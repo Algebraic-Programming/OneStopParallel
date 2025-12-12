@@ -55,8 +55,8 @@ class GrowLocalAutoCores : public Scheduler<GraphT> {
   private:
     GrowLocalAutoCores_Params<VWorkwT<GraphT>> params_;
 
-    constexpr static bool useMemoryConstraint_ = is_memory_constraint_v<MemoryConstraintT>
-                                                 or is_memory_constraint_schedule_v<MemoryConstraintT>;
+    constexpr static bool useMemoryConstraint_ = IsMemoryConstraintV<MemoryConstraintT>
+                                                 or IsMemoryConstraintScheduleV<MemoryConstraintT>;
 
     static_assert(not useMemoryConstraint_ or std::is_same_v<GraphT, typename MemoryConstraintT::Graph_impl_t>,
                   "Graph_t must be the same as MemoryConstraint_t::Graph_impl_t.");
@@ -100,9 +100,9 @@ class GrowLocalAutoCores : public Scheduler<GraphT> {
 
         unsigned supstep = 0;
 
-        if constexpr (is_memory_constraint_v<MemoryConstraintT>) {
+        if constexpr (IsMemoryConstraintV<MemoryConstraintT>) {
             localMemoryConstraint_.initialize(instance);
-        } else if constexpr (is_memory_constraint_schedule_v<MemoryConstraintT>) {
+        } else if constexpr (IsMemoryConstraintScheduleV<MemoryConstraintT>) {
             localMemoryConstraint_.initialize(schedule, supstep);
         }
 

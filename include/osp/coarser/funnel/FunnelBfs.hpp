@@ -41,13 +41,13 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
 
         bool useApproxTransitiveReduction_;
 
-        VWorkwT<Graph_t_in> maxWorkWeight_;
-        VMemwT<Graph_t_in> maxMemoryWeight_;
+        VWorkwT<GraphTIn> maxWorkWeight_;
+        VMemwT<GraphTIn> maxMemoryWeight_;
 
         unsigned maxDepth_;
 
-        FunnelBfsParameters(vWorkwT_<Graph_t_in> max_work_weight_ = std::numeric_limits<VWorkwT<Graph_t_in>>::max(),
-                            VMemwT<Graph_t_in> max_memory_weight_ = std::numeric_limits<VMemwT<Graph_t_in>>::max(),
+        FunnelBfsParameters(vWorkwT_<GraphTIn> max_work_weight_ = std::numeric_limits<VWorkwT<GraphTIn>>::max(),
+                            VMemwT<GraphTIn> max_memory_weight_ = std::numeric_limits<VMemwT<GraphTIn>>::max(),
                             unsigned max_depth_ = std::numeric_limits<unsigned>::max(),
                             bool funnel_incoming_ = true,
                             bool use_approx_transitive_reduction_ = true)
@@ -64,14 +64,14 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
 
     virtual ~FunnelBfs() = default;
 
-    virtual std::vector<std::vector<VertexIdxT<Graph_t_in>>> generate_vertex_expansion_map(const GraphTIn &graph) override {
+    virtual std::vector<std::vector<VertexIdxT<GraphTIn>>> generate_vertex_expansion_map(const GraphTIn &graph) override {
         if constexpr (useArchitectureMemoryContraints) {
             if (max_memory_per_vertex_type.size() < graph.NumVertexTypes()) {
                 throw std::runtime_error("FunnelBfs: max_memory_per_vertex_type has insufficient size.");
             }
         }
 
-        std::vector<std::vector<VertexIdxT<Graph_t_in>>> partition;
+        std::vector<std::vector<VertexIdxT<GraphTIn>>> partition;
 
         if (parameters_.funnelIncoming_) {
             run_in_contraction(graph, partition);
@@ -84,19 +84,19 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
 
     std::string getCoarserName() const override { return "FunnelBfs"; }
 
-    std::vector<VMemwT<Graph_t_in>> &GetMaxMemoryPerVertexType() { return max_memory_per_vertex_type; }
+    std::vector<VMemwT<GraphTIn>> &GetMaxMemoryPerVertexType() { return max_memory_per_vertex_type; }
 
   private:
     FunnelBfsParameters parameters_;
 
-    std::vector<VMemwT<Graph_t_in>> maxMemoryPerVertexType_;
+    std::vector<VMemwT<GraphTIn>> maxMemoryPerVertexType_;
 
-    void RunInContraction(const GraphTIn &graph, std::vector<std::vector<VertexIdxT<Graph_t_in>>> &partition) {
-        using vertex_idx_t = VertexIdxT<Graph_t_in>;
+    void RunInContraction(const GraphTIn &graph, std::vector<std::vector<VertexIdxT<GraphTIn>>> &partition) {
+        using vertex_idx_t = VertexIdxT<GraphTIn>;
 
-        const std::unordered_set<EdgeDescT<Graph_t_in>> edgeMask = parameters.use_approx_transitive_reduction
-                                                                       ? long_edges_in_triangles_parallel(graph)
-                                                                       : std::unordered_set<EdgeDescT<Graph_t_in>>();
+        const std::unordered_set<EdgeDescT<GraphTIn>> edgeMask = parameters.use_approx_transitive_reduction
+                                                                     ? long_edges_in_triangles_parallel(graph)
+                                                                     : std::unordered_set<EdgeDescT<GraphTIn>>();
 
         std::vector<bool> visited(graph.NumVertices(), false);
 
@@ -109,8 +109,8 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
                 continue;
             }
 
-            VWorkwT<Graph_t_in> workWeightOfGroup = 0;
-            VMemwT<Graph_t_in> memoryWeightOfGroup = 0;
+            VWorkwT<GraphTIn> workWeightOfGroup = 0;
+            VMemwT<GraphTIn> memoryWeightOfGroup = 0;
 
             std::unordered_map<vertex_idx_t, vertex_idx_t> childrenNotInGroup;
             std::vector<vertex_idx_t> group;
@@ -203,12 +203,12 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
         }
     }
 
-    void RunOutContraction(const GraphTIn &graph, std::vector<std::vector<VertexIdxT<Graph_t_in>>> &partition) {
-        using vertex_idx_t = VertexIdxT<Graph_t_in>;
+    void RunOutContraction(const GraphTIn &graph, std::vector<std::vector<VertexIdxT<GraphTIn>>> &partition) {
+        using vertex_idx_t = VertexIdxT<GraphTIn>;
 
-        const std::unordered_set<EdgeDescT<Graph_t_in>> edgeMask = parameters.use_approx_transitive_reduction
-                                                                       ? long_edges_in_triangles_parallel(graph)
-                                                                       : std::unordered_set<EdgeDescT<Graph_t_in>>();
+        const std::unordered_set<EdgeDescT<GraphTIn>> edgeMask = parameters.use_approx_transitive_reduction
+                                                                     ? long_edges_in_triangles_parallel(graph)
+                                                                     : std::unordered_set<EdgeDescT<GraphTIn>>();
 
         std::vector<bool> visited(graph.NumVertices(), false);
 
@@ -217,8 +217,8 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
                 continue;
             }
 
-            VWorkwT<Graph_t_in> workWeightOfGroup = 0;
-            VMemwT<Graph_t_in> memoryWeightOfGroup = 0;
+            VWorkwT<GraphTIn> workWeightOfGroup = 0;
+            VMemwT<GraphTIn> memoryWeightOfGroup = 0;
 
             std::unordered_map<vertex_idx_t, vertex_idx_t> parentsNotInGroup;
             std::vector<vertex_idx_t> group;

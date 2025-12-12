@@ -465,8 +465,8 @@ class OrbitGraphProcessor {
                     continue;
                 }
 
-                v_type_t<GraphT> uType = 0;
-                v_type_t<GraphT> vType = 0;
+                VTypeT<GraphT> uType = 0;
+                VTypeT<GraphT> vType = 0;
                 if (not merge_different_node_types && HasTypedVerticesV<GraphT>) {
                     uType = currentCoarseGraph.VertexType(u);
                     vType = currentCoarseGraph.VertexType(v);

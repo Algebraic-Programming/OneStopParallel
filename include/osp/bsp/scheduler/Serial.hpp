@@ -77,7 +77,7 @@ class Serial : public Scheduler<GraphT> {
         const unsigned numNodeTypes = dag.NumVertexTypes();
         std::vector<std::vector<unsigned>> nodeTypeCompatibleProcessors(numNodeTypes);
 
-        for (v_type_t<GraphT> type = 0; type < numNodeTypes; ++type) {
+        for (VTypeT<GraphT> type = 0; type < numNodeTypes; ++type) {
             for (const auto &p : chosenProcs) {
                 if (instance.isCompatibleType(type, instance.processorType(p))) {
                     nodeTypeCompatibleProcessors[type].push_back(p);

@@ -207,7 +207,7 @@ class IsomorphicSubgraphScheduler {
             } else {
                 // Determine if the group consists of a single node type
                 bool isSingleTypeGroup = true;
-                v_type_t<GraphT> commonNodeType = 0;
+                VTypeT<GraphT> commonNodeType = 0;
 
                 if constexpr (HasTypedVerticesV<GraphT>) {
                     if (!group.subgraphs.empty() && !group.subgraphs[0].empty()) {

@@ -65,52 +65,51 @@ struct Parameters {
 template <typename GraphTIn, typename GraphTOut>
 class Sarkar : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
   private:
-    SarkarParams::Parameters<VWorkwT<Graph_t_in>> params_;
+    SarkarParams::Parameters<VWorkwT<GraphTIn>> params_;
 
-    std::vector<VertexIdxT<Graph_t_in>> GetBotPosetMap(const GraphTIn &graph) const;
-    std::vector<VWorkwT<Graph_t_in>> GetTopDistance(VWorkwT<Graph_t_in> commCost, const GraphTIn &graph) const;
-    std::vector<VWorkwT<Graph_t_in>> GetBotDistance(VWorkwT<Graph_t_in> commCost, const GraphTIn &graph) const;
+    std::vector<VertexIdxT<GraphTIn>> GetBotPosetMap(const GraphTIn &graph) const;
+    std::vector<VWorkwT<GraphTIn>> GetTopDistance(VWorkwT<GraphTIn> commCost, const GraphTIn &graph) const;
+    std::vector<VWorkwT<GraphTIn>> GetBotDistance(VWorkwT<GraphTIn> commCost, const GraphTIn &graph) const;
 
-    VertexIdxT<Graph_t_in> SingleContraction(VWorkwT<Graph_t_in> commCost,
-                                             const GraphTIn &graph,
-                                             std::vector<std::vector<VertexIdxT<Graph_t_in>>> &expansionMapOutput) const;
-    VertexIdxT<Graph_t_in> AllChildrenContraction(VWorkwT<Graph_t_in> commCost,
-                                                  const GraphTIn &graph,
-                                                  std::vector<std::vector<VertexIdxT<Graph_t_in>>> &expansionMapOutput) const;
-    VertexIdxT<Graph_t_in> SomeChildrenContraction(VWorkwT<Graph_t_in> commCost,
-                                                   const GraphTIn &graph,
-                                                   std::vector<std::vector<VertexIdxT<Graph_t_in>>> &expansionMapOutput) const;
-    VertexIdxT<Graph_t_in> AllParentsContraction(VWorkwT<Graph_t_in> commCost,
+    VertexIdxT<GraphTIn> SingleContraction(VWorkwT<GraphTIn> commCost,
+                                           const GraphTIn &graph,
+                                           std::vector<std::vector<VertexIdxT<GraphTIn>>> &expansionMapOutput) const;
+    VertexIdxT<GraphTIn> AllChildrenContraction(VWorkwT<GraphTIn> commCost,
+                                                const GraphTIn &graph,
+                                                std::vector<std::vector<VertexIdxT<GraphTIn>>> &expansionMapOutput) const;
+    VertexIdxT<GraphTIn> SomeChildrenContraction(VWorkwT<GraphTIn> commCost,
                                                  const GraphTIn &graph,
-                                                 std::vector<std::vector<VertexIdxT<Graph_t_in>>> &expansionMapOutput) const;
-    VertexIdxT<Graph_t_in> SomeParentsContraction(VWorkwT<Graph_t_in> commCost,
-                                                  const GraphTIn &graph,
-                                                  std::vector<std::vector<VertexIdxT<Graph_t_in>>> &expansionMapOutput) const;
-    VertexIdxT<Graph_t_in> LevelContraction(VWorkwT<Graph_t_in> commCost,
-                                            const GraphTIn &graph,
-                                            std::vector<std::vector<VertexIdxT<Graph_t_in>>> &expansionMapOutput) const;
+                                                 std::vector<std::vector<VertexIdxT<GraphTIn>>> &expansionMapOutput) const;
+    VertexIdxT<GraphTIn> AllParentsContraction(VWorkwT<GraphTIn> commCost,
+                                               const GraphTIn &graph,
+                                               std::vector<std::vector<VertexIdxT<GraphTIn>>> &expansionMapOutput) const;
+    VertexIdxT<GraphTIn> SomeParentsContraction(VWorkwT<GraphTIn> commCost,
+                                                const GraphTIn &graph,
+                                                std::vector<std::vector<VertexIdxT<GraphTIn>>> &expansionMapOutput) const;
+    VertexIdxT<GraphTIn> LevelContraction(VWorkwT<GraphTIn> commCost,
+                                          const GraphTIn &graph,
+                                          std::vector<std::vector<VertexIdxT<GraphTIn>>> &expansionMapOutput) const;
 
-    VertexIdxT<Graph_t_in> HomogeneousBufferMerge(VWorkwT<Graph_t_in> commCost,
-                                                  const GraphTIn &graph,
-                                                  std::vector<std::vector<VertexIdxT<Graph_t_in>>> &expansionMapOutput) const;
+    VertexIdxT<GraphTIn> HomogeneousBufferMerge(VWorkwT<GraphTIn> commCost,
+                                                const GraphTIn &graph,
+                                                std::vector<std::vector<VertexIdxT<GraphTIn>>> &expansionMapOutput) const;
     std::vector<std::size_t> HomogeneousMerge(const std::size_t number, const std::size_t minSize, const std::size_t maxSize) const;
 
     std::vector<std::size_t> ComputeNodeHashes(const GraphTIn &graph,
-                                               const std::vector<VertexIdxT<Graph_t_in>> &vertexPoset,
-                                               const std::vector<VWorkwT<Graph_t_in>> &dist) const;
+                                               const std::vector<VertexIdxT<GraphTIn>> &vertexPoset,
+                                               const std::vector<VWorkwT<GraphTIn>> &dist) const;
 
   public:
-    virtual std::vector<std::vector<VertexIdxT<Graph_t_in>>> generate_vertex_expansion_map(const GraphTIn &dagIn) override;
-    std::vector<std::vector<VertexIdxT<Graph_t_in>>> GenerateVertexExpansionMap(const GraphTIn &dagIn,
-                                                                                VertexIdxT<Graph_t_in> &diff);
+    virtual std::vector<std::vector<VertexIdxT<GraphTIn>>> generate_vertex_expansion_map(const GraphTIn &dagIn) override;
+    std::vector<std::vector<VertexIdxT<GraphTIn>>> GenerateVertexExpansionMap(const GraphTIn &dagIn, VertexIdxT<GraphTIn> &diff);
 
-    inline void SetParameters(const SarkarParams::Parameters<VWorkwT<Graph_t_in>> &params) { params = params_; };
+    inline void SetParameters(const SarkarParams::Parameters<VWorkwT<GraphTIn>> &params) { params = params_; };
 
-    inline SarkarParams::Parameters<VWorkwT<Graph_t_in>> &GetParameters() { return params; };
+    inline SarkarParams::Parameters<VWorkwT<GraphTIn>> &GetParameters() { return params; };
 
-    inline const SarkarParams::Parameters<VWorkwT<Graph_t_in>> &GetParameters() const { return params; };
+    inline const SarkarParams::Parameters<VWorkwT<GraphTIn>> &GetParameters() const { return params; };
 
-    Sarkar(SarkarParams::Parameters<VWorkwT<Graph_t_in>> params = SarkarParams::Parameters<VWorkwT<Graph_t_in>>())
+    Sarkar(SarkarParams::Parameters<VWorkwT<GraphTIn>> params = SarkarParams::Parameters<VWorkwT<GraphTIn>>())
         : params(params_) {};
 
     Sarkar(const Sarkar &) = default;
@@ -123,10 +122,10 @@ class Sarkar : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
 };
 
 template <typename GraphTIn, typename GraphTOut>
-std::vector<VertexIdxT<Graph_t_in>> Sarkar<GraphTIn, GraphTOut>::GetBotPosetMap(const GraphTIn &graph) const {
-    std::vector<VertexIdxT<Graph_t_in>> botPosetMap = get_bottom_node_distance<Graph_t_in, VertexIdxT<Graph_t_in>>(graph);
+std::vector<VertexIdxT<GraphTIn>> Sarkar<GraphTIn, GraphTOut>::GetBotPosetMap(const GraphTIn &graph) const {
+    std::vector<VertexIdxT<GraphTIn>> botPosetMap = get_bottom_node_distance<GraphTIn, VertexIdxT<GraphTIn>>(graph);
 
-    VertexIdxT<Graph_t_in> max = *std::max_element(botPosetMap.begin(), botPosetMap.end());
+    VertexIdxT<GraphTIn> max = *std::max_element(botPosetMap.begin(), botPosetMap.end());
     ++max;
 
     for (std::size_t i = 0; i < botPosetMap.size(); i++) {
@@ -137,12 +136,12 @@ std::vector<VertexIdxT<Graph_t_in>> Sarkar<GraphTIn, GraphTOut>::GetBotPosetMap(
 }
 
 template <typename GraphTIn, typename GraphTOut>
-std::vector<VWorkwT<Graph_t_in>> Sarkar<GraphTIn, GraphTOut>::GetTopDistance(VWorkwT<Graph_t_in> commCost,
-                                                                             const GraphTIn &graph) const {
-    std::vector<VWorkwT<Graph_t_in>> topDist(graph.NumVertices(), 0);
+std::vector<VWorkwT<GraphTIn>> Sarkar<GraphTIn, GraphTOut>::GetTopDistance(VWorkwT<GraphTIn> commCost,
+                                                                           const GraphTIn &graph) const {
+    std::vector<VWorkwT<GraphTIn>> topDist(graph.NumVertices(), 0);
 
     for (const auto &vertex : GetTopOrder<GraphTIn>(graph)) {
-        VWorkwT<Graph_t_in> maxTemp = 0;
+        VWorkwT<GraphTIn> maxTemp = 0;
 
         for (const auto &j : graph.Parents(vertex)) {
             maxTemp = std::max(max_temp, topDist[j]);
@@ -158,12 +157,12 @@ std::vector<VWorkwT<Graph_t_in>> Sarkar<GraphTIn, GraphTOut>::GetTopDistance(VWo
 }
 
 template <typename GraphTIn, typename GraphTOut>
-std::vector<VWorkwT<Graph_t_in>> Sarkar<GraphTIn, GraphTOut>::GetBotDistance(VWorkwT<Graph_t_in> commCost,
-                                                                             const GraphTIn &graph) const {
-    std::vector<VWorkwT<Graph_t_in>> botDist(graph.NumVertices(), 0);
+std::vector<VWorkwT<GraphTIn>> Sarkar<GraphTIn, GraphTOut>::GetBotDistance(VWorkwT<GraphTIn> commCost,
+                                                                           const GraphTIn &graph) const {
+    std::vector<VWorkwT<GraphTIn>> botDist(graph.NumVertices(), 0);
 
     for (const auto &vertex : GetTopOrderReverse<GraphTIn>(graph)) {
-        VWorkwT<Graph_t_in> maxTemp = 0;
+        VWorkwT<GraphTIn> maxTemp = 0;
 
         for (const auto &j : graph.Children(vertex)) {
             maxTemp = std::max(max_temp, botDist[j]);
@@ -179,15 +178,15 @@ std::vector<VWorkwT<Graph_t_in>> Sarkar<GraphTIn, GraphTOut>::GetBotDistance(VWo
 }
 
 template <typename GraphTIn, typename GraphTOut>
-VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SingleContraction(
-    VWorkwT<Graph_t_in> commCost, const GraphTIn &graph, std::vector<std::vector<VertexIdxT<Graph_t_in>>> &expansionMapOutput) const {
-    using VertexType = VertexIdxT<Graph_t_in>;
+VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::SingleContraction(
+    VWorkwT<GraphTIn> commCost, const GraphTIn &graph, std::vector<std::vector<VertexIdxT<GraphTIn>>> &expansionMapOutput) const {
+    using VertexType = VertexIdxT<GraphTIn>;
     assert(expansionMapOutput.size() == 0);
 
-    const std::vector<VertexIdxT<Graph_t_in>> vertexPoset
-        = params.useTopPoset ? get_top_node_distance<Graph_t_in, VertexIdxT<Graph_t_in>>(graph) : getBotPosetMap(graph);
-    const std::vector<VWorkwT<Graph_t_in>> topDist = getTopDistance(commCost, graph);
-    const std::vector<VWorkwT<Graph_t_in>> botDist = getBotDistance(commCost, graph);
+    const std::vector<VertexIdxT<GraphTIn>> vertexPoset
+        = params.useTopPoset ? get_top_node_distance<GraphTIn, VertexIdxT<GraphTIn>>(graph) : getBotPosetMap(graph);
+    const std::vector<VWorkwT<GraphTIn>> topDist = getTopDistance(commCost, graph);
+    const std::vector<VWorkwT<GraphTIn>> botDist = getBotDistance(commCost, graph);
 
     auto cmp = [](const std::tuple<long, VertexType, VertexType> &lhs, const std::tuple<long, VertexType, VertexType> &rhs) {
         return (std::get<0>(lhs) > std::get<0>(rhs))
@@ -199,7 +198,7 @@ VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SingleContraction(
 
     for (const VertexType &edgeSrc : graph.vertices()) {
         for (const VertexType &edgeTgt : graph.Children(edgeSrc)) {
-            if constexpr (HasTypedVerticesV<Graph_t_in>) {
+            if constexpr (HasTypedVerticesV<GraphTIn>) {
                 if (graph.VertexType(edgeSrc) != graph.VertexType(edgeTgt)) {
                     continue;
                 }
@@ -218,9 +217,9 @@ VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SingleContraction(
                 continue;
             }
 
-            VWorkwT<Graph_t_in> maxPath = topDist[edgeSrc] + botDist[edgeTgt] + commCost;
-            VWorkwT<Graph_t_in> maxParentDist = 0;
-            VWorkwT<Graph_t_in> maxChildDist = 0;
+            VWorkwT<GraphTIn> maxPath = topDist[edgeSrc] + botDist[edgeTgt] + commCost;
+            VWorkwT<GraphTIn> maxParentDist = 0;
+            VWorkwT<GraphTIn> maxChildDist = 0;
 
             for (const auto &par : graph.Parents(edgeSrc)) {
                 maxParentDist = std::max(maxParentDist, topDist[par] + commCost);
@@ -242,7 +241,7 @@ VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SingleContraction(
                 maxChildDist = std::max(maxChildDist, botDist[chld] + commCost);
             }
 
-            VWorkwT<Graph_t_in> newMaxPath
+            VWorkwT<GraphTIn> newMaxPath
                 = maxParentDist + maxChildDist + graph.VertexWorkWeight(edgeSrc) + graph.VertexWorkWeight(edgeTgt);
             long savings = static_cast<long>(maxPath) - static_cast<long>(newMaxPath);
 
@@ -256,10 +255,10 @@ VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SingleContraction(
     std::vector<bool> partitionedSourceFlag(graph.NumVertices(), false);
     std::vector<bool> partitionedTargetFlag(graph.NumVertices(), false);
 
-    VertexIdxT<Graph_t_in> maxCorseningNum
-        = graph.NumVertices() - static_cast<VertexIdxT<Graph_t_in>>(static_cast<double>(graph.NumVertices()) * params.geomDecay);
+    VertexIdxT<GraphTIn> maxCorseningNum
+        = graph.NumVertices() - static_cast<VertexIdxT<GraphTIn>>(static_cast<double>(graph.NumVertices()) * params.geomDecay);
 
-    VertexIdxT<Graph_t_in> counter = 0;
+    VertexIdxT<GraphTIn> counter = 0;
     long minSave = std::numeric_limits<long>::lowest();
     for (auto prioIter = edgePriority.begin(); prioIter != edgePriority.end(); prioIter++) {
         const long &edgeSave = std::get<0>(*prioIter);
@@ -329,14 +328,14 @@ VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SingleContraction(
 }
 
 template <typename GraphTIn, typename GraphTOut>
-VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::AllChildrenContraction(
-    VWorkwT<Graph_t_in> commCost, const GraphTIn &graph, std::vector<std::vector<VertexIdxT<Graph_t_in>>> &expansionMapOutput) const {
-    using VertexType = VertexIdxT<Graph_t_in>;
+VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::AllChildrenContraction(
+    VWorkwT<GraphTIn> commCost, const GraphTIn &graph, std::vector<std::vector<VertexIdxT<GraphTIn>>> &expansionMapOutput) const {
+    using VertexType = VertexIdxT<GraphTIn>;
     assert(expansionMapOutput.size() == 0);
 
-    const std::vector<VertexIdxT<Graph_t_in>> vertexPoset = get_top_node_distance<Graph_t_in, VertexIdxT<Graph_t_in>>(graph);
-    const std::vector<VWorkwT<Graph_t_in>> topDist = getTopDistance(commCost, graph);
-    const std::vector<VWorkwT<Graph_t_in>> botDist = getBotDistance(commCost, graph);
+    const std::vector<VertexIdxT<GraphTIn>> vertexPoset = get_top_node_distance<GraphTIn, VertexIdxT<GraphTIn>>(graph);
+    const std::vector<VWorkwT<GraphTIn>> topDist = getTopDistance(commCost, graph);
+    const std::vector<VWorkwT<GraphTIn>> botDist = getBotDistance(commCost, graph);
 
     auto cmp = [](const std::pair<long, VertexType> &lhs, const std::pair<long, VertexType> &rhs) {
         return (lhs.first > rhs.first) || ((lhs.first == rhs.first) && (lhs.second < rhs.second));
@@ -349,7 +348,7 @@ VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::AllChildrenContraction(
         }
 
         bool shouldSkip = false;
-        if constexpr (HasTypedVerticesV<Graph_t_in>) {
+        if constexpr (HasTypedVerticesV<GraphTIn>) {
             for (const VertexType &groupFoot : graph.Children(groupHead)) {
                 if (graph.VertexType(groupHead) != graph.VertexType(groupFoot)) {
                     shouldSkip = true;
@@ -369,7 +368,7 @@ VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::AllChildrenContraction(
         if (shouldSkip) {
             continue;
         }
-        VWorkwT<Graph_t_in> combined_weight = graph.VertexWorkWeight(groupHead);
+        VWorkwT<GraphTIn> combined_weight = graph.VertexWorkWeight(groupHead);
         for (const VertexType &groupFoot : graph.Children(groupHead)) {
             combined_weight += graph.VertexWorkWeight(groupFoot);
         }
@@ -377,13 +376,13 @@ VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::AllChildrenContraction(
             continue;
         }
 
-        VWorkwT<Graph_t_in> maxPath = topDist[groupHead] + botDist[groupHead] - graph.VertexWorkWeight(groupHead);
+        VWorkwT<GraphTIn> maxPath = topDist[groupHead] + botDist[groupHead] - graph.VertexWorkWeight(groupHead);
         for (const VertexType &chld : graph.Children(groupHead)) {
             maxPath = std::max(maxPath, topDist[chld] + botDist[chld] - graph.VertexWorkWeight(chld));
         }
 
-        VWorkwT<Graph_t_in> maxParentDist = 0;
-        VWorkwT<Graph_t_in> maxChildDist = 0;
+        VWorkwT<GraphTIn> maxParentDist = 0;
+        VWorkwT<GraphTIn> maxChildDist = 0;
 
         for (const VertexType &par : graph.Parents(groupHead)) {
             maxParentDist = std::max(maxParentDist, topDist[par] + commCost);
@@ -403,7 +402,7 @@ VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::AllChildrenContraction(
             }
         }
 
-        VWorkwT<Graph_t_in> newMaxPath = maxParentDist + maxChildDist + graph.VertexWorkWeight(groupHead);
+        VWorkwT<GraphTIn> newMaxPath = maxParentDist + maxChildDist + graph.VertexWorkWeight(groupHead);
         for (const VertexType &groupFoot : graph.Children(groupHead)) {
             newMaxPath += graph.VertexWorkWeight(groupFoot);
         }
@@ -416,10 +415,10 @@ VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::AllChildrenContraction(
 
     std::vector<bool> partitionedFlag(graph.NumVertices(), false);
 
-    VertexIdxT<Graph_t_in> maxCorseningNum
-        = graph.NumVertices() - static_cast<VertexIdxT<Graph_t_in>>(static_cast<double>(graph.NumVertices()) * params.geomDecay);
+    VertexIdxT<GraphTIn> maxCorseningNum
+        = graph.NumVertices() - static_cast<VertexIdxT<GraphTIn>>(static_cast<double>(graph.NumVertices()) * params.geomDecay);
 
-    VertexIdxT<Graph_t_in> counter = 0;
+    VertexIdxT<GraphTIn> counter = 0;
     long minSave = std::numeric_limits<long>::lowest();
     for (auto prioIter = vertPriority.begin(); prioIter != vertPriority.end(); prioIter++) {
         const long &vertSave = prioIter->first;
@@ -454,7 +453,7 @@ VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::AllChildrenContraction(
         }
 
         expansionMapOutput.emplace_back(std::move(part));
-        counter += static_cast<VertexIdxT<Graph_t_in>>(graph.OutDegree(groupHead));
+        counter += static_cast<VertexIdxT<GraphTIn>>(graph.OutDegree(groupHead));
         if (counter > maxCorseningNum) {
             minSave = vertSave;
         }
@@ -475,14 +474,14 @@ VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::AllChildrenContraction(
 }
 
 template <typename GraphTIn, typename GraphTOut>
-VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::AllParentsContraction(
-    VWorkwT<Graph_t_in> commCost, const GraphTIn &graph, std::vector<std::vector<VertexIdxT<Graph_t_in>>> &expansionMapOutput) const {
-    using VertexType = VertexIdxT<Graph_t_in>;
+VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::AllParentsContraction(
+    VWorkwT<GraphTIn> commCost, const GraphTIn &graph, std::vector<std::vector<VertexIdxT<GraphTIn>>> &expansionMapOutput) const {
+    using VertexType = VertexIdxT<GraphTIn>;
     assert(expansionMapOutput.size() == 0);
 
-    const std::vector<VertexIdxT<Graph_t_in>> vertexPoset = getBotPosetMap(graph);
-    const std::vector<VWorkwT<Graph_t_in>> topDist = getTopDistance(commCost, graph);
-    const std::vector<VWorkwT<Graph_t_in>> botDist = getBotDistance(commCost, graph);
+    const std::vector<VertexIdxT<GraphTIn>> vertexPoset = getBotPosetMap(graph);
+    const std::vector<VWorkwT<GraphTIn>> topDist = getTopDistance(commCost, graph);
+    const std::vector<VWorkwT<GraphTIn>> botDist = getBotDistance(commCost, graph);
 
     auto cmp = [](const std::pair<long, VertexType> &lhs, const std::pair<long, VertexType> &rhs) {
         return (lhs.first > rhs.first) || ((lhs.first == rhs.first) && (lhs.second < rhs.second));
@@ -495,7 +494,7 @@ VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::AllParentsContraction(
         }
 
         bool shouldSkip = false;
-        if constexpr (HasTypedVerticesV<Graph_t_in>) {
+        if constexpr (HasTypedVerticesV<GraphTIn>) {
             for (const VertexType &groupHead : graph.Parents(groupFoot)) {
                 if (graph.VertexType(groupHead) != graph.VertexType(groupFoot)) {
                     shouldSkip = true;
@@ -515,7 +514,7 @@ VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::AllParentsContraction(
         if (shouldSkip) {
             continue;
         }
-        VWorkwT<Graph_t_in> combined_weight = graph.VertexWorkWeight(groupFoot);
+        VWorkwT<GraphTIn> combined_weight = graph.VertexWorkWeight(groupFoot);
         for (const VertexType &groupHead : graph.Parents(groupFoot)) {
             combined_weight += graph.VertexWorkWeight(groupHead);
         }
@@ -523,13 +522,13 @@ VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::AllParentsContraction(
             continue;
         }
 
-        VWorkwT<Graph_t_in> maxPath = topDist[groupFoot] + botDist[groupFoot] - graph.VertexWorkWeight(groupFoot);
+        VWorkwT<GraphTIn> maxPath = topDist[groupFoot] + botDist[groupFoot] - graph.VertexWorkWeight(groupFoot);
         for (const VertexType &par : graph.Parents(groupFoot)) {
             maxPath = std::max(maxPath, topDist[par] + botDist[par] - graph.VertexWorkWeight(par));
         }
 
-        VWorkwT<Graph_t_in> maxParentDist = 0;
-        VWorkwT<Graph_t_in> maxChildDist = 0;
+        VWorkwT<GraphTIn> maxParentDist = 0;
+        VWorkwT<GraphTIn> maxChildDist = 0;
 
         for (const VertexType &child : graph.Children(groupFoot)) {
             maxChildDist = std::max(maxChildDist, botDist[child] + commCost);
@@ -549,7 +548,7 @@ VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::AllParentsContraction(
             }
         }
 
-        VWorkwT<Graph_t_in> newMaxPath = maxParentDist + maxChildDist + graph.VertexWorkWeight(groupFoot);
+        VWorkwT<GraphTIn> newMaxPath = maxParentDist + maxChildDist + graph.VertexWorkWeight(groupFoot);
         for (const VertexType &groupHead : graph.Parents(groupFoot)) {
             newMaxPath += graph.VertexWorkWeight(groupHead);
         }
@@ -562,10 +561,10 @@ VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::AllParentsContraction(
 
     std::vector<bool> partitionedFlag(graph.NumVertices(), false);
 
-    VertexIdxT<Graph_t_in> maxCorseningNum
-        = graph.NumVertices() - static_cast<VertexIdxT<Graph_t_in>>(static_cast<double>(graph.NumVertices()) * params.geomDecay);
+    VertexIdxT<GraphTIn> maxCorseningNum
+        = graph.NumVertices() - static_cast<VertexIdxT<GraphTIn>>(static_cast<double>(graph.NumVertices()) * params.geomDecay);
 
-    VertexIdxT<Graph_t_in> counter = 0;
+    VertexIdxT<GraphTIn> counter = 0;
     long minSave = std::numeric_limits<long>::lowest();
     for (auto prioIter = vertPriority.begin(); prioIter != vertPriority.end(); prioIter++) {
         const long &vertSave = prioIter->first;
@@ -600,7 +599,7 @@ VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::AllParentsContraction(
         }
 
         expansionMapOutput.emplace_back(std::move(part));
-        counter += static_cast<VertexIdxT<Graph_t_in>>(graph.in_degree(groupFoot));
+        counter += static_cast<VertexIdxT<GraphTIn>>(graph.in_degree(groupFoot));
         if (counter > maxCorseningNum) {
             minSave = vertSave;
         }
@@ -621,9 +620,9 @@ VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::AllParentsContraction(
 }
 
 template <typename GraphTIn, typename GraphTOut>
-std::vector<std::vector<VertexIdxT<Graph_t_in>>> Sarkar<GraphTIn, GraphTOut>::GenerateVertexExpansionMap(
-    const GraphTIn &dagIn, VertexIdxT<Graph_t_in> &diff) {
-    std::vector<std::vector<VertexIdxT<Graph_t_in>>> expansionMap;
+std::vector<std::vector<VertexIdxT<GraphTIn>>> Sarkar<GraphTIn, GraphTOut>::GenerateVertexExpansionMap(const GraphTIn &dagIn,
+                                                                                                       VertexIdxT<GraphTIn> &diff) {
+    std::vector<std::vector<VertexIdxT<GraphTIn>>> expansionMap;
 
     // std::cout << "Mode: " << static_cast<int>(params.mode) << "\n";
     switch (params.mode) {
@@ -675,20 +674,20 @@ std::vector<std::vector<VertexIdxT<Graph_t_in>>> Sarkar<GraphTIn, GraphTOut>::Ge
 }
 
 template <typename GraphTIn, typename GraphTOut>
-std::vector<std::vector<VertexIdxT<Graph_t_in>>> Sarkar<GraphTIn, GraphTOut>::GenerateVertexExpansionMap(const GraphTIn &dagIn) {
-    VertexIdxT<Graph_t_in> dummy;
+std::vector<std::vector<VertexIdxT<GraphTIn>>> Sarkar<GraphTIn, GraphTOut>::GenerateVertexExpansionMap(const GraphTIn &dagIn) {
+    VertexIdxT<GraphTIn> dummy;
     return generate_vertex_expansion_map(dag_in, dummy);
 }
 
 template <typename GraphTIn, typename GraphTOut>
-VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SomeChildrenContraction(
-    VWorkwT<Graph_t_in> commCost, const GraphTIn &graph, std::vector<std::vector<VertexIdxT<Graph_t_in>>> &expansionMapOutput) const {
-    using VertexType = VertexIdxT<Graph_t_in>;
+VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::SomeChildrenContraction(
+    VWorkwT<GraphTIn> commCost, const GraphTIn &graph, std::vector<std::vector<VertexIdxT<GraphTIn>>> &expansionMapOutput) const {
+    using VertexType = VertexIdxT<GraphTIn>;
     assert(expansionMapOutput.size() == 0);
 
-    const std::vector<VertexIdxT<Graph_t_in>> vertexPoset = get_top_node_distance<Graph_t_in, VertexIdxT<Graph_t_in>>(graph);
-    const std::vector<VWorkwT<Graph_t_in>> topDist = getTopDistance(commCost, graph);
-    const std::vector<VWorkwT<Graph_t_in>> botDist = getBotDistance(commCost, graph);
+    const std::vector<VertexIdxT<GraphTIn>> vertexPoset = get_top_node_distance<GraphTIn, VertexIdxT<GraphTIn>>(graph);
+    const std::vector<VWorkwT<GraphTIn>> topDist = getTopDistance(commCost, graph);
+    const std::vector<VWorkwT<GraphTIn>> botDist = getBotDistance(commCost, graph);
 
     auto cmp = [](const std::pair<long, std::vector<VertexType>> &lhs, const std::pair<long, std::vector<VertexType>> &rhs) {
         return (lhs.first > rhs.first) || ((lhs.first == rhs.first) && (lhs.second < rhs.second));
@@ -718,19 +717,19 @@ VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SomeChildrenContraction(
                               typename std::set<VertexType, decltype(cmp_chld)>::const_iterator>>
             admissble_children_groups;
         for (auto chld_iter_start = childrenPriority.cbegin(); chld_iter_start != childrenPriority.cend();) {
-            if constexpr (HasTypedVerticesV<Graph_t_in>) {
+            if constexpr (HasTypedVerticesV<GraphTIn>) {
                 if (graph.VertexType(groupHead) != graph.VertexType(*chld_iter_start)) {
                     ++chld_iter_start;
                     continue;
                 }
             }
 
-            const VWorkwT<Graph_t_in> t_dist = topDist[*chld_iter_start];
-            const VWorkwT<Graph_t_in> b_dist = botDist[*chld_iter_start];
+            const VWorkwT<GraphTIn> t_dist = topDist[*chld_iter_start];
+            const VWorkwT<GraphTIn> b_dist = botDist[*chld_iter_start];
             auto chld_iter_end = chld_iter_start;
             while (chld_iter_end != childrenPriority.cend() && t_dist == topDist[*chld_iter_end]
                    && b_dist == botDist[*chld_iter_end]) {
-                if constexpr (HasTypedVerticesV<Graph_t_in>) {
+                if constexpr (HasTypedVerticesV<GraphTIn>) {
                     if (graph.VertexType(groupHead) != graph.VertexType(*chld_iter_end)) {
                         break;
                     }
@@ -746,7 +745,7 @@ VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SomeChildrenContraction(
         std::set<VertexType> contractionChildrenSet;
         contractionEnsemble.reserve(1 + graph.OutDegree(groupHead));
         contractionEnsemble.emplace_back(groupHead);
-        VWorkwT<Graph_t_in> added_weight = graph.VertexWorkWeight(groupHead);
+        VWorkwT<GraphTIn> added_weight = graph.VertexWorkWeight(groupHead);
 
         for (std::size_t i = 0U; i < admissble_children_groups.size(); ++i) {
             const auto &first = admissble_children_groups[i].first;
@@ -761,13 +760,13 @@ VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SomeChildrenContraction(
                 break;
             }
 
-            VWorkwT<Graph_t_in> maxPath = 0;
+            VWorkwT<GraphTIn> maxPath = 0;
             for (const VertexType &vert : contractionEnsemble) {
                 maxPath = std::max(maxPath, topDist[vert] + botDist[vert] - graph.VertexWorkWeight(vert));
             }
 
-            VWorkwT<Graph_t_in> maxParentDist = 0;
-            VWorkwT<Graph_t_in> maxChildDist = 0;
+            VWorkwT<GraphTIn> maxParentDist = 0;
+            VWorkwT<GraphTIn> maxChildDist = 0;
 
             for (const VertexType &vert : contractionEnsemble) {
                 for (const VertexType &par : graph.Parents(vert)) {
@@ -790,7 +789,7 @@ VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SomeChildrenContraction(
                 }
             }
 
-            VWorkwT<Graph_t_in> newMaxPath = maxParentDist + maxChildDist;
+            VWorkwT<GraphTIn> newMaxPath = maxParentDist + maxChildDist;
             for (const VertexType &vert : contractionEnsemble) {
                 newMaxPath += graph.VertexWorkWeight(vert);
             }
@@ -805,10 +804,10 @@ VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SomeChildrenContraction(
     std::vector<bool> partitionedFlag(graph.NumVertices(), false);
     std::vector<bool> partitionedHeadFlag(graph.NumVertices(), false);
 
-    VertexIdxT<Graph_t_in> maxCorseningNum
-        = graph.NumVertices() - static_cast<VertexIdxT<Graph_t_in>>(static_cast<double>(graph.NumVertices()) * params.geomDecay);
+    VertexIdxT<GraphTIn> maxCorseningNum
+        = graph.NumVertices() - static_cast<VertexIdxT<GraphTIn>>(static_cast<double>(graph.NumVertices()) * params.geomDecay);
 
-    VertexIdxT<Graph_t_in> counter = 0;
+    VertexIdxT<GraphTIn> counter = 0;
     long minSave = std::numeric_limits<long>::lowest();
     for (auto prioIter = vertPriority.begin(); prioIter != vertPriority.end(); prioIter++) {
         const long &vertSave = prioIter->first;
@@ -847,7 +846,7 @@ VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SomeChildrenContraction(
 
         // Adding to partition
         expansionMapOutput.emplace_back(contractionEnsemble);
-        counter += static_cast<VertexIdxT<Graph_t_in>>(contractionEnsemble.size()) - 1;
+        counter += static_cast<VertexIdxT<GraphTIn>>(contractionEnsemble.size()) - 1;
         if (counter > maxCorseningNum) {
             minSave = vertSave;
         }
@@ -868,14 +867,14 @@ VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SomeChildrenContraction(
 }
 
 template <typename GraphTIn, typename GraphTOut>
-VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SomeParentsContraction(
-    VWorkwT<Graph_t_in> commCost, const GraphTIn &graph, std::vector<std::vector<VertexIdxT<Graph_t_in>>> &expansionMapOutput) const {
-    using VertexType = VertexIdxT<Graph_t_in>;
+VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::SomeParentsContraction(
+    VWorkwT<GraphTIn> commCost, const GraphTIn &graph, std::vector<std::vector<VertexIdxT<GraphTIn>>> &expansionMapOutput) const {
+    using VertexType = VertexIdxT<GraphTIn>;
     assert(expansionMapOutput.size() == 0);
 
-    const std::vector<VertexIdxT<Graph_t_in>> vertexPoset = getBotPosetMap(graph);
-    const std::vector<VWorkwT<Graph_t_in>> topDist = getTopDistance(commCost, graph);
-    const std::vector<VWorkwT<Graph_t_in>> botDist = getBotDistance(commCost, graph);
+    const std::vector<VertexIdxT<GraphTIn>> vertexPoset = getBotPosetMap(graph);
+    const std::vector<VWorkwT<GraphTIn>> topDist = getTopDistance(commCost, graph);
+    const std::vector<VWorkwT<GraphTIn>> botDist = getBotDistance(commCost, graph);
 
     auto cmp = [](const std::pair<long, std::vector<VertexType>> &lhs, const std::pair<long, std::vector<VertexType>> &rhs) {
         return (lhs.first > rhs.first) || ((lhs.first == rhs.first) && (lhs.second < rhs.second));
@@ -905,18 +904,18 @@ VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SomeParentsContraction(
                               typename std::set<VertexType, decltype(cmp_par)>::const_iterator>>
             admissble_parent_groups;
         for (auto par_iter_start = parentsPriority.cbegin(); par_iter_start != parentsPriority.cend();) {
-            if constexpr (HasTypedVerticesV<Graph_t_in>) {
+            if constexpr (HasTypedVerticesV<GraphTIn>) {
                 if (graph.VertexType(groupFoot) != graph.VertexType(*par_iter_start)) {
                     ++par_iter_start;
                     continue;
                 }
             }
 
-            const VWorkwT<Graph_t_in> t_dist = topDist[*par_iter_start];
-            const VWorkwT<Graph_t_in> b_dist = botDist[*par_iter_start];
+            const VWorkwT<GraphTIn> t_dist = topDist[*par_iter_start];
+            const VWorkwT<GraphTIn> b_dist = botDist[*par_iter_start];
             auto par_iter_end = par_iter_start;
             while (par_iter_end != parentsPriority.cend() && t_dist == topDist[*par_iter_end] && b_dist == botDist[*par_iter_end]) {
-                if constexpr (HasTypedVerticesV<Graph_t_in>) {
+                if constexpr (HasTypedVerticesV<GraphTIn>) {
                     if (graph.VertexType(groupFoot) != graph.VertexType(*par_iter_end)) {
                         break;
                     }
@@ -932,7 +931,7 @@ VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SomeParentsContraction(
         std::set<VertexType> contractionParentsSet;
         contractionEnsemble.reserve(1 + graph.in_degree(groupFoot));
         contractionEnsemble.emplace_back(groupFoot);
-        VWorkwT<Graph_t_in> added_weight = graph.VertexWorkWeight(groupFoot);
+        VWorkwT<GraphTIn> added_weight = graph.VertexWorkWeight(groupFoot);
 
         for (std::size_t i = 0U; i < admissble_parent_groups.size(); ++i) {
             const auto &first = admissble_parent_groups[i].first;
@@ -947,13 +946,13 @@ VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SomeParentsContraction(
                 break;
             }
 
-            VWorkwT<Graph_t_in> maxPath = 0;
+            VWorkwT<GraphTIn> maxPath = 0;
             for (const VertexType &vert : contractionEnsemble) {
                 maxPath = std::max(maxPath, topDist[vert] + botDist[vert] - graph.VertexWorkWeight(vert));
             }
 
-            VWorkwT<Graph_t_in> maxParentDist = 0;
-            VWorkwT<Graph_t_in> maxChildDist = 0;
+            VWorkwT<GraphTIn> maxParentDist = 0;
+            VWorkwT<GraphTIn> maxChildDist = 0;
 
             for (const VertexType &vert : contractionEnsemble) {
                 for (const VertexType &chld : graph.Children(vert)) {
@@ -976,7 +975,7 @@ VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SomeParentsContraction(
                 }
             }
 
-            VWorkwT<Graph_t_in> newMaxPath = maxParentDist + maxChildDist;
+            VWorkwT<GraphTIn> newMaxPath = maxParentDist + maxChildDist;
             for (const VertexType &vert : contractionEnsemble) {
                 newMaxPath += graph.VertexWorkWeight(vert);
             }
@@ -991,10 +990,10 @@ VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SomeParentsContraction(
     std::vector<bool> partitionedFlag(graph.NumVertices(), false);
     std::vector<bool> partitionedFootFlag(graph.NumVertices(), false);
 
-    VertexIdxT<Graph_t_in> maxCorseningNum
-        = graph.NumVertices() - static_cast<VertexIdxT<Graph_t_in>>(static_cast<double>(graph.NumVertices()) * params.geomDecay);
+    VertexIdxT<GraphTIn> maxCorseningNum
+        = graph.NumVertices() - static_cast<VertexIdxT<GraphTIn>>(static_cast<double>(graph.NumVertices()) * params.geomDecay);
 
-    VertexIdxT<Graph_t_in> counter = 0;
+    VertexIdxT<GraphTIn> counter = 0;
     long minSave = std::numeric_limits<long>::lowest();
     for (auto prioIter = vertPriority.begin(); prioIter != vertPriority.end(); prioIter++) {
         const long &vertSave = prioIter->first;
@@ -1033,7 +1032,7 @@ VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SomeParentsContraction(
 
         // Adding to partition
         expansionMapOutput.emplace_back(contractionEnsemble);
-        counter += static_cast<VertexIdxT<Graph_t_in>>(contractionEnsemble.size()) - 1;
+        counter += static_cast<VertexIdxT<GraphTIn>>(contractionEnsemble.size()) - 1;
         if (counter > maxCorseningNum) {
             minSave = vertSave;
         }
@@ -1054,38 +1053,38 @@ VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::SomeParentsContraction(
 }
 
 template <typename GraphTIn, typename GraphTOut>
-VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::LevelContraction(
-    VWorkwT<Graph_t_in> commCost, const GraphTIn &graph, std::vector<std::vector<VertexIdxT<Graph_t_in>>> &expansionMapOutput) const {
-    using VertexType = VertexIdxT<Graph_t_in>;
+VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::LevelContraction(
+    VWorkwT<GraphTIn> commCost, const GraphTIn &graph, std::vector<std::vector<VertexIdxT<GraphTIn>>> &expansionMapOutput) const {
+    using VertexType = VertexIdxT<GraphTIn>;
     assert(expansionMapOutput.size() == 0);
 
-    const std::vector<VertexIdxT<Graph_t_in>> vertexPoset
-        = params.useTopPoset ? get_top_node_distance<Graph_t_in, VertexIdxT<Graph_t_in>>(graph) : getBotPosetMap(graph);
-    const std::vector<VWorkwT<Graph_t_in>> topDist = getTopDistance(commCost, graph);
-    const std::vector<VWorkwT<Graph_t_in>> botDist = getBotDistance(commCost, graph);
+    const std::vector<VertexIdxT<GraphTIn>> vertexPoset
+        = params.useTopPoset ? get_top_node_distance<GraphTIn, VertexIdxT<GraphTIn>>(graph) : getBotPosetMap(graph);
+    const std::vector<VWorkwT<GraphTIn>> topDist = getTopDistance(commCost, graph);
+    const std::vector<VWorkwT<GraphTIn>> botDist = getBotDistance(commCost, graph);
 
     auto cmp = [](const std::pair<long, std::vector<VertexType>> &lhs, const std::pair<long, std::vector<VertexType>> &rhs) {
         return (lhs.first > rhs.first) || ((lhs.first == rhs.first) && (lhs.second < rhs.second));
     };
     std::set<std::pair<long, std::vector<VertexType>>, decltype(cmp)> vertPriority(cmp);
 
-    const VertexIdxT<Graph_t_in> minLevel = *std::min_element(vertexPoset.cbegin(), vertexPoset.cend());
-    const VertexIdxT<Graph_t_in> maxLevel = *std::max_element(vertexPoset.cbegin(), vertexPoset.cend());
+    const VertexIdxT<GraphTIn> minLevel = *std::min_element(vertexPoset.cbegin(), vertexPoset.cend());
+    const VertexIdxT<GraphTIn> maxLevel = *std::max_element(vertexPoset.cbegin(), vertexPoset.cend());
 
-    const VertexIdxT<Graph_t_in> parity = params.mode == SarkarParams::Mode::LEVEL_EVEN ? 0 : 1;
+    const VertexIdxT<GraphTIn> parity = params.mode == SarkarParams::Mode::LEVEL_EVEN ? 0 : 1;
 
-    std::vector<std::vector<VertexIdxT<Graph_t_in>>> levels(maxLevel - minLevel + 1);
+    std::vector<std::vector<VertexIdxT<GraphTIn>>> levels(maxLevel - minLevel + 1);
     for (const VertexType &vert : graph.vertices()) {
         levels[vertexPoset[vert] - minLevel].emplace_back(vert);
     }
 
-    for (VertexIdxT<Graph_t_in> headLevel = minLevel + parity; headLevel < maxLevel; headLevel += 2) {
-        const VertexIdxT<Graph_t_in> footLevel = headLevel + 1;
+    for (VertexIdxT<GraphTIn> headLevel = minLevel + parity; headLevel < maxLevel; headLevel += 2) {
+        const VertexIdxT<GraphTIn> footLevel = headLevel + 1;
 
-        const std::vector<VertexIdxT<Graph_t_in>> &headVertices = levels[headLevel - minLevel];
-        const std::vector<VertexIdxT<Graph_t_in>> &footVertices = levels[footLevel - minLevel];
+        const std::vector<VertexIdxT<GraphTIn>> &headVertices = levels[headLevel - minLevel];
+        const std::vector<VertexIdxT<GraphTIn>> &footVertices = levels[footLevel - minLevel];
 
-        Union_Find_Universe<VertexType, std::size_t, VWorkwT<Graph_t_in>, VMemwT<Graph_t_in>> uf;
+        Union_Find_Universe<VertexType, std::size_t, VWorkwT<GraphTIn>, VMemwT<GraphTIn>> uf;
         for (const VertexType &vert : headVertices) {
             uf.add_object(vert, graph.VertexWorkWeight(vert));
         }
@@ -1099,7 +1098,7 @@ VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::LevelContraction(
                     continue;
                 }
 
-                if constexpr (HasTypedVerticesV<Graph_t_in>) {
+                if constexpr (HasTypedVerticesV<GraphTIn>) {
                     if (graph.VertexType(srcVert) != graph.VertexType(tgtVert)) {
                         continue;
                     }
@@ -1120,12 +1119,12 @@ VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::LevelContraction(
 
             std::sort(comp.begin(), comp.end());
 
-            VWorkwT<Graph_t_in> maxPath = std::numeric_limits<VWorkwT<Graph_t_in>>::lowest();
+            VWorkwT<GraphTIn> maxPath = std::numeric_limits<VWorkwT<GraphTIn>>::lowest();
             for (const VertexType &vert : comp) {
                 maxPath = std::max(maxPath, topDist[vert] + botDist[vert] - graph.VertexWorkWeight(vert));
             }
 
-            VWorkwT<Graph_t_in> maxParentDist = 0;
+            VWorkwT<GraphTIn> maxParentDist = 0;
             for (const VertexType &vert : comp) {
                 for (const VertexType &par : graph.Parents(vert)) {
                     if (std::binary_search(comp.cbegin(), comp.cend(), par)) {
@@ -1136,7 +1135,7 @@ VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::LevelContraction(
                 }
             }
 
-            VWorkwT<Graph_t_in> maxChildDist = 0;
+            VWorkwT<GraphTIn> maxChildDist = 0;
             for (const VertexType &vert : comp) {
                 for (const VertexType &chld : graph.Children(vert)) {
                     if (std::binary_search(comp.cbegin(), comp.cend(), chld)) {
@@ -1147,7 +1146,7 @@ VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::LevelContraction(
                 }
             }
 
-            VWorkwT<Graph_t_in> newMaxPath = maxParentDist + maxChildDist;
+            VWorkwT<GraphTIn> newMaxPath = maxParentDist + maxChildDist;
             for (const VertexType &vert : comp) {
                 newMaxPath += graph.VertexWorkWeight(vert);
             }
@@ -1162,10 +1161,10 @@ VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::LevelContraction(
 
     std::vector<bool> partitionedFlag(graph.NumVertices(), false);
 
-    VertexIdxT<Graph_t_in> maxCorseningNum
-        = graph.NumVertices() - static_cast<VertexIdxT<Graph_t_in>>(static_cast<double>(graph.NumVertices()) * params.geomDecay);
+    VertexIdxT<GraphTIn> maxCorseningNum
+        = graph.NumVertices() - static_cast<VertexIdxT<GraphTIn>>(static_cast<double>(graph.NumVertices()) * params.geomDecay);
 
-    VertexIdxT<Graph_t_in> counter = 0;
+    VertexIdxT<GraphTIn> counter = 0;
     long minSave = std::numeric_limits<long>::lowest();
     for (auto prioIter = vertPriority.cbegin(); prioIter != vertPriority.cend(); prioIter++) {
         const long &compSave = prioIter->first;
@@ -1201,7 +1200,7 @@ VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::LevelContraction(
 
         // Adding to partition
         expansionMapOutput.emplace_back(comp);
-        counter += static_cast<VertexIdxT<Graph_t_in>>(comp.size() - 1);
+        counter += static_cast<VertexIdxT<GraphTIn>>(comp.size() - 1);
         if (counter > maxCorseningNum) {
             minSave = compSave;
         }
@@ -1225,17 +1224,17 @@ VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::LevelContraction(
 
 template <typename GraphTIn, typename GraphTOut>
 std::vector<std::size_t> Sarkar<GraphTIn, GraphTOut>::ComputeNodeHashes(const GraphTIn &graph,
-                                                                        const std::vector<VertexIdxT<Graph_t_in>> &vertexPoset,
-                                                                        const std::vector<VWorkwT<Graph_t_in>> &dist) const {
-    using VertexType = VertexIdxT<Graph_t_in>;
+                                                                        const std::vector<VertexIdxT<GraphTIn>> &vertexPoset,
+                                                                        const std::vector<VWorkwT<GraphTIn>> &dist) const {
+    using VertexType = VertexIdxT<GraphTIn>;
 
     std::vector<std::size_t> hashes(graph.NumVertices());
     for (const VertexType &vert : graph.vertices()) {
         std::size_t &hash = hashes[vert];
-        hash = std::hash<VWorkwT<Graph_t_in>>{}(graph.VertexWorkWeight(vert));
+        hash = std::hash<VWorkwT<GraphTIn>>{}(graph.VertexWorkWeight(vert));
         HashCombine(hash, vertexPoset[vert]);
         HashCombine(hash, dist[vert]);
-        if constexpr (HasTypedVerticesV<Graph_t_in>) {
+        if constexpr (HasTypedVerticesV<GraphTIn>) {
             HashCombine(hash, graph.VertexType(vert));
         }
     }
@@ -1299,15 +1298,15 @@ std::vector<std::size_t> Sarkar<GraphTIn, GraphTOut>::HomogeneousMerge(const std
 }
 
 template <typename GraphTIn, typename GraphTOut>
-VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::HomogeneousBufferMerge(
-    VWorkwT<Graph_t_in> commCost, const GraphTIn &graph, std::vector<std::vector<VertexIdxT<Graph_t_in>>> &expansionMapOutput) const {
-    using VertexType = VertexIdxT<Graph_t_in>;
+VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::HomogeneousBufferMerge(
+    VWorkwT<GraphTIn> commCost, const GraphTIn &graph, std::vector<std::vector<VertexIdxT<GraphTIn>>> &expansionMapOutput) const {
+    using VertexType = VertexIdxT<GraphTIn>;
     assert(expansionMapOutput.size() == 0);
 
-    const std::vector<VertexIdxT<Graph_t_in>> vertexTopPoset = get_top_node_distance<Graph_t_in, VertexIdxT<Graph_t_in>>(graph);
-    const std::vector<VertexIdxT<Graph_t_in>> vertexBotPoset = getBotPosetMap(graph);
-    const std::vector<VWorkwT<Graph_t_in>> topDist = getTopDistance(commCost, graph);
-    const std::vector<VWorkwT<Graph_t_in>> botDist = getBotDistance(commCost, graph);
+    const std::vector<VertexIdxT<GraphTIn>> vertexTopPoset = get_top_node_distance<GraphTIn, VertexIdxT<GraphTIn>>(graph);
+    const std::vector<VertexIdxT<GraphTIn>> vertexBotPoset = getBotPosetMap(graph);
+    const std::vector<VWorkwT<GraphTIn>> topDist = getTopDistance(commCost, graph);
+    const std::vector<VWorkwT<GraphTIn>> botDist = getBotDistance(commCost, graph);
 
     std::vector<std::size_t> hashValuesCombined(graph.NumVertices(), 1729U);
 
@@ -1347,13 +1346,13 @@ VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::HomogeneousBufferMerge(
         if (found_iter == orbits.end()) {
             orbits.emplace(std::piecewise_construct,
                            std::forward_as_tuple(hash),
-                           std::forward_as_tuple(std::initializer_list<VertexIdxT<Graph_t_in>>{vert}));
+                           std::forward_as_tuple(std::initializer_list<VertexIdxT<GraphTIn>>{vert}));
         } else {
             found_iter->second.emplace(vert);
         }
     }
 
-    VertexIdxT<Graph_t_in> counter = 0;
+    VertexIdxT<GraphTIn> counter = 0;
     std::vector<bool> partitionedFlag(graph.NumVertices(), false);
 
     for (const VertexType &vert : graph.vertices()) {
@@ -1400,7 +1399,7 @@ VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::HomogeneousBufferMerge(
             if (botDist[vertCandidate] != botDist[vert]) {
                 continue;
             }
-            if constexpr (HasTypedVerticesV<Graph_t_in>) {
+            if constexpr (HasTypedVerticesV<GraphTIn>) {
                 if (graph.VertexType(vertCandidate) != graph.VertexType(vert)) {
                     continue;
                 }
@@ -1432,12 +1431,12 @@ VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::HomogeneousBufferMerge(
             continue;
         }
 
-        const VWorkwT<Graph_t_in> desiredVerticesInGroup = graph.VertexWorkWeight(vert) == 0
-                                                               ? std::numeric_limits<VWorkwT<Graph_t_in>>::lowest()
-                                                               : params.smallWeightThreshold / graph.VertexWorkWeight(vert);
-        const VWorkwT<Graph_t_in> maxVerticesInGroup = graph.VertexWorkWeight(vert) == 0
-                                                           ? std::numeric_limits<VWorkwT<Graph_t_in>>::max()
-                                                           : params.maxWeight / graph.VertexWorkWeight(vert);
+        const VWorkwT<GraphTIn> desiredVerticesInGroup = graph.VertexWorkWeight(vert) == 0
+                                                             ? std::numeric_limits<VWorkwT<GraphTIn>>::lowest()
+                                                             : params.smallWeightThreshold / graph.VertexWorkWeight(vert);
+        const VWorkwT<GraphTIn> maxVerticesInGroup = graph.VertexWorkWeight(vert) == 0
+                                                         ? std::numeric_limits<VWorkwT<GraphTIn>>::max()
+                                                         : params.maxWeight / graph.VertexWorkWeight(vert);
 
         const std::size_t minDesiredSize = desiredVerticesInGroup < 2 ? 2U : static_cast<std::size_t>(desiredVerticesInGroup);
         const std::size_t maxDesiredSize

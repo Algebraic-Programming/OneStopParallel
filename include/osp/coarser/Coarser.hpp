@@ -37,18 +37,18 @@ namespace osp {
  */
 template <typename GraphTIn, typename GraphTOut>
 class Coarser {
-    static_assert(IsComputationalDagV<Graph_t_in>, "Graph_t_in must be a computational DAG");
-    static_assert(IsConstructableCdagV<Graph_t_out> || IsDirectConstructableCdagV<Graph_t_out>,
-                  "Graph_t_out must be a (direct) constructable computational DAG");
+    static_assert(IsComputationalDagV<GraphTIn>, "GraphTIn must be a computational DAG");
+    static_assert(IsConstructableCdagV<GraphTOut> || IsDirectConstructableCdagV<GraphTOut>,
+                  "GraphTOut must be a (direct) constructable computational DAG");
 
     // probably too strict, need to be refined.
-    // maybe add concept for when Gtaph_t2 is constructable/coarseable from Graph_t_in
-    static_assert(std::is_same_v<VWorkwT<Graph_t_in>, VWorkwT<Graph_t_out>>,
-                  "Graph_t_in and Graph_t_out must have the same work weight type");
-    static_assert(std::is_same_v<VMemwT<Graph_t_in>, VMemwT<Graph_t_out>>,
-                  "Graph_t_in and Graph_t_out must have the same memory weight type");
-    static_assert(std::is_same_v<VCommwT<Graph_t_in>, VCommwT<Graph_t_out>>,
-                  "Graph_t_in and Graph_t_out must have the same communication weight type");
+    // maybe add concept for when Gtaph_t2 is constructable/coarseable from GraphTIn
+    static_assert(std::is_same_v<VWorkwT<GraphTIn>, VWorkwT<GraphTOut>>,
+                  "GraphTIn and GraphTOut must have the same work weight type");
+    static_assert(std::is_same_v<VMemwT<GraphTIn>, VMemwT<GraphTOut>>,
+                  "GraphTIn and GraphTOut must have the same memory weight type");
+    static_assert(std::is_same_v<VCommwT<GraphTIn>, VCommwT<GraphTOut>>,
+                  "GraphTIn and GraphTOut must have the same communication weight type");
 
   public:
     /**
@@ -59,9 +59,7 @@ class Coarser {
      * @param vertex_contraction_map Output mapping from dag_in to coarsened_dag.
      * @return A status code indicating the success or failure of the coarsening operation.
      */
-    virtual bool CoarsenDag(const GraphTIn &dagIn,
-                            GraphTOut &coarsenedDag,
-                            std::vector<VertexIdxT<Graph_t_out>> &vertexContractionMap)
+    virtual bool CoarsenDag(const GraphTIn &dagIn, GraphTOut &coarsenedDag, std::vector<VertexIdxT<GraphTOut>> &vertexContractionMap)
         = 0;
 
     /**
@@ -84,12 +82,12 @@ class Coarser {
 template <typename GraphTIn, typename GraphTOut>
 class CoarserGenContractionMap : public Coarser<GraphTIn, GraphTOut> {
   public:
-    virtual std::vector<VertexIdxT<Graph_t_out>> GenerateVertexContractionMap(const GraphTIn &dagIn) = 0;
+    virtual std::vector<VertexIdxT<GraphTOut>> GenerateVertexContractionMap(const GraphTIn &dagIn) = 0;
 
     virtual bool coarsenDag(const GraphTIn &dagIn,
                             GraphTOut &coarsenedDag,
-                            std::vector<VertexIdxT<Graph_t_out>> &vertexContractionMap) override {
-        vertex_contraction_map = dag_in.NumVertices() == 0 ? std::vector<VertexIdxT<Graph_t_out>>()
+                            std::vector<VertexIdxT<GraphTOut>> &vertexContractionMap) override {
+        vertex_contraction_map = dag_in.NumVertices() == 0 ? std::vector<VertexIdxT<GraphTOut>>()
                                                            : generate_vertex_contraction_map(dag_in);
 
         return coarser_util::construct_coarse_dag(dagIn, coarsenedDag, vertex_contraction_map);
@@ -109,17 +107,17 @@ class CoarserGenContractionMap : public Coarser<GraphTIn, GraphTOut> {
 template <typename GraphTIn, typename GraphTOut>
 class CoarserGenExpansionMap : public Coarser<GraphTIn, GraphTOut> {
   public:
-    virtual std::vector<std::vector<VertexIdxT<Graph_t_in>>> GenerateVertexExpansionMap(const GraphTIn &dagIn) = 0;
+    virtual std::vector<std::vector<VertexIdxT<GraphTIn>>> GenerateVertexExpansionMap(const GraphTIn &dagIn) = 0;
 
     virtual bool coarsenDag(const GraphTIn &dagIn,
                             GraphTOut &coarsenedDag,
-                            std::vector<VertexIdxT<Graph_t_out>> &vertexContractionMap) override {
+                            std::vector<VertexIdxT<GraphTOut>> &vertexContractionMap) override {
         if (dagIn.NumVertices() == 0) {
-            vertex_contraction_map = std::vector<VertexIdxT<Graph_t_out>>();
+            vertex_contraction_map = std::vector<VertexIdxT<GraphTOut>>();
             return true;
         }
 
-        std::vector<std::vector<VertexIdxT<Graph_t_in>>> vertexExpansionMap = generate_vertex_expansion_map(dag_in);
+        std::vector<std::vector<VertexIdxT<GraphTIn>>> vertexExpansionMap = generate_vertex_expansion_map(dag_in);
         assert(coarser_util::check_valid_expansion_map<GraphTIn>(vertex_expansion_map));
 
         coarser_util::reorder_expansion_map<GraphTIn>(dagIn, vertex_expansion_map);

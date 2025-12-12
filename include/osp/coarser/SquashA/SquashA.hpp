@@ -57,8 +57,8 @@ class SquashA : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
     std::vector<int> GeneratePosetInMap(const GraphTIn &dagIn);
 
     template <typename T, typename CMP>
-    std::vector<std::vector<VertexIdxT<Graph_t_in>>> GenExpMapFromContractableEdges(
-        const std::multiset<std::pair<EdgeDescT<Graph_t_in>, T>, CMP> &edgeWeights,
+    std::vector<std::vector<VertexIdxT<GraphTIn>>> GenExpMapFromContractableEdges(
+        const std::multiset<std::pair<EdgeDescT<GraphTIn>, T>, CMP> &edgeWeights,
         const std::vector<int> &posetIntMapping,
         const GraphTIn &dagIn) {
         static_assert(std::is_arithmetic_v<T>, "T must be of arithmetic type!");
@@ -67,25 +67,25 @@ class SquashA : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
         std::advance(lower_third_it, edge_weights.size() / 3);
         T lowerThirdWt = std::max(lower_third_it->second, static_cast<T>(1));    // Could be 0
 
-        Union_Find_Universe<VertexIdxT<Graph_t_in>, VertexIdxT<Graph_t_in>, VWorkwT<Graph_t_in>, VMemwT<Graph_t_in>> connected_components;
+        Union_Find_Universe<VertexIdxT<GraphTIn>, VertexIdxT<GraphTIn>, VWorkwT<GraphTIn>, VMemwT<GraphTIn>> connected_components;
         for (const auto &vert : dagIn.vertices()) {
             connected_components.add_object(vert, dag_in.VertexWorkWeight(vert), dag_in.VertexMemWeight(vert));
         }
 
         std::vector<bool> mergedNodes(dagIn.NumVertices(), false);
 
-        VertexIdxT<Graph_t_in> numNodesDecrease = 0;
-        VertexIdxT<Graph_t_in> numNodesAim
+        VertexIdxT<GraphTIn> numNodesDecrease = 0;
+        VertexIdxT<GraphTIn> numNodesAim
             = dagIn.NumVertices()
-              - static_cast<VertexIdxT<Graph_t_in>>(static_cast<double>(dagIn.NumVertices()) / params_.geomDecayNumNodes_);
+              - static_cast<VertexIdxT<GraphTIn>>(static_cast<double>(dagIn.NumVertices()) / params_.geomDecayNumNodes_);
 
         double temperature = 1;
         unsigned temperatureIncreaseIteration = 0;
         while (num_nodes_decrease < num_nodes_aim && temperatureIncreaseIteration <= params_.numberOfTemperatureIncreases_) {
             for (const auto &wt_edge : edge_weights) {
                 const auto &edge_d = wt_edge.first;
-                const VertexIdxT<Graph_t_in> edge_source = Source(edge_d, dag_in);
-                const VertexIdxT<Graph_t_in> edge_target = Traget(edge_d, dag_in);
+                const VertexIdxT<GraphTIn> edge_source = Source(edge_d, dag_in);
+                const VertexIdxT<GraphTIn> edge_target = Traget(edge_d, dag_in);
 
                 // Previously merged
                 if (merged_nodes[edge_source]) {
@@ -188,19 +188,18 @@ class SquashA : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
         }
 
         // Getting components to contract and adding graph contraction
-        std::vector<std::vector<VertexIdxT<Graph_t_in>>> partitionVec;
+        std::vector<std::vector<VertexIdxT<GraphTIn>>> partitionVec;
 
-        VertexIdxT<Graph_t_in> minNodeDecrease
-            = dagIn.NumVertices()
-              - static_cast<VertexIdxT<Graph_t_in>>(static_cast<double>(dagIn.NumVertices())
-                                                    / std::pow(params_.geomDecayNumNodes_, 0.25));
+        VertexIdxT<GraphTIn> minNodeDecrease = dagIn.NumVertices()
+                                               - static_cast<VertexIdxT<GraphTIn>>(static_cast<double>(dagIn.NumVertices())
+                                                                                   / std::pow(params_.geomDecayNumNodes_, 0.25));
         if (numNodesDecrease > 0 && num_nodes_decrease >= min_node_decrease) {
             partition_vec = connected_components.get_connected_components();
 
         } else {
             partitionVec.reserve(dagIn.NumVertices());
             for (const auto &vert : dagIn.vertices()) {
-                std::vector<VertexIdxT<Graph_t_in>> vect;
+                std::vector<VertexIdxT<GraphTIn>> vect;
                 vect.push_back(vert);
                 partitionVec.emplace_back(vect);
             }
@@ -210,7 +209,7 @@ class SquashA : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
     }
 
   public:
-    virtual std::vector<std::vector<VertexIdxT<Graph_t_in>>> generate_vertex_expansion_map(const GraphTIn &dagIn) override;
+    virtual std::vector<std::vector<VertexIdxT<GraphTIn>>> generate_vertex_expansion_map(const GraphTIn &dagIn) override;
 
     SquashA(squash_a_params::Parameters params = squash_a_params::Parameters()) : params_(params) {};
 
@@ -247,24 +246,23 @@ std::vector<int> SquashA<GraphTIn, GraphTOut>::GeneratePosetInMap(const GraphTIn
 }
 
 template <typename GraphTIn, typename GraphTOut>
-std::vector<std::vector<VertexIdxT<Graph_t_in>>> SquashA<GraphTIn, GraphTOut>::GenerateVertexExpansionMap(const GraphTIn &dagIn) {
-    static_assert(IsDirectedGraphEdgeDescV<Graph_t_in>, "Graph_t_in must satisfy the directed_graph_edge_desc concept");
-    static_assert(IsComputationalDagEdgeDescV<Graph_t_in>, "Graph_t_in must satisfy the is_computational_dag_edge_desc concept");
-    // static_assert(has_hashable_edge_desc_v<Graph_t_in>, "Graph_t_in must have hashable edge descriptors");
+std::vector<std::vector<VertexIdxT<GraphTIn>>> SquashA<GraphTIn, GraphTOut>::GenerateVertexExpansionMap(const GraphTIn &dagIn) {
+    static_assert(IsDirectedGraphEdgeDescV<GraphTIn>, "GraphTIn must satisfy the directed_graph_edge_desc concept");
+    static_assert(IsComputationalDagEdgeDescV<GraphTIn>, "GraphTIn must satisfy the is_computational_dag_edge_desc concept");
+    // static_assert(has_hashable_edge_desc_v<GraphTIn>, "GraphTIn must have hashable edge descriptors");
 
     std::vector<int> posetIntMapping = GeneratePosetInMap(dagIn);
 
-    if constexpr (HasEdgeWeightsV<Graph_t_in>) {
+    if constexpr (HasEdgeWeightsV<GraphTIn>) {
         if (params_.mode_ == squash_a_params::Mode::EDGE_WEIGHT) {
-            auto edgeWCmp
-                = [](const std::pair<EdgeDescT<Graph_t_in>, ECommwT<Graph_t_in>> &lhs,
-                     const std::pair<EdgeDescT<Graph_t_in>, ECommwT<Graph_t_in>> &rhs) { return lhs.second < rhs.second; };
-            std::multiset<std::pair<EdgeDescT<Graph_t_in>, ECommwT<Graph_t_in>>, decltype(edge_w_cmp)> edge_weights(edge_w_cmp);
+            auto edgeWCmp = [](const std::pair<EdgeDescT<GraphTIn>, ECommwT<GraphTIn>> &lhs,
+                               const std::pair<EdgeDescT<GraphTIn>, ECommwT<GraphTIn>> &rhs) { return lhs.second < rhs.second; };
+            std::multiset<std::pair<EdgeDescT<GraphTIn>, ECommwT<GraphTIn>>, decltype(edge_w_cmp)> edge_weights(edge_w_cmp);
             {
-                std::vector<EdgeDescT<Graph_t_in>> contractableEdges
+                std::vector<EdgeDescT<GraphTIn>> contractableEdges
                     = get_contractable_edges_from_poset_int_map<GraphTIn>(posetIntMapping, dagIn);
                 for (const auto &edge : contractable_edges) {
-                    if constexpr (HasEdgeWeightsV<Graph_t_in>) {
+                    if constexpr (HasEdgeWeightsV<GraphTIn>) {
                         edge_weights.emplace(edge, dag_in.EdgeCommWeight(edge));
                     } else {
                         edge_weights.emplace(edge, dag_in.VertexCommWeight(Source(edge, dag_in)));
@@ -272,16 +270,16 @@ std::vector<std::vector<VertexIdxT<Graph_t_in>>> SquashA<GraphTIn, GraphTOut>::G
                 }
             }
 
-            return gen_exp_map_from_contractable_edges<ECommwT<Graph_t_in>, decltype(edge_w_cmp)>(
+            return gen_exp_map_from_contractable_edges<ECommwT<GraphTIn>, decltype(edge_w_cmp)>(
                 edge_weights, poset_int_mapping, dag_in);
         }
     }
     if (params_.mode_ == squash_a_params::Mode::TRIANGLES) {
-        auto edgeWCmp = [](const std::pair<EdgeDescT<Graph_t_in>, std::size_t> &lhs,
-                           const std::pair<EdgeDescT<Graph_t_in>, std::size_t> &rhs) { return lhs.second < rhs.second; };
-        std::multiset<std::pair<EdgeDescT<Graph_t_in>, std::size_t>, decltype(edge_w_cmp)> edgeWeights(edgeWCmp);
+        auto edgeWCmp = [](const std::pair<EdgeDescT<GraphTIn>, std::size_t> &lhs,
+                           const std::pair<EdgeDescT<GraphTIn>, std::size_t> &rhs) { return lhs.second < rhs.second; };
+        std::multiset<std::pair<EdgeDescT<GraphTIn>, std::size_t>, decltype(edge_w_cmp)> edgeWeights(edgeWCmp);
         {
-            std::vector<EdgeDescT<Graph_t_in>> contractableEdges
+            std::vector<EdgeDescT<GraphTIn>> contractableEdges
                 = get_contractable_edges_from_poset_int_map<GraphTIn>(posetIntMapping, dagIn);
             for (const auto &edge : contractable_edges) {
                 std::size_t num_common_triangles = num_common_parents(dag_in, Source(edge, dag_in), Traget(edge, dag_in));

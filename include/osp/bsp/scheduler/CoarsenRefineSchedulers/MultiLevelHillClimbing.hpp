@@ -27,7 +27,7 @@ template <typename GraphT>
 class MultiLevelHillClimbingScheduler : public Scheduler<GraphT> {
     using vertex_idx = VertexIdxT<GraphT>;
 
-    using vertex_type_t_or_default = std::conditional_t<IsComputationalDagTypedVerticesV<GraphT>, v_type_t<GraphT>, unsigned>;
+    using vertex_type_t_or_default = std::conditional_t<IsComputationalDagTypedVerticesV<GraphT>, VTypeT<GraphT>, unsigned>;
     using edge_commw_t_or_default = std::conditional_t<HasEdgeWeightsV<GraphT>, ECommwT<GraphT>, VCommwT<GraphT>>;
 
   private:

@@ -37,8 +37,8 @@ class VariancePartitioner : public LoadBalancerBase<GraphT, InterpolationT> {
     };
 
   protected:
-    constexpr static bool useMemoryConstraint_ = is_memory_constraint_v<MemoryConstraint_t>
-                                                 or is_memory_constraint_schedule_v<MemoryConstraint_t>;
+    constexpr static bool useMemoryConstraint_ = IsMemoryConstraintV<MemoryConstraint_t>
+                                                 or IsMemoryConstraintScheduleV<MemoryConstraint_t>;
 
     static_assert(not useMemoryConstraint_ or std::is_same_v<GraphT, typename MemoryConstraintT::Graph_impl_t>,
                   "Graph_t must be the same as MemoryConstraint_t::Graph_impl_t.");
@@ -111,9 +111,9 @@ class VariancePartitioner : public LoadBalancerBase<GraphT, InterpolationT> {
 
         unsigned superstep = 0;
 
-        if constexpr (is_memory_constraint_v<MemoryConstraint_t>) {
+        if constexpr (IsMemoryConstraintV<MemoryConstraint_t>) {
             memoryConstraint_.initialize(instance);
-        } else if constexpr (is_memory_constraint_schedule_v<MemoryConstraint_t>) {
+        } else if constexpr (IsMemoryConstraintScheduleV<MemoryConstraint_t>) {
             memoryConstraint_.initialize(schedule, superstep);
         }
 

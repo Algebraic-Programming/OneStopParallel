@@ -1030,13 +1030,13 @@ static_assert(IsDirectedGraphEdgeDescV<CSG>, "CSG must satisfy the directed_grap
 
 // // Graph specific implementations
 
-// template<typename Graph_t_in, typename v_work_acc_method, typename v_comm_acc_method, typename v_mem_acc_method, typename
+// template<typename GraphTIn, typename v_work_acc_method, typename v_comm_acc_method, typename v_mem_acc_method, typename
 // e_comm_acc_method,
 //          bool use_work_weights, bool use_comm_weights, bool use_mem_weights, bool use_vert_types, typename vert_t, typename
 //          edge_t, typename work_weight_type, typename comm_weight_type, typename mem_weight_type, typename
 //          vertex_type_template_type>
 // bool coarser_util::construct_coarse_dag(
-//             const Graph_t_in &dag_in,
+//             const GraphTIn &dag_in,
 //             Compact_Sparse_Graph<false, use_work_weights, use_comm_weights, use_mem_weights, use_vert_types, vert_t, edge_t,
 //             work_weight_type, comm_weight_type, mem_weight_type, vertex_type_template_type> &coarsened_dag,
 //             std::vector<VertexIdxT<Compact_Sparse_Graph<false, use_work_weights, use_comm_weights, use_mem_weights,
@@ -1046,8 +1046,8 @@ static_assert(IsDirectedGraphEdgeDescV<CSG>, "CSG must satisfy the directed_grap
 //     using Graph_out_type = Compact_Sparse_Graph<false, use_work_weights, use_comm_weights, use_mem_weights, use_vert_types,
 //     vert_t, edge_t, work_weight_type, comm_weight_type, mem_weight_type, vertex_type_template_type>;
 
-//     static_assert(IsDirectedGraphV<Graph_t_in> && IsDirectedGraphV<Graph_out_type>, "Graph types need to satisfy the
-//     is_directed_graph concept."); static_assert(IsComputationalDagV<Graph_t_in>, "Graph_t_in must be a computational DAG");
+//     static_assert(IsDirectedGraphV<GraphTIn> && IsDirectedGraphV<Graph_out_type>, "Graph types need to satisfy the
+//     is_directed_graph concept."); static_assert(IsComputationalDagV<GraphTIn>, "GraphTIn must be a computational DAG");
 //     static_assert(IsConstructableCdagV<Graph_out_type> || IsDirectConstructableCdagV<Graph_out_type>, "Graph_out_type
 //     must be a (direct) constructable computational DAG");
 
@@ -1058,8 +1058,8 @@ static_assert(IsDirectedGraphEdgeDescV<CSG>, "CSG must satisfy the directed_grap
 
 //     std::set<std::pair<VertexIdxT<Graph_out_type>, VertexIdxT<Graph_out_type>>> quotient_edges;
 
-//     for (const VertexIdxT<Graph_t_in> &vert : dag_in.vertices()) {
-//         for (const VertexIdxT<Graph_t_in> &chld : dag_in.Children(vert)) {
+//     for (const VertexIdxT<GraphTIn> &vert : dag_in.vertices()) {
+//         for (const VertexIdxT<GraphTIn> &chld : dag_in.Children(vert)) {
 //             if (vertex_contraction_map[vert] == vertex_contraction_map[chld]) {
 //                 continue;
 //             }
@@ -1075,19 +1075,19 @@ static_assert(IsDirectedGraphEdgeDescV<CSG>, "CSG must satisfy the directed_grap
 //         combined_expansion_map[vert] = pushforward_map[vertex_contraction_map[vert]];
 //     }
 
-//     if constexpr (HasVertexWeightsV<Graph_t_in> && IsModifiableCdagVertexV<Graph_out_type>) {
-//         static_assert(std::is_same_v<VWorkwT<Graph_t_in>, VWorkwT<Graph_out_type>>, "Work weight types of in-graph and
-//         out-graph must be the same."); static_assert(std::is_same_v<VCommwT<Graph_t_in>, VCommwT<Graph_out_type>>, "Vertex
-//         communication types of in-graph and out-graph must be the same."); static_assert(std::is_same_v<VMemwT<Graph_t_in>,
+//     if constexpr (HasVertexWeightsV<GraphTIn> && IsModifiableCdagVertexV<Graph_out_type>) {
+//         static_assert(std::is_same_v<VWorkwT<GraphTIn>, VWorkwT<Graph_out_type>>, "Work weight types of in-graph and
+//         out-graph must be the same."); static_assert(std::is_same_v<VCommwT<GraphTIn>, VCommwT<Graph_out_type>>, "Vertex
+//         communication types of in-graph and out-graph must be the same."); static_assert(std::is_same_v<VMemwT<GraphTIn>,
 //         VMemwT<Graph_out_type>>, "Memory weight types of in-graph and out-graph must be the same.");
 
-//         for (const VertexIdxT<Graph_t_in> &vert : coarsened_dag.vertices()) {
+//         for (const VertexIdxT<GraphTIn> &vert : coarsened_dag.vertices()) {
 //             coarsened_dag.SetVertexWorkWeight(vert, 0);
 //             coarsened_dag.SetVertexCommWeight(vert, 0);
 //             coarsened_dag.SetVertexMemWeight(vert, 0);
 //         }
 
-//         for (const VertexIdxT<Graph_t_in> &vert : dag_in.vertices()) {
+//         for (const VertexIdxT<GraphTIn> &vert : dag_in.vertices()) {
 //             coarsened_dag.SetVertexWorkWeight(
 //                 vertex_contraction_map[vert],
 //                 v_work_acc_method()(coarsened_dag.VertexWorkWeight(combined_expansion_map[vert]),
@@ -1105,11 +1105,11 @@ static_assert(IsDirectedGraphEdgeDescV<CSG>, "CSG must satisfy the directed_grap
 //         }
 //     }
 
-//     if constexpr (HasTypedVerticesV<Graph_t_in> && is_modifiable_cdag_typed_vertex_v<Graph_out_type>) {
-//         static_assert(std::is_same_v<v_type_t<Graph_t_in>, v_type_t<Graph_out_type>>,
+//     if constexpr (HasTypedVerticesV<GraphTIn> && is_modifiable_cdag_typed_vertex_v<Graph_out_type>) {
+//         static_assert(std::is_same_v<VTypeT<GraphTIn>, VTypeT<Graph_out_type>>,
 //                         "Vertex type types of in graph and out graph must be the same!");
 
-//         for (const VertexIdxT<Graph_t_in> &vert : dag_in.vertices()) {
+//         for (const VertexIdxT<GraphTIn> &vert : dag_in.vertices()) {
 //             coarsened_dag.SetVertexType(vertex_contraction_map[vert], dag_in.VertexType(vert));
 //         }
 //         // assert(std::all_of(dag_in.vertices().begin(), dag_in.vertices().end(),

@@ -61,7 +61,7 @@ class CompatibleProcessorRange {
         if constexpr (HasTypedVerticesV<GraphT>) {
             typeProcessorIdx_.resize(inst.GetComputationalDag().NumVertexTypes());
 
-            for (v_type_t<GraphT> vType = 0; v_type < inst.GetComputationalDag().NumVertexTypes(); v_type++) {
+            for (VTypeT<GraphT> vType = 0; v_type < inst.GetComputationalDag().NumVertexTypes(); v_type++) {
                 for (unsigned proc = 0; proc < inst.NumberOfProcessors(); proc++) {
                     if (inst.IsCompatibleType(v_type, inst.ProcessorType(proc))) {
                         typeProcessorIdx_[v_type].push_back(proc);
@@ -77,7 +77,7 @@ class CompatibleProcessorRange {
      * @param type The node type.
      * @return A const reference to a vector of compatible processor indices.
      */
-    [[nodiscard]] const auto &CompatibleProcessorsType(const v_type_t<GraphT> type) const {
+    [[nodiscard]] const auto &CompatibleProcessorsType(const VTypeT<GraphT> type) const {
         assert(instance_ != nullptr);
         if constexpr (HasTypedVerticesV<GraphT>) {
             return typeProcessorIdx_[type];

@@ -50,13 +50,13 @@ class BspScheduleCoarser : public CoarserGenContractionMap<GraphTIn, GraphTOut> 
      */
     virtual std::string getCoarserName() const override { return "BspScheduleCoarser"; }
 
-    // virtual bool coarseDag(const Graph_t_in &dag_in, Graph_t_out &dag_out,
-    //                        std::vector<std::vector<VertexIdxT<Graph_t_in>>> &vertex_map,
-    //                        std::vector<VertexIdxT<Graph_t_out>> &reverse_vertex_map) override {
+    // virtual bool coarseDag(const GraphTIn &dag_in, GraphTOut &dag_out,
+    //                        std::vector<std::vector<VertexIdxT<GraphTIn>>> &vertex_map,
+    //                        std::vector<VertexIdxT<GraphTOut>> &reverse_vertex_map) override {
 
-    virtual std::vector<VertexIdxT<Graph_t_out>> generate_vertex_contraction_map(const GraphTIn &dagIn) override {
-        using VertexType_in = VertexIdxT<Graph_t_in>;
-        using VertexType_out = VertexIdxT<Graph_t_out>;
+    virtual std::vector<VertexIdxT<GraphTOut>> generate_vertex_contraction_map(const GraphTIn &dagIn) override {
+        using VertexType_in = VertexIdxT<GraphTIn>;
+        using VertexType_out = VertexIdxT<GraphTOut>;
 
         assert(&dagIn == &schedule_->GetInstance().GetComputationalDag());
         assert(schedule_->satisfiesPrecedenceConstraints());
@@ -70,13 +70,13 @@ class BspScheduleCoarser : public CoarserGenContractionMap<GraphTIn, GraphTOut> 
         for (unsigned step = 0; step < schedule_->NumberOfSupersteps(); step++) {
             for (unsigned proc = 0; proc < schedule_->GetInstance().NumberOfProcessors(); proc++) {
                 if (setSchedule.step_processor_vertices[step][proc].size() > 0) {
-                    VWorkwT<Graph_t_in> totalWork = 0;
-                    VMemwT<Graph_t_in> totalMemory = 0;
-                    VCommwT<Graph_t_in> totalCommunication = 0;
+                    VWorkwT<GraphTIn> totalWork = 0;
+                    VMemwT<GraphTIn> totalMemory = 0;
+                    VCommwT<GraphTIn> totalCommunication = 0;
 
                     vertex_map.push_back(std::vector<VertexType_in>());
 
-                    v_type_t<Graph_t_in> type = dagIn.VertexType(*(setSchedule.step_processor_vertices[step][proc].begin()));
+                    VTypeT<GraphTIn> type = dagIn.VertexType(*(setSchedule.step_processor_vertices[step][proc].begin()));
                     bool homogeneousTypes = true;
 
                     for (const auto &vertex : setSchedule.step_processor_vertices[step][proc]) {

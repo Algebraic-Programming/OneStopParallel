@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(TestDagVectorAdapterEdge) {
                                                  VWorkwT<GraphT>,
                                                  VWorkwT<GraphT>,
                                                  VWorkwT<GraphT>,
-                                                 v_type_t<GraphT>>;
+                                                 VTypeT<GraphT>>;
 
     GraphT graph(outNeighbors, inNeighbors);
 
@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(TestDagVectorAdapter) {
                                                  VWorkwT<GraphT>,
                                                  VWorkwT<GraphT>,
                                                  VWorkwT<GraphT>,
-                                                 v_type_t<GraphT>>;
+                                                 VTypeT<GraphT>>;
 
     GraphT graph(outNeighbors, inNeighbors);
 

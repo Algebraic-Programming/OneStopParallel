@@ -56,7 +56,7 @@ std::unordered_set<EdgeDescT<GraphT>> LongEdgesInTriangles(const GraphT &graph) 
             const auto &child = Traget(edge, graph);
 
             for (const auto &parent : graph.Parents(child)) {
-                if (childrenSet.find(parent) != children_set.cend()) {
+                if (childrenSet.find(parent) != childrenSet.cend()) {
                     longEdges.emplace(edge);
                     break;
                 }
@@ -64,7 +64,7 @@ std::unordered_set<EdgeDescT<GraphT>> LongEdgesInTriangles(const GraphT &graph) 
         }
     }
 
-    return long_edges;
+    return longEdges;
 }
 
 }    // namespace osp

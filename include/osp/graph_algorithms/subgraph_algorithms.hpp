@@ -31,22 +31,22 @@ namespace osp {
 template <typename GraphTIn, typename GraphTOut>
 void CreateInducedSubgraph(const GraphTIn &dag,
                            GraphTOut &dagOut,
-                           const std::set<VertexIdxT<Graph_t_in>> &selectedNodes,
-                           const std::set<VertexIdxT<Graph_t_in>> &extraSources = {}) {
-    static_assert(std::is_same_v<VertexIdxT<Graph_t_in>, VertexIdxT<Graph_t_out>>,
-                  "Graph_t_in and out must have the same vertex_idx types");
+                           const std::set<VertexIdxT<GraphTIn>> &selectedNodes,
+                           const std::set<VertexIdxT<GraphTIn>> &extraSources = {}) {
+    static_assert(std::is_same_v<VertexIdxT<GraphTIn>, VertexIdxT<GraphTOut>>,
+                  "GraphTIn and out must have the same vertex_idx types");
 
-    static_assert(IsConstructableCdagVertexV<Graph_t_out>, "Graph_t_out must satisfy the constructable_cdag_vertex concept");
+    static_assert(IsConstructableCdagVertexV<GraphTOut>, "GraphTOut must satisfy the constructable_cdag_vertex concept");
 
-    static_assert(IsConstructableCdagEdgeV<Graph_t_out>, "Graph_t_out must satisfy the constructable_cdag_edge concept");
+    static_assert(IsConstructableCdagEdgeV<GraphTOut>, "GraphTOut must satisfy the constructable_cdag_edge concept");
 
     assert(dagOut.NumVertices() == 0);
 
-    std::map<VertexIdxT<Graph_t_in>, VertexIdxT<Graph_t_in>> localIdx;
+    std::map<VertexIdxT<GraphTIn>, VertexIdxT<GraphTIn>> localIdx;
 
     for (const auto &node : extraSources) {
         localIdx[node] = dagOut.NumVertices();
-        if constexpr (IsConstructableCdagTypedVertexV<Graph_t_out> and HasTypedVerticesV<Graph_t_in>) {
+        if constexpr (IsConstructableCdagTypedVertexV<GraphTOut> and HasTypedVerticesV<GraphTIn>) {
             // add extra source with type
             dagOut.AddVertex(0, dag.VertexCommWeight(node), dag.VertexMemWeight(node), dag.VertexType(node));
         } else {
@@ -58,7 +58,7 @@ void CreateInducedSubgraph(const GraphTIn &dag,
     for (const auto &node : selectedNodes) {
         localIdx[node] = dagOut.NumVertices();
 
-        if constexpr (IsConstructableCdagTypedVertexV<Graph_t_out> and HasTypedVerticesV<Graph_t_in>) {
+        if constexpr (IsConstructableCdagTypedVertexV<GraphTOut> and HasTypedVerticesV<GraphTIn>) {
             // add vertex with type
             dagOut.AddVertex(
                 dag.VertexWorkWeight(node), dag.VertexCommWeight(node), dag.VertexMemWeight(node), dag.VertexType(node));
@@ -68,7 +68,7 @@ void CreateInducedSubgraph(const GraphTIn &dag,
         }
     }
 
-    if constexpr (HasEdgeWeightsV<Graph_t_in> and HasEdgeWeightsV<Graph_t_out>) {
+    if constexpr (HasEdgeWeightsV<GraphTIn> and HasEdgeWeightsV<GraphTOut>) {
         // add edges with edge comm weights
         for (const auto &node : selectedNodes) {
             for (const auto &inEdge : InEdges(node, dag)) {
@@ -94,9 +94,9 @@ void CreateInducedSubgraph(const GraphTIn &dag,
 template <typename GraphTIn, typename GraphTOut>
 void CreateInducedSubgraph(const GraphTIn &dag,
                            GraphTOut &dagOut,
-                           const std::vector<VertexIdxT<Graph_t_in>> &selectedNodes,
-                           const std::vector<VertexIdxT<Graph_t_in>> &extraSources) {
-    return create_induced_subgraph(dag, dagOut, std::set<VertexIdxT<Graph_t_in>>(selectedNodes.begin(), selectedNodes.end()));
+                           const std::vector<VertexIdxT<GraphTIn>> &selectedNodes,
+                           const std::vector<VertexIdxT<GraphTIn>> &extraSources) {
+    return create_induced_subgraph(dag, dagOut, std::set<VertexIdxT<GraphTIn>>(selectedNodes.begin(), selectedNodes.end()));
 }
 
 template <typename GraphT>
@@ -166,11 +166,11 @@ std::vector<GraphTOut> CreateInducedSubgraphs(const GraphTIn &dagIn, const std::
     // assumes that input partition IDs are consecutive and starting from 0
 
     static_assert(std::is_same_v<VertexIdxT<GraphTIn>, VertexIdxT<GraphTOut>>,
-                  "Graph_t_in and out must have the same vertex_idx types");
+                  "GraphTIn and out must have the same vertex_idx types");
 
-    static_assert(IsConstructableCdagVertexV<GraphTOut>, "Graph_t_out must satisfy the constructable_cdag_vertex concept");
+    static_assert(IsConstructableCdagVertexV<GraphTOut>, "GraphTOut must satisfy the constructable_cdag_vertex concept");
 
-    static_assert(IsConstructableCdagEdgeV<GraphTOut>, "Graph_t_out must satisfy the constructable_cdag_edge concept");
+    static_assert(IsConstructableCdagEdgeV<GraphTOut>, "GraphTOut must satisfy the constructable_cdag_edge concept");
 
     unsigned numberOfParts = 0;
     for (const auto id : partitionIDs) {
@@ -220,11 +220,11 @@ template <typename GraphTIn, typename GraphTOut>
 std::unordered_map<VertexIdxT<GraphTIn>, VertexIdxT<GraphTOut>> CreateInducedSubgraphMap(
     const GraphTIn &dag, GraphTOut &dagOut, const std::vector<VertexIdxT<GraphTIn>> &selectedNodes) {
     static_assert(std::is_same_v<VertexIdxT<GraphTIn>, VertexIdxT<GraphTOut>>,
-                  "Graph_t_in and out must have the same vertex_idx types");
+                  "GraphTIn and out must have the same vertex_idx types");
 
-    static_assert(IsConstructableCdagVertexV<GraphTOut>, "Graph_t_out must satisfy the constructable_cdag_vertex concept");
+    static_assert(IsConstructableCdagVertexV<GraphTOut>, "GraphTOut must satisfy the constructable_cdag_vertex concept");
 
-    static_assert(IsConstructableCdagEdgeV<GraphTOut>, "Graph_t_out must satisfy the constructable_cdag_edge concept");
+    static_assert(IsConstructableCdagEdgeV<GraphTOut>, "GraphTOut must satisfy the constructable_cdag_edge concept");
 
     assert(dagOut.NumVertices() == 0);
 

@@ -28,32 +28,32 @@ namespace osp {
 
 template <typename GraphTIn, typename GraphTOut>
 class HdaggCoarser : public CoarserGenContractionMap<GraphTIn, GraphTOut> {
-    static_assert(IsDirectedGraphEdgeDescV<Graph_t_in>, "Graph_t_in must satisfy the directed_graph edge desc concept");
-    static_assert(has_hashable_edge_desc_v<Graph_t_in>, "Graph_t_in must satisfy the has_hashable_edge_desc concept");
-    static_assert(HasTypedVerticesV<Graph_t_in>, "Graph_t_in must have typed vertices");
+    static_assert(IsDirectedGraphEdgeDescV<GraphTIn>, "GraphTIn must satisfy the directed_graph edge desc concept");
+    static_assert(has_hashable_edge_desc_v<GraphTIn>, "GraphTIn must satisfy the has_hashable_edge_desc concept");
+    static_assert(HasTypedVerticesV<GraphTIn>, "GraphTIn must have typed vertices");
 
   private:
-    using VertexType_in = VertexIdxT<Graph_t_in>;
-    using VertexType_out = VertexIdxT<Graph_t_out>;
+    using VertexType_in = VertexIdxT<GraphTIn>;
+    using VertexType_out = VertexIdxT<GraphTOut>;
 
   protected:
-    VWorkwT<Graph_t_in> workThreshold_ = std::numeric_limits<VWorkwT<Graph_t_in>>::max();
-    VMemwT<Graph_t_in> memoryThreshold_ = std::numeric_limits<VMemwT<Graph_t_in>>::max();
-    VCommwT<Graph_t_in> communicationThreshold_ = std::numeric_limits<VCommwT<Graph_t_in>>::max();
+    VWorkwT<GraphTIn> workThreshold_ = std::numeric_limits<VWorkwT<GraphTIn>>::max();
+    VMemwT<GraphTIn> memoryThreshold_ = std::numeric_limits<VMemwT<GraphTIn>>::max();
+    VCommwT<GraphTIn> communicationThreshold_ = std::numeric_limits<VCommwT<GraphTIn>>::max();
 
     std::size_t superNodeSizeThreshold_ = std::numeric_limits<std::size_t>::max();
 
     // MemoryConstraintType memory_constraint_type = NONE;
 
     // internal data strauctures
-    VMemwT<Graph_t_in> currentMemory_ = 0;
-    VWorkwT<Graph_t_in> currentWork_ = 0;
-    VCommwT<Graph_t_in> currentCommunication_ = 0;
+    VMemwT<GraphTIn> currentMemory_ = 0;
+    VWorkwT<GraphTIn> currentWork_ = 0;
+    VCommwT<GraphTIn> currentCommunication_ = 0;
     VertexType_out currentSuperNodeIdx_ = 0;
-    v_type_t<Graph_t_in> currentVType_ = 0;
+    VTypeT<GraphTIn> currentVType_ = 0;
 
     void AddNewSuperNode(const GraphTIn &dagIn, VertexType_in node) {
-        VMemwT<Graph_t_in> nodeMem = dagIn.VertexMemWeight(node);
+        VMemwT<GraphTIn> nodeMem = dagIn.VertexMemWeight(node);
 
         current_memory = node_mem;
         current_work = dag_in.VertexWorkWeight(node);
@@ -68,7 +68,7 @@ class HdaggCoarser : public CoarserGenContractionMap<GraphTIn, GraphTOut> {
 
     virtual std::string getCoarserName() const override { return "hdagg_coarser"; };
 
-    virtual std::vector<VertexIdxT<Graph_t_out>> generate_vertex_contraction_map(const GraphTIn &dagIn) override {
+    virtual std::vector<VertexIdxT<GraphTOut>> generate_vertex_contraction_map(const GraphTIn &dagIn) override {
         std::vector<bool> visited(dagIn.NumVertices(), false);
         std::vector<VertexType_out> reverseVertexMap(dagIn.NumVertices());
 
@@ -125,7 +125,7 @@ class HdaggCoarser : public CoarserGenContractionMap<GraphTIn, GraphTOut> {
 
                         const auto &edge_source = Source(in_edge, dag_in);
 
-                        VMemwT<Graph_t_in> node_mem = dag_in.VertexMemWeight(edge_source);
+                        VMemwT<GraphTIn> node_mem = dag_in.VertexMemWeight(edge_source);
 
                         if (((current_memory + node_mem > memory_threshold)
                              || (current_work + dag_in.VertexWorkWeight(edge_source) > work_threshold)
@@ -173,11 +173,11 @@ class HdaggCoarser : public CoarserGenContractionMap<GraphTIn, GraphTOut> {
         return reverse_vertex_map;
     }
 
-    inline void SetWorkThreshold(VWorkwT<Graph_t_in> workThreshold) { work_threshold = work_threshold_; }
+    inline void SetWorkThreshold(VWorkwT<GraphTIn> workThreshold) { work_threshold = work_threshold_; }
 
-    inline void SetMemoryThreshold(VMemwT<Graph_t_in> memoryThreshold) { memory_threshold = memory_threshold_; }
+    inline void SetMemoryThreshold(VMemwT<GraphTIn> memoryThreshold) { memory_threshold = memory_threshold_; }
 
-    inline void SetCommunicationThreshold(VCommwT<Graph_t_in> communicationThreshold) {
+    inline void SetCommunicationThreshold(VCommwT<GraphTIn> communicationThreshold) {
         communication_threshold = communication_threshold_;
     }
 

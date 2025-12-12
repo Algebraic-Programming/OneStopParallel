@@ -62,12 +62,12 @@ std::unique_ptr<Coarser<GraphTIn, GraphTOut>> GetCoarserByName(const ConfigParse
         auto coarser = std::make_unique<HdaggCoarser<GraphTIn, GraphTOut>>();
         if (auto paramsOpt = coarserAlgorithm.get_child_optional("parameters")) {
             const auto &paramsPt = paramsOpt.get();
-            coarser->set_work_threshold(params_pt.get_optional<VWorkwT<Graph_t_in>>("max_work_weight")
-                                            .value_or(std::numeric_limits<VWorkwT<Graph_t_in>>::max()));
-            coarser->set_memory_threshold(params_pt.get_optional<VMemwT<Graph_t_in>>("max_memory_weight")
-                                              .value_or(std::numeric_limits<VMemwT<Graph_t_in>>::max()));
-            coarser->set_communication_threshold(params_pt.get_optional<VCommwT<Graph_t_in>>("max_communication_weight")
-                                                     .value_or(std::numeric_limits<VCommwT<Graph_t_in>>::max()));
+            coarser->set_work_threshold(params_pt.get_optional<VWorkwT<GraphTIn>>("max_work_weight")
+                                            .value_or(std::numeric_limits<VWorkwT<GraphTIn>>::max()));
+            coarser->set_memory_threshold(params_pt.get_optional<VMemwT<GraphTIn>>("max_memory_weight")
+                                              .value_or(std::numeric_limits<VMemwT<GraphTIn>>::max()));
+            coarser->set_communication_threshold(params_pt.get_optional<VCommwT<GraphTIn>>("max_communication_weight")
+                                                     .value_or(std::numeric_limits<VCommwT<GraphTIn>>::max()));
             coarser->set_super_node_size_threshold(
                 paramsPt.get_optional<std::size_t>("max_super_node_size").value_or(std::numeric_limits<std::size_t>::max()));
         }
@@ -82,12 +82,12 @@ std::unique_ptr<Coarser<GraphTIn, GraphTOut>> GetCoarserByName(const ConfigParse
         auto setParams = [&](auto &coarserPtr) {
             if (auto paramsOpt = coarserAlgorithm.get_child_optional("parameters")) {
                 const auto &paramsPt = paramsOpt.get();
-                coarser_ptr->set_work_threshold(params_pt.get_optional<VWorkwT<Graph_t_in>>("work_threshold")
-                                                    .value_or(std::numeric_limits<VWorkwT<Graph_t_in>>::max()));
-                coarser_ptr->set_memory_threshold(params_pt.get_optional<VMemwT<Graph_t_in>>("memory_threshold")
-                                                      .value_or(std::numeric_limits<VMemwT<Graph_t_in>>::max()));
-                coarser_ptr->set_communication_threshold(params_pt.get_optional<VCommwT<Graph_t_in>>("communication_threshold")
-                                                             .value_or(std::numeric_limits<VCommwT<Graph_t_in>>::max()));
+                coarser_ptr->set_work_threshold(params_pt.get_optional<VWorkwT<GraphTIn>>("work_threshold")
+                                                    .value_or(std::numeric_limits<VWorkwT<GraphTIn>>::max()));
+                coarser_ptr->set_memory_threshold(params_pt.get_optional<VMemwT<GraphTIn>>("memory_threshold")
+                                                      .value_or(std::numeric_limits<VMemwT<GraphTIn>>::max()));
+                coarser_ptr->set_communication_threshold(params_pt.get_optional<VCommwT<GraphTIn>>("communication_threshold")
+                                                             .value_or(std::numeric_limits<VCommwT<GraphTIn>>::max()));
                 coarserPtr->set_super_node_size_threshold(
                     paramsPt.get_optional<std::size_t>("super_node_size_threshold").value_or(10));
                 coarserPtr->set_node_dist_threshold(paramsPt.get_optional<unsigned>("node_dist_threshold").value_or(10));
@@ -99,7 +99,7 @@ std::unique_ptr<Coarser<GraphTIn, GraphTOut>> GetCoarserByName(const ConfigParse
             setParams(coarser);
             return coarser;
         } else if (topOrderStrategy == "dfs") {
-            auto coarser = std::make_unique<top_order_coarser<Graph_t_in, Graph_t_out, dfs_top_sort>>();
+            auto coarser = std::make_unique<top_order_coarser<GraphTIn, GraphTOut, dfs_top_sort>>();
             setParams(coarser);
             return coarser;
         } else if (topOrderStrategy == "locality") {
@@ -135,13 +135,13 @@ std::unique_ptr<Coarser<GraphTIn, GraphTOut>> GetCoarserByName(const ConfigParse
         }
 
     } else if (coarserName == "Sarkar") {
-        SarkarParams::Parameters<VWorkwT<Graph_t_in>> params;
+        SarkarParams::Parameters<VWorkwT<GraphTIn>> params;
         if (auto paramsOpt = coarserAlgorithm.get_child_optional("parameters")) {
             const auto &paramsPt = paramsOpt.get();
-            params.commCost = params_pt.get_optional<VWorkwT<Graph_t_in>>("commCost").value_or(params.commCost);
-            params.maxWeight = params_pt.get_optional<VWorkwT<Graph_t_in>>("maxWeight").value_or(params.maxWeight);
+            params.commCost = params_pt.get_optional<VWorkwT<GraphTIn>>("commCost").value_or(params.commCost);
+            params.maxWeight = params_pt.get_optional<VWorkwT<GraphTIn>>("maxWeight").value_or(params.maxWeight);
             params.smallWeightThreshold
-                = params_pt.get_optional<VWorkwT<Graph_t_in>>("smallWeightThreshold").value_or(params.smallWeightThreshold);
+                = params_pt.get_optional<VWorkwT<GraphTIn>>("smallWeightThreshold").value_or(params.smallWeightThreshold);
             params.useTopPoset = paramsPt.get_optional<bool>("useTopPoset").value_or(params.useTopPoset);
             params.geomDecay = paramsPt.get_optional<double>("geomDecay").value_or(params.geomDecay);
             params.leniency = paramsPt.get_optional<double>("leniency").value_or(params.leniency);
@@ -214,7 +214,7 @@ std::unique_ptr<MultilevelCoarser<GraphTIn, GraphTOut>> GetMultilevelCoarserByNa
 
     if (coarserName == "Sarkar") {
         auto coarser = std::make_unique<SarkarMul<GraphTIn, GraphTOut>>();
-        SarkarParams::MulParameters<VWorkwT<Graph_t_in>> mlParams;
+        SarkarParams::MulParameters<VWorkwT<GraphTIn>> mlParams;
 
         if (auto paramsOpt = coarserAlgorithm.get_child_optional("parameters")) {
             const auto &paramsPt = paramsOpt.get();
@@ -224,13 +224,13 @@ std::unique_ptr<MultilevelCoarser<GraphTIn, GraphTOut>> GetMultilevelCoarserByNa
             if (paramsPt.get_child_optional("commCostVec")) {
                 mlParams.commCostVec.clear();
                 for (const auto &item : paramsPt.get_child("commCostVec")) {
-                    ml_params.commCostVec.push_back(item.second.get_value<VWorkwT<Graph_t_in>>());
+                    ml_params.commCostVec.push_back(item.second.get_value<VWorkwT<GraphTIn>>());
                 }
                 std::sort(ml_params.commCostVec.begin(), ml_params.commCostVec.end());
             }
-            ml_params.maxWeight = params_pt.get_optional<VWorkwT<Graph_t_in>>("maxWeight").value_or(ml_params.maxWeight);
+            ml_params.maxWeight = params_pt.get_optional<VWorkwT<GraphTIn>>("maxWeight").value_or(ml_params.maxWeight);
             ml_params.smallWeightThreshold
-                = params_pt.get_optional<VWorkwT<Graph_t_in>>("smallWeightThreshold").value_or(ml_params.smallWeightThreshold);
+                = params_pt.get_optional<VWorkwT<GraphTIn>>("smallWeightThreshold").value_or(ml_params.smallWeightThreshold);
             mlParams.max_num_iteration_without_changes = paramsPt.get_optional<unsigned>("max_num_iteration_without_changes")
                                                              .value_or(ml_params.max_num_iteration_without_changes);
 

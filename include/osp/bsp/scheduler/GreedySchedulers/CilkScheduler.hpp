@@ -50,7 +50,7 @@ class CilkScheduler : public Scheduler<GraphT> {
 
     CilkMode mode_; /**< The mode of the Cilk scheduler. */
 
-    // constexpr static bool use_memory_constraint = is_memory_constraint_v<MemoryConstraint_t>;
+    // constexpr static bool use_memory_constraint = IsMemoryConstraintV<MemoryConstraint_t>;
 
     // static_assert(not use_memory_constraint ||
     //                   std::is_same_v<MemoryConstraint_t, persistent_transient_memory_constraint<GraphT>>,

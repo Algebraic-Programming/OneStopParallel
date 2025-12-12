@@ -636,7 +636,7 @@ bool PebblingSchedule<GraphT>::HasValidSolution(const BspInstance<GraphT> &insta
         }
     }
 
-    for (v_type_t<GraphT> nodeType = 0; node_type < instance.GetComputationalDag().NumVertexTypes(); ++node_type) {
+    for (VTypeT<GraphT> nodeType = 0; node_type < instance.GetComputationalDag().NumVertexTypes(); ++node_type) {
         for (unsigned proc = 0; proc < instance.NumberOfProcessors(); ++proc) {
             if (instance.isCompatibleType(node_type, instance.GetArchitecture().processorType(proc))
                 && instance.GetArchitecture().memoryBound(proc) >= memory_required[node_type]) {
@@ -646,7 +646,7 @@ bool PebblingSchedule<GraphT>::HasValidSolution(const BspInstance<GraphT> &insta
         }
     }
 
-    for (v_type_t<GraphT> nodeType = 0; node_type < instance.GetComputationalDag().NumVertexTypes(); ++node_type) {
+    for (VTypeT<GraphT> nodeType = 0; node_type < instance.GetComputationalDag().NumVertexTypes(); ++node_type) {
         if (!hasEnoughMemory[node_type]) {
             std::cout << "No valid solution exists. Minimum memory required for node type " << node_type << " is "
                       << memory_required[node_type] << std::endl;
@@ -1270,7 +1270,7 @@ std::vector<VMemwT<GraphT>> PebblingSchedule<GraphT>::MinimumMemoryRequiredPerNo
         }
 
         VMemwT<GraphT> needed = instance.GetComputationalDag().VertexMemWeight(node);
-        const v_type_t<GraphT> type = instance.GetComputationalDag().VertexType(node);
+        const VTypeT<GraphT> type = instance.GetComputationalDag().VertexType(node);
         for (VertexIdxT<GraphT> pred : instance.GetComputationalDag().Parents(node)) {
             needed += instance.GetComputationalDag().VertexMemWeight(pred);
         }

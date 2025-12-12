@@ -63,7 +63,7 @@ class EtfScheduler : public Scheduler<GraphT> {
     EtfMode mode_;    // The mode of the scheduler (ETF or BL_EST)
     bool useNuma_;    // Flag indicating whether to use NUMA-aware scheduling
 
-    constexpr static bool useMemoryConstraint_ = is_memory_constraint_v<MemoryConstraintT>;
+    constexpr static bool useMemoryConstraint_ = IsMemoryConstraintV<MemoryConstraintT>;
 
     static_assert(not useMemoryConstraint_ || std::is_same_v<MemoryConstraintT, PersistentTransientMemoryConstraint<GraphT>>,
                   "EtfScheduler implements only persistent_transient_memory_constraint.");

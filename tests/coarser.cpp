@@ -64,7 +64,7 @@ bool CheckVertexMap(std::vector<std::vector<VertexType>> &map, std::size_t size)
 template <typename ComputationalDag>
 bool CheckVertexMapConstraints(std::vector<std::vector<VertexType>> &map,
                                ComputationalDag &dag,
-                               v_type_t<ComputationalDag> sizeThreshold,
+                               VTypeT<ComputationalDag> sizeThreshold,
                                VMemwT<ComputationalDag> memoryThreshold,
                                VWorkwT<ComputationalDag> workThreshold,
                                VCommwT<ComputationalDag> communicationThreshold) {

@@ -41,15 +41,15 @@ namespace osp {
  *
  * This algorithm is efficient for sparse graphs, with a complexity of roughly O(E * (V+E)).
  *
- * @tparam Graph_t_in The type of the input graph. Must satisfy the `is_directed_graph` concept.
- * @tparam Graph_t_out The type of the output graph. Must satisfy the `is_constructable_cdag` concept.
+ * @tparam GraphTIn The type of the input graph. Must satisfy the `is_directed_graph` concept.
+ * @tparam GraphTOut The type of the output graph. Must satisfy the `is_constructable_cdag` concept.
  * @param graph_in The input DAG.
  * @param graph_out The output graph, which will contain the transitive reduction. The graph should be empty.
  */
 template <typename GraphTIn, typename GraphTOut>
 void TransitiveReductionSparse(const GraphTIn &graphIn, GraphTOut &graphOut) {
-    static_assert(IsDirectedGraphV<Graph_t_in>, "Input graph must be a directed graph.");
-    static_assert(IsConstructableCdagV<Graph_t_out>, "Output graph must be a constructable computational DAG.");
+    static_assert(IsDirectedGraphV<GraphTIn>, "Input graph must be a directed graph.");
+    static_assert(IsConstructableCdagV<GraphTOut>, "Output graph must be a constructable computational DAG.");
     assert(graphOut.NumVertices() == 0 && "Output graph must be empty.");
 
     if (graphIn.NumVertices() == 0) {
@@ -104,15 +104,15 @@ void TransitiveReductionSparse(const GraphTIn &graphIn, GraphTOut &graphOut) {
  *
  * This algorithm is efficient for dense graphs, with a complexity of O(V^3).
  *
- * @tparam Graph_t_in The type of the input graph. Must satisfy the `is_directed_graph_edge_desc` concept.
- * @tparam Graph_t_out The type of the output graph. Must satisfy the `is_constructable_cdag` concept.
+ * @tparam GraphTIn The type of the input graph. Must satisfy the `is_directed_graph_edge_desc` concept.
+ * @tparam GraphTOut The type of the output graph. Must satisfy the `is_constructable_cdag` concept.
  * @param graph_in The input DAG.
  * @param graph_out The output graph, which will contain the transitive reduction. The graph should be empty.
  */
 template <typename GraphTIn, typename GraphTOut>
 void TransitiveReductionDense(const GraphTIn &graphIn, GraphTOut &graphOut) {
-    static_assert(IsDirectedGraphEdgeDescV<Graph_t_in>, "Input graph must be a directed graph with edge descriptors.");
-    static_assert(IsConstructableCdagV<Graph_t_out>, "Output graph must be a constructable computational DAG.");
+    static_assert(IsDirectedGraphEdgeDescV<GraphTIn>, "Input graph must be a directed graph with edge descriptors.");
+    static_assert(IsConstructableCdagV<GraphTOut>, "Output graph must be a constructable computational DAG.");
     assert(graphOut.NumVertices() == 0 && "Output graph must be empty.");
 
     const auto numV = graphIn.NumVertices();

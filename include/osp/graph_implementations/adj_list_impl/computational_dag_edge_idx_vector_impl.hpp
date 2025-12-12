@@ -159,17 +159,17 @@ class ComputationalDagEdgeIdxVectorImpl {
 
     inline VertexIdx OutDegree(VertexIdx v) const { return static_cast<VertexIdx>(outEdges_[v].size()); }
 
-    inline EdgeCommWeightType EdgeCommWeight(DirectedEdgeDescriptor e) const { return edges_[e.idx].comm_weight; }
+    inline EdgeCommWeightType EdgeCommWeight(DirectedEdgeDescriptor e) const { return edges_[e.idx_].commWeight_; }
 
-    inline VertexWorkWeightType VertexWorkWeight(VertexIdx v) const { return vertices_[v].work_weight; }
+    inline VertexWorkWeightType VertexWorkWeight(VertexIdx v) const { return vertices_[v].workWeight_; }
 
-    inline VertexCommWeightType VertexCommWeight(VertexIdx v) const { return vertices_[v].comm_weight; }
+    inline VertexCommWeightType VertexCommWeight(VertexIdx v) const { return vertices_[v].commWeight_; }
 
-    inline VertexMemWeightType VertexMemWeight(VertexIdx v) const { return vertices_[v].mem_weight; }
+    inline VertexMemWeightType VertexMemWeight(VertexIdx v) const { return vertices_[v].memWeight_; }
 
     inline unsigned NumVertexTypes() const { return numVertexTypes_; }
 
-    inline VertexTypeType VertexType(VertexIdx v) const { return vertices_[v].vertex_type; }
+    inline VertexTypeType VertexType(VertexIdx v) const { return vertices_[v].vertexType_; }
 
     inline VertexIdx Source(const DirectedEdgeDescriptor &e) const { return e.source_; }
 

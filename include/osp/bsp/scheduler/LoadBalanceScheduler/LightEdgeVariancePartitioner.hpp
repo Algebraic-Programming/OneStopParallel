@@ -74,9 +74,9 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
 
         unsigned superstep = 0;
 
-        if constexpr (is_memory_constraint_v<MemoryConstraint_t>) {
+        if constexpr (IsMemoryConstraintV<MemoryConstraint_t>) {
             Base::memory_constraint.initialize(instance);
-        } else if constexpr (is_memory_constraint_schedule_v<MemoryConstraint_t>) {
+        } else if constexpr (IsMemoryConstraintScheduleV<MemoryConstraint_t>) {
             Base::memory_constraint.initialize(schedule, superstep);
         }
 
