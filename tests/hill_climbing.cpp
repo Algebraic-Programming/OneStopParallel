@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(HillClimbing) {
 
     GreedyBspScheduler<Graph> greedy;
     BspSchedule<Graph> bspInitial(instance);
-    BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, greedy.computeSchedule(bspInitial));
+    BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, greedy.computeSchedule(bspInitial));
     BOOST_CHECK_EQUAL(bspInitial.satisfiesPrecedenceConstraints(), true);
 
     HillClimbingScheduler<Graph> scheduler;
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(HillClimbingForCommSchedule) {
 
     GreedyBspScheduler<Graph> greedy;
     BspSchedule<Graph> initial(instance);
-    BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, greedy.computeSchedule(initial));
+    BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, greedy.computeSchedule(initial));
     BOOST_CHECK_EQUAL(initial.satisfiesPrecedenceConstraints(), true);
 
     HillClimbingScheduler<Graph> hc;

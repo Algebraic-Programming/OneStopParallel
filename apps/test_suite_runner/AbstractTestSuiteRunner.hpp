@@ -166,10 +166,10 @@ class AbstractTestSuiteRunner {
         }
     }
 
-    virtual RETURN_STATUS ComputeTargetObjectImpl(const BspInstance<GraphType> &instance,
-                                                  std::unique_ptr<TargetObjectType> &targetObject,
-                                                  const pt::ptree &algoConfig,
-                                                  long long &computationTimeMs)
+    virtual ReturnStatus ComputeTargetObjectImpl(const BspInstance<GraphType> &instance,
+                                                 std::unique_ptr<TargetObjectType> &targetObject,
+                                                 const pt::ptree &algoConfig,
+                                                 long long &computationTimeMs)
         = 0;
 
     virtual void CreateAndRegisterStatisticModules(const std::string &moduleName) = 0;
@@ -321,13 +321,13 @@ class AbstractTestSuiteRunner {
                     long long computation_time_ms;
                     std::unique_ptr<TargetObjectType> target_object;
 
-                    RETURN_STATUS exec_status
+                    ReturnStatus exec_status
                         = compute_target_object_impl(bsp_instance, target_object, algo_config, computation_time_ms);
 
-                    if (exec_status != RETURN_STATUS::OSP_SUCCESS && exec_status != RETURN_STATUS::BEST_FOUND) {
-                        if (exec_status == RETURN_STATUS::ERROR) {
+                    if (exec_status != ReturnStatus::OSP_SUCCESS && exec_status != ReturnStatus::BEST_FOUND) {
+                        if (exec_status == ReturnStatus::ERROR) {
                             log_stream << "Error computing with " << current_algo_name << "." << std::endl;
-                        } else if (exec_status == RETURN_STATUS::TIMEOUT) {
+                        } else if (exec_status == ReturnStatus::TIMEOUT) {
                             log_stream << "Scheduler " << current_algo_name << " timed out." << std::endl;
                         }
                         continue;

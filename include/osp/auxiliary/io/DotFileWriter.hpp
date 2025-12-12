@@ -366,9 +366,9 @@ class DotFileWriter {
             = CdagVertexImpl<VertexIdxT<GraphT>, VWorkwT<GraphT>, VCommwT<GraphT>, VMemwT<GraphT>, VertexTypeTOrDefault>;
         using CdagEdgeImplT = CdagEdgeImpl<EdgeCommwTOrDefault>;
 
-        using GraphT = ComputationalDagEdgeIdxVectorImpl<CdagVertexImplT, CdagEdgeImplT>;
+        using GraphT2 = ComputationalDagEdgeIdxVectorImpl<CdagVertexImplT, CdagEdgeImplT>;
 
-        GraphT g2;
+        GraphT2 g2;
 
         size_t idxNew = 0;
 
@@ -426,7 +426,7 @@ class DotFileWriter {
             }
         }
 
-        WriteGraphStructure(os, g2, VertexWriterDuplicateRecompSchedule_DOT<GraphT>(g2, names, nodeToProc, nodeToSuperstep));
+        WriteGraphStructure(os, g2, VertexWriterDuplicateRecompScheduleDot<GraphT2>(g2, names, nodeToProc, nodeToSuperstep));
     }
 
     template <typename GraphT>

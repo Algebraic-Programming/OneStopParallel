@@ -105,9 +105,9 @@ class KlImproverMt : public KlImprover<GraphT, CommCostFunctionT, MemoryConstrai
 
     void SetMaxNumThreads(const unsigned numThreads) { maxNumThreads_ = numThreads; }
 
-    virtual RETURN_STATUS improveSchedule(BspSchedule<GraphT> &schedule) override {
+    virtual ReturnStatus improveSchedule(BspSchedule<GraphT> &schedule) override {
         if (schedule.GetInstance().NumberOfProcessors() < 2) {
-            return RETURN_STATUS::BEST_FOUND;
+            return ReturnStatus::BEST_FOUND;
         }
 
         unsigned numThreads = std::min(maxNumThreads_, static_cast<unsigned>(omp_get_max_threads()));
@@ -148,10 +148,10 @@ class KlImproverMt : public KlImprover<GraphT, CommCostFunctionT, MemoryConstrai
         if (initialCost > this->activeSchedule_.get_cost()) {
             this->activeSchedule_.write_schedule(schedule);
             this->CleanupDatastructures();
-            return RETURN_STATUS::OSP_SUCCESS;
+            return ReturnStatus::OSP_SUCCESS;
         } else {
             this->CleanupDatastructures();
-            return RETURN_STATUS::BEST_FOUND;
+            return ReturnStatus::BEST_FOUND;
         }
     }
 };

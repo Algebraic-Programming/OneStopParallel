@@ -50,15 +50,15 @@ class PebblingTestSuiteRunner : public AbstractTestSuiteRunner<PebblingSchedule<
     bool useMemoryConstraint_;
 
   protected:
-    RETURN_STATUS compute_target_object_impl(const BspInstance<ConcreteGraphT> &instance,
-                                             std::unique_ptr<PebblingSchedule<concrete_graph_t>> &schedule,
-                                             const pt::ptree &algoConfig,
-                                             long long &computationTimeMs) override {
+    ReturnStatus compute_target_object_impl(const BspInstance<ConcreteGraphT> &instance,
+                                            std::unique_ptr<PebblingSchedule<concrete_graph_t>> &schedule,
+                                            const pt::ptree &algoConfig,
+                                            long long &computationTimeMs) override {
         schedule = std::make_unique<PebblingSchedule<ConcreteGraphT>>(instance);
 
         const auto startTime = std::chrono::high_resolution_clock::now();
 
-        RETURN_STATUS status = run_pebbler(this->parser, algoConfig, *schedule);
+        ReturnStatus status = run_pebbler(this->parser, algoConfig, *schedule);
 
         const auto finishTime = std::chrono::high_resolution_clock::now();
         computationTimeMs = std::chrono::duration_cast<std::chrono::milliseconds>(finishTime - startTime).count();

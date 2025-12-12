@@ -36,7 +36,7 @@ class GreedyChildren : public Scheduler<GraphT> {
   public:
     GreedyChildren(bool ensureEnoughSources = true) : Scheduler<GraphT>(), ensureEnoughSources_(ensureEnoughSources) {};
 
-    RETURN_STATUS computeSchedule(BspSchedule<GraphT> &sched) override {
+    ReturnStatus computeSchedule(BspSchedule<GraphT> &sched) override {
         using VertexType = VertexIdxT<GraphT>;
         const auto &instance = sched.GetInstance();
 
@@ -130,7 +130,7 @@ class GreedyChildren : public Scheduler<GraphT> {
             superstepCounter++;
         }
 
-        return RETURN_STATUS::OSP_SUCCESS;
+        return ReturnStatus::OSP_SUCCESS;
     }
 
     std::string getScheduleName() const override { return ensureEnoughSources_ ? "GreedyChildrenS" : "GreedyChildren"; }

@@ -44,12 +44,12 @@ class GreedyRecomputer {
      */
     virtual ~GreedyRecomputer() = default;
 
-    RETURN_STATUS ComputeRecompSchedule(BspScheduleCS<GraphT> &initialSchedule, BspScheduleRecomp<GraphT> &outSchedule) const;
+    ReturnStatus ComputeRecompSchedule(BspScheduleCS<GraphT> &initialSchedule, BspScheduleRecomp<GraphT> &outSchedule) const;
 };
 
 template <typename GraphT>
-RETURN_STATUS GreedyRecomputer<GraphT>::ComputeRecompSchedule(BspScheduleCS<GraphT> &initialSchedule,
-                                                              BspScheduleRecomp<GraphT> &outSchedule) const {
+ReturnStatus GreedyRecomputer<GraphT>::ComputeRecompSchedule(BspScheduleCS<GraphT> &initialSchedule,
+                                                             BspScheduleRecomp<GraphT> &outSchedule) const {
     const vertex_idx &n = initialSchedule.GetInstance().NumberOfVertices();
     const unsigned &p = initialSchedule.GetInstance().NumberOfProcessors();
     const unsigned &s = initialSchedule.NumberOfSupersteps();
@@ -216,7 +216,7 @@ RETURN_STATUS GreedyRecomputer<GraphT>::ComputeRecompSchedule(BspScheduleCS<Grap
 
     outSchedule.mergeSupersteps();
 
-    return RETURN_STATUS::OSP_SUCCESS;
+    return ReturnStatus::OSP_SUCCESS;
 }
 
 }    // namespace osp

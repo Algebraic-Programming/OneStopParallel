@@ -42,7 +42,7 @@ class SubproblemMultiScheduling : public Scheduler<GraphT> {
 
     virtual ~SubproblemMultiScheduling() = default;
 
-    RETURN_STATUS ComputeMultiSchedule(const BspInstance<GraphT> &instance, std::vector<std::set<unsigned>> &processorsToNode);
+    ReturnStatus ComputeMultiSchedule(const BspInstance<GraphT> &instance, std::vector<std::set<unsigned>> &processorsToNode);
 
     std::vector<std::pair<vertex_idx, unsigned>> MakeAssignment(const BspInstance<GraphT> &instance,
                                                                 const std::set<std::pair<unsigned, vertex_idx>> &nodesAvailable,
@@ -51,7 +51,7 @@ class SubproblemMultiScheduling : public Scheduler<GraphT> {
     std::vector<workweight_type> static GetLongestPath(const GraphT &graph);
 
     // not used, only here for using scheduler class base functionality (status enums, timelimits, etc)
-    RETURN_STATUS computeSchedule(BspSchedule<GraphT> &schedule) override;
+    ReturnStatus computeSchedule(BspSchedule<GraphT> &schedule) override;
 
     /**
      * @brief Get the name of the schedule.
@@ -87,8 +87,8 @@ std::vector<VWorkwT<GraphT>> SubproblemMultiScheduling<GraphT>::GetLongestPath(c
 }
 
 template <typename GraphT>
-RETURN_STATUS SubproblemMultiScheduling<GraphT>::ComputeMultiSchedule(const BspInstance<GraphT> &instance,
-                                                                      std::vector<std::set<unsigned>> &processorsToNode) {
+ReturnStatus SubproblemMultiScheduling<GraphT>::ComputeMultiSchedule(const BspInstance<GraphT> &instance,
+                                                                     std::vector<std::set<unsigned>> &processorsToNode) {
     const unsigned &n = static_cast<unsigned>(instance.NumberOfVertices());
     const unsigned &p = instance.NumberOfProcessors();
     const auto &g = instance.GetComputationalDag();
@@ -202,7 +202,7 @@ RETURN_STATUS SubproblemMultiScheduling<GraphT>::ComputeMultiSchedule(const BspI
         }
     }
 
-    return RETURN_STATUS::OSP_SUCCESS;
+    return ReturnStatus::OSP_SUCCESS;
 }
 
 template <typename GraphT>
@@ -251,8 +251,8 @@ std::vector<std::pair<VertexIdxT<GraphT>, unsigned>> SubproblemMultiScheduling<G
 }
 
 template <typename GraphT>
-RETURN_STATUS SubproblemMultiScheduling<GraphT>::ComputeSchedule(BspSchedule<GraphT> &) {
-    return RETURN_STATUS::ERROR;
+ReturnStatus SubproblemMultiScheduling<GraphT>::ComputeSchedule(BspSchedule<GraphT> &) {
+    return ReturnStatus::ERROR;
 }
 
 }    // namespace osp

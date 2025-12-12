@@ -52,8 +52,6 @@ _add_test( directed_graph_util )
 
 _add_test( directed_graph_top_sort )
 
-#_add_test( kl )
-
 _add_test( kl_total )
 
 _add_test( kl_lambda )

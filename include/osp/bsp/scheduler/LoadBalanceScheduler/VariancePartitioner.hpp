@@ -103,7 +103,7 @@ class VariancePartitioner : public LoadBalancerBase<GraphT, InterpolationT> {
 
     virtual ~VariancePartitioner() = default;
 
-    virtual RETURN_STATUS computeSchedule(BspSchedule<GraphT> &schedule) override {
+    virtual ReturnStatus computeSchedule(BspSchedule<GraphT> &schedule) override {
         const auto &instance = schedule.GetInstance();
         const auto &nVert = instance.NumberOfVertices();
         const unsigned &nProcessors = instance.NumberOfProcessors();
@@ -150,7 +150,7 @@ class VariancePartitioner : public LoadBalancerBase<GraphT, InterpolationT> {
 
         bool endsuperstep = false;
         unsigned numUnableToPartitionNodeLoop = 0;
-        // RETURN_STATUS status = RETURN_STATUS::OSP_SUCCESS;
+        // ReturnStatus status = ReturnStatus::OSP_SUCCESS;
 
         while (!ready.empty()) {
             // Increase memory capacity if needed
@@ -160,7 +160,7 @@ class VariancePartitioner : public LoadBalancerBase<GraphT, InterpolationT> {
             } else {
                 if constexpr (useMemoryConstraint_) {
                     if (numUnableToPartitionNodeLoop >= 2) {
-                        return RETURN_STATUS::ERROR;
+                        return ReturnStatus::ERROR;
                     }
                 }
             }
@@ -355,7 +355,7 @@ class VariancePartitioner : public LoadBalancerBase<GraphT, InterpolationT> {
             }
         }
 
-        return RETURN_STATUS::OSP_SUCCESS;
+        return ReturnStatus::OSP_SUCCESS;
     }
 
     std::string GetScheduleName() const override { return "VariancePartitioner"; };

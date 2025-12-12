@@ -64,10 +64,10 @@ class Scheduler {
      * the specific scheduling logic. It modifies the passed BspSchedule object.
      *
      * @param schedule The BspSchedule object to be computed. It contains the BspInstance.
-     * @return RETURN_STATUS::OSP_SUCCESS if a schedule was successfully computed,
-     *         RETURN_STATUS::ERROR if an error occurred, or other status codes as appropriate.
+     * @return ReturnStatus::OSP_SUCCESS if a schedule was successfully computed,
+     *         ReturnStatus::ERROR if an error occurred, or other status codes as appropriate.
      */
-    virtual RETURN_STATUS ComputeSchedule(BspSchedule<GraphT> &schedule) = 0;
+    virtual ReturnStatus ComputeSchedule(BspSchedule<GraphT> &schedule) = 0;
 
     /**
      * @brief Computes a BSP schedule with communication schedule (CS).
@@ -76,16 +76,16 @@ class Scheduler {
      * If successful, it then calls setAutoCommunicationSchedule() on the schedule to set a communication schedule.
      *
      * @param schedule The BspScheduleCS object to be computed. It contains the BspInstance.
-     * @return RETURN_STATUS::OSP_SUCCESS or RETURN_STATUS::BEST_FOUND if a schedule was successfully computed,
-     *         RETURN_STATUS::ERROR if an error occurred, or other status codes as appropriate.
+     * @return ReturnStatus::OSP_SUCCESS or ReturnStatus::BEST_FOUND if a schedule was successfully computed,
+     *         ReturnStatus::ERROR if an error occurred, or other status codes as appropriate.
      */
-    virtual RETURN_STATUS ComputeScheduleCs(BspScheduleCS<GraphT> &schedule) {
+    virtual ReturnStatus ComputeScheduleCs(BspScheduleCS<GraphT> &schedule) {
         auto result = computeSchedule(schedule);
-        if (result == RETURN_STATUS::OSP_SUCCESS || result == RETURN_STATUS::BEST_FOUND) {
+        if (result == ReturnStatus::OSP_SUCCESS || result == ReturnStatus::BEST_FOUND) {
             schedule.setAutoCommunicationSchedule();
             return result;
         } else {
-            return RETURN_STATUS::ERROR;
+            return ReturnStatus::ERROR;
         }
     }
 };

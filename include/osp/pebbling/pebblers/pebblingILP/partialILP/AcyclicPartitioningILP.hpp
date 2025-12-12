@@ -79,7 +79,7 @@ class AcyclicPartitioningILP {
 
     virtual ~AcyclicPartitioningILP() = default;
 
-    RETURN_STATUS ComputePartitioning(const BspInstance<GraphT> &instance, std::vector<unsigned> &partitioning);
+    ReturnStatus ComputePartitioning(const BspInstance<GraphT> &instance, std::vector<unsigned> &partitioning);
 
     /**
      * @brief Enables writing intermediate solutions.
@@ -175,8 +175,8 @@ void AcyclicPartitioningILP<GraphT>::SolveIlp() {
 }
 
 template <typename GraphT>
-RETURN_STATUS AcyclicPartitioningILP<GraphT>::ComputePartitioning(const BspInstance<GraphT> &instance,
-                                                                  std::vector<unsigned> &partitioning) {
+ReturnStatus AcyclicPartitioningILP<GraphT>::ComputePartitioning(const BspInstance<GraphT> &instance,
+                                                                 std::vector<unsigned> &partitioning) {
     partitioning.clear();
 
     if (numberOfParts_ == 0) {
@@ -191,20 +191,20 @@ RETURN_STATUS AcyclicPartitioningILP<GraphT>::ComputePartitioning(const BspInsta
 
     if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_OPTIMAL) {
         partitioning = returnAssignment(instance);
-        return RETURN_STATUS::OSP_SUCCESS;
+        return ReturnStatus::OSP_SUCCESS;
 
     } else if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_INF_OR_UNB) {
         partitioning.resize(instance.NumberOfVertices(), UINT_MAX);
-        return RETURN_STATUS::ERROR;
+        return ReturnStatus::ERROR;
 
     } else {
         if (model.GetIntAttr(COPT_INTATTR_HASMIPSOL)) {
             partitioning = returnAssignment(instance);
-            return RETURN_STATUS::OSP_SUCCESS;
+            return ReturnStatus::OSP_SUCCESS;
 
         } else {
             partitioning.resize(instance.NumberOfVertices(), UINT_MAX);
-            return RETURN_STATUS::ERROR;
+            return ReturnStatus::ERROR;
         }
     }
 }

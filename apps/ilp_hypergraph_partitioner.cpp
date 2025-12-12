@@ -132,7 +132,7 @@ int main(int argc, char *argv[]) {
 
         auto solveStatus = partitioner.computePartitioning(partition);
 
-        if (solveStatus == RETURN_STATUS::OSP_SUCCESS || solveStatus == RETURN_STATUS::BEST_FOUND) {
+        if (solveStatus == ReturnStatus::OSP_SUCCESS || solveStatus == ReturnStatus::BEST_FOUND) {
             file_writer::WriteTxt(nameHgraph + "_" + std::to_string(nrParts) + "_" + std::to_string(imbalance) + "_ILP_rep"
                                       + std::to_string(replicate) + ".txt",
                                   partition);
@@ -158,7 +158,7 @@ int main(int argc, char *argv[]) {
 
         auto solveStatus = partitioner.computePartitioning(partition);
 
-        if (solveStatus == RETURN_STATUS::OSP_SUCCESS || solveStatus == RETURN_STATUS::BEST_FOUND) {
+        if (solveStatus == ReturnStatus::OSP_SUCCESS || solveStatus == ReturnStatus::BEST_FOUND) {
             file_writer::WriteTxt(nameHgraph + "_" + std::to_string(nrParts) + "_" + std::to_string(imbalance) + "_ILP_rep"
                                       + std::to_string(replicate) + ".txt",
                                   partition);

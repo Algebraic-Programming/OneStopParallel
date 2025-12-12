@@ -73,7 +73,7 @@ class CoptPartialScheduler {
     void SetupVertexMaps(const BspScheduleCS<GraphT> &schedule);
 
   public:
-    virtual RETURN_STATUS ImproveSchedule(BspScheduleCS<GraphT> &schedule);
+    virtual ReturnStatus ImproveSchedule(BspScheduleCS<GraphT> &schedule);
 
     virtual std::string GetScheduleName() const { return "ILPPartial"; }
 
@@ -90,7 +90,7 @@ class CoptPartialScheduler {
 };
 
 template <typename GraphT>
-RETURN_STATUS CoptPartialScheduler<GraphT>::ImproveSchedule(BspScheduleCS<GraphT> &schedule) {
+ReturnStatus CoptPartialScheduler<GraphT>::ImproveSchedule(BspScheduleCS<GraphT> &schedule) {
     Envr env;
     Model model = env.CreateModel("bsp_schedule_partial");
 
@@ -110,14 +110,14 @@ RETURN_STATUS CoptPartialScheduler<GraphT>::ImproveSchedule(BspScheduleCS<GraphT
     }
 
     if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_OPTIMAL) {
-        return RETURN_STATUS::OSP_SUCCESS;
+        return ReturnStatus::OSP_SUCCESS;
     } else if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_INF_OR_UNB) {
-        return RETURN_STATUS::ERROR;
+        return ReturnStatus::ERROR;
     } else {
         if (model.GetIntAttr(COPT_INTATTR_HASMIPSOL)) {
-            return RETURN_STATUS::BEST_FOUND;
+            return ReturnStatus::BEST_FOUND;
         } else {
-            return RETURN_STATUS::TIMEOUT;
+            return ReturnStatus::TIMEOUT;
         }
     }
 }

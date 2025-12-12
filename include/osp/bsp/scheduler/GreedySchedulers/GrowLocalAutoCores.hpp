@@ -89,7 +89,7 @@ class GrowLocalAutoCores : public Scheduler<GraphT> {
      * @param instance The BspInstance object representing the instance to compute the schedule for.
      * @return A pair containing the return status and the computed BspSchedule.
      */
-    virtual RETURN_STATUS computeSchedule(BspSchedule<GraphT> &schedule) override {
+    virtual ReturnStatus computeSchedule(BspSchedule<GraphT> &schedule) override {
         using VertexIdx = typename GraphT::vertex_idx;
         const auto &instance = schedule.GetInstance();
 
@@ -379,7 +379,7 @@ class GrowLocalAutoCores : public Scheduler<GraphT> {
 
         schedule.updateNumberOfSupersteps();
 
-        return RETURN_STATUS::OSP_SUCCESS;
+        return ReturnStatus::OSP_SUCCESS;
     }
 
     /**

@@ -40,7 +40,7 @@ class ConcreteWavefrontScheduler : public osp::AbstractWavefrontScheduler<GraphT
     }
 
     // Dummy implementation for the pure virtual method
-    osp::RETURN_STATUS computeSchedule(osp::BspSchedule<GraphT> &) override { return osp::RETURN_STATUS::OSP_SUCCESS; }
+    osp::ReturnStatus computeSchedule(osp::BspSchedule<GraphT> &) override { return osp::ReturnStatus::OSP_SUCCESS; }
 
     std::string getScheduleName() const override { return "ConcreteScheduler"; }
 };
@@ -51,7 +51,7 @@ struct MockDivider : public osp::IDagDivider<GraphT> {
 };
 
 struct MockScheduler : public osp::Scheduler<GraphT> {
-    osp::RETURN_STATUS computeSchedule(osp::BspSchedule<GraphT> &) override { return osp::RETURN_STATUS::OSP_SUCCESS; }
+    osp::ReturnStatus computeSchedule(osp::BspSchedule<GraphT> &) override { return osp::ReturnStatus::OSP_SUCCESS; }
 
     std::string GetScheduleName() const override { return "Mock"; }
 };
@@ -155,14 +155,14 @@ struct MockDivider2 : public osp::IDagDivider<GraphT> {
 
 // A mock sub-scheduler that returns a simple, predictable schedule.
 struct MockSubScheduler : public osp::Scheduler<GraphT> {
-    osp::RETURN_STATUS computeSchedule(osp::BspSchedule<GraphT> &schedule) override {
+    osp::ReturnStatus computeSchedule(osp::BspSchedule<GraphT> &schedule) override {
         // Assign all tasks to the first processor in a single superstep
         for (VertexType v = 0; v < schedule.GetInstance().GetComputationalDag().NumVertices(); ++v) {
             schedule.setAssignedProcessor(v, 0);
             schedule.setAssignedSuperstep(v, 0);
         }
         schedule.setNumberOfSupersteps(1);
-        return osp::RETURN_STATUS::OSP_SUCCESS;
+        return osp::ReturnStatus::OSP_SUCCESS;
     }
 
     std::string GetScheduleName() const override { return "MockSubScheduler"; }
@@ -200,7 +200,7 @@ BOOST_AUTO_TEST_CASE(BasicSchedulingTest) {
     osp::BspSchedule<GraphT> schedule(instance);
 
     auto status = scheduler.computeSchedule(schedule);
-    BOOST_CHECK_EQUAL(status, osp::RETURN_STATUS::OSP_SUCCESS);
+    BOOST_CHECK_EQUAL(status, osp::ReturnStatus::OSP_SUCCESS);
 
     BOOST_CHECK_EQUAL(schedule.assignedProcessor(0), 0);
     BOOST_CHECK_EQUAL(schedule.assignedProcessor(1), 0);
@@ -227,7 +227,7 @@ BOOST_AUTO_TEST_CASE(MultipleSectionsTest) {
     osp::BspSchedule<GraphT> schedule(instance);
 
     auto status = scheduler.computeSchedule(schedule);
-    BOOST_CHECK_EQUAL(status, osp::RETURN_STATUS::OSP_SUCCESS);
+    BOOST_CHECK_EQUAL(status, osp::ReturnStatus::OSP_SUCCESS);
 
     BOOST_CHECK_EQUAL(schedule.assignedProcessor(0), 0);
     BOOST_CHECK_EQUAL(schedule.assignedProcessor(1), 3);
@@ -259,7 +259,7 @@ BOOST_AUTO_TEST_CASE(StarvationReturnsErrorTest) {
 
     // With 2 components and only 1 processor, the starvation case should be hit.
     auto status = scheduler.computeSchedule(schedule);
-    BOOST_CHECK_EQUAL(status, osp::RETURN_STATUS::ERROR);
+    BOOST_CHECK_EQUAL(status, osp::ReturnStatus::ERROR);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -291,7 +291,7 @@ BOOST_AUTO_TEST_SUITE_END()
 //     osp::BspSchedule<graph_t> schedule(instance);
 
 //     auto status = scheduler.computeSchedule(schedule);
-//     BOOST_CHECK_EQUAL(status, osp::RETURN_STATUS::OSP_SUCCESS);
+//     BOOST_CHECK_EQUAL(status, osp::ReturnStatus::OSP_SUCCESS);
 
 //     // Member 1 of iso group {0,1} gets 1 proc (global proc 0)
 //     BOOST_CHECK_EQUAL(schedule.assignedProcessor(0), 0);
@@ -321,7 +321,7 @@ BOOST_AUTO_TEST_SUITE_END()
 //     osp::BspSchedule<graph_t> schedule(instance);
 
 //     auto status = scheduler.computeSchedule(schedule);
-//     BOOST_CHECK_EQUAL(status, osp::RETURN_STATUS::OSP_SUCCESS);
+//     BOOST_CHECK_EQUAL(status, osp::ReturnStatus::OSP_SUCCESS);
 
 //     BOOST_CHECK_EQUAL(schedule.assignedProcessor(0), 0);
 //     BOOST_CHECK_EQUAL(schedule.assignedSuperstep(0), 0);
@@ -347,7 +347,7 @@ BOOST_AUTO_TEST_SUITE_END()
 
 //     // With 2 active groups and only 1 processor, starvation is hit.
 //     auto status = scheduler.computeSchedule(schedule);
-//     BOOST_CHECK_EQUAL(status, osp::RETURN_STATUS::ERROR);
+//     BOOST_CHECK_EQUAL(status, osp::ReturnStatus::ERROR);
 // }
 
 // BOOST_AUTO_TEST_SUITE_END()

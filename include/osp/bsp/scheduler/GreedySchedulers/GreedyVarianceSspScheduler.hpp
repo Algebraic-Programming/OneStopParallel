@@ -358,7 +358,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
      */
     virtual ~GreedyVarianceSspScheduler() = default;
 
-    RETURN_STATUS ComputeSspSchedule(BspSchedule<GraphT> &schedule, unsigned stale) {
+    ReturnStatus ComputeSspSchedule(BspSchedule<GraphT> &schedule, unsigned stale) {
         const auto &instance = schedule.GetInstance();
         const auto &g = instance.GetComputationalDag();
         const VertexType &n = instance.NumberOfVertices();
@@ -602,7 +602,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
             if (ableToScheduleInStep) {
                 successiveEmptySupersteps = 0;
             } else if (++successiveEmptySupersteps > 100 + stale) {
-                return RETURN_STATUS::ERROR;
+                return ReturnStatus::ERROR;
             }
 
             if (free > (P * max_percent_idle_processors)
@@ -622,12 +622,12 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
         assert(schedule.satisfiesPrecedenceConstraints());
         // schedule.setAutoCommunicationSchedule();
 
-        return RETURN_STATUS::OSP_SUCCESS;
+        return ReturnStatus::OSP_SUCCESS;
     }
 
-    RETURN_STATUS computeSchedule(BspSchedule<GraphT> &schedule) override { return computeSspSchedule(schedule, 1U); }
+    ReturnStatus computeSchedule(BspSchedule<GraphT> &schedule) override { return computeSspSchedule(schedule, 1U); }
 
-    RETURN_STATUS computeSchedule(MaxBspSchedule<GraphT> &schedule) override { return computeSspSchedule(schedule, 2U); }
+    ReturnStatus computeSchedule(MaxBspSchedule<GraphT> &schedule) override { return computeSspSchedule(schedule, 2U); }
 
     std::string getScheduleName() const override {
         if constexpr (useMemoryConstraint_) {

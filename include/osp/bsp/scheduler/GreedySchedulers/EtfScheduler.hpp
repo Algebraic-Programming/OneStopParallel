@@ -257,7 +257,7 @@ class EtfScheduler : public Scheduler<GraphT> {
      * @param instance The BspInstance object representing the BSP instance.
      * @return A pair containing the return status and the computed BspSchedule object.
      */
-    virtual RETURN_STATUS computeSchedule(BspSchedule<GraphT> &bspSchedule) override {
+    virtual ReturnStatus computeSchedule(BspSchedule<GraphT> &bspSchedule) override {
         const auto &instance = bspSchedule.GetInstance();
 
         if constexpr (useMemoryConstraint_) {
@@ -325,14 +325,14 @@ class EtfScheduler : public Scheduler<GraphT> {
 
             if constexpr (useMemoryConstraint_) {
                 if (not check_mem_feasibility(instance, ready)) {
-                    return RETURN_STATUS::ERROR;
+                    return ReturnStatus::ERROR;
                 }
             }
         }
 
         schedule.convertToBspSchedule(instance, greedyProcLists, bspSchedule);
 
-        return RETURN_STATUS::OSP_SUCCESS;
+        return ReturnStatus::OSP_SUCCESS;
     }
 
     /**

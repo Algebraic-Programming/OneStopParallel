@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(ConnectedComponentPartTest) {
     BspSchedule<computational_dag_vector_impl_def_int_t> schedule(instance);
     auto status = scheduler.computeSchedule(schedule);
 
-    BOOST_CHECK_EQUAL(status, RETURN_STATUS::OSP_SUCCESS);
+    BOOST_CHECK_EQUAL(status, ReturnStatus::OSP_SUCCESS);
     BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 
     BOOST_CHECK(partitioner.get_sub_dags().size() == 1);
@@ -118,6 +118,6 @@ BOOST_AUTO_TEST_CASE(ConnectedComponentPartTest) {
 
     auto statusNew = scheduler.computeSchedule(scheduleNew);
 
-    BOOST_CHECK_EQUAL(statusNew, RETURN_STATUS::OSP_SUCCESS);
+    BOOST_CHECK_EQUAL(statusNew, ReturnStatus::OSP_SUCCESS);
     BOOST_CHECK(scheduleNew.satisfiesPrecedenceConstraints());
 }

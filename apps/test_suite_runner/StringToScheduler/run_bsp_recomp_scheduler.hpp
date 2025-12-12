@@ -37,9 +37,9 @@ namespace osp {
 const std::set<std::string> GetAvailableBspRecompSchedulerNames() { return {"GreedyRecomputer"}; }
 
 template <typename GraphT>
-RETURN_STATUS RunBspRecompScheduler(const ConfigParser &parser,
-                                    const boost::property_tree::ptree &algorithm,
-                                    BspScheduleRecomp<GraphT> &schedule) {
+ReturnStatus RunBspRecompScheduler(const ConfigParser &parser,
+                                   const boost::property_tree::ptree &algorithm,
+                                   BspScheduleRecomp<GraphT> &schedule) {
     // const unsigned timeLimit = parser.global_params.get_child("timeLimit").get_value<unsigned>();
     //  const bool use_memory_constraint = parser.global_params.get_child("use_memory_constraints").get_value<bool>();
 
@@ -48,12 +48,12 @@ RETURN_STATUS RunBspRecompScheduler(const ConfigParser &parser,
     if (algorithm.get_child("name").get_value<std::string>() == "GreedyRecomputer") {
         BspSchedule<GraphT> bspSchedule(schedule.GetInstance());
 
-        RETURN_STATUS status = run_bsp_scheduler(parser, algorithm.get_child("parameters").get_child("scheduler"), bspSchedule);
+        ReturnStatus status = run_bsp_scheduler(parser, algorithm.get_child("parameters").get_child("scheduler"), bspSchedule);
 
         BspScheduleCS<GraphT> initialSchedule(std::move(bspSchedule));
 
-        if (status == RETURN_STATUS::ERROR) {
-            return RETURN_STATUS::ERROR;
+        if (status == ReturnStatus::ERROR) {
+            return ReturnStatus::ERROR;
         }
 
         GreedyRecomputer<GraphT> scheduler;

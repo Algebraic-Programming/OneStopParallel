@@ -47,13 +47,13 @@ class Serial : public Scheduler<GraphT> {
      */
     ~Serial() override = default;
 
-    RETURN_STATUS computeSchedule(BspSchedule<GraphT> &schedule) override {
+    ReturnStatus computeSchedule(BspSchedule<GraphT> &schedule) override {
         const auto &instance = schedule.GetInstance();
         const auto &dag = instance.GetComputationalDag();
         const auto numVertices = dag.NumVertices();
 
         if (numVertices == 0) {
-            return RETURN_STATUS::OSP_SUCCESS;
+            return ReturnStatus::OSP_SUCCESS;
         }
 
         const auto &arch = instance.GetArchitecture();
@@ -71,7 +71,7 @@ class Serial : public Scheduler<GraphT> {
         }
 
         if (chosenProcs.empty()) {
-            return RETURN_STATUS::ERROR;
+            return ReturnStatus::ERROR;
         }
 
         const unsigned numNodeTypes = dag.NumVertexTypes();
@@ -150,7 +150,7 @@ class Serial : public Scheduler<GraphT> {
         }
 
         schedule.setNumberOfSupersteps(currentSuperstep + 1);
-        return RETURN_STATUS::OSP_SUCCESS;
+        return ReturnStatus::OSP_SUCCESS;
     }
 
     std::string getScheduleName() const override { return "Serial"; }

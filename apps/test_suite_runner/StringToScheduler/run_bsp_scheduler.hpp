@@ -177,9 +177,9 @@ std::unique_ptr<Scheduler<GraphT>> GetBaseBspSchedulerByName(const ConfigParser 
 }
 
 template <typename GraphT>
-RETURN_STATUS RunBspScheduler(const ConfigParser &parser,
-                              const boost::property_tree::ptree &algorithm,
-                              BspSchedule<GraphT> &schedule) {
+ReturnStatus RunBspScheduler(const ConfigParser &parser,
+                             const boost::property_tree::ptree &algorithm,
+                             BspSchedule<GraphT> &schedule) {
     using vertex_type_t_or_default = std::conditional_t<IsComputationalDagTypedVerticesV<GraphT>, v_type_t<GraphT>, unsigned>;
     using edge_commw_t_or_default = std::conditional_t<HasEdgeWeightsV<GraphT>, ECommwT<GraphT>, VCommwT<GraphT>>;
     using boost_graph_t
@@ -190,9 +190,9 @@ RETURN_STATUS RunBspScheduler(const ConfigParser &parser,
     std::cout << "Running algorithm: " << id << std::endl;
 
     if (id == "LocalSearch") {
-        RETURN_STATUS status = run_bsp_scheduler(parser, algorithm.get_child("parameters").get_child("scheduler"), schedule);
-        if (status == RETURN_STATUS::ERROR) {
-            return RETURN_STATUS::ERROR;
+        ReturnStatus status = run_bsp_scheduler(parser, algorithm.get_child("parameters").get_child("scheduler"), schedule);
+        if (status == ReturnStatus::ERROR) {
+            return ReturnStatus::ERROR;
         }
 
         std::unique_ptr<ImprovementScheduler<GraphT>> improver
@@ -217,10 +217,10 @@ RETURN_STATUS RunBspScheduler(const ConfigParser &parser,
 
             BspSchedule<GraphT> initialSchedule(schedule.GetInstance());
 
-            RETURN_STATUS status = run_bsp_scheduler(
+            ReturnStatus status = run_bsp_scheduler(
                 parser, algorithm.get_child("parameters").get_child("initial_solution_scheduler"), initialSchedule);
 
-            if (status != RETURN_STATUS::OSP_SUCCESS && status != RETURN_STATUS::BEST_FOUND) {
+            if (status != ReturnStatus::OSP_SUCCESS && status != ReturnStatus::BEST_FOUND) {
                 throw std::invalid_argument("Error while computing initial solution.\n");
             }
             BspScheduleCS<GraphT> initialScheduleCs(initialSchedule);
@@ -245,7 +245,7 @@ RETURN_STATUS RunBspScheduler(const ConfigParser &parser,
         bool status
             = coarser->coarsenDag(instance.GetComputationalDag(), instance_coarse.GetComputationalDag(), reverse_vertex_map);
         if (!status) {
-            return RETURN_STATUS::ERROR;
+            return ReturnStatus::ERROR;
         }
 
         instanceCoarse.GetArchitecture() = instance.GetArchitecture();
@@ -254,16 +254,16 @@ RETURN_STATUS RunBspScheduler(const ConfigParser &parser,
 
         const auto statusCoarse
             = run_bsp_scheduler(parser, algorithm.get_child("parameters").get_child("scheduler"), schedule_coarse);
-        if (status_coarse != RETURN_STATUS::OSP_SUCCESS and status_coarse != RETURN_STATUS::BEST_FOUND) {
+        if (status_coarse != ReturnStatus::OSP_SUCCESS and status_coarse != ReturnStatus::BEST_FOUND) {
             return status_coarse;
         }
 
         status = coarser_util::pull_back_schedule(schedule_coarse, reverse_vertex_map, schedule);
         if (!status) {
-            return RETURN_STATUS::ERROR;
+            return ReturnStatus::ERROR;
         }
 
-        return RETURN_STATUS::OSP_SUCCESS;
+        return ReturnStatus::OSP_SUCCESS;
 
     } else if (id == "MultiLevel") {
         std::unique_ptr<MultilevelCoarser<Graph_t, boost_graph_t>> mlCoarser

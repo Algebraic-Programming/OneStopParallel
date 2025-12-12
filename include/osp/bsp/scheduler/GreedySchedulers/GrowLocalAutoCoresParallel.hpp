@@ -502,7 +502,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
         }
     }
 
-    RETURN_STATUS ComputeScheduleParallel(BspSchedule<GraphT> &schedule, unsigned int numThreads) const {
+    ReturnStatus ComputeScheduleParallel(BspSchedule<GraphT> &schedule, unsigned int numThreads) const {
         const BspInstance<GraphT> &instance = schedule.GetInstance();
         const GraphT &graph = instance.GetComputationalDag();
 
@@ -573,7 +573,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
 
         schedule.setNumberOfSupersteps(incr);
 
-        return RETURN_STATUS::OSP_SUCCESS;
+        return ReturnStatus::OSP_SUCCESS;
     }
 
     /**
@@ -584,7 +584,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
      * @param instance The BspInstance object representing the instance to compute the schedule for.
      * @return A pair containing the return status and the computed BspSchedule.
      */
-    virtual RETURN_STATUS computeSchedule(BspSchedule<GraphT> &schedule) override {
+    virtual ReturnStatus computeSchedule(BspSchedule<GraphT> &schedule) override {
         unsigned numThreads = params.numThreads;
         if (numThreads == 0) {
             // numThreads = static_cast<unsigned>(std::sqrt( static_cast<double>((schedule.GetInstance().NumberOfVertices() / 1000000)))) + 1;

@@ -115,11 +115,11 @@ class HillClimbingScheduler : public ImprovementScheduler<GraphT> {
 
     virtual ~HillClimbingScheduler() = default;
 
-    virtual RETURN_STATUS improveSchedule(BspSchedule<GraphT> &inputSchedule) override;
+    virtual ReturnStatus improveSchedule(BspSchedule<GraphT> &inputSchedule) override;
 
     // call with time/step limits
-    virtual RETURN_STATUS improveScheduleWithTimeLimit(BspSchedule<GraphT> &inputSchedule) override;
-    virtual RETURN_STATUS ImproveScheduleWithStepLimit(BspSchedule<GraphT> &inputSchedule, const unsigned stepLimit = 10);
+    virtual ReturnStatus improveScheduleWithTimeLimit(BspSchedule<GraphT> &inputSchedule) override;
+    virtual ReturnStatus ImproveScheduleWithStepLimit(BspSchedule<GraphT> &inputSchedule, const unsigned stepLimit = 10);
 
     // setting parameters
     void SetSteepestAscend(bool steepestAscent) { steepestAscent_ = steepestAscent; }
@@ -130,14 +130,14 @@ class HillClimbingScheduler : public ImprovementScheduler<GraphT> {
 };
 
 template <typename GraphT>
-RETURN_STATUS HillClimbingScheduler<GraphT>::ImproveSchedule(BspSchedule<GraphT> &inputSchedule) {
+ReturnStatus HillClimbingScheduler<GraphT>::ImproveSchedule(BspSchedule<GraphT> &inputSchedule) {
     ImprovementScheduler<GraphT>::setTimeLimitSeconds(600U);
     return improveScheduleWithTimeLimit(input_schedule);
 }
 
 // Main method for hill climbing (with time limit)
 template <typename GraphT>
-RETURN_STATUS HillClimbingScheduler<GraphT>::ImproveScheduleWithTimeLimit(BspSchedule<GraphT> &inputSchedule) {
+ReturnStatus HillClimbingScheduler<GraphT>::ImproveScheduleWithTimeLimit(BspSchedule<GraphT> &inputSchedule) {
     schedule_ = &inputSchedule;
 
     CreateSupstepLists();
@@ -157,13 +157,13 @@ RETURN_STATUS HillClimbingScheduler<GraphT>::ImproveScheduleWithTimeLimit(BspSch
         }
     }
 
-    return RETURN_STATUS::OSP_SUCCESS;
+    return ReturnStatus::OSP_SUCCESS;
 }
 
 template <typename GraphT>
 // Hill climbing with step limit (designed as an ingredient for multilevel algorithms, no safety checks)
-RETURN_STATUS HillClimbingScheduler<GraphT>::ImproveScheduleWithStepLimit(BspSchedule<GraphT> &inputSchedule,
-                                                                          const unsigned stepLimit) {
+ReturnStatus HillClimbingScheduler<GraphT>::ImproveScheduleWithStepLimit(BspSchedule<GraphT> &inputSchedule,
+                                                                         const unsigned stepLimit) {
     schedule_ = &inputSchedule;
 
     CreateSupstepLists();
@@ -174,7 +174,7 @@ RETURN_STATUS HillClimbingScheduler<GraphT>::ImproveScheduleWithStepLimit(BspSch
         }
     }
 
-    return RETURN_STATUS::OSP_SUCCESS;
+    return ReturnStatus::OSP_SUCCESS;
 }
 
 template <typename GraphT>

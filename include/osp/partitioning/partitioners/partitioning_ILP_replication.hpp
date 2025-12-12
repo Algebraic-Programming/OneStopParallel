@@ -41,7 +41,7 @@ class HypergraphPartitioningILPWithReplication : public HypergraphPartitioningIL
   public:
     virtual ~HypergraphPartitioningILPWithReplication() override = default;
 
-    RETURN_STATUS ComputePartitioning(PartitioningWithReplication<HypergraphT> &result);
+    ReturnStatus ComputePartitioning(PartitioningWithReplication<HypergraphT> &result);
 
     virtual std::string GetAlgorithmName() const override { return "HypergraphPartitioningILPWithReplication"; }
 
@@ -49,7 +49,7 @@ class HypergraphPartitioningILPWithReplication : public HypergraphPartitioningIL
 };
 
 template <typename HypergraphT>
-RETURN_STATUS HypergraphPartitioningILPWithReplication<HypergraphT>::ComputePartitioning(
+ReturnStatus HypergraphPartitioningILPWithReplication<HypergraphT>::ComputePartitioning(
     PartitioningWithReplication<HypergraphT> &result) {
     Envr env;
     Model model = env.CreateModel("HypergraphPartRepl");
@@ -65,18 +65,18 @@ RETURN_STATUS HypergraphPartitioningILPWithReplication<HypergraphT>::ComputePart
 
     if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_OPTIMAL) {
         result.setAssignedPartitionVectors(this->ReadAllCoptAssignments(result.GetInstance(), model));
-        return RETURN_STATUS::OSP_SUCCESS;
+        return ReturnStatus::OSP_SUCCESS;
 
     } else if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_INF_OR_UNB) {
-        return RETURN_STATUS::ERROR;
+        return ReturnStatus::ERROR;
 
     } else {
         if (model.GetIntAttr(COPT_INTATTR_HASMIPSOL)) {
             result.setAssignedPartitionVectors(this->ReadAllCoptAssignments(result.GetInstance(), model));
-            return RETURN_STATUS::OSP_SUCCESS;
+            return ReturnStatus::OSP_SUCCESS;
 
         } else {
-            return RETURN_STATUS::ERROR;
+            return ReturnStatus::ERROR;
         }
     }
 }

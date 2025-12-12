@@ -72,7 +72,7 @@ class MultiLevelHillClimbingScheduler : public Scheduler<GraphT> {
   public:
     virtual ~MultiLevelHillClimbingScheduler() = default;
 
-    virtual RETURN_STATUS computeSchedule(BspSchedule<GraphT> &schedule) override;
+    virtual ReturnStatus computeSchedule(BspSchedule<GraphT> &schedule) override;
 
     virtual std::string getScheduleName() const override { return "MultiLevelHillClimbing"; }
 
@@ -100,7 +100,7 @@ class MultiLevelHillClimbingScheduler : public Scheduler<GraphT> {
 };
 
 template <typename GraphT>
-RETURN_STATUS MultiLevelHillClimbingScheduler<GraphT>::ComputeSchedule(BspSchedule<GraphT> &schedule) {
+ReturnStatus MultiLevelHillClimbingScheduler<GraphT>::ComputeSchedule(BspSchedule<GraphT> &schedule) {
     StepByStepCoarser<GraphT> coarser;
     GraphT coarseDAG;
     std::vector<vertex_idx> newVertexId;
@@ -128,7 +128,7 @@ RETURN_STATUS MultiLevelHillClimbingScheduler<GraphT>::ComputeSchedule(BspSchedu
 
     schedule = Refine(schedule.GetInstance(), coarser, coarseSchedule);
 
-    return RETURN_STATUS::OSP_SUCCESS;
+    return ReturnStatus::OSP_SUCCESS;
 }
 
 // run refinement: uncoarsify the DAG in small batches, and apply some steps of hill climbing after each iteration

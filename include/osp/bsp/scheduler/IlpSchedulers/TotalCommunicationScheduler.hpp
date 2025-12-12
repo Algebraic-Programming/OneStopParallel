@@ -143,7 +143,7 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
                         if (sched.NumberOfSupersteps() > 2) {
                             auto status = lk_heuristic.improveSchedule(sched);
 
-                            if (status == RETURN_STATUS::OSP_SUCCESS) {
+                            if (status == ReturnStatus::OSP_SUCCESS) {
                                 FeedImprovedSchedule(sched);
                             }
                         }
@@ -577,7 +577,7 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
 
     virtual ~TotalCommunicationScheduler() = default;
 
-    virtual RETURN_STATUS ComputeScheduleWithTimeLimit(BspSchedule<GraphT> &schedule, unsigned timeout) {
+    virtual ReturnStatus ComputeScheduleWithTimeLimit(BspSchedule<GraphT> &schedule, unsigned timeout) {
         model.SetDblParam(COPT_DBLPARAM_TIMELIMIT, timeout);
         return computeSchedule(schedule);
     }
@@ -592,7 +592,7 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
      * @throws std::invalid_argument if the instance parameters do not
      *         agree with those of the initial schedule's instance
      */
-    virtual RETURN_STATUS computeSchedule(BspSchedule<GraphT> &schedule) override {
+    virtual ReturnStatus computeSchedule(BspSchedule<GraphT> &schedule) override {
         auto &instance = schedule.GetInstance();
 
         assert(!ignoreWorkloadBalance_ || !useLkHeuristicCallback_);
@@ -634,17 +634,17 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
         model.Solve();
 
         if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_OPTIMAL) {
-            return RETURN_STATUS::OSP_SUCCESS;    //, constructBspScheduleFromSolution(instance, true)};
+            return ReturnStatus::OSP_SUCCESS;    //, constructBspScheduleFromSolution(instance, true)};
 
         } else if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_INF_OR_UNB) {
-            return RETURN_STATUS::ERROR;
+            return ReturnStatus::ERROR;
 
         } else {
             if (model.GetIntAttr(COPT_INTATTR_HASMIPSOL)) {
-                return RETURN_STATUS::BEST_FOUND;    //, constructBspScheduleFromSolution(instance, true)};
+                return ReturnStatus::BEST_FOUND;    //, constructBspScheduleFromSolution(instance, true)};
 
             } else {
-                return RETURN_STATUS::TIMEOUT;
+                return ReturnStatus::TIMEOUT;
             }
         }
     };

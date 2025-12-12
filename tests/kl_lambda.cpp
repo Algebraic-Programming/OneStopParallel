@@ -23,9 +23,6 @@ limitations under the License.
 #include "osp/auxiliary/io/arch_file_reader.hpp"
 #include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
-#include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_base.hpp"
-#include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_total_comm.hpp"
-#include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_total_cut.hpp"
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin_v2/kl_improver_test.hpp"
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin_v2/kl_include.hpp"
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin_v2/kl_include_mt.hpp"
@@ -140,7 +137,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverWithNodeTypesTest) {
         BspSchedule<Graph> schedule(instance);
         const auto result = testScheduler.computeSchedule(schedule);
 
-        BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
+        BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
         BOOST_CHECK_EQUAL(&schedule.GetInstance(), &instance);
         BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
         BOOST_CHECK(schedule.satisfiesNodeTypeConstraints());
@@ -149,7 +146,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverWithNodeTypesTest) {
 
         auto status = kl.improveSchedule(schedule);
 
-        BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
+        BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
         BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
         BOOST_CHECK(schedule.satisfiesNodeTypeConstraints());
     }
@@ -192,7 +189,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverOnTestGraphs) {
         BspSchedule<Graph> schedule(instance);
         const auto result = testScheduler.computeSchedule(schedule);
 
-        BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
+        BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
         BOOST_CHECK_EQUAL(&schedule.GetInstance(), &instance);
         BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 
@@ -200,7 +197,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverOnTestGraphs) {
 
         auto status = kl.improveSchedule(schedule);
 
-        BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
+        BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
         BOOST_CHECK_EQUAL(schedule.satisfiesPrecedenceConstraints(), true);
     }
 }
@@ -730,7 +727,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverInnerLoopLambdaMapTest) {
 
 //         BspSchedule<graph> schedule_2(schedule);
 
-//         BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
+//         BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
 //         BOOST_CHECK_EQUAL(&schedule.GetInstance(), &instance);
 //         BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 
@@ -743,7 +740,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverInnerLoopLambdaMapTest) {
 //         std::cout << "kl new finished in " << duration << " seconds, costs: " << schedule.computeTotalLambdaCosts() << " with "
 //         << schedule.NumberOfSupersteps() << " number of supersteps"<< std::endl;
 
-//         BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
+//         BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
 //         BOOST_CHECK_EQUAL(schedule.satisfiesPrecedenceConstraints(), true);
 
 //         // kl_total_comm_test<graph> kl_old;
@@ -757,7 +754,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverInnerLoopLambdaMapTest) {
 //         // std::cout << "kl old finished in " << duration << " seconds, costs: " << schedule_2.computeTotalCosts() << " with "
 //         << schedule_2.NumberOfSupersteps() << " number of supersteps"<< std::endl;
 
-//         // BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
+//         // BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
 //         // BOOST_CHECK_EQUAL(schedule_2.satisfiesPrecedenceConstraints(), true);
 
 //     }
@@ -809,7 +806,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverInnerLoopLambdaMapTest) {
 
 //         BspSchedule<graph> schedule_2(schedule);
 
-//         BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
+//         BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
 //         BOOST_CHECK_EQUAL(&schedule.GetInstance(), &instance);
 //         BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 
@@ -822,7 +819,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverInnerLoopLambdaMapTest) {
 //         std::cout << "kl new finished in " << duration << " seconds, costs: " << schedule.computeTotalLambdaCosts() << " with "
 //         << schedule.NumberOfSupersteps() << " number of supersteps"<< std::endl;
 
-//         BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
+//         BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
 //         BOOST_CHECK_EQUAL(schedule.satisfiesPrecedenceConstraints(), true);
 
 //         // kl_total_comm_test<graph> kl_old;
@@ -836,7 +833,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverInnerLoopLambdaMapTest) {
 //         // std::cout << "kl old finished in " << duration << " seconds, costs: " << schedule_2.computeTotalCosts() << " with "
 //         << schedule_2.NumberOfSupersteps() << " number of supersteps"<< std::endl;
 
-//         // BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
+//         // BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
 //         // BOOST_CHECK_EQUAL(schedule_2.satisfiesPrecedenceConstraints(), true);
 
 //     }

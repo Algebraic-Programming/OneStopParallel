@@ -97,13 +97,13 @@ BOOST_AUTO_TEST_CASE(MultilevelTest) {
     multi1.useLinearRefinementSteps(5);
 
     auto result = multi1.computeSchedule(schedule1);
-    BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
+    BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
     BOOST_CHECK(schedule1.satisfiesPrecedenceConstraints());
 
     multi2.setContractionRate(0.3);
     multi2.useExponentialRefinementPoints(1.2);
 
     result = multi2.computeSchedule(schedule2);
-    BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
+    BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
     BOOST_CHECK(schedule2.satisfiesPrecedenceConstraints());
 }

@@ -146,7 +146,7 @@ class CilkScheduler : public Scheduler<GraphT> {
      * @param instance The BSP instance to compute the schedule for.
      * @return A pair containing the return status and the computed BSP schedule.
      */
-    virtual RETURN_STATUS computeSchedule(BspSchedule<GraphT> &bspSchedule) override {
+    virtual ReturnStatus computeSchedule(BspSchedule<GraphT> &bspSchedule) override {
         // if constexpr (use_memory_constraint) {
         //     memory_constraint.initialize(instance);
         // }
@@ -229,7 +229,7 @@ class CilkScheduler : public Scheduler<GraphT> {
 
         schedule.convertToBspSchedule(instance, greedyProcLists, bspSchedule);
 
-        return RETURN_STATUS::OSP_SUCCESS;
+        return ReturnStatus::OSP_SUCCESS;
     }
 
     /**

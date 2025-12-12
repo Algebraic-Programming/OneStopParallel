@@ -305,7 +305,7 @@ class BspLocking : public Scheduler<GraphT> {
      * @param instance The BspInstance object representing the instance to compute the schedule for.
      * @return A pair containing the return status and the computed BspSchedule.
      */
-    virtual RETURN_STATUS computeSchedule(BspSchedule<GraphT> &schedule) override {
+    virtual ReturnStatus computeSchedule(BspSchedule<GraphT> &schedule) override {
         const auto &instance = schedule.GetInstance();
 
         for (const auto &v : instance.GetComputationalDag().vertices()) {
@@ -591,7 +591,7 @@ class BspLocking : public Scheduler<GraphT> {
 
             if constexpr (useMemoryConstraint_) {
                 if (not check_mem_feasibility(instance, allReady, procReady)) {
-                    return RETURN_STATUS::ERROR;
+                    return ReturnStatus::ERROR;
                 }
             }
 
@@ -606,7 +606,7 @@ class BspLocking : public Scheduler<GraphT> {
 
         assert(schedule.satisfiesPrecedenceConstraints());
 
-        return RETURN_STATUS::OSP_SUCCESS;
+        return ReturnStatus::OSP_SUCCESS;
     }
 
     /**

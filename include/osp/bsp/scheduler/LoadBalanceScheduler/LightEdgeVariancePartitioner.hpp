@@ -62,7 +62,7 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
 
     std::string GetScheduleName() const override { return "LightEdgeVariancePartitioner"; };
 
-    virtual RETURN_STATUS computeSchedule(BspSchedule<GraphT> &schedule) override {
+    virtual ReturnStatus computeSchedule(BspSchedule<GraphT> &schedule) override {
         // DAGPartition output_partition(instance);
 
         using Base = VariancePartitioner<GraphT, InterpolationT, MemoryConstraintT>;
@@ -148,7 +148,7 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
             } else {
                 if constexpr (Base::use_memory_constraint) {
                     if (numUnableToPartitionNodeLoop >= 2) {
-                        return RETURN_STATUS::ERROR;
+                        return ReturnStatus::ERROR;
                     }
                 }
             }
@@ -433,7 +433,7 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
             }
         }
 
-        return RETURN_STATUS::OSP_SUCCESS;
+        return ReturnStatus::OSP_SUCCESS;
     }
 };
 

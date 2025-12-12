@@ -49,7 +49,7 @@ class TrimmedGroupScheduler : public Scheduler<ConstrGraphT> {
 
     std::string getScheduleName() const override { return "TrimmedGroupScheduler"; }
 
-    RETURN_STATUS computeSchedule(BspSchedule<ConstrGraphT> &schedule) override {
+    ReturnStatus computeSchedule(BspSchedule<ConstrGraphT> &schedule) override {
         const auto &instance = schedule.GetInstance();
         const ConstrGraphT &dag = instance.GetComputationalDag();
         const BspArchitecture<ConstrGraphT> &arch = instance.GetArchitecture();
@@ -60,7 +60,7 @@ class TrimmedGroupScheduler : public Scheduler<ConstrGraphT> {
 
         if (numComponents == 0) {
             schedule.setNumberOfSupersteps(0);
-            return RETURN_STATUS::OSP_SUCCESS;
+            return ReturnStatus::OSP_SUCCESS;
         }
 
         if constexpr (verbose_) {
@@ -145,7 +145,7 @@ class TrimmedGroupScheduler : public Scheduler<ConstrGraphT> {
 
             // Call the sub-scheduler to compute the schedule for this group of components
             auto status = subScheduler_->computeSchedule(subSchedule);
-            if (status != RETURN_STATUS::OSP_SUCCESS && status != RETURN_STATUS::BEST_FOUND) {
+            if (status != ReturnStatus::OSP_SUCCESS && status != ReturnStatus::BEST_FOUND) {
                 return status;
             }
 
@@ -172,7 +172,7 @@ class TrimmedGroupScheduler : public Scheduler<ConstrGraphT> {
         }
 
         schedule.setNumberOfSupersteps(maxSupersteps);
-        return RETURN_STATUS::OSP_SUCCESS;
+        return ReturnStatus::OSP_SUCCESS;
     }
 };
 

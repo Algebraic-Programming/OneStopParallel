@@ -33,9 +33,9 @@ namespace osp {
 const std::set<std::string> GetAvailablePebblerNames() { return {"Pebbler"}; }
 
 template <typename GraphT>
-RETURN_STATUS RunPebbler(const ConfigParser &parser,
-                         const boost::property_tree::ptree &algorithm,
-                         PebblingSchedule<GraphT> &schedule) {
+ReturnStatus RunPebbler(const ConfigParser &parser,
+                        const boost::property_tree::ptree &algorithm,
+                        PebblingSchedule<GraphT> &schedule) {
     // const unsigned timeLimit = parser.global_params.get_child("timeLimit").get_value<unsigned>();
     //  const bool use_memory_constraint = parser.global_params.get_child("use_memory_constraints").get_value<bool>();
 

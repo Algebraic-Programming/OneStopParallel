@@ -32,7 +32,7 @@ class WavefrontComponentScheduler : public AbstractWavefrontScheduler<GraphT, Co
 
     std::string getScheduleName() const override { return "WavefrontComponentScheduler"; }
 
-    RETURN_STATUS computeSchedule(BspSchedule<GraphT> &schedule) override {
+    ReturnStatus computeSchedule(BspSchedule<GraphT> &schedule) override {
         const auto &instance = schedule.GetInstance();
         const auto &originalArch = instance.GetArchitecture();
         const auto &originalProcTypeCount = originalArch.getProcessorTypeCount();
@@ -81,7 +81,7 @@ class WavefrontComponentScheduler : public AbstractWavefrontScheduler<GraphT, Co
                         std::cerr << "ERROR: Processor starvation detected for type " << typeIdx << " in wavefront set " << i
                                   << ". Not enough processors to assign one to each active component." << std::endl;
                     }
-                    return RETURN_STATUS::ERROR;
+                    return ReturnStatus::ERROR;
                 }
 
                 for (size_t compIdx = 0; compIdx < components.size(); ++compIdx) {
@@ -107,7 +107,7 @@ class WavefrontComponentScheduler : public AbstractWavefrontScheduler<GraphT, Co
 
                 BspSchedule<ConstrGraphT> subSchedule(subInstance);
                 const auto status = this->scheduler_->computeSchedule(subSchedule);
-                if (status != RETURN_STATUS::OSP_SUCCESS && status != RETURN_STATUS::BEST_FOUND) {
+                if (status != ReturnStatus::OSP_SUCCESS && status != ReturnStatus::BEST_FOUND) {
                     return status;
                 }
 
@@ -140,7 +140,7 @@ class WavefrontComponentScheduler : public AbstractWavefrontScheduler<GraphT, Co
             }
             superstepOffset += maxNumberSupersteps;
         }
-        return RETURN_STATUS::OSP_SUCCESS;
+        return ReturnStatus::OSP_SUCCESS;
     }
 };
 

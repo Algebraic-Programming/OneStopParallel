@@ -38,7 +38,7 @@ class CoarseAndSchedule : public Scheduler<GraphT> {
         return "Coarse(" + coarser_.getCoarserName() + ")AndSchedule(" + scheduler_.getScheduleName() + ")";
     }
 
-    RETURN_STATUS computeSchedule(BspSchedule<GraphT> &schedule) override {
+    ReturnStatus computeSchedule(BspSchedule<GraphT> &schedule) override {
         const auto &instance = schedule.GetInstance();
 
         BspInstance<GraphTCoarse> instanceCoarse;
@@ -48,7 +48,7 @@ class CoarseAndSchedule : public Scheduler<GraphT> {
         bool status = coarser_.coarsenDag(instance.GetComputationalDag(), instanceCoarse.GetComputationalDag(), reverse_vertex_map);
 
         if (!status) {
-            return RETURN_STATUS::ERROR;
+            return ReturnStatus::ERROR;
         }
 
         instanceCoarse.GetArchitecture() = instance.GetArchitecture();
@@ -58,13 +58,13 @@ class CoarseAndSchedule : public Scheduler<GraphT> {
 
         const auto statusCoarse = scheduler_.computeSchedule(scheduleCoarse);
 
-        if (status_coarse != RETURN_STATUS::OSP_SUCCESS and status_coarse != RETURN_STATUS::BEST_FOUND) {
+        if (status_coarse != ReturnStatus::OSP_SUCCESS and status_coarse != ReturnStatus::BEST_FOUND) {
             return statusCoarse;
         }
 
         coarser_util::pull_back_schedule(scheduleCoarse, reverse_vertex_map, schedule);
 
-        return RETURN_STATUS::OSP_SUCCESS;
+        return ReturnStatus::OSP_SUCCESS;
     }
 };
 

@@ -95,7 +95,7 @@ int main(int argc, char *argv[]) {
 
             const auto startTime = std::chrono::high_resolution_clock::now();
 
-            RETURN_STATUS returnStatus;
+            ReturnStatus returnStatus;
             BspSchedule<GraphT> schedule(bspInstance);
 
             try {
@@ -113,13 +113,13 @@ int main(int argc, char *argv[]) {
             schedulersComputeTime[algorithmCounter]
                 = std::chrono::duration_cast<std::chrono::milliseconds>(finishTime - startTime).count();
 
-            if (returnStatus != RETURN_STATUS::OSP_SUCCESS && returnStatus != RETURN_STATUS::BEST_FOUND) {
+            if (returnStatus != ReturnStatus::OSP_SUCCESS && returnStatus != ReturnStatus::BEST_FOUND) {
                 schedulersFailed[algorithmCounter] = true;
-                if (returnStatus == RETURN_STATUS::ERROR) {
+                if (returnStatus == ReturnStatus::ERROR) {
                     std::cerr << "Error while computing schedule " + algorithm.second.get_child("name").get_value<std::string>()
                                      + "."
                               << std::endl;
-                } else if (returnStatus == RETURN_STATUS::TIMEOUT) {
+                } else if (returnStatus == ReturnStatus::TIMEOUT) {
                     std::cerr << "Timeout while computing schedule " + algorithm.second.get_child("name").get_value<std::string>()
                                      + "."
                               << std::endl;

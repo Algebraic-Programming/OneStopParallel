@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(KlLocalMemconst) {
             BspSchedule<Graph> schedule(instance);
             const auto result = testScheduler.computeSchedule(schedule);
 
-            BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
+            BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
             BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
             BOOST_CHECK(schedule.satisfiesMemoryConstraints());
 
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(KlLocalMemconst) {
 
             auto status = kl.improveSchedule(schedule);
 
-            BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
+            BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
             BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
             BOOST_CHECK(schedule.satisfiesMemoryConstraints());
         }

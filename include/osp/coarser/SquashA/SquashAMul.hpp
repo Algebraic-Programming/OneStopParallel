@@ -40,7 +40,7 @@ class SquashAMul : public MultilevelCoarser<GraphT, GraphTCoarse> {
 
     void UpdateParams();
 
-    RETURN_STATUS run_contractions() override;
+    ReturnStatus run_contractions() override;
 
   public:
     void SetParams(squash_a_params::Parameters params) { params_ = params; };
@@ -60,8 +60,8 @@ void SquashAMul<GraphT, GraphTCoarse>::UpdateParams() {
 }
 
 template <typename GraphT, typename GraphTCoarse>
-RETURN_STATUS SquashAMul<GraphT, GraphTCoarse>::RunContractions() {
-    RETURN_STATUS status = RETURN_STATUS::OSP_SUCCESS;
+ReturnStatus SquashAMul<GraphT, GraphTCoarse>::RunContractions() {
+    ReturnStatus status = ReturnStatus::OSP_SUCCESS;
 
     Biased_Random_with_side_bias coin(params_.edgeSortRatio_);
 
@@ -86,7 +86,7 @@ RETURN_STATUS SquashAMul<GraphT, GraphTCoarse>::RunContractions() {
         }
 
         if (!coarsenSuccess) {
-            status = RETURN_STATUS::ERROR;
+            status = ReturnStatus::ERROR;
         }
 
         status = std::max(

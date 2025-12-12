@@ -76,10 +76,10 @@ class HillClimbingForCommSteps {
 
     virtual ~HillClimbingForCommSteps() = default;
 
-    virtual RETURN_STATUS ImproveSchedule(BspScheduleCS<GraphT> &inputSchedule);
+    virtual ReturnStatus ImproveSchedule(BspScheduleCS<GraphT> &inputSchedule);
 
     // call with time limit
-    virtual RETURN_STATUS ImproveScheduleWithTimeLimit(BspScheduleCS<GraphT> &inputSchedule, const unsigned timeLimit);
+    virtual ReturnStatus ImproveScheduleWithTimeLimit(BspScheduleCS<GraphT> &inputSchedule, const unsigned timeLimit);
 
     // setting parameters
     void SetSteepestAscend(bool steepestAscent) { steepestAscent_ = steepestAscent; }
@@ -88,18 +88,18 @@ class HillClimbingForCommSteps {
 };
 
 template <typename GraphT>
-RETURN_STATUS HillClimbingForCommSteps<GraphT>::ImproveSchedule(BspScheduleCS<GraphT> &inputSchedule) {
+ReturnStatus HillClimbingForCommSteps<GraphT>::ImproveSchedule(BspScheduleCS<GraphT> &inputSchedule) {
     return improveScheduleWithTimeLimit(input_schedule, 180);
 }
 
 // Main method for hill climbing (with time limit)
 template <typename GraphT>
-RETURN_STATUS HillClimbingForCommSteps<GraphT>::ImproveScheduleWithTimeLimit(BspScheduleCS<GraphT> &inputSchedule,
-                                                                             const unsigned timeLimit) {
+ReturnStatus HillClimbingForCommSteps<GraphT>::ImproveScheduleWithTimeLimit(BspScheduleCS<GraphT> &inputSchedule,
+                                                                            const unsigned timeLimit) {
     schedule_ = &inputSchedule;
 
     if (schedule_->NumberOfSupersteps() <= 2) {
-        return RETURN_STATUS::OSP_SUCCESS;
+        return ReturnStatus::OSP_SUCCESS;
     }
 
     Init();
@@ -121,7 +121,7 @@ RETURN_STATUS HillClimbingForCommSteps<GraphT>::ImproveScheduleWithTimeLimit(Bsp
 
     ConvertCommSchedule();
 
-    return RETURN_STATUS::OSP_SUCCESS;
+    return ReturnStatus::OSP_SUCCESS;
 }
 
 // Initialization for comm. schedule hill climbing

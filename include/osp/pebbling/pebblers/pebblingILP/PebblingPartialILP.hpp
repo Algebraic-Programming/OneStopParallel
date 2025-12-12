@@ -51,10 +51,10 @@ class PebblingPartialILP : public Scheduler<GraphT> {
 
     virtual ~PebblingPartialILP() = default;
 
-    RETURN_STATUS ComputePebbling(PebblingSchedule<GraphT> &schedule);
+    ReturnStatus ComputePebbling(PebblingSchedule<GraphT> &schedule);
 
     // not used, only here for using scheduler class base functionality (status enums, timelimits, etc)
-    virtual RETURN_STATUS computeSchedule(BspSchedule<GraphT> &schedule) override;
+    virtual ReturnStatus computeSchedule(BspSchedule<GraphT> &schedule) override;
 
     GraphT ContractByPartition(const BspInstance<GraphT> &instance, const std::vector<unsigned> &nodeToPartAssignment);
 
@@ -86,11 +86,11 @@ class PebblingPartialILP : public Scheduler<GraphT> {
 };
 
 template <typename GraphT>
-RETURN_STATUS PebblingPartialILP<GraphT>::ComputePebbling(PebblingSchedule<GraphT> &schedule) {
+ReturnStatus PebblingPartialILP<GraphT>::ComputePebbling(PebblingSchedule<GraphT> &schedule) {
     const BspInstance<GraphT> &instance = schedule.GetInstance();
 
     if (!PebblingSchedule<GraphT>::hasValidSolution(instance)) {
-        return RETURN_STATUS::ERROR;
+        return ReturnStatus::ERROR;
     }
 
     // STEP 1: divide DAG acyclicly with partitioning ILP
@@ -313,8 +313,8 @@ RETURN_STATUS PebblingPartialILP<GraphT>::ComputePebbling(PebblingSchedule<Graph
         mpp.setHasRedInBeginning(has_reds_in_beginning[part]);
 
         PebblingSchedule<GraphT> pebblingILP(subInstance[part]);
-        RETURN_STATUS status = mpp.computePebblingWithInitialSolution(heuristicPebbling, pebblingILP, asynchronous_);
-        if (status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND) {
+        ReturnStatus status = mpp.computePebblingWithInitialSolution(heuristicPebbling, pebblingILP, asynchronous_);
+        if (status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND) {
             if (!pebblingILP.isValid()) {
                 std::cout << "ERROR: Pebbling ILP INVALID!" << std::endl;
             }
@@ -345,7 +345,7 @@ RETURN_STATUS PebblingPartialILP<GraphT>::ComputePebbling(PebblingSchedule<Graph
     schedule.CreateFromPartialPebblings(
         instance, pebbling, processors_to_parts, original_node_id, original_proc_id, has_reds_in_beginning);
     schedule.cleanSchedule();
-    return schedule.isValid() ? RETURN_STATUS::OSP_SUCCESS : RETURN_STATUS::ERROR;
+    return schedule.isValid() ? ReturnStatus::OSP_SUCCESS : ReturnStatus::ERROR;
 }
 
 template <typename GraphT>
@@ -397,8 +397,8 @@ GraphT PebblingPartialILP<GraphT>::ContractByPartition(const BspInstance<GraphT>
 }
 
 template <typename GraphT>
-RETURN_STATUS PebblingPartialILP<GraphT>::ComputeSchedule(BspSchedule<GraphT> &) {
-    return RETURN_STATUS::ERROR;
+ReturnStatus PebblingPartialILP<GraphT>::ComputeSchedule(BspSchedule<GraphT> &) {
+    return ReturnStatus::ERROR;
 }
 
 }    // namespace osp

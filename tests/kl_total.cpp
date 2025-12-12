@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(KlImproverSmokeTest) {
 
     auto status = kl.improveSchedule(schedule);
 
-    BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
+    BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
     BOOST_CHECK_EQUAL(schedule.satisfiesPrecedenceConstraints(), true);
 }
 
@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(KlImproverOnTestGraphs) {
         BspSchedule<Graph> schedule(instance);
         const auto result = testScheduler.computeSchedule(schedule);
 
-        BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
+        BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
         BOOST_CHECK_EQUAL(&schedule.GetInstance(), &instance);
         BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(KlImproverOnTestGraphs) {
 
         auto status = kl.improveSchedule(schedule);
 
-        BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
+        BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
         BOOST_CHECK_EQUAL(schedule.satisfiesPrecedenceConstraints(), true);
     }
 }
@@ -195,7 +195,7 @@ BOOST_AUTO_TEST_CASE(KlImproverSuperstepRemovalTest) {
 
     auto status = kl.improveSchedule(schedule);
 
-    BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
+    BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
     BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
     BOOST_CHECK_LT(schedule.NumberOfSupersteps(), originalSteps);
 }
@@ -985,7 +985,7 @@ BOOST_AUTO_TEST_CASE(KlBase3) {
 
 //         BspSchedule<graph> schedule_2(schedule);
 
-//         BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
+//         BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
 //         BOOST_CHECK_EQUAL(&schedule.GetInstance(), &instance);
 //         BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 
@@ -1000,7 +1000,7 @@ BOOST_AUTO_TEST_CASE(KlBase3) {
 //         std::cout << "kl new finished in " << duration << " seconds, costs: " << schedule.computeTotalCosts() << " with " <<
 //         schedule.NumberOfSupersteps() << " number of supersteps"<< std::endl;
 
-//         BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
+//         BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
 //         BOOST_CHECK_EQUAL(schedule.satisfiesPrecedenceConstraints(), true);
 
 //         // kl_total_comm_test<graph> kl_old;
@@ -1014,7 +1014,7 @@ BOOST_AUTO_TEST_CASE(KlBase3) {
 //         // std::cout << "kl old finished in " << duration << " seconds, costs: " << schedule_2.computeTotalCosts() << " with "
 //         << schedule_2.NumberOfSupersteps() << " number of supersteps"<< std::endl;
 
-//         // BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
+//         // BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
 //         // BOOST_CHECK_EQUAL(schedule_2.satisfiesPrecedenceConstraints(), true);
 
 //     }
@@ -1067,7 +1067,7 @@ BOOST_AUTO_TEST_CASE(KlBase3) {
 
 //         BspSchedule<graph> schedule_2(schedule);
 
-//         BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
+//         BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
 //         BOOST_CHECK_EQUAL(&schedule.GetInstance(), &instance);
 //         BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
 
@@ -1082,7 +1082,7 @@ BOOST_AUTO_TEST_CASE(KlBase3) {
 //         std::cout << "kl new finished in " << duration << " seconds, costs: " << schedule.computeTotalCosts() << " with " <<
 //         schedule.NumberOfSupersteps() << " number of supersteps"<< std::endl;
 
-//         BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
+//         BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
 //         BOOST_CHECK_EQUAL(schedule.satisfiesPrecedenceConstraints(), true);
 
 //         // kl_total_comm_test<graph> kl_old;
@@ -1096,7 +1096,7 @@ BOOST_AUTO_TEST_CASE(KlBase3) {
 //         // std::cout << "kl old finished in " << duration << " seconds, costs: " << schedule_2.computeTotalCosts() << " with "
 //         << schedule_2.NumberOfSupersteps() << " number of supersteps"<< std::endl;
 
-//         // BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
+//         // BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
 //         // BOOST_CHECK_EQUAL(schedule_2.satisfiesPrecedenceConstraints(), true);
 
 //     }

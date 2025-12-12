@@ -33,7 +33,7 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
 
     std::string getScheduleName() const override { return "IsomorphicWavefrontComponentScheduler"; }
 
-    RETURN_STATUS computeSchedule(BspSchedule<GraphT> &schedule) override {
+    ReturnStatus computeSchedule(BspSchedule<GraphT> &schedule) override {
         const auto &instance = schedule.GetInstance();
         const auto &originalArch = instance.GetArchitecture();
 
@@ -61,22 +61,22 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
                                                 global_ids_by_type,
                                                 superstep_offset,
                                                 supersteps_in_set);
-            if (status != RETURN_STATUS::OSP_SUCCESS) {
+            if (status != ReturnStatus::OSP_SUCCESS) {
                 return status;
             }
             superstepOffset += superstepsInSet;
         }
-        return RETURN_STATUS::OSP_SUCCESS;
+        return ReturnStatus::OSP_SUCCESS;
     }
 
   private:
-    RETURN_STATUS ProcessWavefrontSet(BspSchedule<GraphT> &schedule,
-                                      const std::vector<std::vector<VertexIdxT<GraphT>>> &vertexMapForSet,
-                                      const std::vector<std::vector<size_t>> &isoGroupsForSet,
-                                      const std::vector<ConstrGraphT> &subgraphsForSet,
-                                      const std::vector<std::vector<unsigned>> &globalIdsByType,
-                                      unsigned superstepOffset,
-                                      unsigned &superstepsInSet) {
+    ReturnStatus ProcessWavefrontSet(BspSchedule<GraphT> &schedule,
+                                     const std::vector<std::vector<VertexIdxT<GraphT>>> &vertexMapForSet,
+                                     const std::vector<std::vector<size_t>> &isoGroupsForSet,
+                                     const std::vector<ConstrGraphT> &subgraphsForSet,
+                                     const std::vector<std::vector<unsigned>> &globalIdsByType,
+                                     unsigned superstepOffset,
+                                     unsigned &superstepsInSet) {
         const auto &instance = schedule.GetInstance();
         const auto &originalArch = instance.GetArchitecture();
         const auto &originalProcTypeCount = originalArch.getProcessorTypeCount();
@@ -117,7 +117,7 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
                     std::cerr << "ERROR: Processor starvation detected for type " << typeIdx
                               << ". Not enough processors to assign one to each active isomorphism group." << std::endl;
                 }
-                return RETURN_STATUS::ERROR;
+                return ReturnStatus::ERROR;
             }
 
             for (size_t groupIdx = 0; groupIdx < isoGroupsForSet.size(); ++groupIdx) {
@@ -142,7 +142,7 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
                                                      proc_type_offsets,
                                                      superstep_offset,
                                                      supersteps_for_group);
-            if (status != RETURN_STATUS::OSP_SUCCESS) {
+            if (status != ReturnStatus::OSP_SUCCESS) {
                 return status;
             }
             numSuperstepsPerIsoGroup[j] = superstepsForGroup;
@@ -169,18 +169,18 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
         }
 
         superstepsInSet = maxSupersteps;
-        return RETURN_STATUS::OSP_SUCCESS;
+        return ReturnStatus::OSP_SUCCESS;
     }
 
-    RETURN_STATUS ScheduleIsomorphismGroup(BspSchedule<GraphT> &schedule,
-                                           const std::vector<std::vector<VertexIdxT<GraphT>>> &vertexMapForSet,
-                                           const std::vector<size_t> &groupMembers,
-                                           const ConstrGraphT &repSubDag,
-                                           const std::vector<unsigned> &procsForGroup,
-                                           const std::vector<std::vector<unsigned>> &globalIdsByType,
-                                           const std::vector<unsigned> &procTypeOffsets,
-                                           unsigned superstepOffset,
-                                           unsigned &superstepsForGroup) {
+    ReturnStatus ScheduleIsomorphismGroup(BspSchedule<GraphT> &schedule,
+                                          const std::vector<std::vector<VertexIdxT<GraphT>>> &vertexMapForSet,
+                                          const std::vector<size_t> &groupMembers,
+                                          const ConstrGraphT &repSubDag,
+                                          const std::vector<unsigned> &procsForGroup,
+                                          const std::vector<std::vector<unsigned>> &globalIdsByType,
+                                          const std::vector<unsigned> &procTypeOffsets,
+                                          unsigned superstepOffset,
+                                          unsigned &superstepsForGroup) {
         const auto &instance = schedule.GetInstance();
         const auto &originalArch = instance.GetArchitecture();
         const size_t numMembers = groupMembers.size();
@@ -219,7 +219,7 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
             for (const auto &groupMemberIdx : groupMembers) {
                 BspSchedule<ConstrGraphT> subSchedule(subInstance);
                 auto status = this->scheduler_->computeSchedule(subSchedule);
-                if (status != RETURN_STATUS::OSP_SUCCESS && status != RETURN_STATUS::BEST_FOUND) {
+                if (status != ReturnStatus::OSP_SUCCESS && status != ReturnStatus::BEST_FOUND) {
                     return status;
                 }
 
@@ -278,7 +278,7 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
 
             BspSchedule<ConstrGraphT> subSchedule(subInstance);
             auto status = this->scheduler_->computeSchedule(subSchedule);
-            if (status != RETURN_STATUS::OSP_SUCCESS && status != RETURN_STATUS::BEST_FOUND) {
+            if (status != ReturnStatus::OSP_SUCCESS && status != ReturnStatus::BEST_FOUND) {
                 return status;
             }
 
@@ -312,7 +312,7 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
             }
             superstepsForGroup = subSchedule.NumberOfSupersteps();
         }
-        return RETURN_STATUS::OSP_SUCCESS;
+        return ReturnStatus::OSP_SUCCESS;
     }
 };
 

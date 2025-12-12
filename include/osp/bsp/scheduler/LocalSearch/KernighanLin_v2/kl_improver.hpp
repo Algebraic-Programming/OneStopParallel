@@ -1411,9 +1411,9 @@ class KlImprover : public ImprovementScheduler<GraphT> {
 
     virtual ~KlImprover() = default;
 
-    virtual RETURN_STATUS improveSchedule(BspSchedule<GraphT> &schedule) override {
+    virtual ReturnStatus improveSchedule(BspSchedule<GraphT> &schedule) override {
         if (schedule.GetInstance().NumberOfProcessors() < 2) {
-            return RETURN_STATUS::BEST_FOUND;
+            return ReturnStatus::BEST_FOUND;
         }
 
         const unsigned numThreads = 1;
@@ -1439,14 +1439,14 @@ class KlImprover : public ImprovementScheduler<GraphT> {
         if (initialCost > activeSchedule_.get_cost()) {
             activeSchedule_.write_schedule(schedule);
             CleanupDatastructures();
-            return RETURN_STATUS::OSP_SUCCESS;
+            return ReturnStatus::OSP_SUCCESS;
         } else {
             CleanupDatastructures();
-            return RETURN_STATUS::BEST_FOUND;
+            return ReturnStatus::BEST_FOUND;
         }
     }
 
-    virtual RETURN_STATUS improveScheduleWithTimeLimit(BspSchedule<GraphT> &schedule) override {
+    virtual ReturnStatus improveScheduleWithTimeLimit(BspSchedule<GraphT> &schedule) override {
         computeWithTimeLimit_ = true;
         return improveSchedule(schedule);
     }

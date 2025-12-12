@@ -47,22 +47,22 @@ class MaxBspScheduler : public Scheduler<GraphT> {
      * @param instance The BSP instance for which to compute the schedule.
      * @return A pair containing the return status and the computed schedule.
      */
-    virtual RETURN_STATUS computeSchedule(BspSchedule<GraphT> &schedule) override {
+    virtual ReturnStatus computeSchedule(BspSchedule<GraphT> &schedule) override {
         MaxBspSchedule<GraphT> tmpSched(schedule.GetInstance());
-        RETURN_STATUS status = computeSchedule(tmpSched);
+        ReturnStatus status = computeSchedule(tmpSched);
         schedule = tmpSched;
         return status;
     }
 
-    virtual RETURN_STATUS computeScheduleCS(BspScheduleCS<GraphT> &schedule) override {
+    virtual ReturnStatus computeScheduleCS(BspScheduleCS<GraphT> &schedule) override {
         MaxBspScheduleCS<GraphT> tmpSchedule(schedule.GetInstance());
         auto result = computeScheduleCS(tmpSchedule);
-        if (result == RETURN_STATUS::OSP_SUCCESS || result == RETURN_STATUS::BEST_FOUND) {
+        if (result == ReturnStatus::OSP_SUCCESS || result == ReturnStatus::BEST_FOUND) {
             schedule = tmpSchedule;
             schedule.setAutoCommunicationSchedule();
             return result;
         } else {
-            return RETURN_STATUS::ERROR;
+            return ReturnStatus::ERROR;
         }
     }
 
@@ -71,15 +71,15 @@ class MaxBspScheduler : public Scheduler<GraphT> {
      * @param instance The BSP instance for which to compute the schedule.
      * @return A pair containing the return status and the computed schedule.
      */
-    virtual RETURN_STATUS ComputeSchedule(MaxBspSchedule<GraphT> &schedule) = 0;
+    virtual ReturnStatus ComputeSchedule(MaxBspSchedule<GraphT> &schedule) = 0;
 
-    virtual RETURN_STATUS ComputeScheduleCs(MaxBspScheduleCS<GraphT> &schedule) {
+    virtual ReturnStatus ComputeScheduleCs(MaxBspScheduleCS<GraphT> &schedule) {
         auto result = computeSchedule(schedule);
-        if (result == RETURN_STATUS::OSP_SUCCESS || result == RETURN_STATUS::BEST_FOUND) {
+        if (result == ReturnStatus::OSP_SUCCESS || result == ReturnStatus::BEST_FOUND) {
             // schedule.setAutoCommunicationSchedule();
             return result;
         } else {
-            return RETURN_STATUS::ERROR;
+            return ReturnStatus::ERROR;
         }
     };
 };

@@ -62,10 +62,10 @@ class SarkarMul : public MultilevelCoarser<GraphT, GraphTCoarse> {
     void InitParams();
     void UpdateParams();
 
-    RETURN_STATUS RunSingleContractionMode(VertexIdxT<GraphT> &diffVertices);
-    RETURN_STATUS RunBufferMerges();
-    RETURN_STATUS RunContractions(VWorkwT<GraphT> commCost);
-    RETURN_STATUS run_contractions() override;
+    ReturnStatus RunSingleContractionMode(VertexIdxT<GraphT> &diffVertices);
+    ReturnStatus RunBufferMerges();
+    ReturnStatus RunContractions(VWorkwT<GraphT> commCost);
+    ReturnStatus run_contractions() override;
 
   public:
     void SetParameters(SarkarParams::MulParameters<VWorkwT<GraphT>> mlParams) {
@@ -115,8 +115,8 @@ void SarkarMul<GraphT, GraphTCoarse>::UpdateParams() {
 }
 
 template <typename GraphT, typename GraphTCoarse>
-RETURN_STATUS SarkarMul<GraphT, GraphTCoarse>::RunSingleContractionMode(VertexIdxT<GraphT> &diffVertices) {
-    RETURN_STATUS status = RETURN_STATUS::OSP_SUCCESS;
+ReturnStatus SarkarMul<GraphT, GraphTCoarse>::RunSingleContractionMode(VertexIdxT<GraphT> &diffVertices) {
+    ReturnStatus status = ReturnStatus::OSP_SUCCESS;
 
     VertexIdxT<GraphT> currentNumVertices;
     if (firstCoarsen_) {
@@ -139,7 +139,7 @@ RETURN_STATUS SarkarMul<GraphT, GraphTCoarse>::RunSingleContractionMode(VertexId
     }
 
     if (!coarsenSuccess) {
-        status = RETURN_STATUS::ERROR;
+        status = ReturnStatus::ERROR;
     }
 
     status = std::max(
@@ -152,8 +152,8 @@ RETURN_STATUS SarkarMul<GraphT, GraphTCoarse>::RunSingleContractionMode(VertexId
 }
 
 template <typename GraphT, typename GraphTCoarse>
-RETURN_STATUS SarkarMul<GraphT, GraphTCoarse>::RunContractions(VWorkwT<GraphT> commCost) {
-    RETURN_STATUS status = RETURN_STATUS::OSP_SUCCESS;
+ReturnStatus SarkarMul<GraphT, GraphTCoarse>::RunContractions(VWorkwT<GraphT> commCost) {
+    ReturnStatus status = ReturnStatus::OSP_SUCCESS;
     VertexIdxT<GraphT> diff = 0;
 
     params.commCost = commCost;
@@ -240,8 +240,8 @@ RETURN_STATUS SarkarMul<GraphT, GraphTCoarse>::RunContractions(VWorkwT<GraphT> c
 }
 
 template <typename GraphT, typename GraphTCoarse>
-RETURN_STATUS SarkarMul<GraphT, GraphTCoarse>::RunBufferMerges() {
-    RETURN_STATUS status = RETURN_STATUS::OSP_SUCCESS;
+ReturnStatus SarkarMul<GraphT, GraphTCoarse>::RunBufferMerges() {
+    ReturnStatus status = ReturnStatus::OSP_SUCCESS;
 
     unsigned noChange = 0;
     while (no_change < ml_params.max_num_iteration_without_changes) {
@@ -287,10 +287,10 @@ RETURN_STATUS SarkarMul<GraphT, GraphTCoarse>::RunBufferMerges() {
 }
 
 template <typename GraphT, typename GraphTCoarse>
-RETURN_STATUS SarkarMul<GraphT, GraphTCoarse>::RunContractions() {
+ReturnStatus SarkarMul<GraphT, GraphTCoarse>::RunContractions() {
     InitParams();
 
-    RETURN_STATUS status = RETURN_STATUS::OSP_SUCCESS;
+    ReturnStatus status = ReturnStatus::OSP_SUCCESS;
 
     for (const VWorkwT<GraphT> commCost : ml_params.commCostVec) {
         status = std::max(status, run_contractions(commCost));

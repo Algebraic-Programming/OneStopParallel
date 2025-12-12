@@ -33,15 +33,15 @@ template <typename ConcreteGraphT>
 class BspScheduleTestSuiteRunner : public AbstractTestSuiteRunner<BspSchedule<ConcreteGraphT>, ConcreteGraphT> {
   private:
   protected:
-    RETURN_STATUS compute_target_object_impl(const BspInstance<ConcreteGraphT> &instance,
-                                             std::unique_ptr<BspSchedule<ConcreteGraphT>> &schedule,
-                                             const pt::ptree &algoConfig,
-                                             long long &computationTimeMs) override {
+    ReturnStatus compute_target_object_impl(const BspInstance<ConcreteGraphT> &instance,
+                                            std::unique_ptr<BspSchedule<ConcreteGraphT>> &schedule,
+                                            const pt::ptree &algoConfig,
+                                            long long &computationTimeMs) override {
         schedule = std::make_unique<BspSchedule<ConcreteGraphT>>(instance);
 
         const auto startTime = std::chrono::high_resolution_clock::now();
 
-        RETURN_STATUS status = run_bsp_scheduler(this->parser, algoConfig, *schedule);
+        ReturnStatus status = run_bsp_scheduler(this->parser, algoConfig, *schedule);
 
         const auto finishTime = std::chrono::high_resolution_clock::now();
         computationTimeMs = std::chrono::duration_cast<std::chrono::milliseconds>(finishTime - startTime).count();

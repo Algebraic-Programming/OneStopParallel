@@ -80,14 +80,14 @@ class ImprovementScheduler {
      * @param schedule The BspSchedule to be improved.
      * @return The status of the improvement operation.
      */
-    virtual RETURN_STATUS ImproveSchedule(BspSchedule<GraphT> &schedule) = 0;
+    virtual ReturnStatus ImproveSchedule(BspSchedule<GraphT> &schedule) = 0;
 
     /**
      * @brief Improve the given BspSchedule within the time limit.
      * @param schedule The BspSchedule to be improved.
      * @return The status of the improvement operation.
      */
-    virtual RETURN_STATUS ImproveScheduleWithTimeLimit(BspSchedule<GraphT> &schedule) = 0;
+    virtual ReturnStatus ImproveScheduleWithTimeLimit(BspSchedule<GraphT> &schedule) = 0;
 };
 
 template <typename GraphT>
@@ -106,9 +106,9 @@ class ComboScheduler : public Scheduler<GraphT> {
         return baseScheduler_.getScheduleName() + "+" + improvementScheduler_.getScheduleName();
     }
 
-    virtual RETURN_STATUS computeSchedule(BspSchedule<GraphT> &schedule) override {
-        RETURN_STATUS status = baseScheduler_.computeSchedule(schedule);
-        if (status != RETURN_STATUS::OSP_SUCCESS and status != RETURN_STATUS::BEST_FOUND) {
+    virtual ReturnStatus computeSchedule(BspSchedule<GraphT> &schedule) override {
+        ReturnStatus status = baseScheduler_.computeSchedule(schedule);
+        if (status != ReturnStatus::OSP_SUCCESS and status != ReturnStatus::BEST_FOUND) {
             return status;
         }
 
