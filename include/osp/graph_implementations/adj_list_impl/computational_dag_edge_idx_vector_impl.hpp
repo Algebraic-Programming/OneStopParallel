@@ -95,21 +95,6 @@ class ComputationalDagEdgeIdxVectorImpl {
     std::vector<std::vector<DirectedEdgeDescriptor>> outEdges_;
     std::vector<std::vector<DirectedEdgeDescriptor>> inEdges_;
 
-    // struct cdag_edge_source_view {
-    //     using value_type = vertex_idx;
-
-    //     vertex_idx operator()(directed_edge_descriptor &p) const { return p.source; }
-    // };
-
-    // struct cdag_edge_target_view {
-    //     vertex_idx &operator()(directed_edge_descriptor &p) const { return p.target; }
-    //     const vertex_idx &operator()(directed_edge_descriptor const &p) const { return p.target; }
-    // };
-
-    // using edge_adapter_source_t = ContainerAdaptor<cdag_edge_source_view, const
-    // std::vector<directed_edge_descriptor>>; using edge_adapter_target_t = ContainerAdaptor<cdag_edge_target_view,
-    //  const std::vector<directed_edge_descriptor>>;
-
   public:
     ComputationalDagEdgeIdxVectorImpl() = default;
 
@@ -160,9 +145,9 @@ class ComputationalDagEdgeIdxVectorImpl {
 
     inline auto Edges() const { return EdgeRangeVectorImpl<ThisT>(*this); }
 
-    inline auto Parents(VertexIdx v) const { return edge_source_range(inEdges_[v], *this); }
+    inline auto Parents(VertexIdx v) const { return EdgeSourceRange(inEdges_[v], *this); }
 
-    inline auto Children(VertexIdx v) const { return edge_target_range(outEdges_[v], *this); }
+    inline auto Children(VertexIdx v) const { return EdgeTargetRange(outEdges_[v], *this); }
 
     inline auto Vertices() const { return IntegralRange<VertexIdx>(static_cast<VertexIdx>(vertices_.size())); }
 
@@ -288,7 +273,7 @@ using ComputationalDagEdgeIdxVectorImplDefIntT = ComputationalDagEdgeIdxVectorIm
 static_assert(IsDirectedGraphEdgeDescV<ComputationalDagEdgeIdxVectorImplDefT>,
               "computational_dag_edge_idx_vector_impl must satisfy the directed_graph_edge_desc concept");
 
-static_assert(isComputationalDagTypedVerticesEdgeDescV<ComputationalDagEdgeIdxVectorImplDefT>,
+static_assert(IsComputationalDagTypedVerticesEdgeDescV<ComputationalDagEdgeIdxVectorImplDefT>,
               "computational_dag_edge_idx_vector_impl must satisfy the computation_dag_typed_vertices_edge_desc concept");
 
 }    // namespace osp
@@ -299,7 +284,7 @@ struct std::hash<osp::DirectedEdgeDescriptorImpl<VImpl>> {
 
     std::size_t operator()(const osp::DirectedEdgeDescriptorImpl<VImpl> &p) const noexcept {
         auto h1 = std::hash<VertexIdx>{}(p.source);
-        osp::hash_combine(h1, p.target);
+        osp::HashCombine(h1, p.target);
 
         return h1;
     }

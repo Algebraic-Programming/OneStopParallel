@@ -1233,10 +1233,10 @@ std::vector<std::size_t> Sarkar<GraphTIn, GraphTOut>::ComputeNodeHashes(const Gr
     for (const VertexType &vert : graph.vertices()) {
         std::size_t &hash = hashes[vert];
         hash = std::hash<VWorkwT<Graph_t_in>>{}(graph.VertexWorkWeight(vert));
-        hash_combine(hash, vertexPoset[vert]);
-        hash_combine(hash, dist[vert]);
+        HashCombine(hash, vertexPoset[vert]);
+        HashCombine(hash, dist[vert]);
         if constexpr (HasTypedVerticesV<Graph_t_in>) {
-            hash_combine(hash, graph.VertexType(vert));
+            HashCombine(hash, graph.VertexType(vert));
         }
     }
 
@@ -1316,11 +1316,11 @@ VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::HomogeneousBufferMerge(
         std::vector<std::size_t> hashValuesWithParents = hashValues;
         for (const VertexType &par : graph.vertices()) {
             for (const VertexType &chld : graph.Children(par)) {
-                hash_combine(hashValuesWithParents[chld], hashValues[par]);
+                HashCombine(hashValuesWithParents[chld], hashValues[par]);
             }
         }
         for (const VertexType &vert : graph.vertices()) {
-            hash_combine(hashValuesCombined[vert], hashValuesWithParents[vert]);
+            HashCombine(hashValuesCombined[vert], hashValuesWithParents[vert]);
         }
     }
     if (params.mode == SarkarParams::Mode::FAN_IN_BUFFER || params.mode == SarkarParams::Mode::HOMOGENEOUS_BUFFER) {
@@ -1328,11 +1328,11 @@ VertexIdxT<Graph_t_in> Sarkar<GraphTIn, GraphTOut>::HomogeneousBufferMerge(
         std::vector<std::size_t> hashValuesWithChildren = hashValues;
         for (const VertexType &chld : graph.vertices()) {
             for (const VertexType &par : graph.Parents(chld)) {
-                hash_combine(hashValuesWithChildren[par], hashValues[chld]);
+                HashCombine(hashValuesWithChildren[par], hashValues[chld]);
             }
         }
         for (const VertexType &vert : graph.vertices()) {
-            hash_combine(hashValuesCombined[vert], hashValuesWithChildren[vert]);
+            HashCombine(hashValuesCombined[vert], hashValuesWithChildren[vert]);
         }
     }
 

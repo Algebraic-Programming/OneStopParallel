@@ -130,7 +130,7 @@ class ComputationalDagVectorImpl {
     /**
      * @brief Returns a range of all vertex indices.
      */
-    [[nodiscard]] auto Vertices() const { return integral_range<VertexIdx>(static_cast<VertexIdx>(vertices_.size())); }
+    [[nodiscard]] auto Vertices() const { return IntegralRange<VertexIdx>(static_cast<VertexIdx>(vertices_.size())); }
 
     /**
      * @brief Returns the total number of vertices.
@@ -171,13 +171,13 @@ class ComputationalDagVectorImpl {
      */
     [[nodiscard]] VertexIdx OutDegree(const VertexIdx v) const { return static_cast<VertexIdx>(outNeigbors_[v].size()); }
 
-    [[nodiscard]] VertexWorkWeightType VertexWorkWeight(const VertexIdx v) const { return vertices_[v].work_weight; }
+    [[nodiscard]] VertexWorkWeightType VertexWorkWeight(const VertexIdx v) const { return vertices_[v].workWeight_; }
 
-    [[nodiscard]] VertexCommWeightType VertexCommWeight(const VertexIdx v) const { return vertices_[v].comm_weight; }
+    [[nodiscard]] VertexCommWeightType VertexCommWeight(const VertexIdx v) const { return vertices_[v].commWeight_; }
 
-    [[nodiscard]] VertexMemWeightType VertexMemWeight(const VertexIdx v) const { return vertices_[v].mem_weight; }
+    [[nodiscard]] VertexMemWeightType VertexMemWeight(const VertexIdx v) const { return vertices_[v].memWeight_; }
 
-    [[nodiscard]] VertexTypeType VertexType(const VertexIdx v) const { return vertices_[v].vertex_type; }
+    [[nodiscard]] VertexTypeType VertexType(const VertexIdx v) const { return vertices_[v].vertexType_; }
 
     [[nodiscard]] VertexTypeType NumVertexTypes() const { return numVertexTypes_; }
 
@@ -206,17 +206,17 @@ class ComputationalDagVectorImpl {
     }
 
     void SetVertexWorkWeight(const VertexIdx v, const VertexWorkWeightType workWeight) {
-        vertices_.at(v).work_weight = workWeight;
+        vertices_.at(v).workWeight_ = workWeight;
     }
 
     void SetVertexCommWeight(const VertexIdx v, const VertexCommWeightType commWeight) {
-        vertices_.at(v).comm_weight = commWeight;
+        vertices_.at(v).commWeight_ = commWeight;
     }
 
-    void SetVertexMemWeight(const VertexIdx v, const VertexMemWeightType memWeight) { vertices_.at(v).mem_weight = memWeight; }
+    void SetVertexMemWeight(const VertexIdx v, const VertexMemWeightType memWeight) { vertices_.at(v).memWeight_ = memWeight; }
 
     void SetVertexType(const VertexIdx v, const VertexTypeType vertexType) {
-        vertices_.at(v).vertex_type = vertexType;
+        vertices_.at(v).vertexType_ = vertexType;
         numVertexTypes_ = std::max(numVertexTypes_, vertexType + 1);
     }
 

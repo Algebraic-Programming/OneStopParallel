@@ -62,7 +62,7 @@ class MerkleHashComputer : public HashComputer<VertexIdxT<GraphT>> {
 
         std::size_t hash = nodeHashFunc_(v);
         for (const auto &pcHash : parentChildHashes) {
-            hash_combine(hash, pcHash);
+            HashCombine(hash, pcHash);
         }
 
         vertexHashes_[v] = hash;

@@ -69,7 +69,7 @@ struct LocalMemoryConstraint {
 
     inline void Initialize(const BspInstance<GraphT> &instance) {
         instance_ = &instance;
-        current_proc_memory = std::vector<VMemwT<GraphT>>(instance->NumberOfProcessors(), 0);
+        currentProcMemory_ = std::vector<VMemwT<GraphT>>(instance->NumberOfProcessors(), 0);
 
         if (instance->GetArchitecture().GetMemoryConstraintType() != MemoryConstraintType::LOCAL) {
             throw std::invalid_argument("Memory constraint type is not LOCAL");
@@ -77,23 +77,23 @@ struct LocalMemoryConstraint {
     }
 
     inline bool CanAdd(const VertexIdxT<GraphT> &v, const unsigned proc) const {
-        return current_proc_memory[proc] + instance->GetComputationalDag().VertexMemWeight(v)
+        return currentProcMemory_[proc] + instance->GetComputationalDag().VertexMemWeight(v)
                <= instance->GetArchitecture().memoryBound(proc);
     }
 
     inline void Add(const VertexIdxT<GraphT> &v, const unsigned proc) {
-        current_proc_memory[proc] += instance->GetComputationalDag().VertexMemWeight(v);
+        currentProcMemory_[proc] += instance->GetComputationalDag().VertexMemWeight(v);
     }
 
     inline bool CanAdd(const unsigned proc, const VMemwT<GraphT> &customMemWeight, const VMemwT<GraphT> &) const {
-        return current_proc_memory[proc] + custom_mem_weight <= instance->GetArchitecture().memoryBound(proc);
+        return currentProcMemory_[proc] + custom_mem_weight <= instance->GetArchitecture().memoryBound(proc);
     }
 
     inline void Add(const unsigned proc, const VMemwT<GraphT> &customMemWeight, const VMemwT<GraphT> &) {
-        current_proc_memory[proc] += custom_mem_weight;
+        currentProcMemory_[proc] += custom_mem_weight;
     }
 
-    inline void Reset(const unsigned proc) { current_proc_memory[proc] = 0; }
+    inline void Reset(const unsigned proc) { currentProcMemory_[proc] = 0; }
 };
 
 /**
@@ -170,7 +170,7 @@ struct GlobalMemoryConstraint {
 
     inline void Initialize(const BspInstance<GraphT> &instance) {
         instance_ = &instance;
-        current_proc_memory = std::vector<VMemwT<GraphT>>(instance->NumberOfProcessors(), 0);
+        currentProcMemory_ = std::vector<VMemwT<GraphT>>(instance->NumberOfProcessors(), 0);
 
         if (instance->GetArchitecture().GetMemoryConstraintType() != MemoryConstraintType::GLOBAL) {
             throw std::invalid_argument("Memory constraint type is not GLOBAL");
@@ -178,20 +178,20 @@ struct GlobalMemoryConstraint {
     }
 
     inline bool CanAdd(const VertexIdxT<GraphT> &v, const unsigned proc) const {
-        return current_proc_memory[proc] + instance->GetComputationalDag().VertexMemWeight(v)
+        return currentProcMemory_[proc] + instance->GetComputationalDag().VertexMemWeight(v)
                <= instance->GetArchitecture().memoryBound(proc);
     }
 
     inline void Add(const VertexIdxT<GraphT> &v, const unsigned proc) {
-        current_proc_memory[proc] += instance->GetComputationalDag().VertexMemWeight(v);
+        currentProcMemory_[proc] += instance->GetComputationalDag().VertexMemWeight(v);
     }
 
     inline bool CanAdd(const unsigned proc, const VMemwT<GraphT> &customMemWeight, const VCommwT<GraphT> &) const {
-        return current_proc_memory[proc] + custom_mem_weight <= instance->GetArchitecture().memoryBound(proc);
+        return currentProcMemory_[proc] + custom_mem_weight <= instance->GetArchitecture().memoryBound(proc);
     }
 
     inline void Add(const unsigned proc, const VMemwT<GraphT> &customMemWeight, const VCommwT<GraphT> &) {
-        current_proc_memory[proc] += custom_mem_weight;
+        currentProcMemory_[proc] += custom_mem_weight;
     }
 
     inline void Reset(const unsigned) {}
@@ -232,7 +232,7 @@ struct LocalInOutMemoryConstraint {
         currentSuperstep_ = &supstepIdx;
         schedule_ = &schedule;
         instance_ = &schedule_->GetInstance();
-        current_proc_memory = std::vector<VMemwT<GraphT>>(instance->NumberOfProcessors(), 0);
+        currentProcMemory_ = std::vector<VMemwT<GraphT>>(instance->NumberOfProcessors(), 0);
 
         if (instance->GetArchitecture().GetMemoryConstraintType() != MemoryConstraintType::LOCAL_IN_OUT) {
             throw std::invalid_argument("Memory constraint type is not LOCAL_IN_OUT");
@@ -250,22 +250,22 @@ struct LocalInOutMemoryConstraint {
             }
         }
 
-        return current_proc_memory[proc] + inc_memory <= instance->GetArchitecture().memoryBound(proc);
+        return currentProcMemory_[proc] + inc_memory <= instance->GetArchitecture().memoryBound(proc);
     }
 
     inline void Add(const VertexIdxT<GraphT> &v, const unsigned proc) {
-        current_proc_memory[proc]
+        currentProcMemory_[proc]
             += instance->GetComputationalDag().VertexMemWeight(v) + instance->GetComputationalDag().VertexCommWeight(v);
 
         for (const auto &pred : instance->GetComputationalDag().Parents(v)) {
             if (schedule->assignedProcessor(pred) == schedule->assignedProcessor(v)
                 && schedule->assignedSuperstep(pred) == *current_superstep) {
-                current_proc_memory[proc] -= instance->GetComputationalDag().VertexCommWeight(pred);
+                currentProcMemory_[proc] -= instance->GetComputationalDag().VertexCommWeight(pred);
             }
         }
     }
 
-    inline void Reset(const unsigned proc) { current_proc_memory[proc] = 0; }
+    inline void Reset(const unsigned proc) { currentProcMemory_[proc] = 0; }
 };
 
 template <typename GraphT>
@@ -287,7 +287,7 @@ struct LocalIncEdgesMemoryConstraint {
         schedule_ = &schedule;
         instance_ = &schedule_->GetInstance();
 
-        current_proc_memory = std::vector<VCommwT<GraphT>>(instance->NumberOfProcessors(), 0);
+        currentProcMemory_ = std::vector<VCommwT<GraphT>>(instance->NumberOfProcessors(), 0);
         current_proc_predec = std::vector<std::unordered_set<VertexIdxT<GraphT>>>(instance->NumberOfProcessors());
 
         if (instance->GetArchitecture().GetMemoryConstraintType() != MemoryConstraintType::LOCAL_INC_EDGES) {
@@ -305,24 +305,24 @@ struct LocalIncEdgesMemoryConstraint {
             }
         }
 
-        return current_proc_memory[proc] + inc_memory <= instance->GetArchitecture().memoryBound(proc);
+        return currentProcMemory_[proc] + inc_memory <= instance->GetArchitecture().memoryBound(proc);
     }
 
     inline void Add(const VertexIdxT<GraphT> &v, const unsigned proc) {
-        current_proc_memory[proc] += instance->GetComputationalDag().VertexCommWeight(v);
+        currentProcMemory_[proc] += instance->GetComputationalDag().VertexCommWeight(v);
 
         for (const auto &pred : instance->GetComputationalDag().Parents(v)) {
             if (schedule->assignedSuperstep(pred) != *current_superstep) {
                 const auto pair = current_proc_predec[proc].insert(pred);
                 if (pair.second) {
-                    current_proc_memory[proc] += instance->GetComputationalDag().VertexCommWeight(pred);
+                    currentProcMemory_[proc] += instance->GetComputationalDag().VertexCommWeight(pred);
                 }
             }
         }
     }
 
     inline void Reset(const unsigned proc) {
-        current_proc_memory[proc] = 0;
+        currentProcMemory_[proc] = 0;
         current_proc_predec[proc].clear();
     }
 };
@@ -349,7 +349,7 @@ struct LocalSourcesIncEdgesMemoryConstraint {
         schedule_ = &schedule;
         instance_ = &schedule_->GetInstance();
 
-        current_proc_memory = std::vector<VMemwT<GraphT>>(instance->NumberOfProcessors(), 0);
+        currentProcMemory_ = std::vector<VMemwT<GraphT>>(instance->NumberOfProcessors(), 0);
         current_proc_predec = std::vector<std::unordered_set<VertexIdxT<GraphT>>>(instance->NumberOfProcessors());
 
         if (instance->GetArchitecture().GetMemoryConstraintType() != MemoryConstraintType::LOCAL_SOURCES_INC_EDGES) {
@@ -371,26 +371,26 @@ struct LocalSourcesIncEdgesMemoryConstraint {
             }
         }
 
-        return current_proc_memory[proc] + inc_memory <= instance->GetArchitecture().memoryBound(proc);
+        return currentProcMemory_[proc] + inc_memory <= instance->GetArchitecture().memoryBound(proc);
     }
 
     inline void Add(const VertexIdxT<GraphT> &v, const unsigned proc) {
         if (IsSource(v, instance_->GetComputationalDag())) {
-            current_proc_memory[proc] += instance->GetComputationalDag().VertexMemWeight(v);
+            currentProcMemory_[proc] += instance->GetComputationalDag().VertexMemWeight(v);
         }
 
         for (const auto &pred : instance->GetComputationalDag().Parents(v)) {
             if (schedule->assignedSuperstep(pred) != *current_superstep) {
                 const auto pair = current_proc_predec[proc].insert(pred);
                 if (pair.second) {
-                    current_proc_memory[proc] += instance->GetComputationalDag().VertexCommWeight(pred);
+                    currentProcMemory_[proc] += instance->GetComputationalDag().VertexCommWeight(pred);
                 }
             }
         }
     }
 
     inline void Reset(const unsigned proc) {
-        current_proc_memory[proc] = 0;
+        currentProcMemory_[proc] = 0;
         current_proc_predec[proc].clear();
     }
 };

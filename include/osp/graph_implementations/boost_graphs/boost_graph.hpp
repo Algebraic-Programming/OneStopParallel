@@ -71,7 +71,7 @@ template <>
 struct std::hash<BoostEdgeDesc> {
     std::size_t operator()(const BoostEdgeDesc &p) const noexcept {
         auto h1 = std::hash<std::size_t>{}(p.m_source);
-        osp::hash_combine(h1, p.m_target);
+        osp::HashCombine(h1, p.m_target);
 
         return h1;
     }

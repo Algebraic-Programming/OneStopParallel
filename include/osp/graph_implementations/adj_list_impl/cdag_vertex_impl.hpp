@@ -51,11 +51,11 @@ struct CdagVertexImpl {
     /**
      * @brief Constructs a vertex with specified properties.
      *
-     * @param vertex_idx_ The unique identifier for the vertex.
-     * @param work_w The computational work weight.
-     * @param comm_w The communication weight.
-     * @param mem_w The memory weight.
-     * @param vertex_t The type of the vertex.
+     * @param vertexIdx The unique identifier for the vertex.
+     * @param workW The computational work weight.
+     * @param commW The communication weight.
+     * @param memW The memory weight.
+     * @param vertexT The type of the vertex.
      */
     CdagVertexImpl(VertexIdxT vertexIdx, WorkwT workW, CommwT commW, MemwT memW, VertexTypeT vertexT)
         : id_(vertexIdx), workWeight_(workW), commWeight_(commW), memWeight_(memW), vertexType_(vertexT) {}
