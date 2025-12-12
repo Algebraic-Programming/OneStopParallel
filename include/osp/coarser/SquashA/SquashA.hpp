@@ -68,7 +68,7 @@ class SquashA : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
         T lowerThirdWt = std::max(lower_third_it->second, static_cast<T>(1));    // Could be 0
 
         Union_Find_Universe<VertexIdxT<GraphTIn>, VertexIdxT<GraphTIn>, VWorkwT<GraphTIn>, VMemwT<GraphTIn>> connected_components;
-        for (const auto &vert : dagIn.vertices()) {
+        for (const auto &vert : dagIn.Vertices()) {
             connected_components.add_object(vert, dag_in.VertexWorkWeight(vert), dag_in.VertexMemWeight(vert));
         }
 
@@ -198,7 +198,7 @@ class SquashA : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
 
         } else {
             partitionVec.reserve(dagIn.NumVertices());
-            for (const auto &vert : dagIn.vertices()) {
+            for (const auto &vert : dagIn.Vertices()) {
                 std::vector<VertexIdxT<GraphTIn>> vect;
                 vect.push_back(vert);
                 partitionVec.emplace_back(vect);

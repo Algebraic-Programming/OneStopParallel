@@ -135,7 +135,7 @@ ReturnStatus MultilevelCoarseAndSchedule<GraphT, GraphTCoarse>::ExpandActiveSche
         *(mlCoarser_->dagHistory.at(static_cast<std::size_t>(activeGraph_) - 1)), originalInst_->GetArchitecture());
     std::unique_ptr<BspSchedule<GraphTCoarse>> expandedSchedule = std::make_unique<BspSchedule<GraphTCoarse>>(*expandedInstance);
 
-    for (const auto &node : expandedInstance->GetComputationalDag().vertices()) {
+    for (const auto &node : expandedInstance->GetComputationalDag().Vertices()) {
         expandedSchedule->SetAssignedProcessor(
             node,
             activeSchedule_->AssignedProcessor(mlCoarser_->contraction_maps.at(static_cast<std::size_t>(activeGraph_))->at(node)));

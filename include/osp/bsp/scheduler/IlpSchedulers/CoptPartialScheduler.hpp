@@ -128,7 +128,7 @@ void CoptPartialScheduler<GraphT>::SetInitialSolution(const BspScheduleCS<GraphT
     const unsigned &numProcessors = schedule.GetInstance().NumberOfProcessors();
     const auto &cs = schedule.getCommunicationSchedule();
 
-    for (const VertexIdxT<GraphT> &node : DAG.vertices()) {
+    for (const VertexIdxT<GraphT> &node : DAG.Vertices()) {
         if (node_local_ID.find(node) == node_local_ID.end()) {
             continue;
         }
@@ -147,7 +147,7 @@ void CoptPartialScheduler<GraphT>::SetInitialSolution(const BspScheduleCS<GraphT
         model.SetMipStart(keep_fixed_comm_step[static_cast<int>(index)], 1);
     }
 
-    for (const auto &node : dag.vertices()) {
+    for (const auto &node : dag.Vertices()) {
         if (node_local_ID.find(node) == node_local_ID.end()) {
             continue;
         }
@@ -172,7 +172,7 @@ void CoptPartialScheduler<GraphT>::SetInitialSolution(const BspScheduleCS<GraphT
         }
     }
 
-    for (const auto &source : dag.vertices()) {
+    for (const auto &source : dag.Vertices()) {
         if (source_local_ID.find(source) == source_local_ID.end()) {
             continue;
         }

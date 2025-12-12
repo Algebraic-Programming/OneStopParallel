@@ -36,7 +36,7 @@ void AddMemWeights(GraphT &dag) {
     int memWeight = 1;
     int commWeight = 7;
 
-    for (const auto &v : dag.vertices()) {
+    for (const auto &v : dag.Vertices()) {
         dag.SetVertexWorkWeight(v, static_cast<VMemwT<GraphT>>(memWeight++ % 10 + 2));
         dag.SetVertexMemWeight(v, static_cast<VMemwT<GraphT>>(memWeight++ % 10 + 2));
         dag.SetVertexCommWeight(v, static_cast<VCommwT<GraphT>>(commWeight++ % 10 + 2));
@@ -47,7 +47,7 @@ template <typename GraphT>
 void AddNodeTypes(GraphT &dag) {
     unsigned nodeType = 0;
 
-    for (const auto &v : dag.vertices()) {
+    for (const auto &v : dag.Vertices()) {
         dag.SetVertexType(v, nodeType++ % 2);
     }
 }

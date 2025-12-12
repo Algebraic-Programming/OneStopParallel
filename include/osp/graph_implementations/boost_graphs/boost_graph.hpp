@@ -216,7 +216,7 @@ class BoostGraph {
 
     void UpdateNumberOfVertexTypes() {
         numberOfVertexTypes_ = 0;
-        for (const auto &v : vertices()) {
+        for (const auto &v : Vertices()) {
             if (VertexType(v) >= numberOfVertexTypes_) {
                 numberOfVertexTypes_ = VertexType(v) + 1;
             }

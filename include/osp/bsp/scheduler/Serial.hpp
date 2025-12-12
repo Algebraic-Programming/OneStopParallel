@@ -89,7 +89,7 @@ class Serial : public Scheduler<GraphT> {
         std::deque<VertexIdxT<GraphT>> readyNodes;
         std::deque<VertexIdxT<GraphT>> deferredNodes;
 
-        for (const auto &v : dag.vertices()) {
+        for (const auto &v : dag.Vertices()) {
             schedule.SetAssignedProcessor(v, std::numeric_limits<unsigned>::max());
             schedule.SetAssignedSuperstep(v, std::numeric_limits<unsigned>::max());
             inDegree[v] = dag.InDegree(v);

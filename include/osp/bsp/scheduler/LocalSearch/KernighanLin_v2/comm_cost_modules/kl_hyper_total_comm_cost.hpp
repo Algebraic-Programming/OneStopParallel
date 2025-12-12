@@ -77,7 +77,7 @@ struct KlHyperTotalCommCostFunction {
         }
 
         CostT commCosts = 0;
-        for (const auto vertex : graph_->vertices()) {
+        for (const auto vertex : graph_->Vertices()) {
             const unsigned vertexProc = activeSchedule_->assigned_processor(vertex);
             const CostT vCommCost = graph_->VertexCommWeight(vertex);
             maxCommWeight_ = std::max(maxCommWeight_, vCommCost);
@@ -105,7 +105,7 @@ struct KlHyperTotalCommCostFunction {
         }
 
         CostT commCosts = 0;
-        for (const auto vertex : graph_->vertices()) {
+        for (const auto vertex : graph_->Vertices()) {
             const unsigned vertexProc = activeSchedule_->assigned_processor(vertex);
             const CostT vCommCost = graph_->VertexCommWeight(vertex);
             for (const auto lambdaproc_mult_pair : node_lambda_map.iterate_proc_entries(vertex)) {

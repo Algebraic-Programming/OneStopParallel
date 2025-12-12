@@ -118,7 +118,7 @@ HypergraphT ConvertFromCdagAsDag(const GraphT &dag) {
                   "Communication weight type mismatch, cannot convert DAG to hypergraph.");
 
     HypergraphT hgraph(dag.NumVertices(), 0);
-    for (const auto &node : dag.vertices()) {
+    for (const auto &node : dag.Vertices()) {
         hgraph.SetVertexWorkWeight(node, dag.VertexWorkWeight(node));
         hgraph.set_vertex_memory_weight(node, dag.VertexMemWeight(node));
         for (const auto &child : dag.Children(node)) {
@@ -146,7 +146,7 @@ HypergraphT ConvertFromCdagAsHyperdag(const GraphT &dag) {
                   "Communication weight type mismatch, cannot convert DAG to hypergraph.");
 
     HypergraphT hgraph(dag.NumVertices(), 0);
-    for (const auto &node : dag.vertices()) {
+    for (const auto &node : dag.Vertices()) {
         hgraph.SetVertexWorkWeight(node, dag.VertexWorkWeight(node));
         hgraph.set_vertex_memory_weight(node, dag.VertexMemWeight(node));
         if (dag.OutDegree(node) == 0) {

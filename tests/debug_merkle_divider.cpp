@@ -74,7 +74,7 @@ int main(int argc, char *argv[]) {
 
     std::cout << "Graph loaded successfully. " << instance.NumberOfVertices() << " vertices." << std::endl;
 
-    for (auto v : instance.GetComputationalDag().vertices()) {
+    for (auto v : instance.GetComputationalDag().Vertices()) {
         instance.GetComputationalDag().SetVertexCommWeight(
             v, static_cast<VCommwT<GraphT2>>(instance.GetComputationalDag().VertexCommWeight(v) * 0.01));
     }

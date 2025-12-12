@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(HypergraphAndPartitionTest) {
 
     // HyperDAG format, one hypredge for each non-sink node
     unsigned nrOfNonSinks = 0;
-    for (const auto &node : dag.vertices()) {
+    for (const auto &node : dag.Vertices()) {
         if (dag.OutDegree(node) > 0) {
             ++nrOfNonSinks;
         }

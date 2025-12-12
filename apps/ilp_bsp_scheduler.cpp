@@ -81,7 +81,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // for (const auto &vertex : graph.vertices()) {
+    // for (const auto &vertex : graph.Vertices()) {
 
     //     graph.SetVertexWorkWeight(vertex, graph.VertexWorkWeight(vertex) * 80);
     // }

@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(TestEmptyDag) {
     BOOST_CHECK_EQUAL(graph.NumVertices(), 0);
 
     size_t idx = 0;
-    for (const auto &v : graph.vertices()) {
+    for (const auto &v : graph.Vertices()) {
         graph.InDegree(v);
         idx++;
     }
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(TestDag) {
 
     size_t idx = 0;
 
-    for (const auto &v : graph.vertices()) {
+    for (const auto &v : graph.Vertices()) {
         BOOST_CHECK_EQUAL(v, vertices[idx++]);
 
         size_t i = 0;
@@ -243,7 +243,7 @@ BOOST_AUTO_TEST_CASE(TestDagVectorAdapter) {
 
     size_t idx = 0;
 
-    for (const auto &v : graph.vertices()) {
+    for (const auto &v : graph.Vertices()) {
         BOOST_CHECK_EQUAL(v, vertices[idx++]);
 
         unsigned vv = static_cast<unsigned>(v);

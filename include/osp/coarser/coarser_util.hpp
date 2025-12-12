@@ -132,7 +132,7 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
             for (const VertexIdxT<GraphTIn> &vert : dagIn.Vertices()) {
                 coarsenedDag.SetVertexType(vertexContractionMap[vert], dagIn.VertexType(vert));
             }
-            // assert(std::all_of(dag_in.vertices().begin(), dag_in.vertices().end(),
+            // assert(std::all_of(dag_in.Vertices().begin(), dag_in.Vertices().end(),
             //         [&dag_in, &vertex_contraction_map, &coarsened_dag](const auto &vert){ return
             //         dag_in.VertexType(vert) ==  coarsened_dag.VertexType(vertex_contraction_map[vert]); })
             //                 && "Contracted vertices must be of the same type");
@@ -194,7 +194,7 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
             for (const VertexIdxT<GraphTIn> &vert : dagIn.Vertices()) {
                 coarsenedDag.SetVertexType(vertexContractionMap[vert], dagIn.VertexType(vert));
             }
-            // assert(std::all_of(dag_in.vertices().begin(), dag_in.vertices().end(),
+            // assert(std::all_of(dag_in.Vertices().begin(), dag_in.Vertices().end(),
             //         [&dag_in, &vertex_contraction_map, &coarsened_dag](const auto &vert){ return
             //         dag_in.VertexType(vert) ==  coarsened_dag.VertexType(vertex_contraction_map[vert]); })
             //                 && "Contracted vertices must be of the same type");
@@ -309,7 +309,7 @@ bool ConstructCoarseDag(const GraphTIn &dagIn, GraphTOut &coarsenedDag, std::vec
             for (const VertexIdxT<GraphTIn> &vert : dagIn.Vertices()) {
                 coarsenedDag.SetVertexType(vertexContractionMap[vert], dagIn.VertexType(vert));
             }
-            // assert(std::all_of(dag_in.vertices().begin(), dag_in.vertices().end(),
+            // assert(std::all_of(dag_in.Vertices().begin(), dag_in.Vertices().end(),
             //         [&dag_in, &vertex_contraction_map, &coarsened_dag](const auto &vert){ return
             //         dag_in.VertexType(vert) ==  coarsened_dag.VertexType(vertex_contraction_map[vert]); })
             //                 && "Contracted vertices must be of the same type");
@@ -435,7 +435,7 @@ void ReorderExpansionMap(const GraphTIn &graph, std::vector<std::vector<VertexId
     }
 
     std::vector<std::size_t> prec(vertexExpansionMap.size(), 0);
-    for (const auto &vert : graph.vertices()) {
+    for (const auto &vert : graph.Vertices()) {
         for (const auto &par : graph.Parents(vert)) {
             if (vertexContractionMap.at(par) != vertexContractionMap.at(vert)) {
                 prec[vertexContractionMap.at(vert)] += 1;

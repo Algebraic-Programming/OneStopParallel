@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(SubGraphCompactSparseGraph) {
     CompactSparseGraph<true, true, true, true, true> subGraph;
 
     unsigned cntr = 0;
-    for (const auto &vert : graph.vertices()) {
+    for (const auto &vert : graph.Vertices()) {
         graph.SetVertexWorkWeight(vert, cntr++);
         graph.SetVertexCommWeight(vert, cntr++);
         graph.SetVertexMemWeight(vert, cntr++);

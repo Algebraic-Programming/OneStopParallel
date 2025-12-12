@@ -70,10 +70,10 @@ BOOST_AUTO_TEST_CASE(TestEmptyGraph) {
     BOOST_CHECK_EQUAL(graph.NumEdges(), 0);
     BOOST_CHECK_EQUAL(graph.NumVertices(), 0);
 
-    std::vector<VertexIdx> sources = source_vertices(graph);
+    std::vector<VertexIdx> sources = sourceVertices(graph);
     BOOST_CHECK_EQUAL(sources.size(), 0);
 
-    std::vector<VertexIdx> sinks = sink_vertices(graph);
+    std::vector<VertexIdx> sinks = sinkVertices(graph);
     BOOST_CHECK_EQUAL(sinks.size(), 0);
 
     BOOST_CHECK_EQUAL(is_acyclic(graph), true);
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(TestUtil1) {
     BOOST_CHECK_EQUAL(graph.NumEdges(), 9);
     BOOST_CHECK_EQUAL(graph.NumVertices(), 8);
 
-    std::vector<VertexIdx> sources = source_vertices(graph);
+    std::vector<VertexIdx> sources = sourceVertices(graph);
     BOOST_CHECK_EQUAL(sources.size(), 1);
     BOOST_CHECK_EQUAL(sources[0], 0);
 
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(TestUtil1) {
     BOOST_CHECK_EQUAL(sourcesS.size(), 1);
     BOOST_CHECK_EQUAL(sourcesS[0], 0);
 
-    std::vector<VertexIdx> sinks = sink_vertices(graph);
+    std::vector<VertexIdx> sinks = sinkVertices(graph);
     BOOST_CHECK_EQUAL(sinks.size(), 3);
     BOOST_CHECK_EQUAL(sinks[0], 5);
     BOOST_CHECK_EQUAL(sinks[1], 6);
@@ -453,14 +453,14 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 
     const auto longEdges = long_edges_in_triangles(graph);
 
-    BOOST_CHECK_EQUAL(graph.NumVertices(), std::distance(graph.vertices().begin(), graph.vertices().end()));
+    BOOST_CHECK_EQUAL(graph.NumVertices(), std::distance(graph.Vertices().begin(), graph.Vertices().end()));
     BOOST_CHECK_EQUAL(graph.NumEdges(), std::distance(edges(graph).begin(), edges(graph).end()));
-    for (const auto &v : graph.vertices()) {
+    for (const auto &v : graph.Vertices()) {
         BOOST_CHECK_EQUAL(graph.InDegree(v), std::distance(graph.Parents(v).begin(), graph.Parents(v).end()));
         BOOST_CHECK_EQUAL(graph.OutDegree(v), std::distance(graph.Children(v).begin(), graph.Children(v).end()));
     }
 
-    for (const auto i : graph.vertices()) {
+    for (const auto i : graph.Vertices()) {
         const auto v = graph.get_boost_graph()[i];
         BOOST_CHECK_EQUAL(v.workWeight, workW[i]);
         BOOST_CHECK_EQUAL(v.workWeight, graph.VertexWorkWeight(i));
@@ -480,7 +480,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     BOOST_CHECK_EQUAL(sumOfVerticesWorkWeights({}, graphEmpty), 0);
 
     std::size_t numEdges = 0;
-    for (const auto &vertex : graph.vertices()) {
+    for (const auto &vertex : graph.Vertices()) {
         numEdges += graph.OutDegree(vertex);
         for (const auto &parent : graph.Parents(vertex)) {
             BOOST_CHECK(std::any_of(
@@ -488,7 +488,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
         }
     }
 
-    for (const auto &vertex : graph.vertices()) {
+    for (const auto &vertex : graph.Vertices()) {
         for (const auto &child : graph.Children(vertex)) {
             BOOST_CHECK(std::any_of(
                 graph.Parents(child).cbegin(), graph.Parents(child).cend(), [vertex](VertexType k) { return k == vertex; }));
@@ -544,7 +544,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     }
 
     std::set<VertexType> allNodes;
-    for (const auto &vertex : graph.vertices()) {
+    for (const auto &vertex : graph.Vertices()) {
         allNodes.emplace(vertex);
     }
     std::set<VertexType> nodesA({8, 0});
@@ -630,7 +630,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
             for (auto &poisPara : poissonParams) {
                 std::vector<int> posetIntMap = get_strict_poset_integer_map(noise, poisPara, graph);
 
-                for (const auto &vertex : graph.vertices()) {
+                for (const auto &vertex : graph.Vertices()) {
                     for (const auto &child : graph.Children(vertex)) {
                         BOOST_CHECK_LE(posetIntMap[vertex] + 1, posetIntMap[child]);
                     }

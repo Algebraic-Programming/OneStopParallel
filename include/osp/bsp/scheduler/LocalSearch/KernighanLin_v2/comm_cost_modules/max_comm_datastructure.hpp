@@ -348,7 +348,7 @@ struct MaxCommDatastructure {
         const auto &vecSched = activeSchedule_->getVectorSchedule();
         const auto &graph = instance_->GetComputationalDag();
 
-        for (const auto &u : graph.vertices()) {
+        for (const auto &u : graph.Vertices()) {
             node_lambda_map.reset_node(u);
             const unsigned uProc = vecSched.AssignedProcessor(u);
             const unsigned uStep = vecSched.AssignedSuperstep(u);

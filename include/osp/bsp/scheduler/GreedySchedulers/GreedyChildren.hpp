@@ -40,7 +40,7 @@ class GreedyChildren : public Scheduler<GraphT> {
         using VertexType = VertexIdxT<GraphT>;
         const auto &instance = sched.GetInstance();
 
-        for (const auto &v : instance.GetComputationalDag().vertices()) {
+        for (const auto &v : instance.GetComputationalDag().Vertices()) {
             sched.SetAssignedProcessor(v, std::numeric_limits<unsigned>::max());
         }
 

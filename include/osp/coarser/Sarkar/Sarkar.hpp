@@ -196,7 +196,7 @@ VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::SingleContraction(
     };
     std::set<std::tuple<long, VertexType, VertexType>, decltype(cmp)> edgePriority(cmp);
 
-    for (const VertexType &edgeSrc : graph.vertices()) {
+    for (const VertexType &edgeSrc : graph.Vertices()) {
         for (const VertexType &edgeTgt : graph.Children(edgeSrc)) {
             if constexpr (HasTypedVerticesV<GraphTIn>) {
                 if (graph.VertexType(edgeSrc) != graph.VertexType(edgeTgt)) {
@@ -313,7 +313,7 @@ VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::SingleContraction(
     }
 
     expansionMapOutput.reserve(graph.NumVertices() - counter);
-    for (const VertexType &vert : graph.vertices()) {
+    for (const VertexType &vert : graph.Vertices()) {
         if (partitionedSourceFlag[vert]) {
             continue;
         }
@@ -342,7 +342,7 @@ VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::AllChildrenContraction(
     };
     std::set<std::pair<long, VertexType>, decltype(cmp)> vertPriority(cmp);
 
-    for (const VertexType &groupHead : graph.vertices()) {
+    for (const VertexType &groupHead : graph.Vertices()) {
         if (graph.OutDegree(groupHead) < 2) {
             continue;
         }
@@ -463,7 +463,7 @@ VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::AllChildrenContraction(
         }
     }
 
-    for (const VertexType &vert : graph.vertices()) {
+    for (const VertexType &vert : graph.Vertices()) {
         if (partitionedFlag[vert]) {
             continue;
         }
@@ -488,7 +488,7 @@ VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::AllParentsContraction(
     };
     std::set<std::pair<long, VertexType>, decltype(cmp)> vertPriority(cmp);
 
-    for (const VertexType &groupFoot : graph.vertices()) {
+    for (const VertexType &groupFoot : graph.Vertices()) {
         if (graph.InDegree(groupFoot) < 2) {
             continue;
         }
@@ -609,7 +609,7 @@ VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::AllParentsContraction(
         }
     }
 
-    for (const VertexType &vert : graph.vertices()) {
+    for (const VertexType &vert : graph.Vertices()) {
         if (partitionedFlag[vert]) {
             continue;
         }
@@ -694,7 +694,7 @@ VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::SomeChildrenContraction(
     };
     std::set<std::pair<long, std::vector<VertexType>>, decltype(cmp)> vertPriority(cmp);
 
-    for (const VertexType &groupHead : graph.vertices()) {
+    for (const VertexType &groupHead : graph.Vertices()) {
         if (graph.OutDegree(groupHead) < 2) {
             continue;
         }
@@ -856,7 +856,7 @@ VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::SomeChildrenContraction(
         }
     }
 
-    for (const VertexType &vert : graph.vertices()) {
+    for (const VertexType &vert : graph.Vertices()) {
         if (partitionedFlag[vert]) {
             continue;
         }
@@ -881,7 +881,7 @@ VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::SomeParentsContraction(
     };
     std::set<std::pair<long, std::vector<VertexType>>, decltype(cmp)> vertPriority(cmp);
 
-    for (const VertexType &groupFoot : graph.vertices()) {
+    for (const VertexType &groupFoot : graph.Vertices()) {
         if (graph.InDegree(groupFoot) < 2) {
             continue;
         }
@@ -1042,7 +1042,7 @@ VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::SomeParentsContraction(
         }
     }
 
-    for (const VertexType &vert : graph.vertices()) {
+    for (const VertexType &vert : graph.Vertices()) {
         if (partitionedFlag[vert]) {
             continue;
         }
@@ -1074,7 +1074,7 @@ VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::LevelContraction(
     const VertexIdxT<GraphTIn> parity = params.mode == SarkarParams::Mode::LEVEL_EVEN ? 0 : 1;
 
     std::vector<std::vector<VertexIdxT<GraphTIn>>> levels(maxLevel - minLevel + 1);
-    for (const VertexType &vert : graph.vertices()) {
+    for (const VertexType &vert : graph.Vertices()) {
         levels[vertexPoset[vert] - minLevel].emplace_back(vert);
     }
 
@@ -1211,7 +1211,7 @@ VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::LevelContraction(
     }
 
     expansionMapOutput.reserve(graph.NumVertices() - counter);
-    for (const VertexType &vert : graph.vertices()) {
+    for (const VertexType &vert : graph.Vertices()) {
         if (partitionedFlag[vert]) {
             continue;
         }
@@ -1229,7 +1229,7 @@ std::vector<std::size_t> Sarkar<GraphTIn, GraphTOut>::ComputeNodeHashes(const Gr
     using VertexType = VertexIdxT<GraphTIn>;
 
     std::vector<std::size_t> hashes(graph.NumVertices());
-    for (const VertexType &vert : graph.vertices()) {
+    for (const VertexType &vert : graph.Vertices()) {
         std::size_t &hash = hashes[vert];
         hash = std::hash<VWorkwT<GraphTIn>>{}(graph.VertexWorkWeight(vert));
         HashCombine(hash, vertexPoset[vert]);
@@ -1313,30 +1313,30 @@ VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::HomogeneousBufferMerge(
     if (params.mode == SarkarParams::Mode::FAN_OUT_BUFFER || params.mode == SarkarParams::Mode::HOMOGENEOUS_BUFFER) {
         const std::vector<std::size_t> hashValues = computeNodeHashes(graph, vertexTopPoset, topDist);
         std::vector<std::size_t> hashValuesWithParents = hashValues;
-        for (const VertexType &par : graph.vertices()) {
+        for (const VertexType &par : graph.Vertices()) {
             for (const VertexType &chld : graph.Children(par)) {
                 HashCombine(hashValuesWithParents[chld], hashValues[par]);
             }
         }
-        for (const VertexType &vert : graph.vertices()) {
+        for (const VertexType &vert : graph.Vertices()) {
             HashCombine(hashValuesCombined[vert], hashValuesWithParents[vert]);
         }
     }
     if (params.mode == SarkarParams::Mode::FAN_IN_BUFFER || params.mode == SarkarParams::Mode::HOMOGENEOUS_BUFFER) {
         const std::vector<std::size_t> hashValues = computeNodeHashes(graph, vertexBotPoset, botDist);
         std::vector<std::size_t> hashValuesWithChildren = hashValues;
-        for (const VertexType &chld : graph.vertices()) {
+        for (const VertexType &chld : graph.Vertices()) {
             for (const VertexType &par : graph.Parents(chld)) {
                 HashCombine(hashValuesWithChildren[par], hashValues[chld]);
             }
         }
-        for (const VertexType &vert : graph.vertices()) {
+        for (const VertexType &vert : graph.Vertices()) {
             HashCombine(hashValuesCombined[vert], hashValuesWithChildren[vert]);
         }
     }
 
     std::unordered_map<std::size_t, std::set<VertexType>> orbits;
-    for (const VertexType &vert : graph.vertices()) {
+    for (const VertexType &vert : graph.Vertices()) {
         if (graph.VertexWorkWeight(vert) > params.smallWeightThreshold) {
             continue;
         }
@@ -1355,7 +1355,7 @@ VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::HomogeneousBufferMerge(
     VertexIdxT<GraphTIn> counter = 0;
     std::vector<bool> partitionedFlag(graph.NumVertices(), false);
 
-    for (const VertexType &vert : graph.vertices()) {
+    for (const VertexType &vert : graph.Vertices()) {
         if (graph.VertexWorkWeight(vert) > params.smallWeightThreshold) {
             continue;
         }
@@ -1460,7 +1460,7 @@ VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::HomogeneousBufferMerge(
         }
     }
 
-    for (const VertexType &vert : graph.vertices()) {
+    for (const VertexType &vert : graph.Vertices()) {
         if (partitionedFlag[vert]) {
             continue;
         }

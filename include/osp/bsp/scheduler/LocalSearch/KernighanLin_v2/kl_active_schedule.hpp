@@ -617,7 +617,7 @@ void KlActiveSchedule<GraphT, CostT, MemoryConstraintT>::ComputeWorkMemoryDatast
 
 template <typename GraphT, typename CostT, typename MemoryConstraintT>
 void KlActiveSchedule<GraphT, CostT, MemoryConstraintT>::WriteSchedule(BspSchedule<GraphT> &schedule) {
-    for (const auto v : instance_->vertices()) {
+    for (const auto v : instance_->Vertices()) {
         schedule.SetAssignedProcessor(v, vectorSchedule_.AssignedProcessor(v));
         schedule.SetAssignedSuperstep(v, vectorSchedule_.AssignedSuperstep(v));
     }

@@ -118,7 +118,7 @@ void CoptCommScheduleOptimizer<GraphT>::UpdateCommSchedule(BspScheduleCS<GraphT>
     std::map<KeyTriple, unsigned int> &cs = schedule.getCommunicationSchedule();
     cs.clear();
 
-    for (const auto &node : schedule.GetInstance().vertices()) {
+    for (const auto &node : schedule.GetInstance().Vertices()) {
         for (unsigned int pFrom = 0; pFrom < schedule.GetInstance().NumberOfProcessors(); pFrom++) {
             for (unsigned int pTo = 0; pTo < schedule.GetInstance().NumberOfProcessors(); pTo++) {
                 if (pFrom != pTo) {
@@ -145,11 +145,11 @@ void CoptCommScheduleOptimizer<GraphT>::SetInitialSolution(BspScheduleCS<GraphT>
 
     std::vector<std::vector<unsigned>> firstAt(DAG.NumVertices(),
                                                std::vector<unsigned>(num_processors, std::numeric_limits<unsigned>::max()));
-    for (const auto &node : dag.vertices()) {
+    for (const auto &node : dag.Vertices()) {
         firstAt[node][schedule.AssignedProcessor(node)] = schedule.AssignedSuperstep(node);
     }
 
-    for (const auto &node : dag.vertices()) {
+    for (const auto &node : dag.Vertices()) {
         for (unsigned p1 = 0; p1 < numProcessors; p1++) {
             for (unsigned p2 = 0; p2 < numProcessors; p2++) {
                 if (p1 == p2) {
@@ -169,7 +169,7 @@ void CoptCommScheduleOptimizer<GraphT>::SetInitialSolution(BspScheduleCS<GraphT>
         }
     }
 
-    for (const auto &node : dag.vertices()) {
+    for (const auto &node : dag.Vertices()) {
         for (unsigned proc = 0; proc < numProcessors; proc++) {
             for (unsigned step = 0; step < numSupersteps; step++) {
                 if (step >= first_at[node][proc]) {

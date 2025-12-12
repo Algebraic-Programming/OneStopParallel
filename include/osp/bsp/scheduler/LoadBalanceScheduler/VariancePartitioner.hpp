@@ -132,7 +132,7 @@ class VariancePartitioner : public LoadBalancerBase<GraphT, InterpolationT> {
 
         std::vector<unsigned> whichProcReadyPrior(nVert, nProcessors);
 
-        for (const auto &v : graph.vertices()) {
+        for (const auto &v : graph.Vertices()) {
             schedule.SetAssignedProcessor(v, nProcessors);
 
             totalWork += graph.VertexWorkWeight(v);

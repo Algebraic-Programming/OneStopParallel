@@ -444,7 +444,7 @@ class IsomorphicSubgraphScheduler {
                 const auto &repDag = representativeInstance.GetComputationalDag();
                 std::cout << "  Representative subgraph size: " << repDag.NumVertices() << " vertices" << std::endl;
                 std::vector<unsigned> nodeTypeCounts(repDag.NumVertexTypes(), 0);
-                for (const auto &v : repDag.vertices()) {
+                for (const auto &v : repDag.Vertices()) {
                     nodeTypeCounts[repDag.VertexType(v)]++;
                 }
                 std::cout << "    Node type counts: ";
@@ -483,7 +483,7 @@ class IsomorphicSubgraphScheduler {
                 std::map<std::pair<unsigned, unsigned>, unsigned> procSsToColor;
                 unsigned nextColor = 0;
 
-                for (const auto &v : repDag.vertices()) {
+                for (const auto &v : repDag.Vertices()) {
                     const auto assignment = std::make_pair(bspSchedule.AssignedProcessor(v), bspSchedule.AssignedSuperstep(v));
                     if (procSsToColor.find(assignment) == procSsToColor.end()) {
                         procSsToColor[assignment] = nextColor++;

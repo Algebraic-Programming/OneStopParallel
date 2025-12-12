@@ -34,7 +34,7 @@ void WriteTxt(std::ostream &os, const BspSchedule<GraphT> &schedule) {
     os << schedule.GetInstance().NumberOfVertices() << " " << schedule.GetInstance().NumberOfProcessors() << " "
        << schedule.NumberOfSupersteps() << std::endl;
 
-    for (const auto &vertex : schedule.GetInstance().GetComputationalDag().vertices()) {
+    for (const auto &vertex : schedule.GetInstance().GetComputationalDag().Vertices()) {
         os << vertex << " " << schedule.AssignedProcessor(vertex) << " " << schedule.AssignedSuperstep(vertex) << std::endl;
     }
 }

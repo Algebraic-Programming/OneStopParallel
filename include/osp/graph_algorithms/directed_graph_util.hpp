@@ -606,7 +606,7 @@ std::size_t ComputeWeaklyConnectedComponents(const GraphT &graph, std::vector<Ve
     components.assign(graph.NumVertices(), std::numeric_limits<VertexType>::max());
     VertexType componentId = 0;
 
-    for (const auto &v : graph.vertices()) {
+    for (const auto &v : graph.Vertices()) {
         if (components[v] == std::numeric_limits<VertexType>::max()) {
             std::vector<VertexType> q;
             q.push_back(v);

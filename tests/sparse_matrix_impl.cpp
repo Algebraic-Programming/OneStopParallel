@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(TestSparseMatrixAdapter1) {
 
     size_t idx = 0;
 
-    for (const long unsigned int &v : graph.vertices()) {
+    for (const long unsigned int &v : graph.Vertices()) {
         BOOST_CHECK_EQUAL(v, vertices[idx++]);
 
         size_t i = 0;

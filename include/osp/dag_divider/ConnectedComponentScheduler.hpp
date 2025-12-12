@@ -67,7 +67,7 @@ class ConnectedComponentScheduler : public Scheduler<GraphT> {
                 return status;
             }
 
-            for (const auto &v : subInstance.vertices()) {
+            for (const auto &v : subInstance.Vertices()) {
                 schedule.SetAssignedProcessor(mapping.at(v), subSchedule.AssignedProcessor(v) + numProcessorsOffset);
                 schedule.SetAssignedSuperstep(mapping.at(v), subSchedule.AssignedSuperstep(v));
             }

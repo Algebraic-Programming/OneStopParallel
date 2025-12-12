@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(TestEigenSptrsv) {
     auto resultCs = scheduler.computeScheduleCS(scheduleCs);
 
     /*
-    for (const auto &node : instance.vertices()) {
+    for (const auto &node : instance.Vertices()) {
         std::cout << "Vertex " << node << " children:" <<  std::endl;
         for (const auto &target : instance.GetComputationalDag().Children(node)) {
             std::cout << "target:" << target << std::endl;

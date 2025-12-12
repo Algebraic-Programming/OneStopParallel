@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(TestDagVectorAdapterEdge) {
 
     GraphT graph(outNeighbors, inNeighbors);
 
-    for (auto v : graph.vertices()) {
+    for (auto v : graph.Vertices()) {
         graph.SetVertexWorkWeight(v, 10);
     }
 
@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(TestDagVectorAdapter) {
 
     GraphT graph(outNeighbors, inNeighbors);
 
-    for (auto v : graph.vertices()) {
+    for (auto v : graph.Vertices()) {
         graph.SetVertexWorkWeight(v, 10);
     }
 

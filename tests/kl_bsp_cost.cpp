@@ -300,7 +300,7 @@ bool ValidateCommDatastructures(const max_comm_datastructure<Graph, double, KlAc
     }
 
     // 4. Validate Lambda Maps
-    for (const auto v : instance.vertices()) {
+    for (const auto v : instance.Vertices()) {
         for (unsigned p = 0; p < instance.NumberOfProcessors(); ++p) {
             unsigned countInc = 0;
             if (commDsIncremental.node_lambda_map.has_proc_entry(v, p)) {

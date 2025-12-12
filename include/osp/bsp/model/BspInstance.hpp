@@ -164,7 +164,7 @@ class BspInstance {
     /**
      * @brief Returns a view over the vertex indices of the computational DAG.
      */
-    [[nodiscard]] auto Vertices() const { return cdag_.vertices(); }
+    [[nodiscard]] auto Vertices() const { return cdag_.Vertices(); }
 
     /**
      * @brief Returns a view over the processor indices of the BSP architecture.

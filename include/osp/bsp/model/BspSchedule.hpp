@@ -108,7 +108,7 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
           numberOfSupersteps_(schedule.NumberOfSupersteps()),
           nodeToProcessorAssignment_(schedule.GetInstance().NumberOfVertices()),
           nodeToSuperstepAssignment_(schedule.GetInstance().NumberOfVertices()) {
-        for (const auto &v : schedule.GetInstance().GetComputationalDag().vertices()) {
+        for (const auto &v : schedule.GetInstance().GetComputationalDag().Vertices()) {
             nodeToProcessorAssignment_[v] = schedule.AssignedProcessor(v);
             nodeToSuperstepAssignment_[v] = schedule.AssignedSuperstep(v);
         }
@@ -483,7 +483,7 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
     [[nodiscard]] std::vector<VertexIdxT<GraphT>> GetAssignedNodeVector(const unsigned processor) const {
         std::vector<VertexIdxT<GraphT>> vec;
 
-        for (const auto &node : instance_->vertices()) {
+        for (const auto &node : instance_->Vertices()) {
             if (nodeToProcessorAssignment_[node] == processor) {
                 vec.push_back(node);
             }

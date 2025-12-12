@@ -210,7 +210,7 @@ class OrbitGraphProcessor {
                 = get_bottom_node_distance<Constr_Graph_t, VertexIdxT<Constr_Graph_t>>(current_coarse_graph);
 
             changed = false;
-            for (const auto u : currentCoarseGraph.vertices()) {
+            for (const auto u : currentCoarseGraph.Vertices()) {
                 for (const auto v : currentCoarseGraph.Children(u)) {
                     if constexpr (HasTypedVerticesV<Constr_Graph_t>) {
                         if (not mergeDifferentNodeTypes_) {

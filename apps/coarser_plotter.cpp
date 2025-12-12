@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
     bool ignoreVertexTypes = false;
 
     if (ignoreVertexTypes) {
-        for (const auto &vert : graphCopy.vertices()) {
+        for (const auto &vert : graphCopy.Vertices()) {
             graphCopy.SetVertexType(vert, 0);
         }
     }

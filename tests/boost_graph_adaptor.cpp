@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(TestBoostGraphAdapter1) {
 
     size_t idx = 0;
 
-    for (const auto &v : graph.vertices()) {
+    for (const auto &v : graph.Vertices()) {
         BOOST_CHECK_EQUAL(v, vertices[idx++]);
 
         size_t i = 0;
@@ -184,11 +184,11 @@ BOOST_AUTO_TEST_CASE(TestUtil1) {
     BOOST_CHECK_EQUAL(graph.NumEdges(), 9);
     BOOST_CHECK_EQUAL(graph.NumVertices(), 8);
 
-    auto sources = source_vertices(graph);
+    auto sources = sourceVertices(graph);
     BOOST_CHECK_EQUAL(sources.size(), 1);
     BOOST_CHECK_EQUAL(sources[0], 0);
 
-    auto sinks = sink_vertices(graph);
+    auto sinks = sinkVertices(graph);
     BOOST_CHECK_EQUAL(sinks.size(), 3);
     BOOST_CHECK_EQUAL(sinks[0], 5);
     BOOST_CHECK_EQUAL(sinks[1], 6);

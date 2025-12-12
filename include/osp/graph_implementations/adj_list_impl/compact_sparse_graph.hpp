@@ -776,25 +776,25 @@ class CompactSparseGraph {
         static_assert(IsDirectedGraphV<Graph_type>);
 
         if constexpr (IsComputationalDagV<Graph_type> && use_work_weights) {
-            for (const auto &vert : graph.vertices()) {
+            for (const auto &vert : graph.Vertices()) {
                 SetVertexWorkWeight(vert, graph.VertexWorkWeight(vert));
             }
         }
 
         if constexpr (IsComputationalDagV<Graph_type> && use_comm_weights) {
-            for (const auto &vert : graph.vertices()) {
+            for (const auto &vert : graph.Vertices()) {
                 SetVertexCommWeight(vert, graph.VertexCommWeight(vert));
             }
         }
 
         if constexpr (IsComputationalDagV<Graph_type> && use_mem_weights) {
-            for (const auto &vert : graph.vertices()) {
+            for (const auto &vert : graph.Vertices()) {
                 SetVertexMemWeight(vert, graph.VertexMemWeight(vert));
             }
         }
 
         if constexpr (IsComputationalDagTypedVerticesV<Graph_type> && use_vert_types) {
-            for (const auto &vert : graph.vertices()) {
+            for (const auto &vert : graph.Vertices()) {
                 SetVertexType(vert, graph.VertexType(vert));
             }
         }
@@ -1058,7 +1058,7 @@ static_assert(IsDirectedGraphEdgeDescV<CSG>, "CSG must satisfy the directed_grap
 
 //     std::set<std::pair<VertexIdxT<Graph_out_type>, VertexIdxT<Graph_out_type>>> quotient_edges;
 
-//     for (const VertexIdxT<GraphTIn> &vert : dag_in.vertices()) {
+//     for (const VertexIdxT<GraphTIn> &vert : dag_in.Vertices()) {
 //         for (const VertexIdxT<GraphTIn> &chld : dag_in.Children(vert)) {
 //             if (vertex_contraction_map[vert] == vertex_contraction_map[chld]) {
 //                 continue;
@@ -1071,7 +1071,7 @@ static_assert(IsDirectedGraphEdgeDescV<CSG>, "CSG must satisfy the directed_grap
 
 //     const auto& pushforward_map = coarsened_dag.get_pushforward_permutation();
 //     std::vector<VertexIdxT<Graph_out_type>> combined_expansion_map(dag_in.NumVertices());
-//     for (const auto &vert : dag_in.vertices()) {
+//     for (const auto &vert : dag_in.Vertices()) {
 //         combined_expansion_map[vert] = pushforward_map[vertex_contraction_map[vert]];
 //     }
 
@@ -1081,13 +1081,13 @@ static_assert(IsDirectedGraphEdgeDescV<CSG>, "CSG must satisfy the directed_grap
 //         communication types of in-graph and out-graph must be the same."); static_assert(std::is_same_v<VMemwT<GraphTIn>,
 //         VMemwT<Graph_out_type>>, "Memory weight types of in-graph and out-graph must be the same.");
 
-//         for (const VertexIdxT<GraphTIn> &vert : coarsened_dag.vertices()) {
+//         for (const VertexIdxT<GraphTIn> &vert : coarsened_dag.Vertices()) {
 //             coarsened_dag.SetVertexWorkWeight(vert, 0);
 //             coarsened_dag.SetVertexCommWeight(vert, 0);
 //             coarsened_dag.SetVertexMemWeight(vert, 0);
 //         }
 
-//         for (const VertexIdxT<GraphTIn> &vert : dag_in.vertices()) {
+//         for (const VertexIdxT<GraphTIn> &vert : dag_in.Vertices()) {
 //             coarsened_dag.SetVertexWorkWeight(
 //                 vertex_contraction_map[vert],
 //                 v_work_acc_method()(coarsened_dag.VertexWorkWeight(combined_expansion_map[vert]),
@@ -1109,10 +1109,10 @@ static_assert(IsDirectedGraphEdgeDescV<CSG>, "CSG must satisfy the directed_grap
 //         static_assert(std::is_same_v<VTypeT<GraphTIn>, VTypeT<Graph_out_type>>,
 //                         "Vertex type types of in graph and out graph must be the same!");
 
-//         for (const VertexIdxT<GraphTIn> &vert : dag_in.vertices()) {
+//         for (const VertexIdxT<GraphTIn> &vert : dag_in.Vertices()) {
 //             coarsened_dag.SetVertexType(vertex_contraction_map[vert], dag_in.VertexType(vert));
 //         }
-//         // assert(std::all_of(dag_in.vertices().begin(), dag_in.vertices().end(),
+//         // assert(std::all_of(dag_in.Vertices().begin(), dag_in.Vertices().end(),
 //         //         [&dag_in, &vertex_contraction_map, &coarsened_dag](const auto &vert){ return
 //         //         dag_in.VertexType(vert) ==  coarsened_dag.VertexType(vertex_contraction_map[vert]); })
 //         //                 && "Contracted vertices must be of the same type");

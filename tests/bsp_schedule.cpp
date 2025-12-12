@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(TestScheduleWriter) {
     BOOST_CHECK_EQUAL(instanceT2.GetComputationalDag().NumVertexTypes(), instance.GetComputationalDag().NumVertexTypes());
     BOOST_CHECK_EQUAL(instanceT2.GetComputationalDag().NumEdges(), instance.GetComputationalDag().NumEdges());
 
-    for (const auto &v : instance.GetComputationalDag().vertices()) {
+    for (const auto &v : instance.GetComputationalDag().Vertices()) {
         BOOST_CHECK_EQUAL(instanceT2.GetComputationalDag().VertexWorkWeight(v), instance.GetComputationalDag().VertexWorkWeight(v));
         BOOST_CHECK_EQUAL(instanceT2.GetComputationalDag().VertexCommWeight(v), instance.GetComputationalDag().VertexCommWeight(v));
 
@@ -237,7 +237,7 @@ BOOST_AUTO_TEST_CASE(TestBspScheduleCs) {
     BOOST_CHECK(scheduleT2.SatisfiesPrecedenceConstraints());
     BOOST_CHECK_EQUAL(scheduleT2.NumberOfSupersteps(), schedule.NumberOfSupersteps());
 
-    for (const auto &v : instance.GetComputationalDag().vertices()) {
+    for (const auto &v : instance.GetComputationalDag().Vertices()) {
         BOOST_CHECK_EQUAL(scheduleT2.AssignedSuperstep(v), schedule.AssignedSuperstep(v));
         BOOST_CHECK_EQUAL(scheduleT2.AssignedProcessor(v), schedule.AssignedProcessor(v));
     }
@@ -248,7 +248,7 @@ BOOST_AUTO_TEST_CASE(TestBspScheduleCs) {
     BOOST_CHECK(scheduleT3.SatisfiesPrecedenceConstraints());
     BOOST_CHECK_EQUAL(scheduleT3.NumberOfSupersteps(), schedule.NumberOfSupersteps());
 
-    for (const auto &v : instance.GetComputationalDag().vertices()) {
+    for (const auto &v : instance.GetComputationalDag().Vertices()) {
         BOOST_CHECK_EQUAL(scheduleT3.AssignedSuperstep(v), schedule.AssignedSuperstep(v));
         BOOST_CHECK_EQUAL(scheduleT3.AssignedProcessor(v), schedule.AssignedProcessor(v));
     }
@@ -259,7 +259,7 @@ BOOST_AUTO_TEST_CASE(TestBspScheduleCs) {
     BOOST_CHECK_EQUAL(scheduleT4.GetInstance().GetComputationalDag().NumVertices(), instance.GetComputationalDag().NumVertices());
     BOOST_CHECK(scheduleT4.SatisfiesPrecedenceConstraints());
     BOOST_CHECK_EQUAL(scheduleT4.NumberOfSupersteps(), schedule.NumberOfSupersteps());
-    for (const auto &v : instance.GetComputationalDag().vertices()) {
+    for (const auto &v : instance.GetComputationalDag().Vertices()) {
         BOOST_CHECK_EQUAL(scheduleT4.AssignedSuperstep(v), schedule.AssignedSuperstep(v));
         BOOST_CHECK_EQUAL(scheduleT4.AssignedProcessor(v), schedule.AssignedProcessor(v));
     }
@@ -269,7 +269,7 @@ BOOST_AUTO_TEST_CASE(TestBspScheduleCs) {
     BOOST_CHECK(scheduleT5.SatisfiesPrecedenceConstraints());
     BOOST_CHECK_EQUAL(scheduleT5.NumberOfSupersteps(), schedule.NumberOfSupersteps());
 
-    for (const auto &v : instance.GetComputationalDag().vertices()) {
+    for (const auto &v : instance.GetComputationalDag().Vertices()) {
         BOOST_CHECK_EQUAL(scheduleT5.AssignedSuperstep(v), schedule.AssignedSuperstep(v));
         BOOST_CHECK_EQUAL(scheduleT5.AssignedProcessor(v), schedule.AssignedProcessor(v));
     }
@@ -280,7 +280,7 @@ BOOST_AUTO_TEST_CASE(TestBspScheduleCs) {
     BOOST_CHECK(scheduleCs.hasValidCommSchedule());
     BOOST_CHECK_EQUAL(scheduleCs.NumberOfSupersteps(), schedule.NumberOfSupersteps());
 
-    for (const auto &v : instance.GetComputationalDag().vertices()) {
+    for (const auto &v : instance.GetComputationalDag().Vertices()) {
         BOOST_CHECK_EQUAL(scheduleCs.AssignedSuperstep(v), schedule.AssignedSuperstep(v));
         BOOST_CHECK_EQUAL(scheduleCs.AssignedProcessor(v), schedule.AssignedProcessor(v));
     }
@@ -290,7 +290,7 @@ BOOST_AUTO_TEST_CASE(TestBspScheduleCs) {
     BOOST_CHECK(scheduleT5.SatisfiesPrecedenceConstraints());
     BOOST_CHECK_EQUAL(scheduleT5.NumberOfSupersteps(), schedule.NumberOfSupersteps());
 
-    for (const auto &v : instance.GetComputationalDag().vertices()) {
+    for (const auto &v : instance.GetComputationalDag().Vertices()) {
         BOOST_CHECK_EQUAL(scheduleT5.AssignedSuperstep(v), schedule.AssignedSuperstep(v));
         BOOST_CHECK_EQUAL(scheduleT5.AssignedProcessor(v), schedule.AssignedProcessor(v));
     }
@@ -301,7 +301,7 @@ BOOST_AUTO_TEST_CASE(TestBspScheduleCs) {
     BOOST_CHECK(scheduleCsT2.hasValidCommSchedule());
     BOOST_CHECK_EQUAL(scheduleCsT2.NumberOfSupersteps(), schedule.NumberOfSupersteps());
 
-    for (const auto &v : instance.GetComputationalDag().vertices()) {
+    for (const auto &v : instance.GetComputationalDag().Vertices()) {
         BOOST_CHECK_EQUAL(scheduleCsT2.AssignedSuperstep(v), schedule.AssignedSuperstep(v));
         BOOST_CHECK_EQUAL(scheduleCsT2.AssignedProcessor(v), schedule.AssignedProcessor(v));
     }

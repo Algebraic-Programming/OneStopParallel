@@ -234,7 +234,7 @@ std::vector<std::vector<VertexIdxT<GraphT>>> ComputeWavefronts(const GraphT &gra
     std::vector<VertexIdxT<GraphT>> parentsVisited(graph.NumVertices(), 0);
 
     wavefronts.push_back(std::vector<VertexIdxT<GraphT>>());
-    for (const auto &vertex : graph.vertices()) {
+    for (const auto &vertex : graph.Vertices()) {
         if (graph.InDegree(vertex) == 0) {
             wavefronts.back().push_back(vertex);
         } else {

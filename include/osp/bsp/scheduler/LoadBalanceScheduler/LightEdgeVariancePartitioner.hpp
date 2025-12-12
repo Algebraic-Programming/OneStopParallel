@@ -93,7 +93,7 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
         std::vector<VertexType> numUnallocatedParents(nVert, 0);
 
         VWorkwT<GraphT> totalWork = 0;
-        for (const auto &v : graph.vertices()) {
+        for (const auto &v : graph.Vertices()) {
             schedule.SetAssignedProcessor(v, nProcessors);
 
             totalWork += graph.VertexWorkWeight(v);

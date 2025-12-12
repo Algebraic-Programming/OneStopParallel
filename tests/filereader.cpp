@@ -261,7 +261,7 @@ BOOST_AUTO_TEST_CASE(TestKMeans) {
     BOOST_CHECK_EQUAL(graph.NumVertices(), 40);
     BOOST_CHECK_EQUAL(graph.NumEdges(), 45);
 
-    for (const auto &v : graph.vertices()) {
+    for (const auto &v : graph.Vertices()) {
         BOOST_CHECK_EQUAL(graph.VertexWorkWeight(v), work[v]);
         BOOST_CHECK_EQUAL(graph.VertexCommWeight(v), comm[v]);
     }
@@ -274,7 +274,7 @@ BOOST_AUTO_TEST_CASE(TestKMeans) {
     BOOST_CHECK_EQUAL(graph2.NumVertices(), 40);
     BOOST_CHECK_EQUAL(graph2.NumEdges(), 45);
 
-    for (const auto &v : graph2.vertices()) {
+    for (const auto &v : graph2.Vertices()) {
         BOOST_CHECK_EQUAL(graph2.VertexWorkWeight(v), work[v]);
         BOOST_CHECK_EQUAL(graph2.VertexCommWeight(v), comm[v]);
     }
@@ -301,7 +301,7 @@ BOOST_AUTO_TEST_CASE(TestDotGraph) {
     BOOST_CHECK_EQUAL(graph.NumEdges(), 10);
     BOOST_CHECK_EQUAL(graph.NumVertexTypes(), 2);
 
-    for (const auto &v : graph.vertices()) {
+    for (const auto &v : graph.Vertices()) {
         BOOST_CHECK_EQUAL(graph.VertexWorkWeight(v), work[v]);
         BOOST_CHECK_EQUAL(graph.VertexCommWeight(v), comm[v]);
         BOOST_CHECK_EQUAL(graph.VertexMemWeight(v), mem[v]);
@@ -330,7 +330,7 @@ BOOST_AUTO_TEST_CASE(TestDotGraphBoost) {
     BOOST_CHECK_EQUAL(graph.NumEdges(), 10);
     BOOST_CHECK_EQUAL(graph.NumVertexTypes(), 2);
 
-    for (const auto &v : graph.vertices()) {
+    for (const auto &v : graph.Vertices()) {
         BOOST_CHECK_EQUAL(graph.VertexWorkWeight(v), work[v]);
         BOOST_CHECK_EQUAL(graph.VertexCommWeight(v), comm[v]);
         BOOST_CHECK_EQUAL(graph.VertexMemWeight(v), mem[v]);

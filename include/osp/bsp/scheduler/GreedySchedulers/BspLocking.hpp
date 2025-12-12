@@ -308,7 +308,7 @@ class BspLocking : public Scheduler<GraphT> {
     virtual ReturnStatus computeSchedule(BspSchedule<GraphT> &schedule) override {
         const auto &instance = schedule.GetInstance();
 
-        for (const auto &v : instance.GetComputationalDag().vertices()) {
+        for (const auto &v : instance.GetComputationalDag().Vertices()) {
             schedule.SetAssignedProcessor(v, std::numeric_limits<unsigned>::max());
         }
 
@@ -326,7 +326,7 @@ class BspLocking : public Scheduler<GraphT> {
 
         const std::vector<VWorkwT<GraphT>> pathLength = get_longest_path(g);
         VWorkwT<GraphT> maxPath = 1;
-        for (const auto &i : instance.vertices()) {
+        for (const auto &i : instance.Vertices()) {
             if (pathLength[i] > max_path) {
                 maxPath = path_length[i];
             }
@@ -334,7 +334,7 @@ class BspLocking : public Scheduler<GraphT> {
 
         defaultValue_.clear();
         defaultValue_.resize(n, 0);
-        for (const auto &i : instance.vertices()) {
+        for (const auto &i : instance.Vertices()) {
             // assert(path_length[i] * 20 / max_path <= std::numeric_limits<int>::max());
             defaultValue_[i] = static_cast<int>(path_length[i] * static_cast<VWorkwT<GraphT>>(20) / max_path);
         }

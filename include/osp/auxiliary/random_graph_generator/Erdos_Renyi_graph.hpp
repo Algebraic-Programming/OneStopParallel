@@ -43,7 +43,7 @@ void ErdosRenyiGraphGen(GraphT &dagOut, VertexIdxT<GraphT> numVertices, double c
     std::random_device rd;
     std::mt19937 gen(rd());
 
-    for (const auto &v : dagOut.vertices()) {
+    for (const auto &v : dagOut.Vertices()) {
         const auto one = static_cast<VertexIdxT<GraphT>>(1);
         std::binomial_distribution<VertexIdxT<GraphT>> binoDist(numVertices - one - v, chance / double(numVertices));
         auto outEdgesNum = binoDist(gen);
