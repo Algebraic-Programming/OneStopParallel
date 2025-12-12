@@ -35,19 +35,19 @@ namespace osp {
 template <typename GraphT>
 class CSchedule {
   private:
-    using vertex_idx = VertexIdxT<GraphT>;
-    using workw_t = VWorkwT<GraphT>;
+    using VertexIdx = VertexIdxT<GraphT>;
+    using WorkwT = VWorkwT<GraphT>;
 
   public:
     std::vector<unsigned> proc_; /**< The processor assigned to each task. */
-    std::vector<workw_t> time_;  /**< The time at which each task starts. */
+    std::vector<WorkwT> time_;   /**< The time at which each task starts. */
 
     /**
      * @brief Constructs a CSchedule object with the given size.
      * @param size The size of the schedule.
      */
     CSchedule(std::size_t size)
-        : proc_(std::vector<unsigned>(size, std::numeric_limits<unsigned>::max())), time(std::vector<workw_t>(size, 0)) {}
+        : proc_(std::vector<unsigned>(size, std::numeric_limits<unsigned>::max())), time_(std::vector<WorkwT>(size, 0)) {}
 
     /**
      * @brief Converts the CSchedule object to a BspSchedule object.
@@ -57,19 +57,19 @@ class CSchedule {
      */
 
     void ConvertToBspSchedule(const BspInstance<GraphT> &instance,
-                              const std::vector<std::deque<vertex_idx>> &procAssignmentLists,
+                              const std::vector<std::deque<VertexIdx>> &procAssignmentLists,
                               BspSchedule<GraphT> &bspSchedule) {
-        for (const auto &v : instance.vertices()) {
-            bspSchedule.setAssignedProcessor(v, proc_[v]);
+        for (const auto &v : instance.Vertices()) {
+            bspSchedule.SetAssignedProcessor(v, proc_[v]);
         }
 
-        const vertex_idx n = instance.NumberOfVertices();
+        const VertexIdx n = instance.NumberOfVertices();
         const unsigned p = instance.NumberOfProcessors();
 
         unsigned superStepIdx = 0, totalNodesDone = 0;
         std::vector<bool> processed(n, false);
 
-        std::vector<decltype(procAssignmentLists[0].cbegin())> done(p), limit(P);
+        std::vector<decltype(procAssignmentLists[0].cbegin())> done(p), limit(p);
 
         for (unsigned j = 0; j < p; ++j) {
             done[j] = procAssignmentLists[j].cbegin();
@@ -77,14 +77,14 @@ class CSchedule {
 
         while (totalNodesDone < n) {
             // create next superstep
-            workw_t timeLimit = std::numeric_limits<workw_t>::max();
+            WorkwT timeLimit = std::numeric_limits<WorkwT>::max();
             for (unsigned j = 0; j < p; ++j) {
                 for (limit[j] = done[j]; limit[j] != procAssignmentLists[j].end(); ++limit[j]) {
-                    const vertex_idx node = *limit[j];
+                    const VertexIdx node = *limit[j];
                     bool cut = false;
 
                     for (const auto &source : instance.GetComputationalDag().Parents(node)) {
-                        if (!processed[source] && proc[source] != proc[node]) {
+                        if (!processed[source] && proc_[source] != proc_[node]) {
                             cut = true;
                         }
                     }
@@ -93,18 +93,18 @@ class CSchedule {
                         break;
                     }
                 }
-                if (limit[j] != procAssignmentLists[j].end() && time[*limit[j]] < timeLimit) {
-                    timeLimit = time[*limit[j]];
+                if (limit[j] != procAssignmentLists[j].end() && time_[*limit[j]] < timeLimit) {
+                    timeLimit = time_[*limit[j]];
                 }
             }
 
             for (unsigned j = 0; j < p; ++j) {
                 for (; done[j] != limit[j]
-                       && (time[*done[j]] < timeLimit
-                           || (time[*done[j]] == timeLimit && instance.GetComputationalDag().VertexWorkWeight(*done[j]) == 0));
+                       && (time_[*done[j]] < timeLimit
+                           || (time_[*done[j]] == timeLimit && instance.GetComputationalDag().VertexWorkWeight(*done[j]) == 0));
                      ++done[j]) {
                     processed[*done[j]] = true;
-                    bspSchedule.setAssignedSuperstep(*done[j], superStepIdx);
+                    bspSchedule.SetAssignedSuperstep(*done[j], superStepIdx);
                     ++totalNodesDone;
                 }
             }

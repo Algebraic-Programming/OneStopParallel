@@ -254,7 +254,7 @@ VWorkwT<GraphT> BspScheduleRecomp<GraphT>::ComputeCosts() const {
     std::vector<std::vector<CostType>> rec(numberOfSupersteps_, std::vector<CostType>(instance_->NumberOfProcessors(), 0));
     std::vector<std::vector<CostType>> send(numberOfSupersteps_, std::vector<CostType>(instance_->NumberOfProcessors(), 0));
 
-    for (auto const &[key, val] : commSchedule) {
+    for (auto const &[key, val] : commSchedule_) {
         send[val][std::get<1>(key)] += instance_->SendCosts(std::get<1>(key), std::get<2>(key))
                                        * instance_->GetComputationalDag().VertexCommWeight(std::get<0>(key));
         rec[val][std::get<2>(key)] += instance_->SendCosts(std::get<1>(key), std::get<2>(key))
@@ -285,7 +285,7 @@ VWorkwT<GraphT> BspScheduleRecomp<GraphT>::ComputeCosts() const {
 }
 
 template <typename GraphT>
-VertexIdx BspScheduleRecomp<GraphT>::GetTotalAssignments() const {
+VertexIdxT<GraphT> BspScheduleRecomp<GraphT>::GetTotalAssignments() const {
     VertexIdx total = 0;
     for (VertexIdx node = 0; node < instance_->NumberOfVertices(); ++node) {
         total += nodeToProcessorAndSupertepAssignment_[node].size();
@@ -298,7 +298,7 @@ void BspScheduleRecomp<GraphT>::MergeSupersteps() {
     std::vector<unsigned> newStepIdx(numberOfSupersteps_);
     std::vector<bool> commPhaseEmpty(numberOfSupersteps_, true);
 
-    for (auto const &[key, val] : commSchedule) {
+    for (auto const &[key, val] : commSchedule_) {
         commPhaseEmpty[val] = false;
     }
 
@@ -316,7 +316,7 @@ void BspScheduleRecomp<GraphT>::MergeSupersteps() {
         }
         nodeToProcessorAndSupertepAssignment_[node] = newAssignment;
     }
-    for (auto &key_step_pair : commSchedule) {
+    for (auto &key_step_pair : commSchedule_) {
         auto &step = key_step_pair.second;
         step = newStepIdx[step];
     }
