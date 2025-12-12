@@ -35,10 +35,10 @@ struct IsMemoryConstraint : std::false_type {};
 template <typename T>
 struct IsMemoryConstraint<
     T,
-    std::void_t<decltype(std::declval<T>().initialize(std::declval<BspInstance<typename T::Graph_impl_t>>())),
-                decltype(std::declval<T>().can_add(std::declval<VertexIdxT<typename T::Graph_impl_t>>(), std::declval<unsigned>())),
-                decltype(std::declval<T>().add(std::declval<VertexIdxT<typename T::Graph_impl_t>>(), std::declval<unsigned>())),
-                decltype(std::declval<T>().reset(std::declval<unsigned>())),
+    std::void_t<decltype(std::declval<T>().Initialize(std::declval<BspInstance<typename T::GraphImplT>>())),
+                decltype(std::declval<T>().CanAdd(std::declval<VertexIdxT<typename T::GraphImplT>>(), std::declval<unsigned>())),
+                decltype(std::declval<T>().Add(std::declval<VertexIdxT<typename T::GraphImplT>>(), std::declval<unsigned>())),
+                decltype(std::declval<T>().Reset(std::declval<unsigned>())),
                 decltype(T())>> : std::true_type {};
 
 template <typename T>
@@ -202,14 +202,14 @@ struct IsMemoryConstraintSchedule : std::false_type {};
 template <typename T>
 struct IsMemoryConstraintSchedule<
     T,
-    std::void_t<decltype(std::declval<T>().initialize(std::declval<BspSchedule<typename T::Graph_impl_t>>(), std::declval<unsigned>())),
-                decltype(std::declval<T>().can_add(std::declval<VertexIdxT<typename T::Graph_impl_t>>(), std::declval<unsigned>())),
-                decltype(std::declval<T>().add(std::declval<VertexIdxT<typename T::Graph_impl_t>>(), std::declval<unsigned>())),
-                decltype(std::declval<T>().reset(std::declval<unsigned>())),
+    std::void_t<decltype(std::declval<T>().Initialize(std::declval<BspSchedule<typename T::GraphImplT>>(), std::declval<unsigned>())),
+                decltype(std::declval<T>().CanAdd(std::declval<VertexIdxT<typename T::GraphImplT>>(), std::declval<unsigned>())),
+                decltype(std::declval<T>().Add(std::declval<VertexIdxT<typename T::GraphImplT>>(), std::declval<unsigned>())),
+                decltype(std::declval<T>().Reset(std::declval<unsigned>())),
                 decltype(T())>> : std::true_type {};
 
 template <typename T>
-inline constexpr bool isMemoryConstraintScheduleV = IsMemoryConstraintSchedule<T>::value;
+inline constexpr bool IsMemoryConstraintScheduleV = IsMemoryConstraintSchedule<T>::value;
 
 template <typename GraphT>
 struct LocalInOutMemoryConstraint {
@@ -243,8 +243,8 @@ struct LocalInOutMemoryConstraint {
             = instance_->GetComputationalDag().VertexMemWeight(v) + instance_->GetComputationalDag().VertexCommWeight(v);
 
         for (const auto &pred : instance_->GetComputationalDag().Parents(v)) {
-            if (schedule_->assignedProcessor(pred) == schedule_->assignedProcessor(v)
-                && schedule_->assignedSuperstep(pred) == *currentSuperstep_) {
+            if (schedule_->AssignedProcessor(pred) == schedule_->AssignedProcessor(v)
+                && schedule_->AssignedSuperstep(pred) == *currentSuperstep_) {
                 incMemory -= instance_->GetComputationalDag().VertexCommWeight(pred);
             }
         }
@@ -257,8 +257,8 @@ struct LocalInOutMemoryConstraint {
             += instance_->GetComputationalDag().VertexMemWeight(v) + instance_->GetComputationalDag().VertexCommWeight(v);
 
         for (const auto &pred : instance_->GetComputationalDag().Parents(v)) {
-            if (schedule_->assignedProcessor(pred) == schedule_->assignedProcessor(v)
-                && schedule_->assignedSuperstep(pred) == *currentSuperstep_) {
+            if (schedule_->AssignedProcessor(pred) == schedule_->AssignedProcessor(v)
+                && schedule_->AssignedSuperstep(pred) == *currentSuperstep_) {
                 currentProcMemory_[proc] -= instance_->GetComputationalDag().VertexCommWeight(pred);
             }
         }
@@ -298,20 +298,20 @@ struct LocalIncEdgesMemoryConstraint {
         VCommwT<GraphT> incMemory = instance_->GetComputationalDag().VertexCommWeight(v);
 
         for (const auto &pred : instance_->GetComputationalDag().Parents(v)) {
-            if (schedule_->assignedSuperstep(pred) != *currentSuperstep_
+            if (schedule_->AssignedSuperstep(pred) != *currentSuperstep_
                 && currentProcPredec_[proc].find(pred) == currentProcPredec_[proc].end()) {
                 incMemory += instance_->GetComputationalDag().VertexCommWeight(pred);
             }
         }
 
-        return currentProcMemory_[proc] + incMemory <= instance_->GetArchitecture().memoryBound(proc);
+        return currentProcMemory_[proc] + incMemory <= instance_->GetArchitecture().MemoryBound(proc);
     }
 
     inline void Add(const VertexIdxT<GraphT> &v, const unsigned proc) {
         currentProcMemory_[proc] += instance_->GetComputationalDag().VertexCommWeight(v);
 
         for (const auto &pred : instance_->GetComputationalDag().Parents(v)) {
-            if (schedule_->assignedSuperstep(pred) != *currentSuperstep_) {
+            if (schedule_->AssignedSuperstep(pred) != *currentSuperstep_) {
                 const auto pair = currentProcPredec_[proc].insert(pred);
                 if (pair.second) {
                     currentProcMemory_[proc] += instance_->GetComputationalDag().VertexCommWeight(pred);
@@ -364,7 +364,7 @@ struct LocalSourcesIncEdgesMemoryConstraint {
         }
 
         for (const auto &pred : instance_->GetComputationalDag().Parents(v)) {
-            if (schedule_->assignedSuperstep(v) != *currentSuperstep_
+            if (schedule_->AssignedSuperstep(pred) != *currentSuperstep_
                 && currentProcPredec_[proc].find(pred) == currentProcPredec_[proc].end()) {
                 incMemory += instance_->GetComputationalDag().VertexCommWeight(pred);
             }
@@ -379,7 +379,7 @@ struct LocalSourcesIncEdgesMemoryConstraint {
         }
 
         for (const auto &pred : instance_->GetComputationalDag().Parents(v)) {
-            if (schedule_->assignedSuperstep(pred) != *currentSuperstep_) {
+            if (schedule_->AssignedSuperstep(pred) != *currentSuperstep_) {
                 const auto pair = currentProcPredec_[proc].insert(pred);
                 if (pair.second) {
                     currentProcMemory_[proc] += instance_->GetComputationalDag().VertexCommWeight(pred);
