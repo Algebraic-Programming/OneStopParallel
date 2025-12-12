@@ -55,16 +55,16 @@ class SetSchedule : public IBspSchedule<GraphT> {
 
     SetSchedule(const BspInstance<GraphT> &inst, unsigned numSupersteps) : instance_(&inst), numberOfSupersteps_(numSupersteps) {
         stepProcessorVertices_ = std::vector<std::vector<std::unordered_set<VertexIdx>>>(
-            numSupersteps, std::vector<std::unordered_set<VertexIdx>>(inst.numberOfProcessors()));
+            numSupersteps, std::vector<std::unordered_set<VertexIdx>>(inst.NumberOfProcessors()));
     }
 
     SetSchedule(const IBspSchedule<GraphT> &schedule)
-        : instance_(&schedule.getInstance()), numberOfSupersteps_(schedule.numberOfSupersteps()) {
+        : instance_(&schedule.GetInstance()), numberOfSupersteps_(schedule.NumberOfSupersteps()) {
         stepProcessorVertices_ = std::vector<std::vector<std::unordered_set<VertexIdx>>>(
-            schedule.numberOfSupersteps(), std::vector<std::unordered_set<VertexIdx>>(schedule.getInstance().numberOfProcessors()));
+            schedule.NumberOfSupersteps(), std::vector<std::unordered_set<VertexIdx>>(schedule.GetInstance().NumberOfProcessors()));
 
-        for (const auto v : schedule.getInstance().vertices()) {
-            stepProcessorVertices_[schedule.assignedSuperstep(v)][schedule.assignedProcessor(v)].insert(v);
+        for (const auto v : schedule.GetInstance().Vertices()) {
+            stepProcessorVertices_[schedule.AssignedSuperstep(v)][schedule.AssignedProcessor(v)].insert(v);
         }
     }
 
@@ -75,13 +75,13 @@ class SetSchedule : public IBspSchedule<GraphT> {
         numberOfSupersteps_ = 0;
     }
 
-    const BspInstance<GraphT> &getInstance() const override { return *instance_; }
+    const BspInstance<GraphT> &GetInstance() const override { return *instance_; }
 
-    unsigned numberOfSupersteps() const override { return numberOfSupersteps_; }
+    unsigned NumberOfSupersteps() const override { return numberOfSupersteps_; }
 
-    void setAssignedSuperstep(VertexIdx node, unsigned superstep) override {
+    void SetAssignedSuperstep(VertexIdx node, unsigned superstep) override {
         unsigned assignedProcessor = 0;
-        for (unsigned proc = 0; proc < instance_->numberOfProcessors(); proc++) {
+        for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); proc++) {
             for (unsigned step = 0; step < numberOfSupersteps_; step++) {
                 if (stepProcessorVertices_[step][proc].find(node) != stepProcessorVertices_[step][proc].end()) {
                     assignedProcessor = proc;
@@ -93,9 +93,9 @@ class SetSchedule : public IBspSchedule<GraphT> {
         stepProcessorVertices_[superstep][assignedProcessor].insert(node);
     }
 
-    void setAssignedProcessor(VertexIdx node, unsigned processor) override {
+    void SetAssignedProcessor(VertexIdx node, unsigned processor) override {
         unsigned assignedStep = 0;
-        for (unsigned proc = 0; proc < instance_->numberOfProcessors(); proc++) {
+        for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); proc++) {
             for (unsigned step = 0; step < numberOfSupersteps_; step++) {
                 if (stepProcessorVertices_[step][proc].find(node) != stepProcessorVertices_[step][proc].end()) {
                     assignedStep = step;
@@ -110,8 +110,8 @@ class SetSchedule : public IBspSchedule<GraphT> {
     /// @brief returns number of supersteps if the node is not assigned
     /// @param node
     /// @return the assigned superstep
-    unsigned assignedSuperstep(VertexIdx node) const override {
-        for (unsigned proc = 0; proc < instance_->numberOfProcessors(); proc++) {
+    unsigned AssignedSuperstep(VertexIdx node) const override {
+        for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); proc++) {
             for (unsigned step = 0; step < numberOfSupersteps_; step++) {
                 if (stepProcessorVertices_[step][proc].find(node) != stepProcessorVertices_[step][proc].end()) {
                     return step;
@@ -125,8 +125,8 @@ class SetSchedule : public IBspSchedule<GraphT> {
     /// @brief returns number of processors if node is not assigned
     /// @param node
     /// @return the assigned processor
-    unsigned assignedProcessor(VertexIdx node) const override {
-        for (unsigned proc = 0; proc < instance_->numberOfProcessors(); proc++) {
+    unsigned AssignedProcessor(VertexIdx node) const override {
+        for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); proc++) {
             for (unsigned step = 0; step < numberOfSupersteps_; step++) {
                 if (stepProcessorVertices_[step][proc].find(node) != stepProcessorVertices_[step][proc].end()) {
                     return proc;
@@ -134,19 +134,19 @@ class SetSchedule : public IBspSchedule<GraphT> {
             }
         }
 
-        return instance_->numberOfProcessors();
+        return instance_->NumberOfProcessors();
     }
 
     void MergeSupersteps(unsigned startStep, unsigned endStep) {
         unsigned step = startStep + 1;
         for (; step <= endStep; step++) {
-            for (unsigned proc = 0; proc < getInstance().numberOfProcessors(); proc++) {
+            for (unsigned proc = 0; proc < getInstance().NumberOfProcessors(); proc++) {
                 stepProcessorVertices_[startStep][proc].merge(stepProcessorVertices_[step][proc]);
             }
         }
 
         for (; step < numberOfSupersteps_; step++) {
-            for (unsigned proc = 0; proc < getInstance().numberOfProcessors(); proc++) {
+            for (unsigned proc = 0; proc < getInstance().NumberOfProcessors(); proc++) {
                 stepProcessorVertices_[step - (endStep - startStep)][proc] = std::move(stepProcessorVertices_[step][proc]);
             }
         }
@@ -157,9 +157,9 @@ template <typename GraphT>
 static void PrintSetScheduleWorkMemNodesGrid(std::ostream &os,
                                              const SetSchedule<GraphT> &setSchedule,
                                              bool printDetailedNodeAssignment = false) {
-    const auto &instance = setSchedule.getInstance();
-    const unsigned numProcessors = instance.numberOfProcessors();
-    const unsigned numSupersteps = setSchedule.numberOfSupersteps();
+    const auto &instance = setSchedule.GetInstance();
+    const unsigned numProcessors = instance.NumberOfProcessors();
+    const unsigned numSupersteps = setSchedule.NumberOfSupersteps();
 
     // Data structures to store aggregated work, memory, and nodes
     std::vector<std::vector<VWorkwT<GraphT>>> totalWorkPerCell(numProcessors, std::vector<VWorkwT<GraphT>>(numSupersteps, 0.0));
@@ -176,8 +176,8 @@ static void PrintSetScheduleWorkMemNodesGrid(std::ostream &os,
             // for all s, p combinations if it's dynamically sized.
             if (s < setSchedule.step_processor_vertices.size() && p < setSchedule.step_processor_vertices[s].size()) {
                 for (const auto &nodeIdx : setSchedule.step_processor_vertices[s][p]) {
-                    totalWorkPerCell[p][s] += instance.getComputationalDag().VertexWorkWeight(nodeIdx);
-                    totalMemoryPerCell[p][s] += instance.getComputationalDag().VertexMemWeight(nodeIdx);
+                    totalWorkPerCell[p][s] += instance.GetComputationalDag().VertexWorkWeight(nodeIdx);
+                    totalMemoryPerCell[p][s] += instance.GetComputationalDag().VertexMemWeight(nodeIdx);
                     nodesPerCell[p][s].push_back(nodeIdx);
                 }
             }

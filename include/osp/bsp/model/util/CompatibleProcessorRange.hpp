@@ -59,11 +59,11 @@ class CompatibleProcessorRange {
         instance_ = &inst;
 
         if constexpr (HasTypedVerticesV<Graph_t>) {
-            typeProcessorIdx_.resize(inst.getComputationalDag().NumVertexTypes());
+            typeProcessorIdx_.resize(inst.GetComputationalDag().NumVertexTypes());
 
-            for (v_type_t<Graph_t> vType = 0; v_type < inst.getComputationalDag().NumVertexTypes(); v_type++) {
-                for (unsigned proc = 0; proc < inst.numberOfProcessors(); proc++) {
-                    if (inst.isCompatibleType(v_type, inst.processorType(proc))) {
+            for (v_type_t<Graph_t> vType = 0; v_type < inst.GetComputationalDag().NumVertexTypes(); v_type++) {
+                for (unsigned proc = 0; proc < inst.NumberOfProcessors(); proc++) {
+                    if (inst.IsCompatibleType(v_type, inst.ProcessorType(proc))) {
                         typeProcessorIdx_[v_type].push_back(proc);
                     }
                 }
@@ -82,7 +82,7 @@ class CompatibleProcessorRange {
         if constexpr (HasTypedVerticesV<Graph_t>) {
             return typeProcessorIdx_[type];
         } else {
-            return instance_->processors();
+            return instance_->Processors();
         }
     }
 
@@ -94,7 +94,7 @@ class CompatibleProcessorRange {
      */
     [[nodiscard]] const auto &CompatibleProcessorsVertex(const vertex_idx_t<Graph_t> vertex) const {
         assert(instance_ != nullptr);
-        return compatible_processors_type(instance->getComputationalDag().VertexType(vertex));
+        return CompatibleProcessorsType(instance_->GetComputationalDag().VertexType(vertex));
     }
 };
 

@@ -44,13 +44,12 @@ void constructComputationalDag(const GraphFrom &from, GraphTo &to) {
     std::vector<VertexIdxT<GraphTo>> vertexMap;
     vertexMap.reserve(from.NumVertices());
 
-    for (const auto &v_idx : from.Vertices()) {
+    for (const auto &vIdx : from.Vertices()) {
         if constexpr (HasTypedVerticesV<GraphFrom> and HasTypedVerticesV<GraphTo>) {
             vertexMap.push_back(to.AddVertex(
-                from.VertexWorkWeight(v_idx), from.VertexCommWeight(v_idx), from.VertexMemWeight(v_idx), from.VertexType(v_idx)));
+                from.VertexWorkWeight(vIdx), from.VertexCommWeight(vIdx), from.VertexMemWeight(vIdx), from.VertexType(vIdx)));
         } else {
-            vertexMap.push_back(
-                to.AddVertex(from.VertexWorkWeight(v_idx), from.VertexCommWeight(v_idx), from.VertexMemWeight(v_idx)));
+            vertexMap.push_back(to.AddVertex(from.VertexWorkWeight(vIdx), from.VertexCommWeight(vIdx), from.VertexMemWeight(vIdx)));
         }
     }
 

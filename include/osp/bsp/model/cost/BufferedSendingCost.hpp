@@ -32,55 +32,55 @@ namespace osp {
  */
 template <typename GraphT>
 struct BufferedSendingCost {
-    using cost_type = v_commw_t<Graph_t>;
+    using CostType = VCommwT<GraphT>;
 
-    cost_type operator()(const BspSchedule<GraphT> &schedule) const {
+    CostType operator()(const BspSchedule<GraphT> &schedule) const {
         const auto &instance = schedule.getInstance();
-        unsigned numberOfSupersteps = schedule.numberOfSupersteps();
-        const auto &nodeToProcessorAssignment = schedule.assignedProcessors();
-        const auto &nodeToSuperstepAssignment = schedule.assignedSupersteps();
-        const auto staleness = schedule.getStaleness();
+        unsigned numberOfSupersteps = schedule.NumberOfSupersteps();
+        const auto &nodeToProcessorAssignment = schedule.AssignedProcessors();
+        const auto &nodeToSuperstepAssignment = schedule.AssignedSupersteps();
+        const auto staleness = schedule.Staleness();
 
-        std::vector<std::vector<v_commw_t<Graph_t>>> rec(instance.numberOfProcessors(),
-                                                         std::vector<v_commw_t<Graph_t>>(number_of_supersteps, 0));
-        std::vector<std::vector<v_commw_t<Graph_t>>> send(instance.numberOfProcessors(),
-                                                          std::vector<v_commw_t<Graph_t>>(number_of_supersteps, 0));
+        std::vector<std::vector<VCommwT<GraphT>>> rec(instance.NumberOfProcessors(),
+                                                      std::vector<VCommwT<GraphT>>(numberOfSupersteps, 0));
+        std::vector<std::vector<VCommwT<GraphT>>> send(instance.NumberOfProcessors(),
+                                                       std::vector<VCommwT<GraphT>>(numberOfSupersteps, 0));
 
-        for (vertex_idx_t<Graph_t> node = 0; node < instance.numberOfVertices(); node++) {
-            std::vector<unsigned> stepNeeded(instance.numberOfProcessors(), numberOfSupersteps);
-            for (const auto &target : instance.getComputationalDag().children(node)) {
-                if (node_to_processor_assignment[node] != node_to_processor_assignment[target]) {
-                    step_needed[node_to_processor_assignment[target]]
-                        = std::min(step_needed[node_to_processor_assignment[target]], node_to_superstep_assignment[target]);
+        for (VertexIdxT<GraphT> node = 0; node < instance.NumberOfVertices(); node++) {
+            std::vector<unsigned> stepNeeded(instance.NumberOfProcessors(), numberOfSupersteps);
+            for (const auto &target : instance.GetComputationalDag().Children(node)) {
+                if (nodeToProcessorAssignment[node] != nodeToProcessorAssignment[target]) {
+                    stepNeeded[nodeToProcessorAssignment[target]]
+                        = std::min(stepNeeded[nodeToProcessorAssignment[target]], nodeToSuperstepAssignment[target]);
                 }
             }
 
-            for (unsigned proc = 0; proc < instance.numberOfProcessors(); proc++) {
+            for (unsigned proc = 0; proc < instance.NumberOfProcessors(); proc++) {
                 if (stepNeeded[proc] < numberOfSupersteps) {
                     send[nodeToProcessorAssignment[node]][nodeToSuperstepAssignment[node]]
-                        += instance.sendCosts(nodeToProcessorAssignment[node], proc)
-                           * instance.getComputationalDag().VertexCommWeight(node);
+                        += instance.SendCosts(nodeToProcessorAssignment[node], proc)
+                           * instance.GetComputationalDag().VertexCommWeight(node);
 
                     if (stepNeeded[proc] >= staleness) {
-                        rec[proc][stepNeeded[proc] - staleness] += instance.sendCosts(nodeToProcessorAssignment[node], proc)
-                                                                   * instance.getComputationalDag().VertexCommWeight(node);
+                        rec[proc][stepNeeded[proc] - staleness] += instance.SendCosts(nodeToProcessorAssignment[node], proc)
+                                                                   * instance.GetComputationalDag().VertexCommWeight(node);
                     }
                 }
             }
         }
 
-        const auto maxCommPerStep = cost_helpers::compute_max_comm_per_step(schedule, rec, send);
-        v_commw_t<Graph_t> commCosts = 0;
+        const auto maxCommPerStep = cost_helpers::ComputeMaxCommPerStep(schedule, rec, send);
+        VCommwT<GraphT> commCosts = 0;
         for (unsigned step = 0; step < numberOfSupersteps; step++) {
-            const auto stepCommCost = max_comm_per_step[step];
-            commCosts += step_comm_cost;
+            const auto stepCommCost = maxCommPerStep[step];
+            commCosts += stepCommCost;
 
             if (stepCommCost > 0) {
-                commCosts += instance.synchronisationCosts();
+                commCosts += instance.SynchronisationCosts();
             }
         }
 
-        return comm_costs + cost_helpers::compute_work_costs(schedule);
+        return commCosts + cost_helpers::ComputeWorkCosts(schedule);
     }
 };
 

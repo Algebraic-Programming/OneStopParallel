@@ -263,7 +263,7 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
      * @param superstep The superstep to assign to the node.
      */
     void SetAssignedSuperstep(const VertexIdx node, const unsigned superstep) {
-        if (node < instance_->numberOfVertices()) {
+        if (node < instance_->NumberOfVertices()) {
             nodeToSuperstepAssignment_[node] = superstep;
 
             if (superstep >= numberOfSupersteps_) {
@@ -299,10 +299,10 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
      * @param vec The superstep assignment to set.
      */
     void SetAssignedSupersteps(const std::vector<unsigned> &vec) {
-        if (vec.size() == static_cast<std::size_t>(instance_->numberOfVertices())) {
+        if (vec.size() == static_cast<std::size_t>(instance_->NumberOfVertices())) {
             numberOfSupersteps_ = 0;
 
-            for (VertexIdxT<GraphT> i = 0; i < instance_->numberOfVertices(); ++i) {
+            for (VertexIdxT<GraphT> i = 0; i < instance_->NumberOfVertices(); ++i) {
                 if (vec[i] >= numberOfSupersteps_) {
                     numberOfSupersteps_ = vec[i] + 1;
                 }
@@ -320,7 +320,7 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
      * @param vec The superstep assignment to set.
      */
     void SetAssignedSupersteps(std::vector<unsigned> &&vec) {
-        if (vec.size() == static_cast<std::size_t>(instance_->numberOfVertices())) {
+        if (vec.size() == static_cast<std::size_t>(instance_->NumberOfVertices())) {
             nodeToSuperstepAssignment_ = std::move(vec);
         } else {
             throw std::invalid_argument("Invalid Argument while assigning supersteps: size does not match number of nodes.");
@@ -335,7 +335,7 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
      * @param vec The processor assignment to set.
      */
     void SetAssignedProcessors(const std::vector<unsigned> &vec) {
-        if (vec.size() == static_cast<std::size_t>(instance_->numberOfVertices())) {
+        if (vec.size() == static_cast<std::size_t>(instance_->NumberOfVertices())) {
             nodeToProcessorAssignment_ = vec;
         } else {
             throw std::invalid_argument("Invalid Argument while assigning processors: size does not match number of nodes.");
@@ -348,7 +348,7 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
      * @param vec The processor assignment to set.
      */
     void SetAssignedProcessors(std::vector<unsigned> &&vec) {
-        if (vec.size() == static_cast<std::size_t>(instance_->numberOfVertices())) {
+        if (vec.size() == static_cast<std::size_t>(instance_->NumberOfVertices())) {
             nodeToProcessorAssignment_ = std::move(vec);
         } else {
             throw std::invalid_argument("Invalid Argument while assigning processors: size does not match number of nodes.");
@@ -363,7 +363,7 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
      *
      * @return The work costs of the schedule.
      */
-    virtual VWorkwT<GraphT> computeWorkCosts() const override { return cost_helpers::compute_work_costs(*this); }
+    virtual VWorkwT<GraphT> computeWorkCosts() const override { return cost_helpers::ComputeWorkCosts(*this); }
 
     /**
      * @brief Computes the costs of the schedule accoring to lazy communication cost evaluation.
@@ -393,20 +393,20 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
      * @return True if the schedule satisfies the precedence constraints of the computational DAG, false otherwise.
      */
     [[nodiscard]] bool SatisfiesPrecedenceConstraints() const {
-        if (static_cast<VertexIdxT<GraphT>>(nodeToProcessorAssignment_.size()) != instance_->numberOfVertices()
-            || static_cast<VertexIdxT<GraphT>>(nodeToSuperstepAssignment_.size()) != instance_->numberOfVertices()) {
+        if (static_cast<VertexIdxT<GraphT>>(nodeToProcessorAssignment_.size()) != instance_->NumberOfVertices()
+            || static_cast<VertexIdxT<GraphT>>(nodeToSuperstepAssignment_.size()) != instance_->NumberOfVertices()) {
             return false;
         }
 
-        for (const auto &v : instance_->vertices()) {
+        for (const auto &v : instance_->Vertices()) {
             if (nodeToSuperstepAssignment_[v] >= numberOfSupersteps_) {
                 return false;
             }
-            if (nodeToProcessorAssignment_[v] >= instance_->numberOfProcessors()) {
+            if (nodeToProcessorAssignment_[v] >= instance_->NumberOfProcessors()) {
                 return false;
             }
 
-            for (const auto &target : instance_->getComputationalDag().children(v)) {
+            for (const auto &target : instance_->GetComputationalDag().Children(v)) {
                 const unsigned differentProcessors
                     = (nodeToProcessorAssignment_[v] == nodeToProcessorAssignment_[target]) ? 0u : GetStaleness();
                 if (nodeToSuperstepAssignment_[v] + differentProcessors > nodeToSuperstepAssignment_[target]) {
@@ -426,12 +426,12 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
      * @return True if node type constraints are satisfied, false otherwise.
      */
     [[nodiscard]] bool SatisfiesNodeTypeConstraints() const {
-        if (nodeToProcessorAssignment_.size() != instance_->numberOfVertices()) {
+        if (nodeToProcessorAssignment_.size() != instance_->NumberOfVertices()) {
             return false;
         }
 
-        for (const auto &node : instance_->vertices()) {
-            if (!instance_->isCompatible(node, nodeToProcessorAssignment_[node])) {
+        for (const auto &node : instance_->Vertices()) {
+            if (!instance_->IsCompatible(node, nodeToProcessorAssignment_[node])) {
                 return false;
             }
         }
@@ -502,7 +502,7 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
     [[nodiscard]] std::vector<VertexIdxT<GraphT>> GetAssignedNodeVector(const unsigned processor, const unsigned superstep) const {
         std::vector<VertexIdxT<GraphT>> vec;
 
-        for (const auto &node : instance_->vertices()) {
+        for (const auto &node : instance_->Vertices()) {
             if (nodeToProcessorAssignment_[node] == processor && nodeToSuperstepAssignment_[node] == superstep) {
                 vec.push_back(node);
             }
@@ -527,7 +527,7 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
     [[nodiscard]] unsigned NumAssignedNodes(const unsigned processor) const {
         unsigned num = 0;
 
-        for (const auto &node : instance_->vertices()) {
+        for (const auto &node : instance_->Vertices()) {
             if (nodeToProcessorAssignment_[node] == processor) {
                 num++;
             }
@@ -542,9 +542,9 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
      * @return A vector containing the number of nodes assigned to each processor.
      */
     [[nodiscard]] std::vector<unsigned> NumAssignedNodesPerProcessor() const {
-        std::vector<unsigned> num(instance_->numberOfProcessors(), 0);
+        std::vector<unsigned> num(instance_->NumberOfProcessors(), 0);
 
-        for (const auto &node : instance_->vertices()) {
+        for (const auto &node : instance_->Vertices()) {
             num[nodeToProcessorAssignment_[node]]++;
         }
 
@@ -557,9 +557,9 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
      * @return A 2D vector containing the number of nodes assigned to each processor in each superstep.
      */
     [[nodiscard]] std::vector<std::vector<unsigned>> NumAssignedNodesPerSuperstepProcessor() const {
-        std::vector<std::vector<unsigned>> num(numberOfSupersteps_, std::vector<unsigned>(instance_->numberOfProcessors(), 0));
+        std::vector<std::vector<unsigned>> num(numberOfSupersteps_, std::vector<unsigned>(instance_->NumberOfProcessors(), 0));
 
-        for (const auto &v : instance_->vertices()) {
+        for (const auto &v : instance_->Vertices()) {
             num[nodeToSuperstepAssignment_[v]][nodeToProcessorAssignment_[v]] += 1;
         }
 
@@ -571,8 +571,8 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
      */
     virtual void ShrinkByMergingSupersteps() {
         std::vector<bool> commPhaseEmpty(numberOfSupersteps_, true);
-        for (const auto &node : instance_->vertices()) {
-            for (const auto &child : instance_->getComputationalDag().children(node)) {
+        for (const auto &node : instance_->Vertices()) {
+            for (const auto &child : instance_->GetComputationalDag().Children(node)) {
                 if (nodeToProcessorAssignment_[node] != nodeToProcessorAssignment_[child]) {
                     for (unsigned offset = 1; offset <= GetStaleness(); ++offset) {
                         commPhaseEmpty[nodeToSuperstepAssignment_[child] - offset] = false;
@@ -589,7 +589,7 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
                 currentIndex++;
             }
         }
-        for (const auto &node : instance_->vertices()) {
+        for (const auto &node : instance_->Vertices()) {
             nodeToSuperstepAssignment_[node] = newStepIndex[nodeToSuperstepAssignment_[node]];
         }
         SetNumberOfSupersteps(currentIndex);
@@ -608,13 +608,13 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
         SetSchedule setSchedule = SetSchedule(*this);
 
         for (unsigned step = 0; step < numberOfSupersteps_; step++) {
-            for (unsigned proc = 0; proc < instance_->numberOfProcessors(); proc++) {
+            for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); proc++) {
                 VMemwT<GraphT> memory = 0;
                 for (const auto &node : setSchedule.step_processor_vertices[step][proc]) {
-                    memory += instance_->getComputationalDag().VertexMemWeight(node);
+                    memory += instance_->GetComputationalDag().VertexMemWeight(node);
                 }
 
-                if (memory > instance_->getArchitecture().memoryBound(proc)) {
+                if (memory > instance_->GetArchitecture().MemoryBound(proc)) {
                     return false;
                 }
             }
@@ -632,17 +632,17 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
      * @return True if persistent and transient memory constraints are satisfied, false otherwise.
      */
     bool SatisfiesPersistentAndTransientMemoryConstraints() const {
-        std::vector<VMemwT<GraphT>> currentProcPersistentMemory(instance_->numberOfProcessors(), 0);
-        std::vector<VMemwT<GraphT>> currentProcTransientMemory(instance_->numberOfProcessors(), 0);
+        std::vector<VMemwT<GraphT>> currentProcPersistentMemory(instance_->NumberOfProcessors(), 0);
+        std::vector<VMemwT<GraphT>> currentProcTransientMemory(instance_->NumberOfProcessors(), 0);
 
-        for (const auto &node : instance_->vertices()) {
+        for (const auto &node : instance_->Vertices()) {
             const unsigned proc = nodeToProcessorAssignment_[node];
-            currentProcPersistentMemory[proc] += instance_->getComputationalDag().VertexMemWeight(node);
+            currentProcPersistentMemory[proc] += instance_->GetComputationalDag().VertexMemWeight(node);
             currentProcTransientMemory[proc]
-                = std::max(currentProcTransientMemory[proc], instance_->getComputationalDag().VertexCommWeight(node));
+                = std::max(currentProcTransientMemory[proc], instance_->GetComputationalDag().VertexCommWeight(node));
 
             if (currentProcPersistentMemory[proc] + currentProcTransientMemory[proc]
-                > instance_->getArchitecture().memoryBound(proc)) {
+                > instance_->GetArchitecture().MemoryBound(proc)) {
                 return false;
             }
         }
@@ -658,13 +658,13 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
      * @return True if global memory constraints are satisfied, false otherwise.
      */
     bool SatisfiesGlobalMemoryConstraints() const {
-        std::vector<VMemwT<GraphT>> currentProcMemory(instance_->numberOfProcessors(), 0);
+        std::vector<VMemwT<GraphT>> currentProcMemory(instance_->NumberOfProcessors(), 0);
 
-        for (const auto &node : instance_->vertices()) {
+        for (const auto &node : instance_->Vertices()) {
             const unsigned proc = nodeToProcessorAssignment_[node];
-            currentProcMemory[proc] += instance_->getComputationalDag().VertexMemWeight(node);
+            currentProcMemory[proc] += instance_->GetComputationalDag().VertexMemWeight(node);
 
-            if (currentProcMemory[proc] > instance_->getArchitecture().memoryBound(proc)) {
+            if (currentProcMemory[proc] > instance_->GetArchitecture().MemoryBound(proc)) {
                 return false;
             }
         }
@@ -675,20 +675,20 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
         SetSchedule setSchedule = SetSchedule(*this);
 
         for (unsigned step = 0; step < numberOfSupersteps_; step++) {
-            for (unsigned proc = 0; proc < instance_->numberOfProcessors(); proc++) {
+            for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); proc++) {
                 VMemwT<GraphT> memory = 0;
                 for (const auto &node : setSchedule.step_processor_vertices[step][proc]) {
-                    memory += instance_->getComputationalDag().VertexMemWeight(node)
-                              + instance_->getComputationalDag().VertexCommWeight(node);
+                    memory += instance_->GetComputationalDag().VertexMemWeight(node)
+                              + instance_->GetComputationalDag().VertexCommWeight(node);
 
-                    for (const auto &parent : instance_->getComputationalDag().parents(node)) {
+                    for (const auto &parent : instance_->GetComputationalDag().Parents(node)) {
                         if (nodeToProcessorAssignment_[parent] == proc && nodeToSuperstepAssignment_[parent] == step) {
-                            memory -= instance_->getComputationalDag().VertexCommWeight(parent);
+                            memory -= instance_->GetComputationalDag().VertexCommWeight(parent);
                         }
                     }
                 }
 
-                if (memory > instance_->getArchitecture().memoryBound(proc)) {
+                if (memory > instance_->GetArchitecture().MemoryBound(proc)) {
                     return false;
                 }
             }
@@ -701,14 +701,14 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
         SetSchedule setSchedule = SetSchedule(*this);
 
         for (unsigned step = 0; step < numberOfSupersteps_; step++) {
-            for (unsigned proc = 0; proc < instance_->numberOfProcessors(); proc++) {
+            for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); proc++) {
                 std::unordered_set<VertexIdxT<GraphT>> nodesWithIncomingEdges;
 
                 VMemwT<GraphT> memory = 0;
                 for (const auto &node : setSchedule.step_processor_vertices[step][proc]) {
-                    memory += instance_->getComputationalDag().VertexCommWeight(node);
+                    memory += instance_->GetComputationalDag().VertexCommWeight(node);
 
-                    for (const auto &parent : instance_->getComputationalDag().parents(node)) {
+                    for (const auto &parent : instance_->GetComputationalDag().Parents(node)) {
                         if (nodeToSuperstepAssignment_[parent] != step) {
                             nodesWithIncomingEdges.insert(parent);
                         }
@@ -716,10 +716,10 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
                 }
 
                 for (const auto &node : nodesWithIncomingEdges) {
-                    memory += instance_->getComputationalDag().VertexCommWeight(node);
+                    memory += instance_->GetComputationalDag().VertexCommWeight(node);
                 }
 
-                if (memory > instance_->getArchitecture().memoryBound(proc)) {
+                if (memory > instance_->GetArchitecture().MemoryBound(proc)) {
                     return false;
                 }
             }
@@ -731,16 +731,16 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
         SetSchedule setSchedule = SetSchedule(*this);
 
         for (unsigned step = 0; step < numberOfSupersteps_; step++) {
-            for (unsigned proc = 0; proc < instance_->numberOfProcessors(); proc++) {
+            for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); proc++) {
                 std::unordered_set<VertexIdxT<GraphT>> nodesWithIncomingEdges;
 
                 VMemwT<GraphT> memory = 0;
                 for (const auto &node : setSchedule.step_processor_vertices[step][proc]) {
-                    if (IsSource(node, instance_->getComputationalDag())) {
-                        memory += instance_->getComputationalDag().VertexMemWeight(node);
+                    if (IsSource(node, instance_->GetComputationalDag())) {
+                        memory += instance_->GetComputationalDag().VertexMemWeight(node);
                     }
 
-                    for (const auto &parent : instance_->getComputationalDag().parents(node)) {
+                    for (const auto &parent : instance_->GetComputationalDag().Parents(node)) {
                         if (nodeToSuperstepAssignment_[parent] != step) {
                             nodesWithIncomingEdges.insert(parent);
                         }
@@ -748,10 +748,10 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
                 }
 
                 for (const auto &node : nodesWithIncomingEdges) {
-                    memory += instance_->getComputationalDag().VertexCommWeight(node);
+                    memory += instance_->GetComputationalDag().VertexCommWeight(node);
                 }
 
-                if (memory > instance_->getArchitecture().memoryBound(proc)) {
+                if (memory > instance_->GetArchitecture().MemoryBound(proc)) {
                     return false;
                 }
             }

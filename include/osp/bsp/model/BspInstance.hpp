@@ -195,46 +195,46 @@ class BspInstance {
      * @param p_receive The index of the receiving processor.
      */
     [[nodiscard]] VCommwT<GraphT> SendCosts(const unsigned pSend, const unsigned pReceive) const {
-        return architecture_.sendCosts(pSend, pReceive);
+        return architecture_.SendCosts(pSend, pReceive);
     }
 
     /**
      * @brief Returns a copy of the send costs matrix.
      */
-    [[nodiscard]] std::vector<std::vector<VCommwT<GraphT>>> SendCosts() const { return architecture_.sendCosts(); }
+    [[nodiscard]] std::vector<std::vector<VCommwT<GraphT>>> SendCosts() const { return architecture_.SendCosts(); }
 
     /**
      * @brief Returns the flattened send costs vector.
      */
-    [[nodiscard]] const std::vector<VCommwT<GraphT>> &SendCostsVector() const { return architecture_.sendCostsVector(); }
+    [[nodiscard]] const std::vector<VCommwT<GraphT>> &SendCostsVector() const { return architecture_.SendCostsVector(); }
 
     /**
      * @brief Returns the communication costs of the BSP architecture.
      */
-    [[nodiscard]] VCommwT<GraphT> CommunicationCosts() const { return architecture_.communicationCosts(); }
+    [[nodiscard]] VCommwT<GraphT> CommunicationCosts() const { return architecture_.CommunicationCosts(); }
 
     /**
      * @brief Returns the synchronization costs of the BSP architecture.
      */
-    [[nodiscard]] VCommwT<GraphT> SynchronisationCosts() const { return architecture_.synchronisationCosts(); }
+    [[nodiscard]] VCommwT<GraphT> SynchronisationCosts() const { return architecture_.SynchronisationCosts(); }
 
     /**
      * @brief Returns the memory bound for a specific processor.
      * @param proc The processor index.
      */
-    [[nodiscard]] VMemwT<GraphT> MemoryBound(const unsigned proc) const { return architecture_.memoryBound(proc); }
+    [[nodiscard]] VMemwT<GraphT> MemoryBound(const unsigned proc) const { return architecture_.MemoryBound(proc); }
 
     /**
      * @brief Sets the communication costs of the BSP architecture.
      * @param cost The communication costs to set.
      */
-    void SetCommunicationCosts(const VCommwT<GraphT> cost) { architecture_.setCommunicationCosts(cost); }
+    void SetCommunicationCosts(const VCommwT<GraphT> cost) { architecture_.SetCommunicationCosts(cost); }
 
     /**
      * @brief Sets the synchronisation costs of the BSP architecture.
      * @param cost The synchronisation costs to set.
      */
-    void SetSynchronisationCosts(const VCommwT<GraphT> cost) { architecture_.setSynchronisationCosts(cost); }
+    void SetSynchronisationCosts(const VCommwT<GraphT> cost) { architecture_.SetSynchronisationCosts(cost); }
 
     /**
      * @brief Sets the number of processors. Processor type is set to 0 for all processors.
@@ -242,13 +242,13 @@ class BspInstance {
      * @param numberOfProcessors The number of processors. Must be greater than 0.
      * @throws std::invalid_argument if the number of processors is 0.
      */
-    void SetNumberOfProcessors(const unsigned num) { architecture_.setNumberOfProcessors(num); }
+    void SetNumberOfProcessors(const unsigned num) { architecture_.SetNumberOfProcessors(num); }
 
     /**
      * @brief Returns the processor type for a given processor index. Does not perform bounds checking.
      * @param proc The processor index.
      */
-    [[nodiscard]] VertexTypeTOrDefault ProcessorType(const unsigned proc) const { return architecture_.processorType(proc); }
+    [[nodiscard]] VertexTypeTOrDefault ProcessorType(const unsigned proc) const { return architecture_.ProcessorType(proc); }
 
     /**
      * @brief Checks if a node is compatible with a processor. Does not perform bounds checking.
@@ -258,7 +258,7 @@ class BspInstance {
      * @return True if the node is compatible with the processor, false otherwise.
      */
     [[nodiscard]] bool IsCompatible(const VertexIdxT<GraphT> &node, const unsigned processorId) const {
-        return IsCompatibleType(cdag_.VertexType(node), architecture_.processorType(processorId));
+        return IsCompatibleType(cdag_.VertexType(node), architecture_.ProcessorType(processorId));
     }
 
     /**
@@ -310,7 +310,7 @@ class BspInstance {
      */
     void SetAllOnesCompatibilityMatrix() {
         nodeProcessorCompatibility_.assign(cdag_.NumVertexTypes(),
-                                           std::vector<bool>(architecture_.getNumberOfProcessorTypes(), true));
+                                           std::vector<bool>(architecture_.GetNumberOfProcessorTypes(), true));
     }
 
     /**
@@ -318,17 +318,17 @@ class BspInstance {
      * @return True if the memory constraints are feasible, false otherwise.
      */
     [[nodiscard]] bool CheckMemoryConstraintsFeasibility() const {
-        std::vector<VMemwT<GraphT>> maxMemoryPerProcType(architecture_.getNumberOfProcessorTypes(), 0);
-        for (unsigned proc = 0U; proc < architecture_.numberOfProcessors(); proc++) {
-            maxMemoryPerProcType[architecture_.processorType(proc)]
-                = std::max(maxMemoryPerProcType[architecture_.processorType(proc)], architecture_.memoryBound(proc));
+        std::vector<VMemwT<GraphT>> maxMemoryPerProcType(architecture_.GetNumberOfProcessorTypes(), 0);
+        for (unsigned proc = 0U; proc < architecture_.NumberOfProcessors(); proc++) {
+            maxMemoryPerProcType[architecture_.ProcessorType(proc)]
+                = std::max(maxMemoryPerProcType[architecture_.ProcessorType(proc)], architecture_.MemoryBound(proc));
         }
 
         for (VertexTypeTOrDefault vertType = 0U; vertType < cdag_.NumVertexTypes(); vertType++) {
-            VMemwT<GraphT> maxMemoryOfType = max_memory_weight(vertType, cdag_);
+            VMemwT<GraphT> maxMemoryOfType = MaxMemoryWeight(vertType, cdag_);
             bool fits = false;
 
-            for (ProcessorTypeT procType = 0U; procType < architecture_.getNumberOfProcessorTypes(); procType++) {
+            for (ProcessorTypeT procType = 0U; procType < architecture_.GetNumberOfProcessorTypes(); procType++) {
                 if (IsCompatibleType(vertType, procType)) {
                     fits = fits | (maxMemoryOfType <= maxMemoryPerProcType[procType]);
                     if (fits) {
@@ -351,7 +351,7 @@ class BspInstance {
      */
     [[nodiscard]] std::vector<std::vector<ProcessorTypeT>> GetProcTypesCompatibleWithNodeType() const {
         VertexTypeTOrDefault numberOfNodeTypes = cdag_.NumVertexTypes();
-        ProcessorTypeT numberOfProcTypes = architecture_.getNumberOfProcessorTypes();
+        ProcessorTypeT numberOfProcTypes = architecture_.GetNumberOfProcessorTypes();
         std::vector<std::vector<ProcessorTypeT>> compatibleProcTypes(numberOfNodeTypes);
 
         for (VertexTypeTOrDefault nodeType = 0U; nodeType < numberOfNodeTypes; ++nodeType) {

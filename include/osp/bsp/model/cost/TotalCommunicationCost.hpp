@@ -32,30 +32,30 @@ struct TotalCommunicationCost {
     using CostType = double;
 
     CostType operator()(const BspSchedule<GraphT> &schedule) const {
-        const auto &instance = schedule.getInstance();
-        const auto &nodeToProcessorAssignment = schedule.assignedProcessors();
+        const auto &instance = schedule.GetInstance();
+        const auto &nodeToProcessorAssignment = schedule.AssignedProcessors();
 
-        v_commw_t<Graph_t> totalCommunication = 0;
+        VCommwT<GraphT> totalCommunication = 0;
 
-        for (const auto &v : instance.vertices()) {
-            for (const auto &target : instance.getComputationalDag().children(v)) {
+        for (const auto &v : instance.Vertices()) {
+            for (const auto &target : instance.GetComputationalDag().Children(v)) {
                 if (nodeToProcessorAssignment[v] != nodeToProcessorAssignment[target]) {
-                    totalCommunication += instance.sendCosts(nodeToProcessorAssignment[v], nodeToProcessorAssignment[target])
-                                          * instance.getComputationalDag().VertexCommWeight(v);
+                    totalCommunication += instance.SendCosts(nodeToProcessorAssignment[v], nodeToProcessorAssignment[target])
+                                          * instance.GetComputationalDag().VertexCommWeight(v);
                 }
             }
         }
 
-        auto commCost = total_communication * static_cast<double>(instance.communicationCosts())
-                        / static_cast<double>(instance.numberOfProcessors());
+        auto commCost = totalCommunication * static_cast<double>(instance.CommunicationCosts())
+                        / static_cast<double>(instance.NumberOfProcessors());
 
-        const unsigned numberOfSupersteps = schedule.numberOfSupersteps();
+        const unsigned numberOfSupersteps = schedule.NumberOfSupersteps();
 
-        auto workCost = cost_helpers::compute_work_costs(schedule);
-        auto syncCost = static_cast<v_commw_t<Graph_t>>(numberOfSupersteps > 1 ? numberOfSupersteps - 1 : 0)
-                        * instance.synchronisationCosts();
+        auto workCost = cost_helpers::ComputeWorkCosts(schedule);
+        auto syncCost
+            = static_cast<VCommwT<GraphT>>(numberOfSupersteps > 1 ? numberOfSupersteps - 1 : 0) * instance.SynchronisationCosts();
 
-        return comm_cost + work_cost + syncCost;
+        return commCost + workCost + syncCost;
     }
 };
 

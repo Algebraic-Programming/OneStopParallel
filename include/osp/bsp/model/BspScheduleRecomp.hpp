@@ -27,13 +27,13 @@ namespace osp {
 template <typename GraphT>
 class BspScheduleRecomp : public IBspScheduleEval<GraphT> {
   public:
-    using vertex_idx = vertex_idx_t<Graph_t>;
-    using cost_type = v_workw_t<Graph_t>;
+    using VertexIdx = VertexIdxT<GraphT>;
+    using CostType = VWorkwT<GraphT>;
 
-    using KeyTriple = std::tuple<vertex_idx_t<Graph_t>, unsigned int, unsigned int>;
+    using KeyTriple = std::tuple<VertexIdx, unsigned int, unsigned int>;
 
-    static_assert(IsComputationalDagV<Graph_t>, "BspScheduleRecomp can only be used with computational DAGs.");
-    static_assert(std::is_same_v<v_workw_t<Graph_t>, v_commw_t<Graph_t>>,
+    static_assert(IsComputationalDagV<GraphT>, "BspScheduleRecomp can only be used with computational DAGs.");
+    static_assert(std::is_same_v<VWorkwT<GraphT>, VCommwT<GraphT>>,
                   "BspScheduleRecomp requires work and comm. weights to have the same type.");
 
   private:
@@ -49,7 +49,7 @@ class BspScheduleRecomp : public IBspScheduleEval<GraphT> {
     BspScheduleRecomp() = default;
 
     BspScheduleRecomp(const BspInstance<GraphT> &inst) : instance_(&inst) {
-        nodeToProcessorAndSupertepAssignment_.resize(inst.numberOfVertices());
+        nodeToProcessorAndSupertepAssignment_.resize(inst.NumberOfVertices());
     }
 
     BspScheduleRecomp(const BspScheduleCS<GraphT> &schedule);
@@ -65,15 +65,15 @@ class BspScheduleRecomp : public IBspScheduleEval<GraphT> {
      *
      * @return The number of supersteps in the schedule.
      */
-    virtual unsigned numberOfSupersteps() const override { return numberOfSupersteps_; }
+    virtual unsigned NumberOfSupersteps() const override { return numberOfSupersteps_; }
 
     void SetNumberOfSupersteps(unsigned numberOfSupersteps) { numberOfSupersteps_ = numberOfSupersteps; }
 
-    std::vector<std::pair<unsigned, unsigned>> &Assignments(vertex_idx node) {
+    std::vector<std::pair<unsigned, unsigned>> &Assignments(VertexIdx node) {
         return nodeToProcessorAndSupertepAssignment_[node];
     }
 
-    const std::vector<std::pair<unsigned, unsigned>> &Assignments(vertex_idx node) const {
+    const std::vector<std::pair<unsigned, unsigned>> &Assignments(VertexIdx node) const {
         return nodeToProcessorAndSupertepAssignment_[node];
     }
 
@@ -111,9 +111,9 @@ class BspScheduleRecomp : public IBspScheduleEval<GraphT> {
 
     std::map<KeyTriple, unsigned int> &GetCommunicationSchedule() { return commSchedule; }
 
-    virtual cost_type computeWorkCosts() const override;
+    virtual CostType ComputeWorkCosts() const override;
 
-    virtual cost_type computeCosts() const override;
+    virtual CostType ComputeCosts() const override;
 
     /**
      * @brief Returns true if the schedule is valid, i.e. if every time we compute a node, all its parents are already available
@@ -131,12 +131,12 @@ class BspScheduleRecomp : public IBspScheduleEval<GraphT> {
 template <typename GraphT>
 BspScheduleRecomp<GraphT>::BspScheduleRecomp(const BspScheduleCS<GraphT> &schedule) : instance_(&schedule.getInstance()) {
     nodeToProcessorAndSupertepAssignment_.clear();
-    nodeToProcessorAndSupertepAssignment_.resize(instance_->numberOfVertices());
-    numberOfSupersteps_ = schedule.numberOfSupersteps();
+    nodeToProcessorAndSupertepAssignment_.resize(instance_->NumberOfVertices());
+    numberOfSupersteps_ = schedule.NumberOfSupersteps();
 
-    for (vertex_idx node = 0; node < instance_->numberOfVertices(); ++node) {
-        nodeToProcessorAndSupertepAssignment_[node].emplace_back(schedule.assignedProcessor(node),
-                                                                 schedule.assignedSuperstep(node));
+    for (VertexIdx node = 0; node < instance_->NumberOfVertices(); ++node) {
+        nodeToProcessorAndSupertepAssignment_[node].emplace_back(schedule.AssignedProcessor(node),
+                                                                 schedule.AssignedSuperstep(node));
     }
 
     commSchedule = schedule.getCommunicationSchedule();
@@ -173,29 +173,29 @@ bool BspScheduleRecomp<GraphT>::SatisfiesConstraints() const {
     // find first availability
 
     std::vector<std::vector<unsigned>> nodeFirstAvailableOnProc(
-        instance_->numberOfVertices(),
-        std::vector<unsigned>(instance_->numberOfProcessors(), std::numeric_limits<unsigned>::max()));
+        instance_->NumberOfVertices(),
+        std::vector<unsigned>(instance_->NumberOfProcessors(), std::numeric_limits<unsigned>::max()));
 
-    for (vertex_idx node = 0; node < instance_->numberOfVertices(); ++node) {
-        for (const std::pair<unsigned, unsigned> &compute_step : node_to_processor_and_supertep_assignment[node]) {
-            node_first_available_on_proc[node][compute_step.first]
-                = std::min(node_first_available_on_proc[node][compute_step.first], compute_step.second);
+    for (VertexIdx node = 0; node < instance_->NumberOfVertices(); ++node) {
+        for (const std::pair<unsigned, unsigned> &compute_step : nodeToProcessorAndSupertepAssignment_[node]) {
+            nodeFirstAvailableOnProc[node][compute_step.first]
+                = std::min(nodeFirstAvailableOnProc[node][compute_step.first], compute_step.second);
         }
     }
 
     for (auto const &[key, val] : commSchedule) {
-        const vertex_idx &node = std::get<0>(key);
+        const VertexIdx &node = std::get<0>(key);
         const unsigned &to_proc = std::get<2>(key);
 
-        node_first_available_on_proc[node][to_proc] = std::min(node_first_available_on_proc[node][to_proc], val + 1);
+        nodeFirstAvailableOnProc[node][to_proc] = std::min(nodeFirstAvailableOnProc[node][to_proc], val + 1);
     }
 
     // check validity
 
-    for (vertex_idx node = 0; node < instance_->numberOfVertices(); ++node) {
-        for (vertex_idx pred : instance->getComputationalDag().parents(node)) {
-            for (const std::pair<unsigned, unsigned> &compute_step : node_to_processor_and_supertep_assignment[node]) {
-                if (node_first_available_on_proc[pred][compute_step.first] > compute_step.second) {
+    for (VertexIdx node = 0; node < instance_->NumberOfVertices(); ++node) {
+        for (VertexIdx pred : instance_->getComputationalDag().parents(node)) {
+            for (const std::pair<unsigned, unsigned> &compute_step : nodeToProcessorAndSupertepAssignment_[node]) {
+                if (nodeFirstAvailableOnProc[pred][compute_step.first] > compute_step.second) {
                     // std::cout << "Not a valid schedule: parent " << pred << " of node "<< node <<
                     //" not yet available on processor " << compute_step.first << " in superstep "<< compute_step.second <<"." << std::endl;
                     return false;
@@ -205,10 +205,10 @@ bool BspScheduleRecomp<GraphT>::SatisfiesConstraints() const {
     }
 
     for (auto const &[key, val] : commSchedule) {
-        const vertex_idx &node = std::get<0>(key);
+        const VertexIdx &node = std::get<0>(key);
         const unsigned &from_proc = std::get<1>(key);
 
-        if (node_first_available_on_proc[node][from_proc] > val) {
+        if (nodeFirstAvailableOnProc[node][from_proc] > val) {
             // std::cout << "Not a valid schedule: node " << node << " not yet available for sending from processor "
             // << from_proc << " in superstep "<< val <<"." << std::endl;
             return false;
@@ -219,26 +219,25 @@ bool BspScheduleRecomp<GraphT>::SatisfiesConstraints() const {
 }
 
 template <typename GraphT>
-v_workw_t<Graph_t> BspScheduleRecomp<GraphT>::ComputeWorkCosts() const {
+VWorkwT<GraphT> BspScheduleRecomp<GraphT>::ComputeWorkCosts() const {
     assert(SatisfiesConstraints());
 
-    std::vector<std::vector<cost_type>> stepProcWork(number_of_supersteps,
-                                                     std::vector<cost_type>(instance->numberOfProcessors(), 0));
+    std::vector<std::vector<CostType>> stepProcWork(numberOfSupersteps_, std::vector<CostType>(instance_->NumberOfProcessors(), 0));
 
-    for (vertex_idx node = 0; node < instance_->numberOfVertices(); node++) {
-        for (const std::pair<unsigned, unsigned> &processor_superstep : node_to_processor_and_supertep_assignment[node]) {
-            step_proc_work[processor_superstep.second][processor_superstep.first]
-                += instance->getComputationalDag().VertexWorkWeight(node);
+    for (VertexIdx node = 0; node < instance_->NumberOfVertices(); node++) {
+        for (const std::pair<unsigned, unsigned> &processor_superstep : nodeToProcessorAndSupertepAssignment_[node]) {
+            stepProcWork[processor_superstep.second][processor_superstep.first]
+                += instance_->GetComputationalDag().VertexWorkWeight(node);
         }
     }
 
-    cost_type totalCosts = 0;
+    CostType totalCosts = 0;
     for (unsigned step = 0; step < numberOfSupersteps_; step++) {
-        cost_type maxWork = 0;
+        CostType maxWork = 0;
 
-        for (unsigned proc = 0; proc < instance_->numberOfProcessors(); proc++) {
-            if (max_work < step_proc_work[step][proc]) {
-                maxWork = step_proc_work[step][proc];
+        for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); proc++) {
+            if (maxWork < stepProcWork[step][proc]) {
+                maxWork = stepProcWork[step][proc];
             }
         }
 
@@ -252,43 +251,43 @@ template <typename GraphT>
 v_workw_t<Graph_t> BspScheduleRecomp<GraphT>::ComputeCosts() const {
     assert(SatisfiesConstraints());
 
-    std::vector<std::vector<cost_type>> rec(number_of_supersteps, std::vector<cost_type>(instance->numberOfProcessors(), 0));
-    std::vector<std::vector<cost_type>> send(number_of_supersteps, std::vector<cost_type>(instance->numberOfProcessors(), 0));
+    std::vector<std::vector<CostType>> rec(numberOfSupersteps_, std::vector<CostType>(instance_->NumberOfProcessors(), 0));
+    std::vector<std::vector<CostType>> send(numberOfSupersteps_, std::vector<CostType>(instance_->NumberOfProcessors(), 0));
 
     for (auto const &[key, val] : commSchedule) {
-        send[val][std::get<1>(key)] += instance->sendCosts(std::get<1>(key), std::get<2>(key))
-                                       * instance->getComputationalDag().VertexCommWeight(std::get<0>(key));
-        rec[val][std::get<2>(key)] += instance->sendCosts(std::get<1>(key), std::get<2>(key))
-                                      * instance->getComputationalDag().VertexCommWeight(std::get<0>(key));
+        send[val][std::get<1>(key)] += instance_->SendCosts(std::get<1>(key), std::get<2>(key))
+                                       * instance_->GetComputationalDag().VertexCommWeight(std::get<0>(key));
+        rec[val][std::get<2>(key)] += instance_->SendCosts(std::get<1>(key), std::get<2>(key))
+                                      * instance_->GetComputationalDag().VertexCommWeight(std::get<0>(key));
     }
 
-    cost_type totalCosts = 0;
+    CostType totalCosts = 0;
     for (unsigned step = 0; step < numberOfSupersteps_; step++) {
-        cost_type maxComm = 0;
+        CostType maxComm = 0;
 
-        for (unsigned proc = 0; proc < instance_->numberOfProcessors(); proc++) {
-            if (max_comm < send[step][proc]) {
+        for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); proc++) {
+            if (maxComm < send[step][proc]) {
                 maxComm = send[step][proc];
             }
-            if (max_comm < rec[step][proc]) {
+            if (maxComm < rec[step][proc]) {
                 maxComm = rec[step][proc];
             }
         }
 
         if (maxComm > 0) {
-            totalCosts += instance_->synchronisationCosts() + max_comm * instance_->communicationCosts();
+            totalCosts += instance_->SynchronisationCosts() + maxComm * instance_->CommunicationCosts();
         }
     }
 
-    total_costs += computeWorkCosts();
+    totalCosts += ComputeWorkCosts();
 
-    return total_costs;
+    return totalCosts;
 }
 
 template <typename GraphT>
-vertex_idx_t<Graph_t> BspScheduleRecomp<GraphT>::GetTotalAssignments() const {
-    vertex_idx total = 0;
-    for (vertex_idx node = 0; node < instance_->numberOfVertices(); ++node) {
+VertexIdx BspScheduleRecomp<GraphT>::GetTotalAssignments() const {
+    VertexIdx total = 0;
+    for (VertexIdx node = 0; node < instance_->NumberOfVertices(); ++node) {
         total += nodeToProcessorAndSupertepAssignment_[node].size();
     }
     return total;
@@ -300,7 +299,7 @@ void BspScheduleRecomp<GraphT>::MergeSupersteps() {
     std::vector<bool> commPhaseEmpty(numberOfSupersteps_, true);
 
     for (auto const &[key, val] : commSchedule) {
-        comm_phase_empty[val] = false;
+        commPhaseEmpty[val] = false;
     }
 
     unsigned currentStepIdx = 0;
@@ -310,16 +309,16 @@ void BspScheduleRecomp<GraphT>::MergeSupersteps() {
             ++currentStepIdx;
         }
     }
-    for (vertex_idx node = 0; node < instance_->numberOfVertices(); ++node) {
+    for (VertexIdx node = 0; node < instance_->NumberOfVertices(); ++node) {
         std::vector<std::pair<unsigned, unsigned>> newAssignment;
-        for (const std::pair<unsigned, unsigned> &entry : node_to_processor_and_supertep_assignment[node]) {
-            new_assignment.emplace_back(entry.first, new_step_idx[entry.second]);
+        for (const std::pair<unsigned, unsigned> &entry : nodeToProcessorAndSupertepAssignment_[node]) {
+            newAssignment.emplace_back(entry.first, newStepIdx[entry.second]);
         }
         nodeToProcessorAndSupertepAssignment_[node] = newAssignment;
     }
     for (auto &key_step_pair : commSchedule) {
         auto &step = key_step_pair.second;
-        step = new_step_idx[step];
+        step = newStepIdx[step];
     }
 
     numberOfSupersteps_ = currentStepIdx;
