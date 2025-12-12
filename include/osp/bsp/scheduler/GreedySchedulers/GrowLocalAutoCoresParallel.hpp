@@ -571,7 +571,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
             }
         }
 
-        schedule.setNumberOfSupersteps(incr);
+        schedule.SetNumberOfSupersteps(incr);
 
         return ReturnStatus::OSP_SUCCESS;
     }

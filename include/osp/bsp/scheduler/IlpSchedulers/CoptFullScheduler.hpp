@@ -180,7 +180,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
                 }
             }
 
-            schedule.setNumberOfSupersteps(numberOfSupersteps);
+            schedule.SetNumberOfSupersteps(numberOfSupersteps);
 
             for (unsigned int node = 0; node < instancePtr_->NumberOfVertices(); node++) {
                 for (unsigned int pFrom = 0; pFrom < instancePtr_->NumberOfProcessors(); pFrom++) {
@@ -273,7 +273,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
             }
         }
 
-        schedule.setNumberOfSupersteps(numberOfSupersteps);
+        schedule.SetNumberOfSupersteps(numberOfSupersteps);
 
         for (unsigned node = 0; node < schedule.GetInstance().NumberOfVertices(); node++) {
             for (unsigned processor = 0; processor < schedule.GetInstance().NumberOfProcessors(); processor++) {

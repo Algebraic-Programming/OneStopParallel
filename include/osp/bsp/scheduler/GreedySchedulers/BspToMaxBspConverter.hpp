@@ -174,7 +174,7 @@ MaxBspScheduleCS<GraphT> GreedyBspToMaxBspConverter<GraphT>::Convert(const BspSc
                     sendOnProc[std::get<1>(itr->first)] += comm_cost;
                     rec_on_proc[std::get<2>(itr->first)] += comm_cost;
                     if (currentStep - 1 >= scheduleMax.NumberOfSupersteps()) {
-                        scheduleMax.setNumberOfSupersteps(currentStep);
+                        scheduleMax.SetNumberOfSupersteps(currentStep);
                     }
                     scheduleMax.addCommunicationScheduleEntry(itr->first, currentStep - 1);
                     commInCurrentStep.emplace_back(*itr);
@@ -294,7 +294,7 @@ MaxBspScheduleCS<GraphT> GreedyBspToMaxBspConverter<GraphT>::Convert(const BspSc
             workLimit = max_comm_together;
             for (const std::pair<KeyTriple, unsigned> &entry : comm_in_current_step) {
                 if (current_step - 1 >= schedule_max.NumberOfSupersteps()) {
-                    schedule_max.setNumberOfSupersteps(current_step);
+                    schedule_max.SetNumberOfSupersteps(current_step);
                 }
                 schedule_max.addCommunicationScheduleEntry(entry.first, current_step - 1);
                 late_arriving_nodes.emplace(std::get<0>(entry.first), std::get<2>(entry.first));

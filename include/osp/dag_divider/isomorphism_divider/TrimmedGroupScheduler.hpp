@@ -59,7 +59,7 @@ class TrimmedGroupScheduler : public Scheduler<ConstrGraphT> {
         size_t numComponents = compute_weakly_connected_components(dag, component_map);
 
         if (numComponents == 0) {
-            schedule.setNumberOfSupersteps(0);
+            schedule.SetNumberOfSupersteps(0);
             return ReturnStatus::OSP_SUCCESS;
         }
 
@@ -171,7 +171,7 @@ class TrimmedGroupScheduler : public Scheduler<ConstrGraphT> {
             maxSupersteps = std::max(maxSupersteps, subSchedule.NumberOfSupersteps());
         }
 
-        schedule.setNumberOfSupersteps(maxSupersteps);
+        schedule.SetNumberOfSupersteps(maxSupersteps);
         return ReturnStatus::OSP_SUCCESS;
     }
 };

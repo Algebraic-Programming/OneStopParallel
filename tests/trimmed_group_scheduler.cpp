@@ -40,7 +40,7 @@ class MockSubScheduler : public Scheduler<ConstrGraphT> {
             schedule.SetAssignedProcessor(v, 0);
             schedule.SetAssignedSuperstep(v, 0);
         }
-        schedule.setNumberOfSupersteps(1);
+        schedule.SetNumberOfSupersteps(1);
         return ReturnStatus::OSP_SUCCESS;
     }
 

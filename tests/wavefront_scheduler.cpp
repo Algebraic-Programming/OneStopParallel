@@ -161,7 +161,7 @@ struct MockSubScheduler : public osp::Scheduler<GraphT> {
             schedule.SetAssignedProcessor(v, 0);
             schedule.SetAssignedSuperstep(v, 0);
         }
-        schedule.setNumberOfSupersteps(1);
+        schedule.SetNumberOfSupersteps(1);
         return osp::ReturnStatus::OSP_SUCCESS;
     }
 

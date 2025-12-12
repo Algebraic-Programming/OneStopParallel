@@ -56,7 +56,7 @@ ReturnStatus GreedyRecomputer<GraphT>::ComputeRecompSchedule(BspScheduleCS<Graph
     const GraphT &g = initialSchedule.GetInstance().GetComputationalDag();
 
     outSchedule = BspScheduleRecomp<GraphT>(initialSchedule.GetInstance());
-    outSchedule.setNumberOfSupersteps(initialSchedule.NumberOfSupersteps());
+    outSchedule.SetNumberOfSupersteps(initialSchedule.NumberOfSupersteps());
 
     // Initialize required data structures
     std::vector<std::vector<cost_type>> workCost(P, std::vector<cost_type>(S, 0)), send_cost(P, std::vector<cost_type>(S, 0)),
