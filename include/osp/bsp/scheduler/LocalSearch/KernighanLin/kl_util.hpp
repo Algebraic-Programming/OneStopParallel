@@ -104,7 +104,7 @@ struct AdaptiveAffinityTable {
 
         nodeIsSelected_.resize(graph_->NumVertices());
         selectedNodesIdx_.resize(graph_->NumVertices());
-        selected_nodes.resize(initial_table_size);
+        selectedNodes_.resize(initialTableSize);
 
         nodeIsSelected_.assign(nodeIsSelected_.size(), false);
 
@@ -118,9 +118,9 @@ struct AdaptiveAffinityTable {
         }
     }
 
-    inline std::vector<VertexType> &GetSelectedNodes() { return selected_nodes; }
+    inline std::vector<VertexType> &GetSelectedNodes() { return selectedNodes_; }
 
-    inline const std::vector<VertexType> &GetSelectedNodes() const { return selected_nodes; }
+    inline const std::vector<VertexType> &GetSelectedNodes() const { return selectedNodes_; }
 
     inline size_t size() const { return lastIdx_ - gaps_.size(); }
 
@@ -162,11 +162,11 @@ struct AdaptiveAffinityTable {
         } else {
             insertLocation = lastIdx_;
 
-            if (insert_location >= selected_nodes.size()) {
-                const size_t oldSize = selected_nodes.size();
+            if (insertLocation >= selectedNodes_.size()) {
+                const size_t oldSize = selectedNodes_.size();
                 const size_t newSize = std::min(oldSize * 2, static_cast<size_t>(graph_->NumVertices()));
 
-                selected_nodes.resize(new_size);
+                selectedNodes_.resize(newSize);
                 affinityTable_.resize(newSize);
 
                 const unsigned numProcs = activeSchedule_->GetInstance().NumberOfProcessors();
@@ -182,7 +182,7 @@ struct AdaptiveAffinityTable {
 
         nodeIsSelected_[node] = true;
         selectedNodesIdx_[node] = insertLocation;
-        selected_nodes[insert_location] = node;
+        selectedNodes_[insertLocation] = node;
 
         return true;
     }
@@ -204,7 +204,7 @@ struct AdaptiveAffinityTable {
         nodeIsSelected_.clear();
         selectedNodesIdx_.clear();
         affinityTable_.clear();
-        selected_nodes.clear();
+        selectedNodes_.clear();
         gaps_.clear();
         lastIdx_ = 0;
     }
@@ -215,7 +215,7 @@ struct AdaptiveAffinityTable {
 
             // The last element could be a gap itself. If so, just shrink the size.
             // We don't need to touch the `gaps` vector, as it will be cleared.
-            if (!node_is_selected[selected_nodes[last_element_idx]]) {
+            if (!nodeIsSelected_[selectedNodes_[lastElementIdx]]) {
                 lastIdx_--;
                 continue;
             }
@@ -228,11 +228,11 @@ struct AdaptiveAffinityTable {
                 continue;
             }
 
-            VertexType nodeToMove = selected_nodes[last_element_idx];
+            VertexType nodeToMove = selectedNodes_[lastElementIdx];
 
             std::swap(affinityTable_[gapIdx], affinityTable_[lastElementIdx]);
-            std::swap(selected_nodes[gap_idx], selected_nodes[last_element_idx]);
-            selectedNodesIdx_[node_to_move] = gapIdx;
+            std::swap(selectedNodes_[gapIdx], selectedNodes_[lastElementIdx]);
+            selectedNodesIdx_[nodeToMove] = gapIdx;
 
             lastIdx_--;
         }
@@ -268,11 +268,11 @@ struct StaticAffinityTable {
         }
     }
 
-    inline std::vector<VertexType> GetSelectedNodes() const { return {selected_nodes.begin(), selected_nodes.end()}; }
+    inline std::vector<VertexType> GetSelectedNodes() const { return {selectedNodes_.begin(), selectedNodes_.end()}; }
 
-    inline size_t size() const { return selected_nodes.size(); }
+    inline size_t size() const { return selectedNodes_.size(); }
 
-    inline bool IsSelected(VertexType node) const { return selected_nodes.find(node) != selected_nodes.end(); }
+    inline bool IsSelected(VertexType node) const { return selectedNodes_.find(node) != selectedNodes_.end(); }
 
     inline std::vector<std::vector<CostT>> &operator[](VertexType node) { return affinityTable_[node]; }
 
@@ -283,17 +283,17 @@ struct StaticAffinityTable {
     inline std::vector<std::vector<CostT>> &GetAffinityTable(VertexType node) { return affinityTable_[node]; }
 
     bool Insert(VertexType node) {
-        const auto pair = selected_nodes.insert(node);
+        const auto pair = selectedNodes_.insert(node);
         return pair.second;
     }
 
-    void Remove(VertexType node) { selected_nodes.erase(node); }
+    void Remove(VertexType node) { selectedNodes_.erase(node); }
 
-    void ResetNodeSelection() { selected_nodes.clear(); }
+    void ResetNodeSelection() { selectedNodes_.clear(); }
 
     void Clear() {
         affinityTable_.clear();
-        selected_nodes.clear();
+        selectedNodes_.clear();
     }
 
     void Trim() {}
@@ -319,39 +319,39 @@ struct VertexSelectionStrategy {
         graph_ = &(sche.GetInstance().GetComputationalDag());
         gen_ = &gen;
 
-        permutation.reserve(graph->NumVertices() / active_schedule->num_steps() * (end_step - start_step));
+        permutation_.reserve(graph_->NumVertices() / activeSchedule_->NumSteps() * (endStep - startStep));
     }
 
     inline void Setup(const unsigned startStep, const unsigned endStep) {
         maxWorkCounter_ = startStep;
         strategyCounter_ = 0;
-        permutation.clear();
+        permutation_.clear();
 
         const unsigned numProcs = activeSchedule_->GetInstance().NumberOfProcessors();
         for (unsigned step = startStep; step <= endStep; ++step) {
-            const auto &processorVertices = activeSchedule_->getSetSchedule().step_processor_vertices[step];
+            const auto &processorVertices = activeSchedule_->GetSetSchedule().stepProcessorVertices_[step];
             for (unsigned proc = 0; proc < numProcs; ++proc) {
                 for (const auto node : processorVertices[proc]) {
-                    permutation.push_back(node);
+                    permutation_.push_back(node);
                 }
             }
         }
 
         permutationIdx_ = 0;
-        std::shuffle(permutation.begin(), permutation.end(), *gen);
+        std::shuffle(permutation_.begin(), permutation_.end(), *gen_);
     }
 
     void AddNeighboursToSelection(VertexIdxT<GraphT> node, ContainerT &nodes, const unsigned startStep, const unsigned endStep) {
-        for (const auto parent : graph->Parents(node)) {
-            const unsigned parent_step = active_schedule->assigned_superstep(parent);
-            if (parent_step >= start_step && parent_step <= end_step) {
+        for (const auto parent : graph_->Parents(node)) {
+            const unsigned parentStep = activeSchedule_->AssignedSuperstep(parent);
+            if (parentStep >= startStep && parentStep <= endStep) {
                 nodes.insert(parent);
             }
         }
 
-        for (const auto child : graph->Children(node)) {
-            const unsigned child_step = active_schedule->assigned_superstep(child);
-            if (child_step >= start_step && child_step <= end_step) {
+        for (const auto child : graph_->Children(node)) {
+            const unsigned childStep = activeSchedule_->AssignedSuperstep(child);
+            if (childStep >= startStep && childStep <= endStep) {
                 nodes.insert(child);
             }
         }
@@ -372,32 +372,32 @@ struct VertexSelectionStrategy {
                                std::unordered_set<EdgeType> &currentViolations,
                                const unsigned startStep,
                                const unsigned endStep) {
-        for (const auto &edge : current_violations) {
-            const auto source_v = Source(edge, *graph);
-            const auto target_v = Traget(edge, *graph);
+        for (const auto &edge : currentViolations) {
+            const auto sourceV = Source(edge, *graph_);
+            const auto targetV = Target(edge, *graph_);
 
-            const unsigned source_step = active_schedule->assigned_superstep(source_v);
-            if (source_step >= start_step && source_step <= end_step) {
-                node_selection.insert(source_v);
+            const unsigned sourceStep = activeSchedule_->AssignedSuperstep(sourceV);
+            if (sourceStep >= startStep && sourceStep <= endStep) {
+                nodeSelection.insert(sourceV);
             }
 
-            const unsigned target_step = active_schedule->assigned_superstep(target_v);
-            if (target_step >= start_step && target_step <= end_step) {
-                node_selection.insert(target_v);
+            const unsigned targetStep = activeSchedule_->AssignedSuperstep(targetV);
+            if (targetStep >= startStep && targetStep <= endStep) {
+                nodeSelection.insert(targetV);
             }
         }
     }
 
     void SelectNodesPermutationThreshold(const std::size_t &threshold, ContainerT &nodeSelection) {
-        const size_t bound = std::min(threshold + permutation_idx, permutation.size());
+        const size_t bound = std::min(threshold + permutationIdx_, permutation_.size());
         for (std::size_t i = permutationIdx_; i < bound; i++) {
-            node_selection.insert(permutation[i]);
+            nodeSelection.insert(permutation_[i]);
         }
 
         permutationIdx_ = bound;
-        if (permutation_idx + threshold >= permutation.size()) {
+        if (permutationIdx_ + threshold >= permutation_.size()) {
             permutationIdx_ = 0;
-            std::shuffle(permutation.begin(), permutation.end(), *gen);
+            std::shuffle(permutation_.begin(), permutation_.end(), *gen_);
         }
     }
 
@@ -417,15 +417,15 @@ struct VertexSelectionStrategy {
     }
 
     void SelectNodesMaxWorkProcHelper(const std::size_t &threshold, unsigned step, ContainerT &nodeSelection) {
-        const unsigned numMaxWorkProc = activeSchedule_->work_datastructures.step_max_work_processor_count[step];
+        const unsigned numMaxWorkProc = activeSchedule_->workDatastructures_.stepMaxWorkProcessorCount_[step];
         for (unsigned idx = 0; idx < numMaxWorkProc; idx++) {
-            const unsigned proc = activeSchedule_->work_datastructures.step_processor_work_[step][idx].proc;
+            const unsigned proc = activeSchedule_->workDatastructures_.stepProcessorWork_[step][idx].proc_;
             const std::unordered_set<VertexIdxT<GraphT>> stepProcVert
-                = activeSchedule_->getSetSchedule().step_processor_vertices[step][proc];
-            const size_t numInsert = std::min(threshold - nodeSelection.size(), step_proc_vert.size());
-            auto endIt = step_proc_vert.begin();
-            std::advance(end_it, numInsert);
-            std::for_each(step_proc_vert.begin(), end_it, [&](const auto &val) { nodeSelection.insert(val); });
+                = activeSchedule_->GetSetSchedule().stepProcessorVertices_[step][proc];
+            const size_t numInsert = std::min(threshold - nodeSelection.size(), stepProcVert.size());
+            auto endIt = stepProcVert.begin();
+            std::advance(endIt, numInsert);
+            std::for_each(stepProcVert.begin(), endIt, [&](const auto &val) { nodeSelection.insert(val); });
         }
     }
 };

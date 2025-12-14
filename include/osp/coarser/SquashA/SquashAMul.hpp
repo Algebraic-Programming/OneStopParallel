@@ -28,8 +28,8 @@ template <typename GraphT, typename GraphTCoarse>
 class SquashAMul : public MultilevelCoarser<GraphT, GraphTCoarse> {
   private:
     VertexIdxT<GraphT> minNodes_{1};
-    Thue_Morse_Sequence thueCoin_{};
-    Biased_Random balancedRandom_{};
+    ThueMorseSequence thueCoin_{};
+    BiasedRandom balancedRandom_{};
 
     // Coarser Params
     squash_a_params::Parameters params_;
@@ -40,49 +40,54 @@ class SquashAMul : public MultilevelCoarser<GraphT, GraphTCoarse> {
 
     void UpdateParams();
 
-    ReturnStatus run_contractions() override;
+    ReturnStatus RunContractions() override;
 
   public:
     void SetParams(squash_a_params::Parameters params) { params_ = params; };
 
-    void SetMinimumNumberVertices(VertexIdxT<GraphT> num) { min_nodes = num; };
+    void SetMinimumNumberVertices(VertexIdxT<GraphT> num) { minNodes_ = num; };
 
-    std::string GetCoarserName() const { return "SquashA"; };
+    std::string getCoarserName() const override { return "SquashA"; };
 };
 
 template <typename GraphT, typename GraphTCoarse>
 void SquashAMul<GraphT, GraphTCoarse>::UpdateParams() {
-    params.use_structured_poset = thue_coin.get_flip();
-    params.use_top_poset = balanced_random.get_flip();
+    params_.useStructuredPoset_ = thueCoin_.GetFlip();
+    params_.useTopPoset_ = balancedRandom_.GetFlip();
 
-    coarserInitial_.setParams(params_);
-    coarserSecondary_.setParams(params_);
+    coarserInitial_.SetParams(params_);
+    coarserSecondary_.SetParams(params_);
 }
 
 template <typename GraphT, typename GraphTCoarse>
 ReturnStatus SquashAMul<GraphT, GraphTCoarse>::RunContractions() {
     ReturnStatus status = ReturnStatus::OSP_SUCCESS;
 
-    Biased_Random_with_side_bias coin(params_.edgeSortRatio_);
+    BiasedRandomWithSideBias coin(params_.edgeSortRatio_);
 
     bool firstCoarsen = true;
     unsigned noChangeInARow = 0;
-    VertexIdxT<GraphT> currentNumVertices = MultilevelCoarser<GraphT, GraphTCoarse>::getOriginalGraph()->NumVertices();
+    VertexIdxT<GraphT> currentNumVertices;
+    if (MultilevelCoarser<GraphT, GraphTCoarse>::GetOriginalGraph()) {
+        currentNumVertices = MultilevelCoarser<GraphT, GraphTCoarse>::GetOriginalGraph()->NumVertices();
+    } else {
+        return ReturnStatus::ERROR;
+    }
 
-    while (no_change_in_a_row < params.num_rep_without_node_decrease && current_num_vertices > min_nodes) {
+    while (noChangeInARow < params_.numRepWithoutNodeDecrease_ && currentNumVertices > minNodes_) {
         UpdateParams();
 
         GraphTCoarse coarsenedDag;
-        std::vector<VertexIdxT<Graph_t_coarse>> contractionMap;
+        std::vector<VertexIdxT<GraphTCoarse>> contractionMap;
         bool coarsenSuccess;
 
         if (firstCoarsen) {
-            coarsenSuccess = coarserInitial_.coarsenDag(
-                *(MultilevelCoarser<GraphT, GraphTCoarse>::getOriginalGraph()), coarsenedDag, contraction_map);
+            coarsenSuccess = coarserInitial_.CoarsenDag(
+                *(MultilevelCoarser<GraphT, GraphTCoarse>::GetOriginalGraph()), coarsenedDag, contractionMap);
             firstCoarsen = false;
         } else {
-            coarsenSuccess = coarserSecondary_.coarsenDag(
-                *(MultilevelCoarser<GraphT, GraphTCoarse>::dag_history.back()), coarsenedDag, contraction_map);
+            coarsenSuccess = coarserSecondary_.CoarsenDag(
+                *(MultilevelCoarser<GraphT, GraphTCoarse>::dagHistory_.back()), coarsenedDag, contractionMap);
         }
 
         if (!coarsenSuccess) {
@@ -90,15 +95,15 @@ ReturnStatus SquashAMul<GraphT, GraphTCoarse>::RunContractions() {
         }
 
         status = std::max(
-            status, MultilevelCoarser<GraphT, GraphTCoarse>::add_contraction(std::move(contraction_map), std::move(coarsenedDag)));
+            status, MultilevelCoarser<GraphT, GraphTCoarse>::AddContraction(std::move(contractionMap), std::move(coarsenedDag)));
 
-        VertexIdxT<GraphT> newNumVertices = MultilevelCoarser<GraphT, GraphTCoarse>::dag_history.back()->NumVertices();
+        VertexIdxT<GraphT> newNumVertices = MultilevelCoarser<GraphT, GraphTCoarse>::dagHistory_.back()->NumVertices();
 
-        if (newNumVertices == current_num_vertices) {
+        if (newNumVertices == currentNumVertices) {
             noChangeInARow++;
         } else {
             noChangeInARow = 0;
-            currentNumVertices = new_num_vertices;
+            currentNumVertices = newNumVertices;
         }
     }
 

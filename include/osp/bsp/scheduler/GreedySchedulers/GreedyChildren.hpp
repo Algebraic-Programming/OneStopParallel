@@ -50,7 +50,7 @@ class GreedyChildren : public Scheduler<GraphT> {
 
         std::vector<VertexType> predecessorsCount(instance.NumberOfVertices(), 0);
         std::multiset<std::pair<unsigned, VertexType>, std::greater<>> next;
-        for (const VertexType &i : source_vertices_view(graph)) {
+        for (const VertexType &i : SourceVerticesView(graph)) {
             next.emplace(graph.OutDegree(i), i);
         }
 
@@ -60,7 +60,7 @@ class GreedyChildren : public Scheduler<GraphT> {
 
             bool fewSources = next.size() < instance.NumberOfProcessors() ? true : false;
             bool nodeAdded = true;
-            while (!next.empty() && node_added) {
+            while (!next.empty() && nodeAdded) {
                 nodeAdded = false;
                 for (auto iter = next.begin(); iter != next.cend(); iter++) {
                     const auto &node = iter->second;
@@ -69,17 +69,17 @@ class GreedyChildren : public Scheduler<GraphT> {
                     unsigned processorToBeAllocated = 0;
 
                     for (const auto &par : graph.Parents(node)) {
-                        if (nodes_assigned_this_superstep.count(par)) {
-                            if (!processor_set) {
-                                const unsigned par_proc = sched.AssignedProcessor(par);
-                                if (!instance.isCompatible(node, par_proc)) {
-                                    failed_to_allocate = true;
+                        if (nodesAssignedThisSuperstep.count(par)) {
+                            if (!processorSet) {
+                                const unsigned parProc = sched.AssignedProcessor(par);
+                                if (!instance.IsCompatible(node, parProc)) {
+                                    failedToAllocate = true;
                                     break;
                                 }
-                                processor_set = true;
-                                processor_to_be_allocated = par_proc;
-                            } else if (sched.AssignedProcessor(par) != processor_to_be_allocated) {
-                                failed_to_allocate = true;
+                                processorSet = true;
+                                processorToBeAllocated = parProc;
+                            } else if (sched.AssignedProcessor(par) != processorToBeAllocated) {
+                                failedToAllocate = true;
                                 break;
                             }
                         }
@@ -96,9 +96,9 @@ class GreedyChildren : public Scheduler<GraphT> {
                         VWorkwT<GraphT> minWeight = std::numeric_limits<VWorkwT<GraphT>>::max();
                         unsigned bestProc = std::numeric_limits<unsigned>::max();
                         for (unsigned p = 0; p < instance.NumberOfProcessors(); ++p) {
-                            if (instance.isCompatible(node, p)) {
-                                if (processorWeights[p] < min_weight) {
-                                    minWeight = processor_weights[p];
+                            if (instance.IsCompatible(node, p)) {
+                                if (processorWeights[p] < minWeight) {
+                                    minWeight = processorWeights[p];
                                     bestProc = p;
                                 }
                             }
@@ -110,19 +110,19 @@ class GreedyChildren : public Scheduler<GraphT> {
                     processorWeights[sched.AssignedProcessor(node)] += graph.VertexWorkWeight(node);
                     std::vector<VertexType> newNodes;
                     for (const auto &chld : graph.Children(node)) {
-                        predecessors_count[chld]++;
-                        if (predecessors_count[chld] == graph.InDegree(chld)) {
-                            new_nodes.emplace_back(chld);
+                        predecessorsCount[chld]++;
+                        if (predecessorsCount[chld] == graph.InDegree(chld)) {
+                            newNodes.emplace_back(chld);
                         }
                     }
                     next.erase(iter);
-                    for (const auto &vrt : new_nodes) {
+                    for (const auto &vrt : newNodes) {
                         next.emplace(graph.OutDegree(vrt), vrt);
                     }
                     nodeAdded = true;
                     break;
                 }
-                if (ensure_enough_sources && few_sources && next.size() >= instance.NumberOfProcessors()) {
+                if (ensureEnoughSources_ && fewSources && next.size() >= instance.NumberOfProcessors()) {
                     break;
                 }
             }
@@ -133,7 +133,7 @@ class GreedyChildren : public Scheduler<GraphT> {
         return ReturnStatus::OSP_SUCCESS;
     }
 
-    std::string getScheduleName() const override { return ensureEnoughSources_ ? "GreedyChildrenS" : "GreedyChildren"; }
+    std::string GetScheduleName() const override { return ensureEnoughSources_ ? "GreedyChildrenS" : "GreedyChildren"; }
 };
 
 }    // namespace osp

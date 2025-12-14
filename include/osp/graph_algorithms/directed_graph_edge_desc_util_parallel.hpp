@@ -32,7 +32,7 @@ namespace osp {
 template <typename GraphT>
 std::unordered_set<EdgeDescT<GraphT>> LongEdgesInTrianglesParallel(const GraphT &graph) {
     static_assert(IsDirectedGraphEdgeDescV<GraphT>, "Graph_t must satisfy the directed_graph edge desc concept");
-    static_assert(has_hashable_edge_desc_v<GraphT>, "Graph_t must satisfy the has_hashable_edge_desc concept");
+    static_assert(HasHashableEdgeDescV<GraphT>, "Graph_t must satisfy the has_hashable_edge_desc concept");
 
     if (graph.NumEdges() < 1000) {
         return LongEdgesInTriangles(graph);
@@ -70,7 +70,7 @@ std::unordered_set<EdgeDescT<GraphT>> LongEdgesInTrianglesParallel(const GraphT 
         }
     }
 
-    return long_edges;
+    return longEdges;
 }
 
 }    // namespace osp

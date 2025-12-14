@@ -48,13 +48,13 @@ std::unique_ptr<Coarser<GraphTIn, GraphTOut>> GetCoarserByName(const ConfigParse
     const std::string coarserName = coarserAlgorithm.get_child("name").get_value<std::string>();
 
     if (coarserName == "funnel") {
-        typename FunnelBfs<GraphTIn, GraphTOut>::FunnelBfs_parameters funnelParameters;
+        typename FunnelBfs<GraphTIn, GraphTOut>::FunnelBfsParameters funnelParameters;
         if (auto paramsOpt = coarserAlgorithm.get_child_optional("parameters")) {
             const auto &paramsPt = paramsOpt.get();
-            funnelParameters.funnel_incoming
-                = paramsPt.get_optional<bool>("funnel_incoming").value_or(funnelParameters.funnel_incoming);
-            funnelParameters.use_approx_transitive_reduction = paramsPt.get_optional<bool>("use_approx_transitive_reduction")
-                                                                   .value_or(funnelParameters.use_approx_transitive_reduction);
+            funnelParameters.funnelIncoming_
+                = paramsPt.get_optional<bool>("funnel_incoming").value_or(funnelParameters.funnelIncoming_);
+            funnelParameters.useApproxTransitiveReduction_ = paramsPt.get_optional<bool>("use_approx_transitive_reduction")
+                                                                 .value_or(funnelParameters.useApproxTransitiveReduction_);
         }
         return std::make_unique<FunnelBfs<GraphTIn, GraphTOut>>(funnelParameters);
 
@@ -62,13 +62,13 @@ std::unique_ptr<Coarser<GraphTIn, GraphTOut>> GetCoarserByName(const ConfigParse
         auto coarser = std::make_unique<HdaggCoarser<GraphTIn, GraphTOut>>();
         if (auto paramsOpt = coarserAlgorithm.get_child_optional("parameters")) {
             const auto &paramsPt = paramsOpt.get();
-            coarser->set_work_threshold(params_pt.get_optional<VWorkwT<GraphTIn>>("max_work_weight")
-                                            .value_or(std::numeric_limits<VWorkwT<GraphTIn>>::max()));
-            coarser->set_memory_threshold(params_pt.get_optional<VMemwT<GraphTIn>>("max_memory_weight")
-                                              .value_or(std::numeric_limits<VMemwT<GraphTIn>>::max()));
-            coarser->set_communication_threshold(params_pt.get_optional<VCommwT<GraphTIn>>("max_communication_weight")
-                                                     .value_or(std::numeric_limits<VCommwT<GraphTIn>>::max()));
-            coarser->set_super_node_size_threshold(
+            coarser->SetWorkThreshold(
+                paramsPt.get_optional<VWorkwT<GraphTIn>>("max_work_weight").value_or(std::numeric_limits<VWorkwT<GraphTIn>>::max()));
+            coarser->SetMemoryThreshold(
+                paramsPt.get_optional<VMemwT<GraphTIn>>("max_memory_weight").value_or(std::numeric_limits<VMemwT<GraphTIn>>::max()));
+            coarser->SetCommunicationThreshold(paramsPt.get_optional<VCommwT<GraphTIn>>("max_communication_weight")
+                                                   .value_or(std::numeric_limits<VCommwT<GraphTIn>>::max()));
+            coarser->SetSuperNodeSizeThreshold(
                 paramsPt.get_optional<std::size_t>("max_super_node_size").value_or(std::numeric_limits<std::size_t>::max()));
         }
         return coarser;
@@ -82,15 +82,14 @@ std::unique_ptr<Coarser<GraphTIn, GraphTOut>> GetCoarserByName(const ConfigParse
         auto setParams = [&](auto &coarserPtr) {
             if (auto paramsOpt = coarserAlgorithm.get_child_optional("parameters")) {
                 const auto &paramsPt = paramsOpt.get();
-                coarser_ptr->set_work_threshold(params_pt.get_optional<VWorkwT<GraphTIn>>("work_threshold")
-                                                    .value_or(std::numeric_limits<VWorkwT<GraphTIn>>::max()));
-                coarser_ptr->set_memory_threshold(params_pt.get_optional<VMemwT<GraphTIn>>("memory_threshold")
-                                                      .value_or(std::numeric_limits<VMemwT<GraphTIn>>::max()));
-                coarser_ptr->set_communication_threshold(params_pt.get_optional<VCommwT<GraphTIn>>("communication_threshold")
-                                                             .value_or(std::numeric_limits<VCommwT<GraphTIn>>::max()));
-                coarserPtr->set_super_node_size_threshold(
-                    paramsPt.get_optional<std::size_t>("super_node_size_threshold").value_or(10));
-                coarserPtr->set_node_dist_threshold(paramsPt.get_optional<unsigned>("node_dist_threshold").value_or(10));
+                coarserPtr->SetWorkThreshold(paramsPt.get_optional<VWorkwT<GraphTIn>>("work_threshold")
+                                                 .value_or(std::numeric_limits<VWorkwT<GraphTIn>>::max()));
+                coarserPtr->SetMemoryThreshold(paramsPt.get_optional<VMemwT<GraphTIn>>("memory_threshold")
+                                                   .value_or(std::numeric_limits<VMemwT<GraphTIn>>::max()));
+                coarserPtr->SetCommunicationThreshold(paramsPt.get_optional<VCommwT<GraphTIn>>("communication_threshold")
+                                                          .value_or(std::numeric_limits<VCommwT<GraphTIn>>::max()));
+                coarserPtr->SetSuperNodeSizeThreshold(paramsPt.get_optional<std::size_t>("super_node_size_threshold").value_or(10));
+                coarserPtr->SetNodeDistThreshold(paramsPt.get_optional<unsigned>("node_dist_threshold").value_or(10));
             }
         };
 
@@ -99,7 +98,7 @@ std::unique_ptr<Coarser<GraphTIn, GraphTOut>> GetCoarserByName(const ConfigParse
             setParams(coarser);
             return coarser;
         } else if (topOrderStrategy == "dfs") {
-            auto coarser = std::make_unique<top_order_coarser<GraphTIn, GraphTOut, dfs_top_sort>>();
+            auto coarser = std::make_unique<TopOrderCoarser<GraphTIn, GraphTOut, DfsTopSort>>();
             setParams(coarser);
             return coarser;
         } else if (topOrderStrategy == "locality") {
@@ -135,39 +134,39 @@ std::unique_ptr<Coarser<GraphTIn, GraphTOut>> GetCoarserByName(const ConfigParse
         }
 
     } else if (coarserName == "Sarkar") {
-        SarkarParams::Parameters<VWorkwT<GraphTIn>> params;
+        sarkar_params::Parameters<VWorkwT<GraphTIn>> params;
         if (auto paramsOpt = coarserAlgorithm.get_child_optional("parameters")) {
             const auto &paramsPt = paramsOpt.get();
-            params.commCost = params_pt.get_optional<VWorkwT<GraphTIn>>("commCost").value_or(params.commCost);
-            params.maxWeight = params_pt.get_optional<VWorkwT<GraphTIn>>("maxWeight").value_or(params.maxWeight);
-            params.smallWeightThreshold
-                = params_pt.get_optional<VWorkwT<GraphTIn>>("smallWeightThreshold").value_or(params.smallWeightThreshold);
-            params.useTopPoset = paramsPt.get_optional<bool>("useTopPoset").value_or(params.useTopPoset);
-            params.geomDecay = paramsPt.get_optional<double>("geomDecay").value_or(params.geomDecay);
-            params.leniency = paramsPt.get_optional<double>("leniency").value_or(params.leniency);
+            params.commCost_ = paramsPt.get_optional<VWorkwT<GraphTIn>>("commCost").value_or(params.commCost_);
+            params.maxWeight_ = paramsPt.get_optional<VWorkwT<GraphTIn>>("maxWeight").value_or(params.maxWeight_);
+            params.smallWeightThreshold_
+                = paramsPt.get_optional<VWorkwT<GraphTIn>>("smallWeightThreshold").value_or(params.smallWeightThreshold_);
+            params.useTopPoset_ = paramsPt.get_optional<bool>("useTopPoset").value_or(params.useTopPoset_);
+            params.geomDecay_ = paramsPt.get_optional<double>("geomDecay").value_or(params.geomDecay_);
+            params.leniency_ = paramsPt.get_optional<double>("leniency").value_or(params.leniency_);
 
             if (auto modeStrOpt = paramsPt.get_optional<std::string>("mode")) {
                 const std::string &modeStr = modeStrOpt.get();
                 if (modeStr == "LINES") {
-                    params.mode = sarkar_params::Mode::LINES;
+                    params.mode_ = sarkar_params::Mode::LINES;
                 } else if (modeStr == "FAN_IN_FULL") {
-                    params.mode = sarkar_params::Mode::FAN_IN_FULL;
+                    params.mode_ = sarkar_params::Mode::FAN_IN_FULL;
                 } else if (modeStr == "FAN_IN_PARTIAL") {
-                    params.mode = sarkar_params::Mode::FAN_IN_PARTIAL;
+                    params.mode_ = sarkar_params::Mode::FAN_IN_PARTIAL;
                 } else if (modeStr == "FAN_OUT_FULL") {
-                    params.mode = sarkar_params::Mode::FAN_OUT_FULL;
+                    params.mode_ = sarkar_params::Mode::FAN_OUT_FULL;
                 } else if (modeStr == "FAN_OUT_PARTIAL") {
-                    params.mode = sarkar_params::Mode::FAN_OUT_PARTIAL;
+                    params.mode_ = sarkar_params::Mode::FAN_OUT_PARTIAL;
                 } else if (modeStr == "LEVEL_EVEN") {
-                    params.mode = sarkar_params::Mode::LEVEL_EVEN;
+                    params.mode_ = sarkar_params::Mode::LEVEL_EVEN;
                 } else if (modeStr == "LEVEL_ODD") {
-                    params.mode = sarkar_params::Mode::LEVEL_ODD;
+                    params.mode_ = sarkar_params::Mode::LEVEL_ODD;
                 } else if (modeStr == "FAN_IN_BUFFER") {
-                    params.mode = sarkar_params::Mode::FAN_IN_BUFFER;
+                    params.mode_ = sarkar_params::Mode::FAN_IN_BUFFER;
                 } else if (modeStr == "FAN_OUT_BUFFER") {
-                    params.mode = sarkar_params::Mode::FAN_OUT_BUFFER;
+                    params.mode_ = sarkar_params::Mode::FAN_OUT_BUFFER;
                 } else if (modeStr == "HOMOGENEOUS_BUFFER") {
-                    params.mode = sarkar_params::Mode::HOMOGENEOUS_BUFFER;
+                    params.mode_ = sarkar_params::Mode::HOMOGENEOUS_BUFFER;
                 } else {
                     throw std::invalid_argument(
                         "Invalid Sarkar mode: " + modeStr
@@ -196,7 +195,7 @@ std::unique_ptr<Coarser<GraphTIn, GraphTOut>> GetCoarserByName(const ConfigParse
                 }
             }
         }
-        coarser->setParams(params);
+        coarser->SetParams(params);
         return coarser;
 
     } else if (coarserName == "BspScheduleCoarser") {
@@ -214,38 +213,38 @@ std::unique_ptr<MultilevelCoarser<GraphTIn, GraphTOut>> GetMultilevelCoarserByNa
 
     if (coarserName == "Sarkar") {
         auto coarser = std::make_unique<SarkarMul<GraphTIn, GraphTOut>>();
-        SarkarParams::MulParameters<VWorkwT<GraphTIn>> mlParams;
+        sarkar_params::MulParameters<VWorkwT<GraphTIn>> mlParams;
 
         if (auto paramsOpt = coarserAlgorithm.get_child_optional("parameters")) {
             const auto &paramsPt = paramsOpt.get();
-            mlParams.seed = paramsPt.get_optional<std::size_t>("seed").value_or(ml_params.seed);
-            mlParams.geomDecay = paramsPt.get_optional<double>("geomDecay").value_or(ml_params.geomDecay);
-            mlParams.leniency = paramsPt.get_optional<double>("leniency").value_or(ml_params.leniency);
+            mlParams.seed_ = paramsPt.get_optional<std::size_t>("seed").value_or(mlParams.seed_);
+            mlParams.geomDecay_ = paramsPt.get_optional<double>("geomDecay").value_or(mlParams.geomDecay_);
+            mlParams.leniency_ = paramsPt.get_optional<double>("leniency").value_or(mlParams.leniency_);
             if (paramsPt.get_child_optional("commCostVec")) {
-                mlParams.commCostVec.clear();
+                mlParams.commCostVec_.clear();
                 for (const auto &item : paramsPt.get_child("commCostVec")) {
-                    ml_params.commCostVec.push_back(item.second.get_value<VWorkwT<GraphTIn>>());
+                    mlParams.commCostVec_.push_back(item.second.get_value<VWorkwT<GraphTIn>>());
                 }
-                std::sort(ml_params.commCostVec.begin(), ml_params.commCostVec.end());
+                std::sort(mlParams.commCostVec_.begin(), mlParams.commCostVec_.end());
             }
-            ml_params.maxWeight = params_pt.get_optional<VWorkwT<GraphTIn>>("maxWeight").value_or(ml_params.maxWeight);
-            ml_params.smallWeightThreshold
-                = params_pt.get_optional<VWorkwT<GraphTIn>>("smallWeightThreshold").value_or(ml_params.smallWeightThreshold);
-            mlParams.max_num_iteration_without_changes = paramsPt.get_optional<unsigned>("max_num_iteration_without_changes")
-                                                             .value_or(ml_params.max_num_iteration_without_changes);
+            mlParams.maxWeight_ = paramsPt.get_optional<VWorkwT<GraphTIn>>("maxWeight").value_or(mlParams.maxWeight_);
+            mlParams.smallWeightThreshold_
+                = paramsPt.get_optional<VWorkwT<GraphTIn>>("smallWeightThreshold").value_or(mlParams.smallWeightThreshold_);
+            mlParams.maxNumIterationWithoutChanges_ = paramsPt.get_optional<unsigned>("max_num_iteration_without_changes")
+                                                          .value_or(mlParams.maxNumIterationWithoutChanges_);
 
             if (auto modeStrOpt = paramsPt.get_optional<std::string>("buffer_merge_mode")) {
                 const std::string &modeStr = modeStrOpt.get();
                 if (modeStr == "OFF") {
-                    mlParams.buffer_merge_mode = sarkar_params::BufferMergeMode::OFF;
+                    mlParams.bufferMergeMode_ = sarkar_params::BufferMergeMode::OFF;
                 } else if (modeStr == "FAN_IN") {
-                    mlParams.buffer_merge_mode = sarkar_params::BufferMergeMode::FAN_IN;
+                    mlParams.bufferMergeMode_ = sarkar_params::BufferMergeMode::FAN_IN;
                 } else if (modeStr == "FAN_OUT") {
-                    mlParams.buffer_merge_mode = sarkar_params::BufferMergeMode::FAN_OUT;
+                    mlParams.bufferMergeMode_ = sarkar_params::BufferMergeMode::FAN_OUT;
                 } else if (modeStr == "HOMOGENEOUS") {
-                    mlParams.buffer_merge_mode = sarkar_params::BufferMergeMode::HOMOGENEOUS;
+                    mlParams.bufferMergeMode_ = sarkar_params::BufferMergeMode::HOMOGENEOUS;
                 } else if (modeStr == "FULL") {
-                    mlParams.buffer_merge_mode = sarkar_params::BufferMergeMode::FULL;
+                    mlParams.bufferMergeMode_ = sarkar_params::BufferMergeMode::FULL;
                 } else {
                     throw std::invalid_argument("Invalid Sarkar Buffer Merge mode: " + modeStr
                                                 + "!\nChoose from: OFF, FAN_IN, FAN_OUT, HOMOGENEOUS, FULL.");
@@ -253,7 +252,7 @@ std::unique_ptr<MultilevelCoarser<GraphTIn, GraphTOut>> GetMultilevelCoarserByNa
             }
         }
 
-        coarser->setParameters(ml_params);
+        coarser->SetParameters(mlParams);
         return coarser;
 
     } else if (coarserName == "SquashA") {
@@ -283,10 +282,10 @@ std::unique_ptr<MultilevelCoarser<GraphTIn, GraphTOut>> GetMultilevelCoarserByNa
                 }
             }
 
-            coarser->setMinimumNumberVertices(paramsPt.get_optional<unsigned>("min_nodes").value_or(1));
+            coarser->SetMinimumNumberVertices(paramsPt.get_optional<unsigned>("min_nodes").value_or(1));
         }
 
-        coarser->setParams(params);
+        coarser->SetParams(params);
         return coarser;
     }
 

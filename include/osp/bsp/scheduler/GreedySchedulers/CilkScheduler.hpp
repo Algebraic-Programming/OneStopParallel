@@ -46,17 +46,9 @@ class CilkScheduler : public Scheduler<GraphT> {
     static_assert(IsComputationalDagV<GraphT>, "CilkScheduler can only be used with computational DAGs.");
 
   private:
-    using tv_pair = std::pair<VWorkwT<GraphT>, VertexIdxT<GraphT>>;
+    using TvPair = std::pair<VWorkwT<GraphT>, VertexIdxT<GraphT>>;
 
     CilkMode mode_; /**< The mode of the Cilk scheduler. */
-
-    // constexpr static bool use_memory_constraint = IsMemoryConstraintV<MemoryConstraint_t>;
-
-    // static_assert(not use_memory_constraint ||
-    //                   std::is_same_v<MemoryConstraint_t, persistent_transient_memory_constraint<GraphT>>,
-    //               "CilkScheduler implements only persistent_transient_memory_constraint.");
-
-    // MemoryConstraint_t memory_constraint;
 
     std::mt19937 gen_;
 
@@ -126,7 +118,7 @@ class CilkScheduler : public Scheduler<GraphT> {
      *
      * This constructor initializes a GreedyCilkScheduler object with the specified Cilk mode.
      *
-     * @param mode_ The Cilk mode for the scheduler.
+     * @param mode The Cilk mode for the scheduler.
      */
     CilkScheduler(CilkMode mode = CILK) : Scheduler<GraphT>(), mode_(mode), gen_(std::random_device{}()) {}
 
@@ -147,10 +139,6 @@ class CilkScheduler : public Scheduler<GraphT> {
      * @return A pair containing the return status and the computed BSP schedule.
      */
     virtual ReturnStatus ComputeSchedule(BspSchedule<GraphT> &bspSchedule) override {
-        // if constexpr (use_memory_constraint) {
-        //     memory_constraint.initialize(instance);
-        // }
-
         const auto &instance = bspSchedule.GetInstance();
 
         CSchedule<GraphT> schedule(instance.NumberOfVertices());
@@ -166,12 +154,12 @@ class CilkScheduler : public Scheduler<GraphT> {
         std::vector<std::deque<VertexIdxT<GraphT>>> procQueue(instance.NumberOfProcessors());
         std::vector<std::deque<VertexIdxT<GraphT>>> greedyProcLists(instance.NumberOfProcessors());
 
-        std::set<tv_pair> finishTimes;
-        const tv_pair start(0, std::numeric_limits<VertexIdxT<GraphT>>::max());
+        std::set<TvPair> finishTimes;
+        const TvPair start(0, std::numeric_limits<VertexIdxT<GraphT>>::max());
 
         finishTimes.insert(start);
 
-        for (const auto &v : source_vertices_view(instance.GetComputationalDag())) {
+        for (const auto &v : SourceVerticesView(instance.GetComputationalDag())) {
             ready.insert(v);
             if (mode_ == CILK) {
                 procQueue[0].push_front(v);
@@ -183,7 +171,7 @@ class CilkScheduler : public Scheduler<GraphT> {
 
             // Find new ready jobs
             while (!finishTimes.empty() && finishTimes.begin()->first == time) {
-                const tv_pair &currentPair = *finishTimes.begin();
+                const TvPair &currentPair = *finishTimes.begin();
                 finishTimes.erase(finishTimes.begin());
                 const VertexIdxT<GraphT> &node = currentPair.second;
                 if (node != std::numeric_limits<VertexIdxT<GraphT>>::max()) {
@@ -191,7 +179,7 @@ class CilkScheduler : public Scheduler<GraphT> {
                         ++nrPredecDone[succ];
                         if (nrPredecDone[succ] == instance.GetComputationalDag().InDegree(succ)) {
                             ready.insert(succ);
-                            if (mode == CILK) {
+                            if (mode_ == CILK) {
                                 procQueue[schedule.proc[node]].push_back(succ);
                             }
                         }
@@ -211,10 +199,6 @@ class CilkScheduler : public Scheduler<GraphT> {
                 ready.erase(nextNode);
                 schedule.proc[nextNode] = nextProc;
                 schedule.time[nextNode] = time;
-
-                // if constexpr (use_memory_constraint) {
-                //     memory_constraint.add(nextNode, nextProc);
-                // }
 
                 finishTimes.insert({time + instance.GetComputationalDag().VertexWorkWeight(nextNode), nextNode});
                 procFree[nextProc] = false;
@@ -237,7 +221,7 @@ class CilkScheduler : public Scheduler<GraphT> {
      *
      * This member function sets the Cilk mode for the scheduler.
      *
-     * @param mode_ The Cilk mode to set.
+     * @param mode The Cilk mode to set.
      */
     inline void SetMode(CilkMode mode) { mode_ = mode; }
 
@@ -257,7 +241,7 @@ class CilkScheduler : public Scheduler<GraphT> {
      *
      * @return The name of the schedule.
      */
-    virtual std::string getScheduleName() const override {
+    virtual std::string GetScheduleName() const override {
         switch (mode_) {
             case CILK:
                 return "CilkGreedy";

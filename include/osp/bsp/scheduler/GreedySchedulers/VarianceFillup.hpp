@@ -56,7 +56,7 @@ class VarianceFillup : public Scheduler<GraphT> {
                                                  or IsMemoryConstraintScheduleV<MemoryConstraintT>;
 
     static_assert(not useMemoryConstraint_ or std::is_same_v<GraphT, typename MemoryConstraintT::Graph_impl_t>,
-                  "Graph_t must be the same as MemoryConstraint_t::Graph_impl_t.");
+                  "GraphT must be the same as MemoryConstraintT::Graph_impl_t.");
 
     MemoryConstraintT memoryConstraint_;
 
@@ -68,22 +68,22 @@ class VarianceFillup : public Scheduler<GraphT> {
 
         const std::vector<VertexType> topOrder = GetTopOrder(graph);
 
-        for (auto rIter = top_order.rbegin(); rIter != top_order.crend(); r_iter++) {
+        for (auto rIter = topOrder.rbegin(); rIter != topOrder.crend(); rIter++) {
             double temp = 0;
             double maxPriority = 0;
-            for (const auto &child : graph.Children(*r_iter)) {
-                max_priority = std::max(work_variance[child], max_priority);
+            for (const auto &child : graph.Children(*rIter)) {
+                maxPriority = std::max(workVariance[child], maxPriority);
             }
-            for (const auto &child : graph.Children(*r_iter)) {
-                temp += std::exp(2 * (work_variance[child] - max_priority));
+            for (const auto &child : graph.Children(*rIter)) {
+                temp += std::exp(2 * (workVariance[child] - maxPriority));
             }
             temp = std::log(temp) / 2 + maxPriority;
 
             double nodeWeight
-                = std::log(static_cast<double>(std::max(graph.VertexWorkWeight(*r_iter), static_cast<VWorkwT<GraphT>>(1))));
+                = std::log(static_cast<double>(std::max(graph.VertexWorkWeight(*rIter), static_cast<VWorkwT<GraphT>>(1))));
             double largerVal = nodeWeight > temp ? nodeWeight : temp;
 
-            workVariance[*r_iter] = std::log(std::exp(nodeWeight - largerVal) + std::exp(temp - largerVal)) + largerVal;
+            workVariance[*rIter] = std::log(std::exp(nodeWeight - largerVal) + std::exp(temp - largerVal)) + largerVal;
         }
 
         return workVariance;
@@ -124,9 +124,9 @@ class VarianceFillup : public Scheduler<GraphT> {
                 for (unsigned i = 0; i < instance.NumberOfProcessors(); ++i) {
                     if (!procReady[i].empty()) {
                         const std::pair<VertexType, double> &nodePair = *procReady[i].begin();
-                        VertexType topNode = node_pair.first;
+                        VertexType topNode = nodePair.first;
 
-                        if (memoryConstraint_.can_add(top_node, i)) {
+                        if (memoryConstraint_.can_add(topNode, i)) {
                             return true;
                         }
                     }
@@ -138,9 +138,9 @@ class VarianceFillup : public Scheduler<GraphT> {
                     }
 
                     const std::pair<VertexType, double> &nodePair = *allReady[instance.GetArchitecture().ProcessorType(i)].begin();
-                    VertexType topNode = node_pair.first;
+                    VertexType topNode = nodePair.first;
 
-                    if (memoryConstraint_.can_add(top_node, i)) {
+                    if (memoryConstraint_.can_add(topNode, i)) {
                         return true;
                     }
                 }
@@ -167,19 +167,19 @@ class VarianceFillup : public Scheduler<GraphT> {
             if (procFree[i] && !procReady[i].empty()) {
                 // select node
                 for (auto nodePairIt = procReady[i].begin(); nodePairIt != procReady[i].end();) {
-                    if (endSupStep && (remaining_time < instance.GetComputationalDag().VertexWorkWeight(node_pair_it->first))) {
-                        nodePairIt = procReady[i].erase(node_pair_it);
+                    if (endSupStep && (remainingTime < instance.GetComputationalDag().VertexWorkWeight(nodePairIt->first))) {
+                        nodePairIt = procReady[i].erase(nodePairIt);
                         continue;
                     }
 
-                    const double &score = node_pair_it->second;
+                    const double &score = nodePairIt->second;
 
                     if (score > maxScore) {
                         maxScore = score;
-                        node = node_pair_it->first;
+                        node = nodePairIt->first;
                         p = i;
 
-                        procReady[i].erase(node_pair_it);
+                        procReady[i].erase(nodePairIt);
                         return;
                     }
                     nodePairIt++;
@@ -192,7 +192,7 @@ class VarianceFillup : public Scheduler<GraphT> {
                 // select node
                 for (auto it = allReady[instance.GetArchitecture().ProcessorType(i)].begin();
                      it != allReady[instance.GetArchitecture().ProcessorType(i)].end();) {
-                    if (endSupStep && (remaining_time < instance.GetComputationalDag().VertexWorkWeight(it->first))) {
+                    if (endSupStep && (remainingTime < instance.GetComputationalDag().VertexWorkWeight(it->first))) {
                         it = allReady[instance.GetArchitecture().ProcessorType(i)].erase(it);
                         continue;
                     }
@@ -207,9 +207,9 @@ class VarianceFillup : public Scheduler<GraphT> {
 
                                 allReady[instance.GetArchitecture().ProcessorType(i)].erase(it);
                                 for (unsigned procType :
-                                     procTypesCompatibleWithNodeType_skip_proctype[instance.GetArchitecture().ProcessorType(
-                                         i)][instance.GetComputationalDag().VertexType(node)]) {
-                                    allReady[procType].erase(std::make_pair(node, work_variance[node]));
+                                     procTypesCompatibleWithNodeTypeSkipProctype[instance.GetArchitecture().ProcessorType(i)]
+                                                                                [instance.GetComputationalDag().VertexType(node)]) {
+                                    allReady[procType].erase(std::make_pair(node, workVariance[node]));
                                 }
                                 return;
                             }
@@ -219,9 +219,9 @@ class VarianceFillup : public Scheduler<GraphT> {
 
                             allReady[instance.GetArchitecture().ProcessorType(i)].erase(it);
                             for (unsigned procType :
-                                 procTypesCompatibleWithNodeType_skip_proctype[instance.GetArchitecture().ProcessorType(i)]
-                                                                              [instance.GetComputationalDag().VertexType(node)]) {
-                                allReady[procType].erase(std::make_pair(node, work_variance[node]));
+                                 procTypesCompatibleWithNodeTypeSkipProctype[instance.GetArchitecture().ProcessorType(i)]
+                                                                            [instance.GetComputationalDag().VertexType(node)]) {
+                                allReady[procType].erase(std::make_pair(node, workVariance[node]));
                             }
                             return;
                         }
@@ -332,12 +332,12 @@ class VarianceFillup : public Scheduler<GraphT> {
         std::vector<VertexType> nrPredecRemain(n);
         for (VertexType node = 0; node < n; node++) {
             const auto numParents = g.InDegree(node);
-            nrPredecRemain[node] = num_parents;
+            nrPredecRemain[node] = numParents;
             if (numParents == 0) {
                 ready.insert(std::make_pair(node, workVariances[node]));
                 ++nrReadyNodesPerType[g.VertexType(node)];
-                for (unsigned procType : procTypesCompatibleWithNodeType[G.VertexType(node)]) {
-                    allReady[procType].insert(std::make_pair(node, work_variances[node]));
+                for (unsigned procType : procTypesCompatibleWithNodeType[g.VertexType(node)]) {
+                    allReady[procType].insert(std::make_pair(node, workVariances[node]));
                 }
             }
         }
@@ -365,7 +365,7 @@ class VarianceFillup : public Scheduler<GraphT> {
 
                 for (const auto &nodeAndValuePair : ready) {
                     const auto node = nodeAndValuePair.first;
-                    for (unsigned procType : procTypesCompatibleWithNodeType[G.VertexType(node)]) {
+                    for (unsigned procType : procTypesCompatibleWithNodeType[g.VertexType(node)]) {
                         allReady[procType].insert(allReady[procType].end(), nodeAndValuePair);
                     }
                 }
@@ -384,34 +384,34 @@ class VarianceFillup : public Scheduler<GraphT> {
                 const VertexType node = finishTimes.begin()->second;
                 finishTimes.erase(finishTimes.begin());
                 if (node != std::numeric_limits<VertexType>::max()) {
-                    for (const auto &succ : G.Children(node)) {
+                    for (const auto &succ : g.Children(node)) {
                         nrPredecRemain[succ]--;
                         if (nrPredecRemain[succ] == 0) {
-                            ready.emplace(succ, work_variances[succ]);
-                            ++nr_ready_nodes_per_type[G.VertexType(succ)];
+                            ready.emplace(succ, workVariances[succ]);
+                            ++nrReadyNodesPerType[g.VertexType(succ)];
 
                             bool canAdd = true;
-                            for (const auto &pred : G.Parents(succ)) {
+                            for (const auto &pred : g.Parents(succ)) {
                                 if (schedule.AssignedProcessor(pred) != schedule.AssignedProcessor(node)
                                     && schedule.AssignedSuperstep(pred) == supstepIdx) {
                                     canAdd = false;
                                 }
                             }
 
-                            if constexpr (use_memory_constraint) {
+                            if constexpr (useMemoryConstraint_) {
                                 if (canAdd) {
-                                    if (not memory_constraint.can_add(succ, schedule.AssignedProcessor(node))) {
+                                    if (not memoryConstraint_.can_add(succ, schedule.AssignedProcessor(node))) {
                                         canAdd = false;
                                     }
                                 }
                             }
 
-                            if (!instance.isCompatible(succ, schedule.AssignedProcessor(node))) {
+                            if (!instance.IsCompatible(succ, schedule.AssignedProcessor(node))) {
                                 canAdd = false;
                             }
 
                             if (canAdd) {
-                                procReady[schedule.AssignedProcessor(node)].emplace(succ, work_variances[succ]);
+                                procReady[schedule.AssignedProcessor(node)].emplace(succ, workVariances[succ]);
                             }
                         }
                     }
@@ -428,17 +428,17 @@ class VarianceFillup : public Scheduler<GraphT> {
                 VertexType nextNode = std::numeric_limits<VertexType>::max();
                 unsigned nextProc = paramsP;
                 Choose(instance,
-                       work_variances,
+                       workVariances,
                        allReady,
                        procReady,
                        procFree,
                        nextNode,
                        nextProc,
                        endSupStep,
-                       max_finish_time - time,
-                       procTypesCompatibleWithNodeType_skip_proctype);
+                       maxFinishTime - time,
+                       procTypesCompatibleWithNodeTypeSkipProctype);
 
-                if (nextNode == std::numeric_limits<VertexType>::max() || nextProc == params_p) {
+                if (nextNode == std::numeric_limits<VertexType>::max() || nextProc == paramsP) {
                     endSupStep = true;
                     break;
                 }
@@ -453,9 +453,9 @@ class VarianceFillup : public Scheduler<GraphT> {
 
                     std::vector<std::pair<VertexType, double>> toErase;
 
-                    for (const auto &node_pair : procReady[nextProc]) {
-                        if (not memory_constraint.can_add(node_pair.first, nextProc)) {
-                            toErase.push_back(node_pair);
+                    for (const auto &nodePair : procReady[nextProc]) {
+                        if (not memoryConstraint_.can_add(nodePair.first, nextProc)) {
+                            toErase.push_back(nodePair);
                         }
                     }
 
@@ -470,7 +470,7 @@ class VarianceFillup : public Scheduler<GraphT> {
             }
 
             if constexpr (useMemoryConstraint_) {
-                if (not check_mem_feasibility(instance, allReady, procReady)) {
+                if (not CheckMemFeasibility(instance, allReady, procReady)) {
                     return ReturnStatus::ERROR;
                 }
             }
@@ -496,7 +496,7 @@ class VarianceFillup : public Scheduler<GraphT> {
      *
      * @return The name of the schedule.
      */
-    virtual std::string getScheduleName() const override {
+    virtual std::string GetScheduleName() const override {
         if constexpr (useMemoryConstraint_) {
             return "VarianceGreedyFillupMemory";
         } else {

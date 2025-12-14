@@ -43,26 +43,26 @@ class CoarseAndSchedule : public Scheduler<GraphT> {
 
         BspInstance<GraphTCoarse> instanceCoarse;
 
-        std::vector<VertexIdxT<Graph_t_coarse>> reverseVertexMap;
+        std::vector<VertexIdxT<GraphTCoarse>> reverseVertexMap;
 
-        bool status = coarser_.coarsenDag(instance.GetComputationalDag(), instanceCoarse.GetComputationalDag(), reverse_vertex_map);
+        bool status = coarser_.CoarsenDag(instance.GetComputationalDag(), instanceCoarse.GetComputationalDag(), reverseVertexMap);
 
         if (!status) {
             return ReturnStatus::ERROR;
         }
 
         instanceCoarse.GetArchitecture() = instance.GetArchitecture();
-        instanceCoarse.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());
+        instanceCoarse.SetNodeProcessorCompatibility(instance.GetProcessorCompatibilityMatrix());
 
         BspSchedule<GraphTCoarse> scheduleCoarse(instanceCoarse);
 
         const auto statusCoarse = scheduler_.ComputeSchedule(scheduleCoarse);
 
-        if (status_coarse != ReturnStatus::OSP_SUCCESS and status_coarse != ReturnStatus::BEST_FOUND) {
+        if (statusCoarse != ReturnStatus::OSP_SUCCESS and statusCoarse != ReturnStatus::BEST_FOUND) {
             return statusCoarse;
         }
 
-        coarser_util::pull_back_schedule(scheduleCoarse, reverse_vertex_map, schedule);
+        coarser_util::PullBackSchedule(scheduleCoarse, reverseVertexMap, schedule);
 
         return ReturnStatus::OSP_SUCCESS;
     }

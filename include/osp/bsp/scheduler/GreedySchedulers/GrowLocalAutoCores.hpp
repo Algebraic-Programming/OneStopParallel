@@ -53,18 +53,18 @@ struct GrowLocalAutoCoresParams {
 template <typename GraphT, typename MemoryConstraintT = NoMemoryConstraint>
 class GrowLocalAutoCores : public Scheduler<GraphT> {
   private:
-    GrowLocalAutoCores_Params<VWorkwT<GraphT>> params_;
+    GrowLocalAutoCoresParams<VWorkwT<GraphT>> params_;
 
     constexpr static bool useMemoryConstraint_ = IsMemoryConstraintV<MemoryConstraintT>
                                                  or IsMemoryConstraintScheduleV<MemoryConstraintT>;
 
     static_assert(not useMemoryConstraint_ or std::is_same_v<GraphT, typename MemoryConstraintT::Graph_impl_t>,
-                  "Graph_t must be the same as MemoryConstraint_t::Graph_impl_t.");
+                  "GraphT must be the same as MemoryConstraintT::Graph_impl_t.");
 
     static_assert(not useMemoryConstraint_
                       or not(std::is_same_v<MemoryConstraintT, PersistentTransientMemoryConstraint<GraphT>>
                              or std::is_same_v<MemoryConstraintT, GlobalMemoryConstraint<GraphT>>),
-                  "MemoryConstraint_t must not be persistent_transient_memory_constraint or global_memory_constraint. Not "
+                  "MemoryConstraintT must not be persistent_transient_memory_constraint or global_memory_constraint. Not "
                   "supported in GrowLocalAutoCores.");
 
     MemoryConstraintT localMemoryConstraint_;
@@ -73,8 +73,8 @@ class GrowLocalAutoCores : public Scheduler<GraphT> {
     /**
      * @brief Default constructor for GreedyBspGrowLocalAutoCores.
      */
-    GrowLocalAutoCores(GrowLocalAutoCores_Params<VWorkwT<GraphT>> params = GrowLocalAutoCores_Params<VWorkwT<GraphT>>())
-        : params(params_) {}
+    GrowLocalAutoCores(GrowLocalAutoCoresParams<VWorkwT<GraphT>> params = GrowLocalAutoCoresParams<VWorkwT<GraphT>>())
+        : params_(params) {}
 
     /**
      * @brief Default destructor for GreedyBspGrowLocalAutoCores.
@@ -90,7 +90,7 @@ class GrowLocalAutoCores : public Scheduler<GraphT> {
      * @return A pair containing the return status and the computed BspSchedule.
      */
     virtual ReturnStatus ComputeSchedule(BspSchedule<GraphT> &schedule) override {
-        using VertexIdx = typename GraphT::vertex_idx;
+        using VertexIdx = typename GraphT::VertexIdx;
         const auto &instance = schedule.GetInstance();
 
         for (const auto &v : instance.GetComputationalDag().Vertices()) {
@@ -106,7 +106,7 @@ class GrowLocalAutoCores : public Scheduler<GraphT> {
             localMemoryConstraint_.initialize(schedule, supstep);
         }
 
-        auto &nodeToProc = schedule.assignedProcessors();
+        auto &nodeToProc = schedule.AssignedProcessors();
         auto &nodeToSupstep = schedule.AssignedSupersteps();
 
         const auto n = instance.NumberOfVertices();
@@ -134,23 +134,23 @@ class GrowLocalAutoCores : public Scheduler<GraphT> {
         std::vector<VertexIdx> newReady;
         std::vector<VertexIdx> bestNewReady;
 
-        const VWorkwT<GraphT> minWeightParallelCheck = params.syncCostMultiplierParallelCheck * instance.SynchronisationCosts();
-        const VWorkwT<GraphT> minSuperstepWeight = params.syncCostMultiplierMinSuperstepWeight * instance.SynchronisationCosts();
+        const VWorkwT<GraphT> minWeightParallelCheck = params_.syncCostMultiplierParallelCheck_ * instance.SynchronisationCosts();
+        const VWorkwT<GraphT> minSuperstepWeight = params_.syncCostMultiplierMinSuperstepWeight_ * instance.SynchronisationCosts();
 
         double desiredParallelism = static_cast<double>(p);
 
         VertexIdx totalAssigned = 0;
         while (totalAssigned < n) {
-            unsigned limit = params.minSuperstepSize;
+            unsigned limit = params_.minSuperstepSize_;
             double bestScore = 0;
             double bestParallelism = 0;
 
             bool continueSuperstepAttempts = true;
 
             while (continueSuperstepAttempts) {
-                for (unsigned p = 0; p < p; p++) {
-                    newAssignments[p].clear();
-                    procReady[p].clear();
+                for (unsigned pIdx = 0; pIdx < p; pIdx++) {
+                    newAssignments[pIdx].clear();
+                    procReady[pIdx].clear();
                 }
 
                 newReady.clear();
@@ -158,7 +158,8 @@ class GrowLocalAutoCores : public Scheduler<GraphT> {
                 std::make_heap(allReady.begin(), allReady.end(), std::greater<VertexIdx>());
 
                 VertexIdx newTotalAssigned = 0;
-                VWorkwT<GraphT> weightLimit = 0, total_weight_assigned = 0;
+                VWorkwT<GraphT> weightLimit = 0;
+                VWorkwT<GraphT> totalWeightAssigned = 0;
 
                 bool earlyMemoryBreak = false;
 
@@ -221,12 +222,12 @@ class GrowLocalAutoCores : public Scheduler<GraphT> {
                     }
                 }
 
-                total_weight_assigned += weight_limit;
+                totalWeightAssigned += weightLimit;
 
                 // Processors 1 through P-1
                 for (unsigned proc = 1; proc < p; ++proc) {
                     VWorkwT<GraphT> currentWeightAssigned = 0;
-                    while (current_weight_assigned < weight_limit) {
+                    while (currentWeightAssigned < weightLimit) {
                         VertexIdx chosenNode = std::numeric_limits<VertexIdx>::max();
 
                         if constexpr (useMemoryConstraint_) {
@@ -283,17 +284,17 @@ class GrowLocalAutoCores : public Scheduler<GraphT> {
                         }
                     }
 
-                    weightLimit = std::max(weight_limit, current_weight_assigned);
-                    total_weight_assigned += current_weight_assigned;
+                    weightLimit = std::max(weightLimit, currentWeightAssigned);
+                    totalWeightAssigned += currentWeightAssigned;
                 }
 
                 bool acceptStep = false;
 
-                double score = static_cast<double>(total_weight_assigned)
-                               / static_cast<double>(weight_limit + instance.SynchronisationCosts());
+                double score = static_cast<double>(totalWeightAssigned)
+                               / static_cast<double>(weightLimit + instance.SynchronisationCosts());
                 double parallelism = 0;
                 if (weightLimit > 0) {
-                    parallelism = static_cast<double>(total_weight_assigned) / static_cast<double>(weight_limit);
+                    parallelism = static_cast<double>(totalWeightAssigned) / static_cast<double>(weightLimit);
                 }
 
                 if (score > 0.97 * bestScore) {
@@ -377,7 +378,7 @@ class GrowLocalAutoCores : public Scheduler<GraphT> {
             ++supstep;
         }
 
-        schedule.updateNumberOfSupersteps();
+        schedule.UpdateNumberOfSupersteps();
 
         return ReturnStatus::OSP_SUCCESS;
     }
@@ -389,7 +390,7 @@ class GrowLocalAutoCores : public Scheduler<GraphT> {
      *
      * @return The name of the schedule.
      */
-    virtual std::string getScheduleName() const override { return "GrowLocalAutoCores"; }
+    virtual std::string GetScheduleName() const override { return "GrowLocalAutoCores"; }
 };
 
 }    // namespace osp

@@ -74,7 +74,7 @@ class BspScheduleCoarser : public CoarserGenContractionMap<GraphTIn, GraphTOut> 
                     VMemwT<GraphTIn> totalMemory = 0;
                     VCommwT<GraphTIn> totalCommunication = 0;
 
-                    vertex_map.push_back(std::vector<VertexType_in>());
+                    vertexMap.push_back(std::vector<VertexType_in>());
 
                     VTypeT<GraphTIn> type = dagIn.VertexType(*(setSchedule.step_processor_vertices[step][proc].begin()));
                     bool homogeneousTypes = true;
@@ -85,7 +85,7 @@ class BspScheduleCoarser : public CoarserGenContractionMap<GraphTIn, GraphTOut> 
                         }
 
                         vertexMap.back().push_back(vertex);
-                        reverseVertexMap[vertex] = vertex_map.size() - 1;
+                        reverseVertexMap[vertex] = vertexMap.size() - 1;
 
                         totalWork += dagIn.VertexWorkWeight(vertex);
                         totalCommunication += dagIn.VertexCommWeight(vertex);
@@ -99,7 +99,7 @@ class BspScheduleCoarser : public CoarserGenContractionMap<GraphTIn, GraphTOut> 
             }
         }
 
-        return reverse_vertex_map;
+        return reverseVertexMap;
     }
 };
 

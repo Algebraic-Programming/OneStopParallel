@@ -29,12 +29,12 @@ namespace osp {
 template <typename GraphTIn, typename GraphTOut>
 class HdaggCoarser : public CoarserGenContractionMap<GraphTIn, GraphTOut> {
     static_assert(IsDirectedGraphEdgeDescV<GraphTIn>, "GraphTIn must satisfy the directed_graph edge desc concept");
-    static_assert(has_hashable_edge_desc_v<GraphTIn>, "GraphTIn must satisfy the has_hashable_edge_desc concept");
+    static_assert(HasHashableEdgeDescV<GraphTIn>, "GraphTIn must satisfy the has_hashable_edge_desc concept");
     static_assert(HasTypedVerticesV<GraphTIn>, "GraphTIn must have typed vertices");
 
   private:
-    using VertexType_in = VertexIdxT<GraphTIn>;
-    using VertexType_out = VertexIdxT<GraphTOut>;
+    using VertexTypeIn = VertexIdxT<GraphTIn>;
+    using VertexTypeOut = VertexIdxT<GraphTOut>;
 
   protected:
     VWorkwT<GraphTIn> workThreshold_ = std::numeric_limits<VWorkwT<GraphTIn>>::max();
@@ -49,16 +49,16 @@ class HdaggCoarser : public CoarserGenContractionMap<GraphTIn, GraphTOut> {
     VMemwT<GraphTIn> currentMemory_ = 0;
     VWorkwT<GraphTIn> currentWork_ = 0;
     VCommwT<GraphTIn> currentCommunication_ = 0;
-    VertexType_out currentSuperNodeIdx_ = 0;
+    VertexTypeOut currentSuperNodeIdx_ = 0;
     VTypeT<GraphTIn> currentVType_ = 0;
 
-    void AddNewSuperNode(const GraphTIn &dagIn, VertexType_in node) {
+    void AddNewSuperNode(const GraphTIn &dagIn, VertexTypeIn node) {
         VMemwT<GraphTIn> nodeMem = dagIn.VertexMemWeight(node);
 
-        current_memory = node_mem;
-        current_work = dag_in.VertexWorkWeight(node);
-        current_communication = dag_in.VertexCommWeight(node);
-        current_v_type = dag_in.VertexType(node);
+        currentMemory_ = nodeMem;
+        currentWork_ = dagIn.VertexWorkWeight(node);
+        currentCommunication_ = dagIn.VertexCommWeight(node);
+        currentVType_ = dagIn.VertexType(node);
     }
 
   public:
@@ -70,97 +70,97 @@ class HdaggCoarser : public CoarserGenContractionMap<GraphTIn, GraphTOut> {
 
     virtual std::vector<VertexIdxT<GraphTOut>> generate_vertex_contraction_map(const GraphTIn &dagIn) override {
         std::vector<bool> visited(dagIn.NumVertices(), false);
-        std::vector<VertexType_out> reverseVertexMap(dagIn.NumVertices());
+        std::vector<VertexTypeOut> reverseVertexMap(dagIn.NumVertices());
 
-        std::vector<std::vector<VertexType_in>> vertexMap;
+        std::vector<std::vector<VertexTypeIn>> vertexMap;
 
-        auto edgeMask = long_edges_in_triangles(dagIn);
+        auto edgeMask = LongEdgesInTriangles(dagIn);
         const auto edgeMastEnd = edgeMask.cend();
 
-        for (const auto &sink : sink_vertices_view(dagIn)) {
-            vertex_map.push_back(std::vector<VertexType_in>({sink}));
+        for (const auto &sink : SinkVerticesView(dagIn)) {
+            vertexMap.push_back(std::vector<VertexTypeIn>({sink}));
         }
 
         std::size_t partInd = 0;
-        std::size_t partitionSize = vertex_map.size();
+        std::size_t partitionSize = vertexMap.size();
         while (partInd < partitionSize) {
             std::size_t vertInd = 0;
-            std::size_t partSize = vertex_map[partInd].size();
+            std::size_t partSize = vertexMap[partInd].size();
 
-            add_new_super_node(dag_in, vertex_map[part_ind][vert_ind]);
+            AddNewSuperNode(dagIn, vertexMap[partInd][vertInd]);
 
             while (vertInd < partSize) {
-                const VertexType_in vert = vertex_map[partInd][vertInd];
-                reverse_vertex_map[vert] = current_super_node_idx;
+                const VertexTypeIn vert = vertexMap[partInd][vertInd];
+                reverseVertexMap[vert] = currentSuperNodeIdx_;
                 bool indegreeOne = true;
 
-                for (const auto &in_edge : InEdges(vert, dag_in)) {
-                    if (edge_mask.find(in_edge) != edge_mast_end) {
+                for (const auto &inEdge : InEdges(vert, dagIn)) {
+                    if (edgeMask.find(inEdge) != edgeMastEnd) {
                         continue;
                     }
 
                     unsigned count = 0;
-                    for (const auto &out_edge : OutEdges(Source(in_edge, dag_in), dag_in)) {
-                        if (edge_mask.find(out_edge) != edge_mast_end) {
+                    for (const auto &outEdge : OutEdges(Source(inEdge, dagIn), dagIn)) {
+                        if (edgeMask.find(outEdge) != edgeMastEnd) {
                             continue;
                         }
 
                         count++;
                         if (count > 1) {
-                            indegree_one = false;
+                            indegreeOne = false;
                             break;
                         }
                     }
 
-                    if (not indegree_one) {
+                    if (not indegreeOne) {
                         break;
                     }
                 }
 
                 if (indegreeOne) {
-                    for (const auto &in_edge : InEdges(vert, dag_in)) {
-                        if (edge_mask.find(in_edge) != edge_mast_end) {
+                    for (const auto &inEdge : InEdges(vert, dagIn)) {
+                        if (edgeMask.find(inEdge) != edgeMastEnd) {
                             continue;
                         }
 
-                        const auto &edge_source = Source(in_edge, dag_in);
+                        const auto &edgeSource = Source(inEdge, dagIn);
 
-                        VMemwT<GraphTIn> node_mem = dag_in.VertexMemWeight(edge_source);
+                        VMemwT<GraphTIn> nodeMem = dagIn.VertexMemWeight(edgeSource);
 
-                        if (((current_memory + node_mem > memory_threshold)
-                             || (current_work + dag_in.VertexWorkWeight(edge_source) > work_threshold)
-                             || (vertex_map[part_ind].size() >= super_node_size_threshold)
-                             || (current_communication + dag_in.VertexCommWeight(edge_source) > communication_threshold))
+                        if (((currentMemory_ + nodeMem > memoryThreshold_)
+                             || (currentWork_ + dagIn.VertexWorkWeight(edgeSource) > workThreshold_)
+                             || (vertexMap[partInd].size() >= superNodeSizeThreshold_)
+                             || (currentCommunication_ + dagIn.VertexCommWeight(edgeSource) > communicationThreshold_))
                             ||
                             // or node type changes
-                            (current_v_type != dag_in.VertexType(edge_source))) {
-                            if (!visited[edge_source]) {
-                                vertex_map.push_back(std::vector<VertexType_in>({edge_source}));
-                                partition_size++;
-                                visited[edge_source] = true;
+                            (currentVType_ != dagIn.VertexType(edgeSource))) {
+                            if (!visited[edgeSource]) {
+                                vertexMap.push_back(std::vector<VertexTypeIn>({edgeSource}));
+                                partitionSize++;
+                                visited[edgeSource] = true;
                             }
 
                         } else {
-                            current_memory += node_mem;
-                            current_work += dag_in.VertexWorkWeight(edge_source);
-                            current_communication += dag_in.VertexCommWeight(edge_source);
+                            currentMemory_ += nodeMem;
+                            currentWork_ += dagIn.VertexWorkWeight(edgeSource);
+                            currentCommunication_ += dagIn.VertexCommWeight(edgeSource);
 
-                            vertex_map[part_ind].push_back(edge_source);
-                            part_size++;
+                            vertexMap[partInd].push_back(edgeSource);
+                            partSize++;
                         }
                     }
                 } else {
-                    for (const auto &in_edge : InEdges(vert, dag_in)) {
-                        if (edge_mask.find(in_edge) != edge_mast_end) {
+                    for (const auto &inEdge : InEdges(vert, dagIn)) {
+                        if (edgeMask.find(inEdge) != edgeMastEnd) {
                             continue;
                         }
 
-                        const auto &edge_source = Source(in_edge, dag_in);
+                        const auto &edgeSource = Source(inEdge, dagIn);
 
-                        if (!visited[edge_source]) {
-                            vertex_map.push_back(std::vector<VertexType_in>({edge_source}));
-                            partition_size++;
-                            visited[edge_source] = true;
+                        if (!visited[edgeSource]) {
+                            vertexMap.push_back(std::vector<VertexTypeIn>({edgeSource}));
+                            partitionSize++;
+                            visited[edgeSource] = true;
                         }
                     }
                 }
@@ -170,15 +170,15 @@ class HdaggCoarser : public CoarserGenContractionMap<GraphTIn, GraphTOut> {
             partInd++;
         }
 
-        return reverse_vertex_map;
+        return reverseVertexMap;
     }
 
-    inline void SetWorkThreshold(VWorkwT<GraphTIn> workThreshold) { work_threshold = work_threshold_; }
+    inline void SetWorkThreshold(VWorkwT<GraphTIn> workThreshold) { workThreshold_ = workThreshold; }
 
-    inline void SetMemoryThreshold(VMemwT<GraphTIn> memoryThreshold) { memory_threshold = memory_threshold_; }
+    inline void SetMemoryThreshold(VMemwT<GraphTIn> memoryThreshold) { memoryThreshold_ = memoryThreshold; }
 
     inline void SetCommunicationThreshold(VCommwT<GraphTIn> communicationThreshold) {
-        communication_threshold = communication_threshold_;
+        communicationThreshold_ = communicationThreshold;
     }
 
     inline void SetSuperNodeSizeThreshold(std::size_t superNodeSizeThreshold) {

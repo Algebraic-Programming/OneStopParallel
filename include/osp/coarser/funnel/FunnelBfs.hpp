@@ -46,16 +46,16 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
 
         unsigned maxDepth_;
 
-        FunnelBfsParameters(vWorkwT_<GraphTIn> max_work_weight_ = std::numeric_limits<VWorkwT<GraphTIn>>::max(),
-                            VMemwT<GraphTIn> max_memory_weight_ = std::numeric_limits<VMemwT<GraphTIn>>::max(),
-                            unsigned max_depth_ = std::numeric_limits<unsigned>::max(),
-                            bool funnel_incoming_ = true,
-                            bool use_approx_transitive_reduction_ = true)
-            : funnel_incoming(funnel_incoming_),
-              UseApproxTransitiveReduction(use_approx_transitive_reduction_),
-              MaxWorkWeight(max_work_weight_),
-              MaxMemoryWeight(max_memory_weight_),
-              MaxDepth(max_depth_) {};
+        FunnelBfsParameters(VWorkwT<GraphTIn> maxWorkWeight = std::numeric_limits<VWorkwT<GraphTIn>>::max(),
+                            VMemwT<GraphTIn> maxMemoryWeight = std::numeric_limits<VMemwT<GraphTIn>>::max(),
+                            unsigned maxDepth = std::numeric_limits<unsigned>::max(),
+                            bool funnelIncoming = true,
+                            bool useApproxTransitiveReduction = true)
+            : funnelIncoming_(funnelIncoming),
+              useApproxTransitiveReduction_(useApproxTransitiveReduction),
+              maxWorkWeight_(maxWorkWeight),
+              maxMemoryWeight_(maxMemoryWeight),
+              maxDepth_(maxDepth) {};
 
         ~FunnelBfsParameters() = default;
     };
@@ -66,7 +66,7 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
 
     virtual std::vector<std::vector<VertexIdxT<GraphTIn>>> generate_vertex_expansion_map(const GraphTIn &graph) override {
         if constexpr (useArchitectureMemoryContraints) {
-            if (max_memory_per_vertex_type.size() < graph.NumVertexTypes()) {
+            if (maxMemoryPerVertexType_.size() < graph.NumVertexTypes()) {
                 throw std::runtime_error("FunnelBfs: max_memory_per_vertex_type has insufficient size.");
             }
         }
@@ -74,9 +74,9 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
         std::vector<std::vector<VertexIdxT<GraphTIn>>> partition;
 
         if (parameters_.funnelIncoming_) {
-            run_in_contraction(graph, partition);
+            RunInContraction(graph, partition);
         } else {
-            run_out_contraction(graph, partition);
+            RunOutContraction(graph, partition);
         }
 
         return partition;
@@ -84,7 +84,7 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
 
     std::string getCoarserName() const override { return "FunnelBfs"; }
 
-    std::vector<VMemwT<GraphTIn>> &GetMaxMemoryPerVertexType() { return max_memory_per_vertex_type; }
+    std::vector<VMemwT<GraphTIn>> &GetMaxMemoryPerVertexType() { return maxMemoryPerVertexType_; }
 
   private:
     FunnelBfsParameters parameters_;
@@ -92,37 +92,37 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
     std::vector<VMemwT<GraphTIn>> maxMemoryPerVertexType_;
 
     void RunInContraction(const GraphTIn &graph, std::vector<std::vector<VertexIdxT<GraphTIn>>> &partition) {
-        using vertex_idx_t = VertexIdxT<GraphTIn>;
+        using VertexIdxT = VertexIdxT<GraphTIn>;
 
-        const std::unordered_set<EdgeDescT<GraphTIn>> edgeMask = parameters.use_approx_transitive_reduction
-                                                                     ? long_edges_in_triangles_parallel(graph)
+        const std::unordered_set<EdgeDescT<GraphTIn>> edgeMask = parameters_.useApproxTransitiveReduction_
+                                                                     ? LongEdgesInTrianglesParallel(graph)
                                                                      : std::unordered_set<EdgeDescT<GraphTIn>>();
 
         std::vector<bool> visited(graph.NumVertices(), false);
 
-        const std::vector<vertex_idx_t> topOrder = GetTopOrder(graph);
+        const std::vector<VertexIdxT> topOrder = GetTopOrder(graph);
 
-        for (auto revTopIt = top_order.rbegin(); revTopIt != top_order.crend(); rev_top_it++) {
-            const vertex_idx_t &bottomNode = *rev_top_it;
+        for (auto revTopIt = topOrder.rbegin(); revTopIt != topOrder.crend(); revTopIt++) {
+            const VertexIdxT &bottomNode = *revTopIt;
 
-            if (visited[bottom_node]) {
+            if (visited[bottomNode]) {
                 continue;
             }
 
             VWorkwT<GraphTIn> workWeightOfGroup = 0;
             VMemwT<GraphTIn> memoryWeightOfGroup = 0;
 
-            std::unordered_map<vertex_idx_t, vertex_idx_t> childrenNotInGroup;
-            std::vector<vertex_idx_t> group;
+            std::unordered_map<VertexIdxT, VertexIdxT> childrenNotInGroup;
+            std::vector<VertexIdxT> group;
 
-            std::deque<vertex_idx_t> vertexProcessingFifo({bottom_node});
-            std::deque<vertex_idx_t> nextVertexProcessingFifo;
+            std::deque<VertexIdxT> vertexProcessingFifo({bottomNode});
+            std::deque<VertexIdxT> nextVertexProcessingFifo;
 
             unsigned depthCounter = 0;
 
-            while ((not vertex_processing_fifo.empty()) || (not next_vertex_processing_fifo.empty())) {
+            while ((not vertexProcessingFifo.empty()) || (not nextVertexProcessingFifo.empty())) {
                 if (vertexProcessingFifo.empty()) {
-                    vertexProcessingFifo = next_vertex_processing_fifo;
+                    vertexProcessingFifo = nextVertexProcessingFifo;
                     nextVertexProcessingFifo.clear();
                     depthCounter++;
                     if (depthCounter > parameters_.maxDepth_) {
@@ -130,67 +130,67 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
                     }
                 }
 
-                vertex_idx_t activeNode = vertex_processing_fifo.front();
+                VertexIdxT activeNode = vertexProcessingFifo.front();
                 vertexProcessingFifo.pop_front();
 
-                if (graph.VertexType(active_node) != graph.VertexType(bottom_node)) {
+                if (graph.VertexType(activeNode) != graph.VertexType(bottomNode)) {
                     continue;
                 }
 
-                if (workWeightOfGroup + graph.VertexWorkWeight(active_node) > parameters_.maxWorkWeight_) {
+                if (workWeightOfGroup + graph.VertexWorkWeight(activeNode) > parameters_.maxWorkWeight_) {
                     continue;
                 }
 
-                if (memoryWeightOfGroup + graph.VertexMemWeight(active_node) > parameters_.maxMemoryWeight_) {
+                if (memoryWeightOfGroup + graph.VertexMemWeight(activeNode) > parameters_.maxMemoryWeight_) {
                     continue;
                 }
 
                 if constexpr (useArchitectureMemoryContraints) {
-                    if (memory_weight_of_group + graph.VertexMemWeight(active_node)
-                        > max_memory_per_vertex_type[graph.VertexType(bottom_node)]) {
+                    if (memoryWeightOfGroup + graph.VertexMemWeight(activeNode)
+                        > maxMemoryPerVertexType_[graph.VertexType(bottomNode)]) {
                         continue;
                     }
                 }
 
-                group.emplace_back(active_node);
-                workWeightOfGroup += graph.VertexWorkWeight(active_node);
-                memoryWeightOfGroup += graph.VertexMemWeight(active_node);
+                group.emplace_back(activeNode);
+                workWeightOfGroup += graph.VertexWorkWeight(activeNode);
+                memoryWeightOfGroup += graph.VertexMemWeight(activeNode);
 
-                for (const auto &in_edge : InEdges(active_node, graph)) {
-                    if (parameters.use_approx_transitive_reduction && (edge_mask.find(in_edge) != edge_mask.cend())) {
+                for (const auto &inEdge : InEdges(activeNode, graph)) {
+                    if (parameters_.useApproxTransitiveReduction_ && (edgeMask.find(inEdge) != edgeMask.cend())) {
                         continue;
                     }
 
-                    const vertex_idx_t &par = Source(in_edge, graph);
+                    const VertexIdxT &par = Source(inEdge, graph);
 
-                    if (children_not_in_group.find(par) != children_not_in_group.cend()) {
-                        children_not_in_group[par] -= 1;
+                    if (childrenNotInGroup.find(par) != childrenNotInGroup.cend()) {
+                        childrenNotInGroup[par] -= 1;
 
                     } else {
-                        if (parameters.use_approx_transitive_reduction) {
-                            children_not_in_group[par] = 0;
+                        if (parameters_.useApproxTransitiveReduction_) {
+                            childrenNotInGroup[par] = 0;
 
-                            for (const auto out_edge : OutEdges(par, graph)) {
-                                if (edge_mask.find(out_edge) != edge_mask.cend()) {
+                            for (const auto outEdge : OutEdges(par, graph)) {
+                                if (edgeMask.find(outEdge) != edgeMask.cend()) {
                                     continue;
                                 }
-                                children_not_in_group[par] += 1;
+                                childrenNotInGroup[par] += 1;
                             }
 
                         } else {
-                            children_not_in_group[par] = graph.OutDegree(par);
+                            childrenNotInGroup[par] = graph.OutDegree(par);
                         }
-                        children_not_in_group[par] -= 1;
+                        childrenNotInGroup[par] -= 1;
                     }
                 }
-                for (const auto &in_edge : InEdges(active_node, graph)) {
-                    if (parameters.use_approx_transitive_reduction && (edge_mask.find(in_edge) != edge_mask.cend())) {
+                for (const auto &inEdge : InEdges(activeNode, graph)) {
+                    if (parameters_.useApproxTransitiveReduction_ && (edgeMask.find(inEdge) != edgeMask.cend())) {
                         continue;
                     }
 
-                    const vertex_idx_t &par = Source(in_edge, graph);
-                    if (children_not_in_group[par] == 0) {
-                        next_vertex_processing_fifo.emplace_back(par);
+                    const VertexIdxT &par = Source(inEdge, graph);
+                    if (childrenNotInGroup[par] == 0) {
+                        nextVertexProcessingFifo.emplace_back(par);
                     }
                 }
             }
@@ -204,10 +204,10 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
     }
 
     void RunOutContraction(const GraphTIn &graph, std::vector<std::vector<VertexIdxT<GraphTIn>>> &partition) {
-        using vertex_idx_t = VertexIdxT<GraphTIn>;
+        using VertexIdxT = VertexIdxT<GraphTIn>;
 
-        const std::unordered_set<EdgeDescT<GraphTIn>> edgeMask = parameters.use_approx_transitive_reduction
-                                                                     ? long_edges_in_triangles_parallel(graph)
+        const std::unordered_set<EdgeDescT<GraphTIn>> edgeMask = parameters_.useApproxTransitiveReduction_
+                                                                     ? LongEdgesInTrianglesParallel(graph)
                                                                      : std::unordered_set<EdgeDescT<GraphTIn>>();
 
         std::vector<bool> visited(graph.NumVertices(), false);
@@ -220,17 +220,17 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
             VWorkwT<GraphTIn> workWeightOfGroup = 0;
             VMemwT<GraphTIn> memoryWeightOfGroup = 0;
 
-            std::unordered_map<vertex_idx_t, vertex_idx_t> parentsNotInGroup;
-            std::vector<vertex_idx_t> group;
+            std::unordered_map<VertexIdxT, VertexIdxT> parentsNotInGroup;
+            std::vector<VertexIdxT> group;
 
-            std::deque<vertex_idx_t> vertexProcessingFifo({topNode});
-            std::deque<vertex_idx_t> nextVertexProcessingFifo;
+            std::deque<VertexIdxT> vertexProcessingFifo({topNode});
+            std::deque<VertexIdxT> nextVertexProcessingFifo;
 
             unsigned depthCounter = 0;
 
-            while ((not vertex_processing_fifo.empty()) || (not next_vertex_processing_fifo.empty())) {
+            while ((not vertexProcessingFifo.empty()) || (not nextVertexProcessingFifo.empty())) {
                 if (vertexProcessingFifo.empty()) {
-                    vertexProcessingFifo = next_vertex_processing_fifo;
+                    vertexProcessingFifo = nextVertexProcessingFifo;
                     nextVertexProcessingFifo.clear();
                     depthCounter++;
                     if (depthCounter > parameters_.maxDepth_) {
@@ -238,67 +238,67 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
                     }
                 }
 
-                vertex_idx_t activeNode = vertex_processing_fifo.front();
+                VertexIdxT activeNode = vertexProcessingFifo.front();
                 vertexProcessingFifo.pop_front();
 
-                if (graph.VertexType(active_node) != graph.VertexType(topNode)) {
+                if (graph.VertexType(activeNode) != graph.VertexType(topNode)) {
                     continue;
                 }
 
-                if (workWeightOfGroup + graph.VertexWorkWeight(active_node) > parameters_.maxWorkWeight_) {
+                if (workWeightOfGroup + graph.VertexWorkWeight(activeNode) > parameters_.maxWorkWeight_) {
                     continue;
                 }
 
-                if (memoryWeightOfGroup + graph.VertexMemWeight(active_node) > parameters_.maxMemoryWeight_) {
+                if (memoryWeightOfGroup + graph.VertexMemWeight(activeNode) > parameters_.maxMemoryWeight_) {
                     continue;
                 }
 
                 if constexpr (useArchitectureMemoryContraints) {
-                    if (memory_weight_of_group + graph.VertexMemWeight(active_node)
-                        > max_memory_per_vertex_type[graph.VertexType(top_node)]) {
+                    if (memoryWeightOfGroup + graph.VertexMemWeight(activeNode)
+                        > maxMemoryPerVertexType_[graph.VertexType(topNode)]) {
                         continue;
                     }
                 }
 
-                group.emplace_back(active_node);
-                workWeightOfGroup += graph.VertexWorkWeight(active_node);
-                memoryWeightOfGroup += graph.VertexMemWeight(active_node);
+                group.emplace_back(activeNode);
+                workWeightOfGroup += graph.VertexWorkWeight(activeNode);
+                memoryWeightOfGroup += graph.VertexMemWeight(activeNode);
 
-                for (const auto &out_edge : OutEdges(active_node, graph)) {
-                    if (parameters.use_approx_transitive_reduction && (edge_mask.find(out_edge) != edge_mask.cend())) {
+                for (const auto &outEdge : OutEdges(activeNode, graph)) {
+                    if (parameters_.useApproxTransitiveReduction_ && (edgeMask.find(outEdge) != edgeMask.cend())) {
                         continue;
                     }
 
-                    const vertex_idx_t &child = Traget(out_edge, graph);
+                    const VertexIdxT &child = Traget(outEdge, graph);
 
-                    if (parents_not_in_group.find(child) != parents_not_in_group.cend()) {
-                        parents_not_in_group[child] -= 1;
+                    if (parentsNotInGroup.find(child) != parentsNotInGroup.cend()) {
+                        parentsNotInGroup[child] -= 1;
 
                     } else {
-                        if (parameters.use_approx_transitive_reduction) {
-                            parents_not_in_group[child] = 0;
+                        if (parameters_.useApproxTransitiveReduction_) {
+                            parentsNotInGroup[child] = 0;
 
-                            for (const auto in_edge : InEdges(child, graph)) {
-                                if (edge_mask.find(in_edge) != edge_mask.cend()) {
+                            for (const auto inEdge : InEdges(child, graph)) {
+                                if (edgeMask.find(inEdge) != edgeMask.cend()) {
                                     continue;
                                 }
-                                parents_not_in_group[child] += 1;
+                                parentsNotInGroup[child] += 1;
                             }
 
                         } else {
-                            parents_not_in_group[child] = graph.InDegree(child);
+                            parentsNotInGroup[child] = graph.InDegree(child);
                         }
-                        parents_not_in_group[child] -= 1;
+                        parentsNotInGroup[child] -= 1;
                     }
                 }
-                for (const auto &out_edge : OutEdges(active_node, graph)) {
-                    if (parameters.use_approx_transitive_reduction && (edge_mask.find(out_edge) != edge_mask.cend())) {
+                for (const auto &outEdge : OutEdges(activeNode, graph)) {
+                    if (parameters_.useApproxTransitiveReduction_ && (edgeMask.find(outEdge) != edgeMask.cend())) {
                         continue;
                     }
 
-                    const vertex_idx_t &child = Traget(out_edge, graph);
-                    if (parents_not_in_group[child] == 0) {
-                        next_vertex_processing_fifo.emplace_back(child);
+                    const VertexIdxT &child = Traget(outEdge, graph);
+                    if (parentsNotInGroup[child] == 0) {
+                        nextVertexProcessingFifo.emplace_back(child);
                     }
                 }
             }

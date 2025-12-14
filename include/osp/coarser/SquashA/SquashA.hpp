@@ -63,13 +63,13 @@ class SquashA : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
         const GraphTIn &dagIn) {
         static_assert(std::is_arithmetic_v<T>, "T must be of arithmetic type!");
 
-        auto lowerThirdIt = edge_weights.begin();
-        std::advance(lower_third_it, edge_weights.size() / 3);
-        T lowerThirdWt = std::max(lower_third_it->second, static_cast<T>(1));    // Could be 0
+        auto lowerThirdIt = edgeWeights.begin();
+        std::advance(lowerThirdIt, edgeWeights.size() / 3);
+        T lowerThirdWt = std::max(lowerThirdIt->second, static_cast<T>(1));    // Could be 0
 
-        Union_Find_Universe<VertexIdxT<GraphTIn>, VertexIdxT<GraphTIn>, VWorkwT<GraphTIn>, VMemwT<GraphTIn>> connected_components;
+        UnionFindUniverse<VertexIdxT<GraphTIn>, VertexIdxT<GraphTIn>, VWorkwT<GraphTIn>, VMemwT<GraphTIn>> connectedComponents;
         for (const auto &vert : dagIn.Vertices()) {
-            connected_components.add_object(vert, dag_in.VertexWorkWeight(vert), dag_in.VertexMemWeight(vert));
+            connectedComponents.AddObject(vert, dagIn.VertexWorkWeight(vert), dagIn.VertexMemWeight(vert));
         }
 
         std::vector<bool> mergedNodes(dagIn.NumVertices(), false);
@@ -81,106 +81,106 @@ class SquashA : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
 
         double temperature = 1;
         unsigned temperatureIncreaseIteration = 0;
-        while (num_nodes_decrease < num_nodes_aim && temperatureIncreaseIteration <= params_.numberOfTemperatureIncreases_) {
-            for (const auto &wt_edge : edge_weights) {
-                const auto &edge_d = wt_edge.first;
-                const VertexIdxT<GraphTIn> edge_source = Source(edge_d, dag_in);
-                const VertexIdxT<GraphTIn> edge_target = Traget(edge_d, dag_in);
+        while (numNodesDecrease < numNodesAim && temperatureIncreaseIteration <= params_.numberOfTemperatureIncreases_) {
+            for (const auto &wtEdge : edgeWeights) {
+                const auto &edgeD = wtEdge.first;
+                const VertexIdxT<GraphTIn> edgeSource = Source(edgeD, dagIn);
+                const VertexIdxT<GraphTIn> edgeTarget = Traget(edgeD, dagIn);
 
                 // Previously merged
-                if (merged_nodes[edge_source]) {
+                if (mergedNodes[edgeSource]) {
                     continue;
                 }
-                if (merged_nodes[edge_target]) {
+                if (mergedNodes[edgeTarget]) {
                     continue;
                 }
 
                 // weight check
-                if (connected_components.get_weight_of_component_by_name(edge_source)
-                        + connected_components.get_weight_of_component_by_name(edge_target)
-                    > static_cast<double>(lower_third_wt) * temperature) {
+                if (connectedComponents.GetWeightOfComponentByName(edgeSource)
+                        + connectedComponents.GetWeightOfComponentByName(edgeTarget)
+                    > static_cast<double>(lowerThirdWt) * temperature) {
                     continue;
                 }
 
                 // no loops criteria check
-                bool check_failed = false;
+                bool checkFailed = false;
                 // safety check - this should already be the case
-                assert(abs(poset_int_mapping[edge_source] - poset_int_mapping[edge_target]) <= 1);
+                assert(abs(posetIntMapping[edgeSource] - posetIntMapping[edgeTarget]) <= 1);
                 // Checks over all affected edges
                 // In edges first
-                for (const auto &node : dag_in.Parents(edge_source)) {
-                    if (node == edge_target) {
+                for (const auto &node : dagIn.Parents(edgeSource)) {
+                    if (node == edgeTarget) {
                         continue;
                     }
-                    if (!merged_nodes[node]) {
+                    if (!mergedNodes[node]) {
                         continue;
                     }
-                    if (poset_int_mapping[edge_source] >= poset_int_mapping[node] + 2) {
+                    if (posetIntMapping[edgeSource] >= posetIntMapping[node] + 2) {
                         continue;
                     }
-                    check_failed = true;
+                    checkFailed = true;
                     break;
                 }
-                if (check_failed) {
+                if (checkFailed) {
                     continue;
                 }
                 // Out edges first
-                for (const auto &node : dag_in.Children(edge_source)) {
-                    if (node == edge_target) {
+                for (const auto &node : dagIn.Children(edgeSource)) {
+                    if (node == edgeTarget) {
                         continue;
                     }
-                    if (!merged_nodes[node]) {
+                    if (!mergedNodes[node]) {
                         continue;
                     }
-                    if (poset_int_mapping[node] >= poset_int_mapping[edge_source] + 2) {
+                    if (posetIntMapping[node] >= posetIntMapping[edgeSource] + 2) {
                         continue;
                     }
-                    check_failed = true;
+                    checkFailed = true;
                     break;
                 }
-                if (check_failed) {
+                if (checkFailed) {
                     continue;
                 }
                 // In edges second
-                for (const auto &node : dag_in.Parents(edge_target)) {
-                    if (node == edge_source) {
+                for (const auto &node : dagIn.Parents(edgeTarget)) {
+                    if (node == edgeSource) {
                         continue;
                     }
-                    if (!merged_nodes[node]) {
+                    if (!mergedNodes[node]) {
                         continue;
                     }
-                    if (poset_int_mapping[edge_target] >= poset_int_mapping[node] + 2) {
+                    if (posetIntMapping[edgeTarget] >= posetIntMapping[node] + 2) {
                         continue;
                     }
-                    check_failed = true;
+                    checkFailed = true;
                     break;
                 }
-                if (check_failed) {
+                if (checkFailed) {
                     continue;
                 }
                 // Out edges second
-                for (const auto &node : dag_in.Children(edge_target)) {
-                    if (node == edge_source) {
+                for (const auto &node : dagIn.Children(edgeTarget)) {
+                    if (node == edgeSource) {
                         continue;
                     }
-                    if (!merged_nodes[node]) {
+                    if (!mergedNodes[node]) {
                         continue;
                     }
-                    if (poset_int_mapping[node] >= poset_int_mapping[edge_target] + 2) {
+                    if (posetIntMapping[node] >= posetIntMapping[edgeTarget] + 2) {
                         continue;
                     }
-                    check_failed = true;
+                    checkFailed = true;
                     break;
                 }
-                if (check_failed) {
+                if (checkFailed) {
                     continue;
                 }
 
                 // merging
-                connected_components.join_by_name(edge_source, edge_target);
-                merged_nodes[edge_source] = true;
-                merged_nodes[edge_target] = true;
-                num_nodes_decrease++;
+                connectedComponents.JoinByName(edgeSource, edgeTarget);
+                mergedNodes[edgeSource] = true;
+                mergedNodes[edgeTarget] = true;
+                numNodesDecrease++;
             }
 
             temperature *= params_.temperatureMultiplier_;
@@ -193,8 +193,8 @@ class SquashA : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
         VertexIdxT<GraphTIn> minNodeDecrease = dagIn.NumVertices()
                                                - static_cast<VertexIdxT<GraphTIn>>(static_cast<double>(dagIn.NumVertices())
                                                                                    / std::pow(params_.geomDecayNumNodes_, 0.25));
-        if (numNodesDecrease > 0 && num_nodes_decrease >= min_node_decrease) {
-            partition_vec = connected_components.get_connected_components();
+        if (numNodesDecrease > 0 && numNodesDecrease >= minNodeDecrease) {
+            partitionVec = connectedComponents.GetConnectedComponents();
 
         } else {
             partitionVec.reserve(dagIn.NumVertices());
@@ -205,7 +205,7 @@ class SquashA : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
             }
         }
 
-        return partition_vec;
+        return partitionVec;
     }
 
   public:
@@ -230,12 +230,12 @@ template <typename GraphTIn, typename GraphTOut>
 std::vector<int> SquashA<GraphTIn, GraphTOut>::GeneratePosetInMap(const GraphTIn &dagIn) {
     std::vector<int> posetIntMapping;
     if (!params_.useStructuredPoset_) {
-        posetIntMapping = get_strict_poset_integer_map<GraphTIn>(params_.noise_, params_.poissonPar_, dagIn);
+        posetIntMapping = GetStrictPosetIntegerMap<GraphTIn>(params_.noise_, params_.poissonPar_, dagIn);
     } else {
         if (params_.useTopPoset_) {
-            posetIntMapping = get_top_node_distance<GraphTIn, int>(dagIn);
+            posetIntMapping = GetTopNodeDistance<GraphTIn, int>(dagIn);
         } else {
-            std::vector<int> botDist = get_bottom_node_distance<GraphTIn, int>(dagIn);
+            std::vector<int> botDist = GetBottomNodeDistance<GraphTIn, int>(dagIn);
             posetIntMapping.resize(botDist.size());
             for (std::size_t i = 0; i < botDist.size(); i++) {
                 posetIntMapping[i] = -botDist[i];
@@ -246,7 +246,7 @@ std::vector<int> SquashA<GraphTIn, GraphTOut>::GeneratePosetInMap(const GraphTIn
 }
 
 template <typename GraphTIn, typename GraphTOut>
-std::vector<std::vector<VertexIdxT<GraphTIn>>> SquashA<GraphTIn, GraphTOut>::GenerateVertexExpansionMap(const GraphTIn &dagIn) {
+std::vector<std::vector<VertexIdxT<GraphTIn>>> SquashA<GraphTIn, GraphTOut>::generate_vertex_expansion_map(const GraphTIn &dagIn) {
     static_assert(IsDirectedGraphEdgeDescV<GraphTIn>, "GraphTIn must satisfy the directed_graph_edge_desc concept");
     static_assert(IsComputationalDagEdgeDescV<GraphTIn>, "GraphTIn must satisfy the is_computational_dag_edge_desc concept");
     // static_assert(has_hashable_edge_desc_v<GraphTIn>, "GraphTIn must have hashable edge descriptors");
@@ -257,38 +257,37 @@ std::vector<std::vector<VertexIdxT<GraphTIn>>> SquashA<GraphTIn, GraphTOut>::Gen
         if (params_.mode_ == squash_a_params::Mode::EDGE_WEIGHT) {
             auto edgeWCmp = [](const std::pair<EdgeDescT<GraphTIn>, ECommwT<GraphTIn>> &lhs,
                                const std::pair<EdgeDescT<GraphTIn>, ECommwT<GraphTIn>> &rhs) { return lhs.second < rhs.second; };
-            std::multiset<std::pair<EdgeDescT<GraphTIn>, ECommwT<GraphTIn>>, decltype(edge_w_cmp)> edge_weights(edge_w_cmp);
+            std::multiset<std::pair<EdgeDescT<GraphTIn>, ECommwT<GraphTIn>>, decltype(edgeWCmp)> edgeWeights(edgeWCmp);
             {
                 std::vector<EdgeDescT<GraphTIn>> contractableEdges
-                    = get_contractable_edges_from_poset_int_map<GraphTIn>(posetIntMapping, dagIn);
-                for (const auto &edge : contractable_edges) {
+                    = GetContractableEdgesFromPosetIntMap<GraphTIn>(posetIntMapping, dagIn);
+                for (const auto &edge : contractableEdges) {
                     if constexpr (HasEdgeWeightsV<GraphTIn>) {
-                        edge_weights.emplace(edge, dag_in.EdgeCommWeight(edge));
+                        edgeWeights.emplace(edge, dagIn.EdgeCommWeight(edge));
                     } else {
-                        edge_weights.emplace(edge, dag_in.VertexCommWeight(Source(edge, dag_in)));
+                        edgeWeights.emplace(edge, dagIn.VertexCommWeight(Source(edge, dagIn)));
                     }
                 }
             }
 
-            return gen_exp_map_from_contractable_edges<ECommwT<GraphTIn>, decltype(edge_w_cmp)>(
-                edge_weights, poset_int_mapping, dag_in);
+            return GenExpMapFromContractableEdges<ECommwT<GraphTIn>, decltype(edgeWCmp)>(edgeWeights, posetIntMapping, dagIn);
         }
     }
     if (params_.mode_ == squash_a_params::Mode::TRIANGLES) {
         auto edgeWCmp = [](const std::pair<EdgeDescT<GraphTIn>, std::size_t> &lhs,
                            const std::pair<EdgeDescT<GraphTIn>, std::size_t> &rhs) { return lhs.second < rhs.second; };
-        std::multiset<std::pair<EdgeDescT<GraphTIn>, std::size_t>, decltype(edge_w_cmp)> edgeWeights(edgeWCmp);
+        std::multiset<std::pair<EdgeDescT<GraphTIn>, std::size_t>, decltype(edgeWCmp)> edgeWeights(edgeWCmp);
         {
             std::vector<EdgeDescT<GraphTIn>> contractableEdges
-                = get_contractable_edges_from_poset_int_map<GraphTIn>(posetIntMapping, dagIn);
-            for (const auto &edge : contractable_edges) {
-                std::size_t num_common_triangles = num_common_parents(dag_in, Source(edge, dag_in), Traget(edge, dag_in));
-                num_common_triangles += num_common_children(dag_in, Source(edge, dag_in), Traget(edge, dag_in));
-                edge_weights.emplace(edge, num_common_triangles);
+                = GetContractableEdgesFromPosetIntMap<GraphTIn>(posetIntMapping, dagIn);
+            for (const auto &edge : contractableEdges) {
+                std::size_t numCommonTriangles = NumCommonParents(dagIn, Source(edge, dagIn), Traget(edge, dagIn));
+                numCommonTriangles += NumCommonChildren(dagIn, Source(edge, dagIn), Traget(edge, dagIn));
+                edgeWeights.emplace(edge, numCommonTriangles);
             }
         }
 
-        return gen_exp_map_from_contractable_edges<std::size_t, decltype(edgeWCmp)>(edge_weights, posetIntMapping, dagIn);
+        return GenExpMapFromContractableEdges<std::size_t, decltype(edgeWCmp)>(edgeWeights, posetIntMapping, dagIn);
 
     } else {
         throw std::runtime_error("Edge sorting mode not recognised.");

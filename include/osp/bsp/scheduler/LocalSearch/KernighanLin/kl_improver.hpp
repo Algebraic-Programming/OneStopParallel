@@ -88,7 +88,7 @@ template <typename GraphT,
           typename CostT = double>
 class KlImprover : public ImprovementScheduler<GraphT> {
     static_assert(IsDirectedGraphEdgeDescV<GraphT>, "Graph_t must satisfy the directed_graph concept");
-    static_assert(has_hashable_edge_desc_v<GraphT>, "Graph_t must satisfy the has_hashable_edge_desc concept");
+    static_assert(HasHashableEdgeDescV<GraphT>, "Graph_t must satisfy the has_hashable_edge_desc concept");
     static_assert(IsComputationalDagV<GraphT>, "Graph_t must satisfy the computational_dag concept");
 
   protected:
@@ -97,17 +97,17 @@ class KlImprover : public ImprovementScheduler<GraphT> {
     constexpr static bool enablePreresolvingViolations_ = true;
     constexpr static double epsilon_ = 1e-9;
 
-    using memw_t = VMemwT<GraphT>;
-    using commw_t = VCommwT<GraphT>;
-    using work_weight_t = VWorkwT<GraphT>;
+    using VMemwT = VMemwT<GraphT>;
+    using VCommwT = VCommwT<GraphT>;
+    using VWorkwT = VWorkwT<GraphT>;
     using VertexType = VertexIdxT<GraphT>;
     using EdgeType = EdgeDescT<GraphT>;
 
-    using kl_move = kl_move_struct<cost_t, VertexType>;
-    using heap_datastructure = MaxPairingHeap<VertexType, kl_move>;
+    using KlMove = KlMoveStruct<CostT, VertexType>;
+    using HeapDatastructure = MaxPairingHeap<VertexType, KlMove>;
     using ActiveScheduleT = KlActiveSchedule<GraphT, CostT, MemoryConstraintT>;
     using NodeSelectionContainerT = AdaptiveAffinityTable<GraphT, CostT, ActiveScheduleT, windowSize>;
-    using kl_gain_update_info = kl_update_info<VertexType>;
+    using KlGainUpdateInfo = KlUpdateInfo<VertexType>;
 
     struct ThreadSearchContext {
         unsigned threadId_ = 0;
@@ -115,8 +115,8 @@ class KlImprover : public ImprovementScheduler<GraphT> {
         unsigned endStep_ = 0;
         unsigned originalEndStep_ = 0;
 
-        vector_vertex_lock_manger<VertexType> lockManager_;
-        heap_datastructure maxGainHeap_;
+        VectorVertexLockManger<VertexType> lockManager_;
+        HeapDatastructure maxGainHeap_;
         NodeSelectionContainerT affinityTable_;
         std::vector<std::vector<CostT>> localAffinityTable_;
         RewardPenaltyStrategy<CostT, CommCostFunctionT, ActiveScheduleT> rewardPenaltyStrat_;
@@ -187,28 +187,28 @@ class KlImprover : public ImprovementScheduler<GraphT> {
         threadData.maxNoVioaltionsRemovedBacktrack_ = parameters_.maxNoVioaltionsRemovedBacktrackReset_;
     }
 
-    kl_move GetBestMove(NodeSelectionContainerT &affinityTable,
-                        vector_vertex_lock_manger<VertexType> &lockManager,
-                        heap_datastructure &maxGainHeap) {
+    KlMove GetBestMove(NodeSelectionContainerT &affinityTable,
+                       VectorVertexLockManger<VertexType> &lockManager,
+                       HeapDatastructure &maxGainHeap) {
         // To introduce non-determinism and help escape local optima, if there are multiple moves with the same
         // top gain, we randomly select one. We check up to `local_max` ties.
         const unsigned localMax = 50;
-        std::vector<VertexType> topGainNodes = max_gain_heap.get_top_keys(localMax);
+        std::vector<VertexType> topGainNodes = maxGainHeap.get_top_keys(localMax);
 
         if (topGainNodes.empty()) {
             // This case is guarded by the caller, but for safety:
-            topGainNodes.push_back(max_gain_heap.top());
+            topGainNodes.push_back(maxGainHeap.top());
         }
 
-        std::uniform_int_distribution<size_t> dis(0, top_gain_nodes.size() - 1);
-        const VertexType node = top_gain_nodes[dis(gen_)];
+        std::uniform_int_distribution<size_t> dis(0, topGainNodes.size() - 1);
+        const VertexType node = topGainNodes[dis(gen_)];
 
-        kl_move bestMove = max_gain_heap.get_value(node);
+        KlMove bestMove = maxGainHeap.get_value(node);
         maxGainHeap.erase(node);
-        lockManager.lock(node);
-        affinityTable.remove(node);
+        lockManager.Lock(node);
+        affinityTable.Remove(node);
 
-        return best_move;
+        return bestMove;
     }
 
     inline void ProcessOtherStepsBestMove(const unsigned idx,
@@ -219,28 +219,28 @@ class KlImprover : public ImprovementScheduler<GraphT> {
                                           unsigned &maxProc,
                                           unsigned &maxStep,
                                           const std::vector<std::vector<CostT>> &affinityTableNode) const {
-        for (const unsigned p : proc_range.compatible_processors_vertex(node)) {
-            if constexpr (active_schedule_t::use_memory_constraint) {
-                if (not active_schedule.memory_constraint.can_move(node, p, node_step + idx - window_size)) {
+        for (const unsigned p : procRange_.compatible_processors_vertex(node)) {
+            if constexpr (ActiveScheduleT::useMemoryConstraint_) {
+                if (not activeSchedule_.memoryConstraint_.CanMove(node, p, nodeStep + idx - windowSize)) {
                     continue;
                 }
             }
 
-            const cost_t gain = affinity_current_proc_step - affinity_table_node[p][idx];
-            if (gain > max_gain) {
-                max_gain = gain;
-                max_proc = p;
-                max_step = idx;
+            const CostT gain = affinityCurrentProcStep - affinityTableNode[p][idx];
+            if (gain > maxGain) {
+                maxGain = gain;
+                maxProc = p;
+                maxStep = idx;
             }
         }
     }
 
     template <bool moveToSameSuperStep>
-    kl_move ComputeBestMove(VertexType node,
-                            const std::vector<std::vector<CostT>> &affinityTableNode,
-                            ThreadSearchContext &threadData) {
-        const unsigned nodeStep = activeSchedule_.assigned_superstep(node);
-        const unsigned nodeProc = activeSchedule_.assigned_processor(node);
+    KlMove ComputeBestMove(VertexType node,
+                           const std::vector<std::vector<CostT>> &affinityTableNode,
+                           ThreadSearchContext &threadData) {
+        const unsigned nodeStep = activeSchedule_.AssignedSuperstep(node);
+        const unsigned nodeProc = activeSchedule_.AssignedProcessor(node);
 
         CostT maxGain = std::numeric_limits<CostT>::lowest();
 
@@ -251,27 +251,26 @@ class KlImprover : public ImprovementScheduler<GraphT> {
 
         unsigned idx = threadData.StartIdx(nodeStep);
         for (; idx < windowSize; idx++) {
-            process_other_steps_best_move(
-                idx, node_step, node, affinity_current_proc_step, max_gain, max_proc, max_step, affinity_table_node);
+            ProcessOtherStepsBestMove(idx, nodeStep, node, affinityCurrentProcStep, maxGain, maxProc, maxStep, affinityTableNode);
         }
 
         if constexpr (moveToSameSuperStep) {
-            for (const unsigned proc : proc_range.compatible_processors_vertex(node)) {
-                if (proc == node_proc) {
+            for (const unsigned proc : procRange_.compatible_processors_vertex(node)) {
+                if (proc == nodeProc) {
                     continue;
                 }
 
-                if constexpr (active_schedule_t::use_memory_constraint) {
-                    if (not active_schedule.memory_constraint.can_move(node, proc, node_step + idx - window_size)) {
+                if constexpr (ActiveScheduleT::useMemoryConstraint_) {
+                    if (not activeSchedule_.memoryConstraint_.CanMove(node, proc, nodeStep + idx - windowSize)) {
                         continue;
                     }
                 }
 
-                const cost_t gain = affinity_current_proc_step - affinity_table_node[proc][window_size];
-                if (gain > max_gain) {
-                    max_gain = gain;
-                    max_proc = proc;
-                    max_step = idx;
+                const CostT gain = affinityCurrentProcStep - affinityTableNode[proc][windowSize];
+                if (gain > maxGain) {
+                    maxGain = gain;
+                    maxProc = proc;
+                    maxStep = idx;
                 }
             }
         }
@@ -280,272 +279,254 @@ class KlImprover : public ImprovementScheduler<GraphT> {
 
         const unsigned bound = threadData.EndIdx(nodeStep);
         for (; idx < bound; idx++) {
-            process_other_steps_best_move(
-                idx, node_step, node, affinity_current_proc_step, max_gain, max_proc, max_step, affinity_table_node);
+            ProcessOtherStepsBestMove(idx, nodeStep, node, affinityCurrentProcStep, maxGain, maxProc, maxStep, affinityTableNode);
         }
 
-        return kl_move(node, maxGain, nodeProc, nodeStep, maxProc, nodeStep + maxStep - windowSize);
+        return KlMove(node, maxGain, nodeProc, nodeStep, maxProc, nodeStep + maxStep - windowSize);
     }
 
-    kl_gain_update_info UpdateNodeWorkAffinityAfterMove(VertexType node,
-                                                        kl_move move,
-                                                        const pre_move_work_data<work_weight_t> &prevWorkData,
-                                                        std::vector<std::vector<CostT>> &affinityTableNode) {
-        const unsigned nodeStep = activeSchedule_.assigned_superstep(node);
-        const work_weight_t vertexWeight = graph_->VertexWorkWeight(node);
+    KlGainUpdateInfo UpdateNodeWorkAffinityAfterMove(VertexType node,
+                                                     KlMove move,
+                                                     const PreMoveWorkData<VWorkwT> &prevWorkData,
+                                                     std::vector<std::vector<CostT>> &affinityTableNode) {
+        const unsigned nodeStep = activeSchedule_.AssignedSuperstep(node);
+        const VWorkwT vertexWeight = graph_->VertexWorkWeight(node);
 
-        kl_gain_update_info updateInfo(node);
+        KlGainUpdateInfo updateInfo(node);
 
-        if (move.from_step == move.to_step) {
-            const unsigned lowerBound = move.from_step > windowSize ? move.from_step - windowSize : 0;
-            if (lowerBound <= nodeStep && nodeStep <= move.from_step + windowSize) {
-                updateInfo.update_from_step = true;
-                updateInfo.update_to_step = true;
+        if (move.fromStep_ == move.toStep_) {
+            const unsigned lowerBound = move.fromStep_ > windowSize ? move.fromStep_ - windowSize : 0;
+            if (lowerBound <= nodeStep && nodeStep <= move.fromStep_ + windowSize) {
+                updateInfo.updateFromStep_ = true;
+                updateInfo.updateToStep_ = true;
 
-                const work_weight_t prevMaxWork = prev_work_data.from_step_max_work;
-                const work_weight_t prevSecondMaxWork = prev_work_data.from_step_second_max_work;
+                const VWorkwT prevMaxWork = prevWorkData.fromStepMaxWork_;
+                const VWorkwT prevSecondMaxWork = prevWorkData.fromStepSecondMaxWork_;
 
-                if (nodeStep == move.from_step) {
-                    const unsigned nodeProc = activeSchedule_.assigned_processor(node);
-                    const work_weight_t newMaxWeight = activeSchedule_.get_step_max_work(move.from_step);
-                    const work_weight_t newSecondMaxWeight = activeSchedule_.get_step_second_max_work(move.from_step);
-                    const work_weight_t newStepProcWork = activeSchedule_.get_step_processor_work(nodeStep, nodeProc);
-                    const work_weight_t prevStepProcWork
-                        = (nodeProc == move.from_proc) ? new_step_proc_work + graph_->VertexWorkWeight(move.node)
-                          : (nodeProc == move.to_proc) ? new_step_proc_work - graph_->VertexWorkWeight(move.node)
-                                                       : new_step_proc_work;
-                    const bool prevIsSoleMaxProcessor = (prevWorkData.from_step_max_work_processor_count == 1)
-                                                        && (prevMaxWork == prev_step_proc_work);
+                if (nodeStep == move.fromStep_) {
+                    const unsigned nodeProc = activeSchedule_.AssignedProcessor(node);
+                    const VWorkwT newMaxWeight = activeSchedule_.GetStepMaxWork(move.fromStep_);
+                    const VWorkwT newSecondMaxWeight = activeSchedule_.GetStepSecondMaxWork(move.fromStep_);
+                    const VWorkwT newStepProcWork = activeSchedule_.GetStepProcessorWork(nodeStep, nodeProc);
+                    const VWorkwT prevStepProcWork
+                        = (nodeProc == move.fromProc_) ? newStepProcWork + graph_->VertexWorkWeight(move.node_)
+                          : (nodeProc == move.toProc_) ? newStepProcWork - graph_->VertexWorkWeight(move.node_)
+                                                       : newStepProcWork;
+                    const bool prevIsSoleMaxProcessor = (prevWorkData.fromStepMaxWorkProcessorCount_ == 1)
+                                                        && (prevMaxWork == prevStepProcWork);
                     const CostT prevNodeProcAffinity
-                        = prevIsSoleMaxProcessor ? std::min(vertex_weight, prev_max_work - prev_second_max_work) : 0.0;
-                    const bool newIsSoleMaxProcessor = (activeSchedule_.get_step_max_work_processor_count()[nodeStep] == 1)
-                                                       && (newMaxWeight == new_step_proc_work);
+                        = prevIsSoleMaxProcessor ? std::min(vertexWeight, prevMaxWork - prevSecondMaxWork) : 0.0;
+                    const bool newIsSoleMaxProcessor = (activeSchedule_.GetStepMaxWorkProcessorCount()[nodeStep] == 1)
+                                                       && (newMaxWeight == newStepProcWork);
                     const CostT newNodeProcAffinity
-                        = newIsSoleMaxProcessor ? std::min(vertex_weight, new_max_weight - new_second_max_weight) : 0.0;
+                        = newIsSoleMaxProcessor ? std::min(vertexWeight, newMaxWeight - newSecondMaxWeight) : 0.0;
 
                     const CostT diff = newNodeProcAffinity - prevNodeProcAffinity;
                     if (std::abs(diff) > epsilon_) {
-                        updateInfo.full_update = true;
+                        updateInfo.fullUpdate_ = true;
                         affinityTableNode[nodeProc][windowSize] += diff;    // Use the pre-calculated diff
                     }
 
-                    if ((prevMaxWork != new_max_weight) || update_info.full_update) {
-                        updateInfo.update_entire_from_step = true;
+                    if ((prevMaxWork != newMaxWeight) || updateInfo.fullUpdate_) {
+                        updateInfo.updateEntireFromStep_ = true;
 
-                        for (const unsigned proc : proc_range.compatible_processors_vertex(node)) {
-                            if ((proc == node_proc) || (proc == move.from_proc) || (proc == move.to_proc)) {
+                        for (const unsigned proc : procRange_.compatible_processors_vertex(node)) {
+                            if ((proc == nodeProc) || (proc == move.fromProc_) || (proc == move.toProc_)) {
                                 continue;
                             }
 
-                            const work_weight_t new_weight
-                                = vertex_weight + active_schedule.get_step_processor_work(node_step, proc);
-                            const cost_t prev_other_affinity
-                                = compute_same_step_affinity(prev_max_work, new_weight, prev_node_proc_affinity);
-                            const cost_t other_affinity
-                                = compute_same_step_affinity(new_max_weight, new_weight, new_node_proc_affinity);
+                            const VWorkwT newWeight = vertexWeight + activeSchedule_.GetStepProcessorWork(nodeStep, proc);
+                            const CostT prevOtherAffinity = ComputeSameStepAffinity(prevMaxWork, newWeight, prevNodeProcAffinity);
+                            const CostT otherAffinity = ComputeSameStepAffinity(newMaxWeight, newWeight, newNodeProcAffinity);
 
-                            affinity_table_node[proc][window_size] += (other_affinity - prev_other_affinity);
+                            affinityTableNode[proc][windowSize] += (otherAffinity - prevOtherAffinity);
                         }
                     }
 
-                    if (node_proc != move.from_proc && is_compatible(node, move.from_proc)) {
-                        const work_weight_t prevNewWeight = vertex_weight
-                                                            + activeSchedule_.get_step_processor_work(nodeStep, move.from_proc)
-                                                            + graph_->VertexWorkWeight(move.node);
-                        const CostT prevOtherAffinity
-                            = compute_same_step_affinity(prev_max_work, prev_new_weight, prev_node_proc_affinity);
-                        const work_weight_t newWeight
-                            = vertex_weight + activeSchedule_.get_step_processor_work(nodeStep, move.from_proc);
-                        const CostT otherAffinity = compute_same_step_affinity(new_max_weight, new_weight, new_node_proc_affinity);
-                        affinityTableNode[move.from_proc][windowSize] += (otherAffinity - prevOtherAffinity);
+                    if (nodeProc != move.fromProc_ && IsCompatible(node, move.fromProc_)) {
+                        const VWorkwT prevNewWeight = vertexWeight + activeSchedule_.GetStepProcessorWork(nodeStep, move.fromProc_)
+                                                      + graph_->VertexWorkWeight(move.node_);
+                        const CostT prevOtherAffinity = ComputeSameStepAffinity(prevMaxWork, prevNewWeight, prevNodeProcAffinity);
+                        const VWorkwT newWeight = vertexWeight + activeSchedule_.GetStepProcessorWork(nodeStep, move.fromProc_);
+                        const CostT otherAffinity = ComputeSameStepAffinity(newMaxWeight, newWeight, newNodeProcAffinity);
+                        affinityTableNode[move.fromProc_][windowSize] += (otherAffinity - prevOtherAffinity);
                     }
 
-                    if (node_proc != move.to_proc && is_compatible(node, move.to_proc)) {
-                        const work_weight_t prevNewWeight = vertex_weight
-                                                            + activeSchedule_.get_step_processor_work(nodeStep, move.to_proc)
-                                                            - graph_->VertexWorkWeight(move.node);
-                        const CostT prevOtherAffinity
-                            = compute_same_step_affinity(prev_max_work, prev_new_weight, prev_node_proc_affinity);
-                        const work_weight_t newWeight
-                            = vertex_weight + activeSchedule_.get_step_processor_work(nodeStep, move.to_proc);
-                        const CostT otherAffinity = compute_same_step_affinity(new_max_weight, new_weight, new_node_proc_affinity);
-                        affinityTableNode[move.to_proc][windowSize] += (otherAffinity - prevOtherAffinity);
+                    if (nodeProc != move.toProc_ && IsCompatible(node, move.toProc_)) {
+                        const VWorkwT prevNewWeight = vertexWeight + activeSchedule_.GetStepProcessorWork(nodeStep, move.toProc_)
+                                                      - graph_->VertexWorkWeight(move.node_);
+                        const CostT prevOtherAffinity = ComputeSameStepAffinity(prevMaxWork, prevNewWeight, prevNodeProcAffinity);
+                        const VWorkwT newWeight = vertexWeight + activeSchedule_.GetStepProcessorWork(nodeStep, move.toProc_);
+                        const CostT otherAffinity = ComputeSameStepAffinity(newMaxWeight, newWeight, newNodeProcAffinity);
+                        affinityTableNode[move.toProc_][windowSize] += (otherAffinity - prevOtherAffinity);
                     }
 
                 } else {
-                    const work_weight_t newMaxWeight = activeSchedule_.get_step_max_work(move.from_step);
-                    const unsigned idx = RelStepIdx(nodeStep, move.from_step);
-                    if (prevMaxWork != new_max_weight) {
-                        updateInfo.update_entire_from_step = true;
-                        // update moving to all procs with special for move.from_proc
-                        for (const unsigned proc : proc_range.compatible_processors_vertex(node)) {
-                            const work_weight_t new_weight
-                                = vertex_weight + active_schedule.get_step_processor_work(move.from_step, proc);
-                            if (proc == move.from_proc) {
-                                const work_weight_t prev_new_weight
-                                    = vertex_weight + active_schedule.get_step_processor_work(move.from_step, proc)
-                                      + graph->VertexWorkWeight(move.node);
-                                const cost_t prev_affinity
-                                    = prev_max_work < prev_new_weight
-                                          ? static_cast<cost_t>(prev_new_weight) - static_cast<cost_t>(prev_max_work)
-                                          : 0.0;
-                                const cost_t new_affinity = new_max_weight < new_weight ? static_cast<cost_t>(new_weight)
-                                                                                              - static_cast<cost_t>(new_max_weight)
-                                                                                        : 0.0;
-                                affinity_table_node[proc][idx] += new_affinity - prev_affinity;
-                            } else if (proc == move.to_proc) {
-                                const work_weight_t prev_new_weight
-                                    = vertex_weight + active_schedule.get_step_processor_work(move.to_step, proc)
-                                      - graph->VertexWorkWeight(move.node);
-                                const cost_t prev_affinity
-                                    = prev_max_work < prev_new_weight
-                                          ? static_cast<cost_t>(prev_new_weight) - static_cast<cost_t>(prev_max_work)
-                                          : 0.0;
-                                const cost_t new_affinity = new_max_weight < new_weight ? static_cast<cost_t>(new_weight)
-                                                                                              - static_cast<cost_t>(new_max_weight)
-                                                                                        : 0.0;
-                                affinity_table_node[proc][idx] += new_affinity - prev_affinity;
+                    const VWorkwT newMaxWeight = activeSchedule_.GetStepMaxWork(move.fromStep_);
+                    const unsigned idx = RelStepIdx(nodeStep, move.fromStep_);
+                    if (prevMaxWork != newMaxWeight) {
+                        updateInfo.updateEntireFromStep_ = true;
+                        // update moving to all procs with special for move.fromProc_
+                        for (const unsigned proc : procRange_.compatible_processors_vertex(node)) {
+                            const VWorkwT newWeight = vertexWeight + activeSchedule_.GetStepProcessorWork(move.fromStep_, proc);
+                            if (proc == move.fromProc_) {
+                                const VWorkwT prevNewWeight = vertexWeight
+                                                              + activeSchedule_.GetStepProcessorWork(move.fromStep_, proc)
+                                                              + graph_->VertexWorkWeight(move.node_);
+                                const CostT prevAffinity = prevMaxWork < prevNewWeight ? static_cast<CostT>(prevNewWeight)
+                                                                                             - static_cast<CostT>(prevMaxWork)
+                                                                                       : 0.0;
+                                const CostT newAffinity = newMaxWeight < newWeight
+                                                              ? static_cast<CostT>(newWeight) - static_cast<CostT>(newMaxWeight)
+                                                              : 0.0;
+                                affinityTableNode[proc][idx] += newAffinity - prevAffinity;
+                            } else if (proc == move.toProc_) {
+                                const VWorkwT prevNewWeight = vertexWeight
+                                                              + activeSchedule_.GetStepProcessorWork(move.toStep_, proc)
+                                                              - graph_->VertexWorkWeight(move.node_);
+                                const CostT prevAffinity = prevMaxWork < prevNewWeight ? static_cast<CostT>(prevNewWeight)
+                                                                                             - static_cast<CostT>(prevMaxWork)
+                                                                                       : 0.0;
+                                const CostT newAffinity = newMaxWeight < newWeight
+                                                              ? static_cast<CostT>(newWeight) - static_cast<CostT>(newMaxWeight)
+                                                              : 0.0;
+                                affinityTableNode[proc][idx] += newAffinity - prevAffinity;
                             } else {
-                                const cost_t prev_affinity = prev_max_work < new_weight ? static_cast<cost_t>(new_weight)
-                                                                                              - static_cast<cost_t>(prev_max_work)
-                                                                                        : 0.0;
-                                const cost_t new_affinity = new_max_weight < new_weight ? static_cast<cost_t>(new_weight)
-                                                                                              - static_cast<cost_t>(new_max_weight)
-                                                                                        : 0.0;
-                                affinity_table_node[proc][idx] += new_affinity - prev_affinity;
+                                const CostT prevAffinity = prevMaxWork < newWeight
+                                                               ? static_cast<CostT>(newWeight) - static_cast<CostT>(prevMaxWork)
+                                                               : 0.0;
+                                const CostT newAffinity = newMaxWeight < newWeight
+                                                              ? static_cast<CostT>(newWeight) - static_cast<CostT>(newMaxWeight)
+                                                              : 0.0;
+                                affinityTableNode[proc][idx] += newAffinity - prevAffinity;
                             }
                         }
                     } else {
-                        // update only move.from_proc and move.to_proc
-                        if (is_compatible(node, move.from_proc)) {
-                            const work_weight_t fromNewWeight
-                                = vertex_weight + activeSchedule_.get_step_processor_work(move.from_step, move.from_proc);
-                            const work_weight_t fromPrevNewWeight = from_new_weight + graph_->VertexWorkWeight(move.node);
-                            const CostT fromPrevAffinity
-                                = prev_max_work < from_prev_new_weight
-                                      ? static_cast<CostT>(from_prev_new_weight) - static_cast<CostT>(prev_max_work)
-                                      : 0.0;
+                        // update only move.fromProc_ and move.toProc_
+                        if (IsCompatible(node, move.fromProc_)) {
+                            const VWorkwT fromNewWeight
+                                = vertexWeight + activeSchedule_.GetStepProcessorWork(move.fromStep_, move.fromProc_);
+                            const VWorkwT fromPrevNewWeight = fromNewWeight + graph_->VertexWorkWeight(move.node_);
+                            const CostT fromPrevAffinity = prevMaxWork < fromPrevNewWeight ? static_cast<CostT>(fromPrevNewWeight)
+                                                                                                 - static_cast<CostT>(prevMaxWork)
+                                                                                           : 0.0;
 
-                            const CostT fromNewAffinity
-                                = new_max_weight < from_new_weight
-                                      ? static_cast<CostT>(from_new_weight) - static_cast<CostT>(new_max_weight)
-                                      : 0.0;
-                            affinityTableNode[move.from_proc][idx] += fromNewAffinity - fromPrevAffinity;
+                            const CostT fromNewAffinity = newMaxWeight < fromNewWeight ? static_cast<CostT>(fromNewWeight)
+                                                                                             - static_cast<CostT>(newMaxWeight)
+                                                                                       : 0.0;
+                            affinityTableNode[move.fromProc_][idx] += fromNewAffinity - fromPrevAffinity;
                         }
 
-                        if (is_compatible(node, move.to_proc)) {
-                            const work_weight_t toNewWeight
-                                = vertex_weight + activeSchedule_.get_step_processor_work(move.to_step, move.to_proc);
-                            const work_weight_t toPrevNewWeight = to_new_weight - graph_->VertexWorkWeight(move.node);
-                            const CostT toPrevAffinity
-                                = prev_max_work < to_prev_new_weight
-                                      ? static_cast<CostT>(to_prev_new_weight) - static_cast<CostT>(prev_max_work)
-                                      : 0.0;
-
-                            const CostT toNewAffinity = new_max_weight < to_new_weight ? static_cast<CostT>(to_new_weight)
-                                                                                             - static_cast<CostT>(new_max_weight)
+                        if (IsCompatible(node, move.toProc_)) {
+                            const VWorkwT toNewWeight
+                                = vertexWeight + activeSchedule_.GetStepProcessorWork(move.toStep_, move.toProc_);
+                            const VWorkwT toPrevNewWeight = toNewWeight - graph_->VertexWorkWeight(move.node_);
+                            const CostT toPrevAffinity = prevMaxWork < toPrevNewWeight ? static_cast<CostT>(toPrevNewWeight)
+                                                                                             - static_cast<CostT>(prevMaxWork)
                                                                                        : 0.0;
-                            affinityTableNode[move.to_proc][idx] += toNewAffinity - toPrevAffinity;
+
+                            const CostT toNewAffinity = newMaxWeight < toNewWeight
+                                                            ? static_cast<CostT>(toNewWeight) - static_cast<CostT>(newMaxWeight)
+                                                            : 0.0;
+                            affinityTableNode[move.toProc_][idx] += toNewAffinity - toPrevAffinity;
                         }
                     }
                 }
             }
 
         } else {
-            const unsigned nodeProc = activeSchedule_.assigned_processor(node);
-            process_work_update_step(node,
-                                     node_step,
-                                     node_proc,
-                                     vertex_weight,
-                                     move.from_step,
-                                     move.from_proc,
-                                     graph->VertexWorkWeight(move.node),
-                                     prev_work_data.from_step_max_work,
-                                     prev_work_data.from_step_second_max_work,
-                                     prev_work_data.from_step_max_work_processor_count,
-                                     update_info.update_from_step,
-                                     update_info.update_entire_from_step,
-                                     update_info.full_update,
-                                     affinity_table_node);
-            process_work_update_step(node,
-                                     node_step,
-                                     node_proc,
-                                     vertex_weight,
-                                     move.to_step,
-                                     move.to_proc,
-                                     -graph->VertexWorkWeight(move.node),
-                                     prev_work_data.to_step_max_work,
-                                     prev_work_data.to_step_second_max_work,
-                                     prev_work_data.to_step_max_work_processor_count,
-                                     update_info.update_to_step,
-                                     update_info.update_entire_to_step,
-                                     update_info.full_update,
-                                     affinity_table_node);
+            const unsigned nodeProc = activeSchedule_.AssignedProcessor(node);
+            ProcessWorkUpdateStep(node,
+                                  nodeStep,
+                                  nodeProc,
+                                  vertexWeight,
+                                  move.fromStep_,
+                                  move.fromProc_,
+                                  graph_->VertexWorkWeight(move.node_),
+                                  prevWorkData.fromStepMaxWork_,
+                                  prevWorkData.fromStepSecondMaxWork_,
+                                  prevWorkData.fromStepMaxWorkProcessorCount_,
+                                  updateInfo.updateFromStep_,
+                                  updateInfo.updateEntireFromStep_,
+                                  updateInfo.fullUpdate_,
+                                  affinityTableNode);
+            ProcessWorkUpdateStep(node,
+                                  nodeStep,
+                                  nodeProc,
+                                  vertexWeight,
+                                  move.toStep_,
+                                  move.toProc_,
+                                  -graph_->VertexWorkWeight(move.node_),
+                                  prevWorkData.toStepMaxWork_,
+                                  prevWorkData.toStepSecondMaxWork_,
+                                  prevWorkData.toStepMaxWorkProcessorCount_,
+                                  updateInfo.updateToStep_,
+                                  updateInfo.updateEntireToStep_,
+                                  updateInfo.fullUpdate_,
+                                  affinityTableNode);
         }
 
-        return update_info;
+        return updateInfo;
     }
 
     void ProcessWorkUpdateStep(VertexType node,
                                unsigned nodeStep,
                                unsigned nodeProc,
-                               work_weight_t vertexWeight,
+                               VWorkwT vertexWeight,
                                unsigned moveStep,
                                unsigned moveProc,
-                               work_weight_t moveCorrectionNodeWeight,
-                               const work_weight_t prevMoveStepMaxWork,
-                               const work_weight_t prevMoveStepSecondMaxWork,
+                               VWorkwT moveCorrectionNodeWeight,
+                               const VWorkwT prevMoveStepMaxWork,
+                               const VWorkwT prevMoveStepSecondMaxWork,
                                unsigned prevMoveStepMaxWorkProcessorCount,
                                bool &updateStep,
                                bool &updateEntireStep,
                                bool &fullUpdate,
                                std::vector<std::vector<CostT>> &affinityTableNode);
     void UpdateNodeWorkAffinity(NodeSelectionContainerT &nodes,
-                                kl_move move,
-                                const pre_move_work_data<work_weight_t> &prevWorkData,
-                                std::map<VertexType, kl_gain_update_info> &recomputeMaxGain);
+                                KlMove move,
+                                const PreMoveWorkData<VWorkwT> &prevWorkData,
+                                std::map<VertexType, KlGainUpdateInfo> &recomputeMaxGain);
     void UpdateBestMove(
         VertexType node, unsigned step, unsigned proc, NodeSelectionContainerT &affinityTable, ThreadSearchContext &threadData);
     void UpdateBestMove(VertexType node, unsigned step, NodeSelectionContainerT &affinityTable, ThreadSearchContext &threadData);
-    void UpdateMaxGain(kl_move move, std::map<VertexType, kl_gain_update_info> &recomputeMaxGain, ThreadSearchContext &threadData);
+    void UpdateMaxGain(KlMove move, std::map<VertexType, KlGainUpdateInfo> &recomputeMaxGain, ThreadSearchContext &threadData);
     void ComputeWorkAffinity(VertexType node, std::vector<std::vector<CostT>> &affinityTableNode, ThreadSearchContext &threadData);
 
     inline void RecomputeNodeMaxGain(VertexType node, NodeSelectionContainerT &affinityTable, ThreadSearchContext &threadData) {
-        const auto bestMove = compute_best_move<true>(node, affinityTable[node], threadData);
-        threadData.maxGainHeap_.update(node, best_move);
+        const auto bestMove = ComputeBestMove<true>(node, affinityTable[node], threadData);
+        threadData.maxGainHeap_.update(node, bestMove);
     }
 
-    inline CostT ComputeSameStepAffinity(const work_weight_t &maxWorkForStep,
-                                         const work_weight_t &newWeight,
-                                         const CostT &nodeProcAffinity) {
-        const CostT maxWorkAfterRemoval = static_cast<CostT>(max_work_for_step) - nodeProcAffinity;
+    inline CostT ComputeSameStepAffinity(const VWorkwT &maxWorkForStep, const VWorkwT &newWeight, const CostT &nodeProcAffinity) {
+        const CostT maxWorkAfterRemoval = static_cast<CostT>(maxWorkForStep) - nodeProcAffinity;
         if (newWeight > maxWorkAfterRemoval) {
-            return new_weight - maxWorkAfterRemoval;
+            return newWeight - maxWorkAfterRemoval;
         }
         return 0.0;
     }
 
-    inline CostT ApplyMove(kl_move move, ThreadSearchContext &threadData) {
-        activeSchedule_.apply_move(move, threadData.activeScheduleData_);
-        commCostF_.update_datastructure_after_move(move, threadData.startStep_, threadData.endStep_);
-        CostT changeInCost = -move.gain;
-        changeInCost += static_cast<CostT>(threadData.activeScheduleData_.resolved_violations.size())
-                        * threadData.rewardPenaltyStrat_.reward;
+    inline CostT ApplyMove(KlMove move, ThreadSearchContext &threadData) {
+        activeSchedule_.ApplyMove(move, threadData.activeScheduleData_);
+        commCostF_.UpdateDatastructureAfterMove(move, threadData.startStep_, threadData.endStep_);
+        CostT changeInCost = -move.gain_;
+        changeInCost += static_cast<CostT>(threadData.activeScheduleData_.resolvedViolations_.size())
+                        * threadData.rewardPenaltyStrat_.reward_;
         changeInCost
-            -= static_cast<CostT>(threadData.activeScheduleData_.new_violations.size()) * threadData.rewardPenaltyStrat_.penalty;
+            -= static_cast<CostT>(threadData.activeScheduleData_.newViolations_.size()) * threadData.rewardPenaltyStrat_.penalty_;
 
 #ifdef KL_DEBUG
-        std::cout << "penalty: " << thread_data.reward_penalty_strat.penalty
-                  << " num violations: " << thread_data.active_schedule_data.current_violations.size()
-                  << " num new violations: " << thread_data.active_schedule_data.new_violations.size()
-                  << ", num resolved violations: " << thread_data.active_schedule_data.resolved_violations.size()
-                  << ", reward: " << thread_data.reward_penalty_strat.reward << std::endl;
-        std::cout << "apply move, previous cost: " << thread_data.active_schedule_data.cost
-                  << ", new cost: " << thread_data.active_schedule_data.cost + change_in_cost << ", "
-                  << (thread_data.active_schedule_data.feasible ? "feasible," : "infeasible,") << std::endl;
+        std::cout << "penalty: " << threadData.rewardPenaltyStrat_.penalty_
+                  << " num violations: " << threadData.activeScheduleData_.currentViolations_.size()
+                  << " num new violations: " << threadData.activeScheduleData_.newViolations_.size()
+                  << ", num resolved violations: " << threadData.activeScheduleData_.resolvedViolations_.size()
+                  << ", reward: " << threadData.rewardPenaltyStrat_.reward_ << std::endl;
+        std::cout << "apply move, previous cost: " << threadData.activeScheduleData_.cost_
+                  << ", new cost: " << threadData.activeScheduleData_.cost_ + changeInCost << ", "
+                  << (threadData.activeScheduleData_.feasible_ ? "feasible," : "infeasible,") << std::endl;
 #endif
 
-        threadData.activeScheduleData_.update_cost(changeInCost);
+        threadData.activeScheduleData_.UpdateCost(changeInCost);
 
         return changeInCost;
     }
@@ -559,48 +540,48 @@ class KlImprover : public ImprovementScheduler<GraphT> {
 #endif
         innerIter++;
 
-        const size_t numAppliedMoves = threadData.activeScheduleData_.applied_moves.size() - 1;
-        const CostT savedCost = threadData.activeScheduleData_.cost - changeInCost;
+        const size_t numAppliedMoves = threadData.activeScheduleData_.appliedMoves_.size() - 1;
+        const CostT savedCost = threadData.activeScheduleData_.cost_ - changeInCost;
 
         std::unordered_set<VertexType> localLock;
-        localLock.insert(best_move_node);
+        localLock.insert(bestMoveNode);
         std::vector<VertexType> quickMovesStack;
-        quickMovesStack.reserve(10 + threadData.activeScheduleData_.new_violations.size() * 2);
+        quickMovesStack.reserve(10 + threadData.activeScheduleData_.newViolations_.size() * 2);
 
-        for (const auto &keyValuePair : threadData.activeScheduleData_.new_violations) {
+        for (const auto &keyValuePair : threadData.activeScheduleData_.newViolations_) {
             const auto &key = keyValuePair.first;
             quickMovesStack.push_back(key);
         }
 
         while (quickMovesStack.size() > 0) {
-            auto nextNodeToMove = quick_moves_stack.back();
+            auto nextNodeToMove = quickMovesStack.back();
             quickMovesStack.pop_back();
 
-            threadData.rewardPenaltyStrat_.init_reward_penalty(
-                static_cast<double>(threadData.activeScheduleData_.current_violations.size()) + 1.0);
-            compute_node_affinities(next_node_to_move, thread_data.local_affinity_table, thread_data);
-            kl_move bestQuickMove = compute_best_move<true>(next_node_to_move, threadData.localAffinityTable_, threadData);
+            threadData.rewardPenaltyStrat_.InitRewardPenalty(
+                static_cast<double>(threadData.activeScheduleData_.currentViolations_.size()) + 1.0);
+            ComputeNodeAffinities(nextNodeToMove, threadData.localAffinityTable_, threadData);
+            KlMove bestQuickMove = ComputeBestMove<true>(nextNodeToMove, threadData.localAffinityTable_, threadData);
 
-            localLock.insert(next_node_to_move);
-            if (bestQuickMove.gain <= std::numeric_limits<CostT>::lowest()) {
+            localLock.insert(nextNodeToMove);
+            if (bestQuickMove.gain_ <= std::numeric_limits<CostT>::lowest()) {
                 continue;
             }
 
 #ifdef KL_DEBUG
-            std::cout << " >>> move node " << best_quick_move.node << " with gain " << best_quick_move.gain
-                      << ", from proc|step: " << best_quick_move.from_proc << "|" << best_quick_move.from_step
-                      << " to: " << best_quick_move.to_proc << "|" << best_quick_move.to_step << std::endl;
+            std::cout << " >>> move node " << bestQuickMove.node_ << " with gain " << bestQuickMove.gain_
+                      << ", from proc|step: " << bestQuickMove.fromProc_ << "|" << bestQuickMove.fromStep_
+                      << " to: " << bestQuickMove.toProc_ << "|" << bestQuickMove.toStep_ << std::endl;
 #endif
 
-            apply_move(best_quick_move, thread_data);
+            ApplyMove(bestQuickMove, threadData);
             innerIter++;
 
-            if (threadData.activeScheduleData_.new_violations.size() > 0) {
+            if (threadData.activeScheduleData_.newViolations_.size() > 0) {
                 bool abort = false;
 
-                for (const auto &keyValuePair : threadData.activeScheduleData_.new_violations) {
+                for (const auto &keyValuePair : threadData.activeScheduleData_.newViolations_) {
                     const auto &key = keyValuePair.first;
-                    if (localLock.find(key) != local_lock.end()) {
+                    if (localLock.find(key) != localLock.end()) {
                         abort = true;
                         break;
                     }
@@ -611,19 +592,19 @@ class KlImprover : public ImprovementScheduler<GraphT> {
                     break;
                 }
 
-            } else if (threadData.activeScheduleData_.feasible) {
+            } else if (threadData.activeScheduleData_.feasible_) {
                 break;
             }
         }
 
-        if (!threadData.activeScheduleData_.feasible) {
-            activeSchedule_.revert_schedule_to_bound(numAppliedMoves,
-                                                     savedCost,
-                                                     true,
-                                                     commCostF_,
-                                                     threadData.activeScheduleData_,
-                                                     threadData.startStep_,
-                                                     threadData.endStep_);
+        if (!threadData.activeScheduleData_.feasible_) {
+            activeSchedule_.RevertScheduleToBound(numAppliedMoves,
+                                                  savedCost,
+                                                  true,
+                                                  commCostF_,
+                                                  threadData.activeScheduleData_,
+                                                  threadData.startStep_,
+                                                  threadData.endStep_);
 #ifdef KL_DEBUG
             std::cout << "Ending quick moves sequence with infeasible solution." << std::endl;
 #endif
@@ -634,21 +615,21 @@ class KlImprover : public ImprovementScheduler<GraphT> {
         }
 #endif
 
-        threadData.affinityTable_.trim();
+        threadData.affinityTable_.Trim();
         threadData.maxGainHeap_.clear();
-        threadData.rewardPenaltyStrat_.init_reward_penalty(1.0);
+        threadData.rewardPenaltyStrat_.InitRewardPenalty(1.0);
         InsertGainHeap(threadData);    // Re-initialize the heap with the current state
     }
 
     void ResolveViolations(ThreadSearchContext &threadData) {
-        auto &currentViolations = threadData.activeScheduleData_.current_violations;
+        auto &currentViolations = threadData.activeScheduleData_.currentViolations_;
         unsigned numViolations = static_cast<unsigned>(currentViolations.size());
         if (numViolations > 0) {
 #ifdef KL_DEBUG_1
-            std::cout << "thread " << thread_data.thread_id << ", Starting preresolving violations with " << num_violations
+            std::cout << "thread " << threadData.threadId_ << ", Starting preresolving violations with " << numViolations
                       << " initial violations" << std::endl;
 #endif
-            threadData.rewardPenaltyStrat_.init_reward_penalty(static_cast<double>(numViolations) + 1.0);
+            threadData.rewardPenaltyStrat_.InitRewardPenalty(static_cast<double>(numViolations) + 1.0);
             std::unordered_set<VertexType> localLock;
             unsigned numIter = 0;
             const unsigned minIter = numViolations / 4;
@@ -659,8 +640,8 @@ class KlImprover : public ImprovementScheduler<GraphT> {
                 const auto &nextEdge = *it;
                 const VertexType sourceV = Source(nextEdge, *graph_);
                 const VertexType targetV = Traget(nextEdge, *graph_);
-                const bool sourceLocked = local_lock.find(source_v) != local_lock.end();
-                const bool targetLocked = local_lock.find(target_v) != local_lock.end();
+                const bool sourceLocked = localLock.find(sourceV) != localLock.end();
+                const bool targetLocked = localLock.find(targetV) != localLock.end();
 
                 if (sourceLocked && targetLocked) {
 #ifdef KL_DEBUG_1
@@ -669,41 +650,41 @@ class KlImprover : public ImprovementScheduler<GraphT> {
                     break;
                 }
 
-                kl_move bestMove;
+                KlMove bestMove;
                 if (sourceLocked || targetLocked) {
-                    const VertexType node = sourceLocked ? target_v : source_v;
-                    compute_node_affinities(node, thread_data.local_affinity_table, thread_data);
-                    bestMove = compute_best_move<true>(node, threadData.localAffinityTable_, threadData);
+                    const VertexType node = sourceLocked ? targetV : sourceV;
+                    ComputeNodeAffinities(node, threadData.localAffinityTable_, threadData);
+                    bestMove = ComputeBestMove<true>(node, threadData.localAffinityTable_, threadData);
                 } else {
-                    compute_node_affinities(source_v, thread_data.local_affinity_table, thread_data);
-                    kl_move bestSourceVMove = compute_best_move<true>(source_v, threadData.localAffinityTable_, threadData);
-                    compute_node_affinities(target_v, thread_data.local_affinity_table, thread_data);
-                    kl_move bestTargetVMove = compute_best_move<true>(target_v, threadData.localAffinityTable_, threadData);
-                    bestMove = best_target_v_move.gain > best_source_v_move.gain ? std::move(best_target_v_move)
-                                                                                 : std::move(best_source_v_move);
+                    ComputeNodeAffinities(sourceV, threadData.localAffinityTable_, threadData);
+                    KlMove bestSourceVMove = ComputeBestMove<true>(sourceV, threadData.localAffinityTable_, threadData);
+                    ComputeNodeAffinities(targetV, threadData.localAffinityTable_, threadData);
+                    KlMove bestTargetVMove = ComputeBestMove<true>(targetV, threadData.localAffinityTable_, threadData);
+                    bestMove = bestTargetVMove.gain_ > bestSourceVMove.gain_ ? std::move(bestTargetVMove)
+                                                                             : std::move(bestSourceVMove);
                 }
 
-                localLock.insert(best_move.node);
-                if (bestMove.gain <= std::numeric_limits<CostT>::lowest()) {
+                localLock.insert(bestMove.node_);
+                if (bestMove.gain_ <= std::numeric_limits<CostT>::lowest()) {
                     continue;
                 }
 
-                apply_move(best_move, thread_data);
-                threadData.affinityTable_.insert(best_move.node);
+                ApplyMove(bestMove, threadData);
+                threadData.affinityTable_.Insert(bestMove.node_);
 #ifdef KL_DEBUG_1
-                std::cout << "move node " << best_move.node << " with gain " << best_move.gain
-                          << ", from proc|step: " << best_move.from_proc << "|" << best_move.from_step
-                          << " to: " << best_move.to_proc << "|" << best_move.to_step << std::endl;
+                std::cout << "move node " << bestMove.node_ << " with gain " << bestMove.gain_
+                          << ", from proc|step: " << bestMove.fromProc_ << "|" << bestMove.fromStep_
+                          << " to: " << bestMove.toProc_ << "|" << bestMove.toStep_ << std::endl;
 #endif
                 const unsigned newNumViolations = static_cast<unsigned>(currentViolations.size());
                 if (newNumViolations == 0) {
                     break;
                 }
 
-                if (threadData.activeScheduleData_.new_violations.size() > 0) {
-                    for (const auto &vertexEdgePair : threadData.activeScheduleData_.new_violations) {
+                if (threadData.activeScheduleData_.newViolations_.size() > 0) {
+                    for (const auto &vertexEdgePair : threadData.activeScheduleData_.newViolations_) {
                         const auto &vertex = vertexEdgePair.first;
-                        threadData.affinityTable_.insert(vertex);
+                        threadData.affinityTable_.Insert(vertex);
                     }
                 }
 
@@ -711,8 +692,8 @@ class KlImprover : public ImprovementScheduler<GraphT> {
                 numViolations = newNumViolations;
                 UpdateAvgGain(gain, numIter++, threadData.averageGain_);
 #ifdef KL_DEBUG_1
-                std::cout << "thread " << thread_data.thread_id << ",  preresolving violations with " << num_violations
-                          << " violations, " << num_iter << " #iterations, " << thread_data.average_gain << " average gain"
+                std::cout << "thread " << threadData.threadId_ << ",  preresolving violations with " << numViolations
+                          << " violations, " << numIter << " #iterations, " << threadData.averageGain_ << " average gain"
                           << std::endl;
 #endif
                 if (numIter > minIter && threadData.averageGain_ < 0.0) {
@@ -725,13 +706,13 @@ class KlImprover : public ImprovementScheduler<GraphT> {
 
     void RunLocalSearch(ThreadSearchContext &threadData) {
 #ifdef KL_DEBUG_1
-        std::cout << "thread " << thread_data.thread_id
-                  << ", start local search, initial schedule cost: " << thread_data.active_schedule_data.cost << " with "
-                  << thread_data.num_steps() << " supersteps." << std::endl;
+        std::cout << "thread " << threadData.threadId_
+                  << ", start local search, initial schedule cost: " << threadData.activeScheduleData_.cost_ << " with "
+                  << threadData.NumSteps() << " supersteps." << std::endl;
 #endif
         std::vector<VertexType> newNodes;
         std::vector<VertexType> unlockNodes;
-        std::map<VertexType, kl_gain_update_info> recomputeMaxGain;
+        std::map<VertexType, KlGainUpdateInfo> recomputeMaxGain;
 
         const auto startTime = std::chrono::high_resolution_clock::now();
 
@@ -739,106 +720,105 @@ class KlImprover : public ImprovementScheduler<GraphT> {
         unsigned outerIter = 0;
 
         for (; outerIter < parameters_.maxOuterIterations_; outerIter++) {
-            CostT initialInnerIterCost = threadData.activeScheduleData_.cost;
+            CostT initialInnerIterCost = threadData.activeScheduleData_.cost_;
 
             ResetInnerSearchStructures(threadData);
             SelectActiveNodes(threadData);
-            threadData.rewardPenaltyStrat_.init_reward_penalty(
-                static_cast<double>(threadData.activeScheduleData_.current_violations.size()) + 1.0);
+            threadData.rewardPenaltyStrat_.InitRewardPenalty(
+                static_cast<double>(threadData.activeScheduleData_.currentViolations_.size()) + 1.0);
             InsertGainHeap(threadData);
 
             unsigned innerIter = 0;
             unsigned violationRemovedCount = 0;
             unsigned resetCounter = 0;
-            bool iterInitalFeasible = threadData.activeScheduleData_.feasible;
+            bool iterInitalFeasible = threadData.activeScheduleData_.feasible_;
 
 #ifdef KL_DEBUG
             std::cout << "------ start inner loop ------" << std::endl;
             std::cout << "initial node selection: {";
-            for (size_t i = 0; i < thread_data.affinity_table.size(); ++i) {
-                std::cout << thread_data.affinity_table.get_selected_nodes()[i] << ", ";
+            for (size_t i = 0; i < threadData.affinityTable_.size(); ++i) {
+                std::cout << threadData.affinityTable_.GetSelectedNodes()[i] << ", ";
             }
             std::cout << "}" << std::endl;
 #endif
 #ifdef KL_DEBUG_1
-            if (not iter_inital_feasible) {
+            if (not iterInitalFeasible) {
                 std::cout << "initial solution not feasible, num violations: "
-                          << thread_data.active_schedule_data.current_violations.size()
-                          << ". Penalty: " << thread_data.reward_penalty_strat.penalty
-                          << ", reward: " << thread_data.reward_penalty_strat.reward << std::endl;
+                          << threadData.activeScheduleData_.currentViolations_.size()
+                          << ". Penalty: " << threadData.rewardPenaltyStrat_.penalty_
+                          << ", reward: " << threadData.rewardPenaltyStrat_.reward_ << std::endl;
             }
 #endif
 #ifdef KL_DEBUG_COST_CHECK
-            active_schedule.getVectorSchedule().number_of_supersteps = thread_data_vec[0].num_steps();
-            if (std::abs(comm_cost_f.compute_schedule_cost_test() - thread_data.active_schedule_data.cost) > 0.00001) {
-                std::cout << "computed cost: " << comm_cost_f.compute_schedule_cost_test()
-                          << ", current cost: " << thread_data.active_schedule_data.cost << std::endl;
+            activeSchedule_.GetVectorSchedule().numberOfSupersteps = threadDataVec_[0].NumSteps();
+            if (std::abs(commCostF_.ComputeScheduleCostTest() - threadData.activeScheduleData_.cost_) > 0.00001) {
+                std::cout << "computed cost: " << commCostF_.ComputeScheduleCostTest()
+                          << ", current cost: " << threadData.activeScheduleData_.cost_ << std::endl;
                 std::cout << ">>>>>>>>>>>>>>>>>>>>>> compute cost not equal to new cost <<<<<<<<<<<<<<<<<<<<" << std::endl;
             }
-            if constexpr (active_schedule_t::use_memory_constraint) {
-                if (not active_schedule.memory_constraint.satisfied_memory_constraint()) {
+            if constexpr (ActiveScheduleT::useMemoryConstraint_) {
+                if (not activeSchedule_.memoryConstraint_.SatisfiedMemoryConstraint()) {
                     std::cout << "memory constraint not satisfied" << std::endl;
                 }
             }
 #endif
 
             while (innerIter < threadData.maxInnerIterations_ && threadData.maxGainHeap_.size() > 0) {
-                kl_move bestMove
-                    = get_best_move(thread_data.affinity_table,
-                                    thread_data.lock_manager,
-                                    thread_data.max_gain_heap);    // locks best_move.node and removes it from node_selection
-                if (bestMove.gain <= std::numeric_limits<CostT>::lowest()) {
+                KlMove bestMove
+                    = GetBestMove(threadData.affinityTable_,
+                                  threadData.lockManager_,
+                                  threadData.maxGainHeap_);    // locks bestMove.node and removes it from node_selection
+                if (bestMove.gain_ <= std::numeric_limits<CostT>::lowest()) {
                     break;
                 }
-                UpdateAvgGain(best_move.gain, innerIter, threadData.averageGain_);
+                UpdateAvgGain(bestMove.gain_, innerIter, threadData.averageGain_);
 #ifdef KL_DEBUG
-                std::cout << " >>> move node " << best_move.node << " with gain " << best_move.gain
-                          << ", from proc|step: " << best_move.from_proc << "|" << best_move.from_step
-                          << " to: " << best_move.to_proc << "|" << best_move.to_step << ",avg gain: " << thread_data.average_gain
-                          << std::endl;
+                std::cout << " >>> move node " << bestMove.node_ << " with gain " << bestMove.gain_
+                          << ", from proc|step: " << bestMove.fromProc_ << "|" << bestMove.fromStep_ << " to: " << bestMove.toProc_
+                          << "|" << bestMove.toStep_ << ",avg gain: " << threadData.averageGain_ << std::endl;
 #endif
                 if (innerIter > threadData.minInnerIter_ && threadData.averageGain_ < 0.0) {
 #ifdef KL_DEBUG
-                    std::cout << "Negative average gain: " << thread_data.average_gain << ", end local search" << std::endl;
+                    std::cout << "Negative average gain: " << threadData.averageGain_ << ", end local search" << std::endl;
 #endif
                     break;
                 }
 
 #ifdef KL_DEBUG
-                if (not active_schedule.GetInstance().isCompatible(best_move.node, best_move.to_proc)) {
+                if (not activeSchedule_.GetInstance().isCompatible(bestMove.node_, bestMove.toProc_)) {
                     std::cout << "move to incompatibe node" << std::endl;
                 }
 #endif
 
-                const auto prevWorkData = activeSchedule_.get_pre_move_work_data(best_move);
-                const typename CommCostFunctionT::pre_move_comm_data_t prevCommData = commCostF_.get_pre_move_comm_data(best_move);
-                const CostT changeInCost = apply_move(best_move, thread_data);
+                const auto prevWorkData = activeSchedule_.GetPreMoveWorkData(bestMove);
+                const typename CommCostFunctionT::PreMoveCommData prevCommData = commCostF_.GetPreMoveCommData(bestMove);
+                const CostT changeInCost = ApplyMove(bestMove, threadData);
 #ifdef KL_DEBUG_COST_CHECK
-                active_schedule.getVectorSchedule().number_of_supersteps = thread_data_vec[0].num_steps();
-                if (std::abs(comm_cost_f.compute_schedule_cost_test() - thread_data.active_schedule_data.cost) > 0.00001) {
-                    std::cout << "computed cost: " << comm_cost_f.compute_schedule_cost_test()
-                              << ", current cost: " << thread_data.active_schedule_data.cost << std::endl;
+                activeSchedule_.GetVectorSchedule().numberOfSupersteps = threadDataVec_[0].NumSteps();
+                if (std::abs(commCostF_.ComputeScheduleCostTest() - threadData.activeScheduleData_.cost_) > 0.00001) {
+                    std::cout << "computed cost: " << commCostF_.ComputeScheduleCostTest()
+                              << ", current cost: " << threadData.activeScheduleData_.cost_ << std::endl;
                     std::cout << ">>>>>>>>>>>>>>>>>>>>>> compute cost not equal to new cost <<<<<<<<<<<<<<<<<<<<" << std::endl;
                 }
-                if constexpr (active_schedule_t::use_memory_constraint) {
-                    if (not active_schedule.memory_constraint.satisfied_memory_constraint()) {
+                if constexpr (ActiveScheduleT::useMemoryConstraint_) {
+                    if (not activeSchedule_.memoryConstraint_.SatisfiedMemoryConstraint()) {
                         std::cout << "memory constraint not satisfied" << std::endl;
                     }
                 }
 #endif
                 if constexpr (enableQuickMoves_) {
-                    if (iterInitalFeasible && threadData.activeScheduleData_.new_violations.size() > 0) {
-                        run_quick_moves(inner_iter, thread_data, change_in_cost, best_move.node);
+                    if (iterInitalFeasible && threadData.activeScheduleData_.newViolations_.size() > 0) {
+                        RunQuickMoves(innerIter, threadData, changeInCost, bestMove.node_);
 #ifdef KL_DEBUG_COST_CHECK
-                        active_schedule.getVectorSchedule().number_of_supersteps = thread_data_vec[0].num_steps();
-                        if (std::abs(comm_cost_f.compute_schedule_cost_test() - thread_data.active_schedule_data.cost) > 0.00001) {
-                            std::cout << "computed cost: " << comm_cost_f.compute_schedule_cost_test()
-                                      << ", current cost: " << thread_data.active_schedule_data.cost << std::endl;
+                        activeSchedule_.GetVectorSchedule().numberOfSupersteps = threadDataVec_[0].NumSteps();
+                        if (std::abs(commCostF_.ComputeScheduleCostTest() - threadData.activeScheduleData_.cost_) > 0.00001) {
+                            std::cout << "computed cost: " << commCostF_.ComputeScheduleCostTest()
+                                      << ", current cost: " << threadData.activeScheduleData_.cost_ << std::endl;
                             std::cout << ">>>>>>>>>>>>>>>>>>>>>> compute cost not equal to new cost <<<<<<<<<<<<<<<<<<<<"
                                       << std::endl;
                         }
-                        if constexpr (active_schedule_t::use_memory_constraint) {
-                            if (not active_schedule.memory_constraint.satisfied_memory_constraint()) {
+                        if constexpr (ActiveScheduleT::useMemoryConstraint_) {
+                            if (not activeSchedule_.memoryConstraint_.SatisfiedMemoryConstraint()) {
                                 std::cout << "memory constraint not satisfied" << std::endl;
                             }
                         }
@@ -847,8 +827,8 @@ class KlImprover : public ImprovementScheduler<GraphT> {
                     }
                 }
 
-                if (threadData.activeScheduleData_.current_violations.size() > 0) {
-                    if (threadData.activeScheduleData_.resolved_violations.size() > 0) {
+                if (threadData.activeScheduleData_.currentViolations_.size() > 0) {
+                    if (threadData.activeScheduleData_.resolvedViolations_.size() > 0) {
                         violationRemovedCount = 0;
                     } else {
                         violationRemovedCount++;
@@ -856,21 +836,21 @@ class KlImprover : public ImprovementScheduler<GraphT> {
                         if (violationRemovedCount > 3) {
                             if (resetCounter < threadData.maxNoVioaltionsRemovedBacktrack_
                                 && ((not iterInitalFeasible)
-                                    || (threadData.activeScheduleData_.cost < threadData.activeScheduleData_.best_cost))) {
-                                threadData.affinityTable_.reset_node_selection();
+                                    || (threadData.activeScheduleData_.cost_ < threadData.activeScheduleData_.bestCost_))) {
+                                threadData.affinityTable_.ResetNodeSelection();
                                 threadData.maxGainHeap_.clear();
-                                threadData.lockManager_.clear();
-                                threadData.selectionStrategy_.select_nodes_violations(
+                                threadData.lockManager_.Clear();
+                                threadData.selectionStrategy_.SelectNodesViolations(
                                     threadData.affinityTable_,
-                                    threadData.activeScheduleData_.current_violations,
+                                    threadData.activeScheduleData_.currentViolations_,
                                     threadData.startStep_,
                                     threadData.endStep_);
 #ifdef KL_DEBUG
                                 std::cout << "Infeasible, and no violations resolved for 5 iterations, reset node selection"
                                           << std::endl;
 #endif
-                                threadData.rewardPenaltyStrat_.init_reward_penalty(
-                                    static_cast<double>(threadData.activeScheduleData_.current_violations.size()));
+                                threadData.rewardPenaltyStrat_.InitRewardPenalty(
+                                    static_cast<double>(threadData.activeScheduleData_.currentViolations_.size()));
                                 InsertGainHeap(threadData);
 
                                 resetCounter++;
@@ -888,48 +868,48 @@ class KlImprover : public ImprovementScheduler<GraphT> {
                 }
 
                 if (IsLocalSearchBlocked(threadData)) {
-                    if (not blocked_edge_strategy(best_move.node, unlock_nodes, thread_data)) {
+                    if (not BlockedEdgeStrategy(bestMove.node_, unlockNodes, threadData)) {
                         break;
                     }
                 }
 
-                threadData.affinityTable_.trim();
-                update_affinities(best_move, thread_data, recompute_max_gain, new_nodes, prev_work_data, prev_comm_data);
+                threadData.affinityTable_.Trim();
+                UpdateAffinities(bestMove, threadData, recomputeMaxGain, newNodes, prevWorkData, prevCommData);
 
-                for (const auto v : unlock_nodes) {
-                    thread_data.lock_manager.unlock(v);
+                for (const auto v : unlockNodes) {
+                    threadData.lockManager_.Unlock(v);
                 }
-                newNodes.insert(new_nodes.end(), unlock_nodes.begin(), unlock_nodes.end());
+                newNodes.insert(newNodes.end(), unlockNodes.begin(), unlockNodes.end());
                 unlockNodes.clear();
 
 #ifdef KL_DEBUG
                 std::cout << "recmopute max gain: {";
-                for (const auto map_pair : recompute_max_gain) {
-                    const auto &key = map_pair.first;
+                for (const auto mapPair : recomputeMaxGain) {
+                    const auto &key = mapPair.first;
                     std::cout << key << ", ";
                 }
                 std::cout << "}" << std::endl;
                 std::cout << "new nodes: {";
-                for (const auto v : new_nodes) {
+                for (const auto v : newNodes) {
                     std::cout << v << ", ";
                 }
                 std::cout << "}" << std::endl;
 #endif
 #ifdef KL_DEBUG_COST_CHECK
-                active_schedule.getVectorSchedule().number_of_supersteps = thread_data_vec[0].num_steps();
-                if (std::abs(comm_cost_f.compute_schedule_cost_test() - thread_data.active_schedule_data.cost) > 0.00001) {
-                    std::cout << "computed cost: " << comm_cost_f.compute_schedule_cost_test()
-                              << ", current cost: " << thread_data.active_schedule_data.cost << std::endl;
+                activeSchedule_.GetVectorSchedule().numberOfSupersteps = threadDataVec_[0].NumSteps();
+                if (std::abs(commCostF_.ComputeScheduleCostTest() - threadData.activeScheduleData_.cost_) > 0.00001) {
+                    std::cout << "computed cost: " << commCostF_.ComputeScheduleCostTest()
+                              << ", current cost: " << threadData.activeScheduleData_.cost_ << std::endl;
                     std::cout << ">>>>>>>>>>>>>>>>>>>>>> compute cost not equal to new cost <<<<<<<<<<<<<<<<<<<<" << std::endl;
                 }
-                if constexpr (active_schedule_t::use_memory_constraint) {
-                    if (not active_schedule.memory_constraint.satisfied_memory_constraint()) {
+                if constexpr (ActiveScheduleT::useMemoryConstraint_) {
+                    if (not activeSchedule_.memoryConstraint_.SatisfiedMemoryConstraint()) {
                         std::cout << "memory constraint not satisfied" << std::endl;
                     }
                 }
 #endif
-                update_max_gain(best_move, recompute_max_gain, thread_data);
-                insert_new_nodes_gain_heap(new_nodes, thread_data.affinity_table, thread_data);
+                UpdateMaxGain(bestMove, recomputeMaxGain, threadData);
+                InsertNewNodesGainHeap(newNodes, threadData.affinityTable_, threadData);
 
                 recomputeMaxGain.clear();
                 newNodes.clear();
@@ -938,42 +918,42 @@ class KlImprover : public ImprovementScheduler<GraphT> {
             }
 
 #ifdef KL_DEBUG
-            std::cout << "--- end inner loop after " << inner_iter
-                      << " inner iterations, gain heap size: " << thread_data.max_gain_heap.size() << ", outer iteraion "
-                      << outer_iter << "/" << parameters.max_outer_iterations
-                      << ", current cost: " << thread_data.active_schedule_data.cost << ", "
-                      << (thread_data.active_schedule_data.feasible ? "feasible" : "infeasible") << std::endl;
+            std::cout << "--- end inner loop after " << innerIter
+                      << " inner iterations, gain heap size: " << threadData.maxGainHeap_.size() << ", outer iteraion "
+                      << outerIter << "/" << parameters_.maxOuterIterations_
+                      << ", current cost: " << threadData.activeScheduleData_.cost_ << ", "
+                      << (threadData.activeScheduleData_.feasible_ ? "feasible" : "infeasible") << std::endl;
 #endif
 #ifdef KL_DEBUG_1
-            const unsigned num_steps_tmp = thread_data.end_step;
+            const unsigned numStepsTmp = threadData.endStep_;
 #endif
-            activeSchedule_.revert_to_best_schedule(threadData.localSearchStartStep_,
-                                                    threadData.stepToRemove_,
-                                                    commCostF_,
-                                                    threadData.activeScheduleData_,
-                                                    threadData.startStep_,
-                                                    threadData.endStep_);
+            activeSchedule_.RevertToBestSchedule(threadData.localSearchStartStep_,
+                                                 threadData.stepToRemove_,
+                                                 commCostF_,
+                                                 threadData.activeScheduleData_,
+                                                 threadData.startStep_,
+                                                 threadData.endStep_);
 #ifdef KL_DEBUG_1
-            if (thread_data.local_search_start_step > 0) {
-                if (num_steps_tmp == thread_data.end_step) {
-                    std::cout << "thread " << thread_data.thread_id << ", removing step " << thread_data.step_to_remove
+            if (threadData.localSearchStartStep_ > 0) {
+                if (numStepsTmp == threadData.endStep_) {
+                    std::cout << "thread " << threadData.threadId_ << ", removing step " << threadData.stepToRemove_
                               << " succeded " << std::endl;
                 } else {
-                    std::cout << "thread " << thread_data.thread_id << ", removing step " << thread_data.step_to_remove
-                              << " failed " << std::endl;
+                    std::cout << "thread " << threadData.threadId_ << ", removing step " << threadData.stepToRemove_ << " failed "
+                              << std::endl;
                 }
             }
 #endif
 
 #ifdef KL_DEBUG_COST_CHECK
-            active_schedule.getVectorSchedule().number_of_supersteps = thread_data_vec[0].num_steps();
-            if (std::abs(comm_cost_f.compute_schedule_cost_test() - thread_data.active_schedule_data.cost) > 0.00001) {
-                std::cout << "computed cost: " << comm_cost_f.compute_schedule_cost_test()
-                          << ", current cost: " << thread_data.active_schedule_data.cost << std::endl;
+            activeSchedule_.GetVectorSchedule().numberOfSupersteps = threadDataVec_[0].NumSteps();
+            if (std::abs(commCostF_.ComputeScheduleCostTest() - threadData.activeScheduleData_.cost_) > 0.00001) {
+                std::cout << "computed cost: " << commCostF_.ComputeScheduleCostTest()
+                          << ", current cost: " << threadData.activeScheduleData_.cost_ << std::endl;
                 std::cout << ">>>>>>>>>>>>>>>>>>>>>> compute cost not equal to new cost <<<<<<<<<<<<<<<<<<<<" << std::endl;
             }
-            if constexpr (active_schedule_t::use_memory_constraint) {
-                if (not active_schedule.memory_constraint.satisfied_memory_constraint()) {
+            if constexpr (ActiveScheduleT::useMemoryConstraint_) {
+                if (not activeSchedule_.memoryConstraint_.SatisfiedMemoryConstraint()) {
                     std::cout << "memory constraint not satisfied" << std::endl;
                 }
             }
@@ -989,18 +969,18 @@ class KlImprover : public ImprovementScheduler<GraphT> {
 
             if (OtherThreadsFinished(threadData.threadId_)) {
 #ifdef KL_DEBUG_1
-                std::cout << "thread " << thread_data.thread_id << ", other threads finished, end local search" << std::endl;
+                std::cout << "thread " << threadData.threadId_ << ", other threads finished, end local search" << std::endl;
 #endif
                 break;
             }
 
-            if (initialInnerIterCost <= threadData.activeScheduleData_.cost) {
+            if (initialInnerIterCost <= threadData.activeScheduleData_.cost_) {
                 noImprovementIterCounter++;
 
                 if (noImprovementIterCounter >= parameters_.maxNoImprovementIterations_) {
 #ifdef KL_DEBUG_1
-                    std::cout << "thread " << thread_data.thread_id << ", no improvement for "
-                              << parameters.max_no_improvement_iterations << " iterations, end local search" << std::endl;
+                    std::cout << "thread " << threadData.threadId_ << ", no improvement for "
+                              << parameters_.maxNoImprovementIterations_ << " iterations, end local search" << std::endl;
 #endif
                     break;
                 }
@@ -1012,9 +992,9 @@ class KlImprover : public ImprovementScheduler<GraphT> {
         }
 
 #ifdef KL_DEBUG_1
-        std::cout << "thread " << thread_data.thread_id << ", local search end after " << outer_iter
-                  << " outer iterations, current cost: " << thread_data.active_schedule_data.cost << " with "
-                  << thread_data.num_steps() << " supersteps, vs serial cost " << active_schedule.get_total_work_weight() << "."
+        std::cout << "thread " << threadData.threadId_ << ", local search end after " << outerIter
+                  << " outer iterations, current cost: " << threadData.activeScheduleData_.cost_ << " with "
+                  << threadData.NumSteps() << " supersteps, vs serial cost " << activeSchedule_.GetTotalWorkWeight() << "."
                   << std::endl;
 #endif
         threadFinishedVec_[threadData.threadId_] = true;

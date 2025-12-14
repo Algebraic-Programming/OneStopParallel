@@ -56,9 +56,9 @@ struct AccMax {
 /**
  * @brief Coarsens the input computational DAG into a simplified version.
  *
- * @param dag_in The input computational DAG to be coarsened. It is expected to be a valid graph structure.
- * @param coarsened_dag The output computational DAG after coarsening. It will be populated by this method.
- * @param vertex_contraction_map Output mapping from dag_in to coarsened_dag.
+ * @param dagIn The input computational DAG to be coarsened. It is expected to be a valid graph structure.
+ * @param coarsenedDag The output computational DAG after coarsening. It will be populated by this method.
+ * @param vertexContractionMap Output mapping from dagIn to coarsenedDag.
  * @return A status code indicating the success or failure of the coarsening operation.
  */
 
@@ -72,7 +72,7 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
     static_assert(IsConstructableCdagV<GraphTOut> || IsDirectConstructableCdagV<GraphTOut>,
                   "GraphTOut must be a (direct) constructable computational DAG");
 
-    assert(check_valid_contraction_map<GraphTOut>(vertexContractionMap));
+    assert(CheckValidContractionMap<GraphTOut>(vertexContractionMap));
 
     if (vertexContractionMap.size() == 0) {
         coarsenedDag = GraphTOut();
@@ -83,18 +83,18 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
         const VertexIdxT<GraphTOut> numVertQuotient
             = (*std::max_element(vertexContractionMap.cbegin(), vertexContractionMap.cend())) + 1;
 
-        std::set<std::pair<VertexIdxT<GraphTOut>, VertexIdxT<GraphTOut>>> quotient_edges;
+        std::set<std::pair<VertexIdxT<GraphTOut>, VertexIdxT<GraphTOut>>> quotientEdges;
 
         for (const VertexIdxT<GraphTIn> &vert : dagIn.Vertices()) {
             for (const VertexIdxT<GraphTIn> &chld : dagIn.Children(vert)) {
                 if (vertexContractionMap[vert] == vertexContractionMap[chld]) {
                     continue;
                 }
-                quotient_edges.emplace(vertexContractionMap[vert], vertexContractionMap[chld]);
+                quotientEdges.emplace(vertexContractionMap[vert], vertexContractionMap[chld]);
             }
         }
 
-        coarsenedDag = GraphTOut(numVertQuotient, quotient_edges);
+        coarsenedDag = GraphTOut(numVertQuotient, quotientEdges);
 
         if constexpr (HasVertexWeightsV<GraphTIn> && IsModifiableCdagVertexV<GraphTOut>) {
             static_assert(std::is_same_v<VWorkwT<GraphTIn>, VWorkwT<GraphTOut>>,
@@ -132,10 +132,6 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
             for (const VertexIdxT<GraphTIn> &vert : dagIn.Vertices()) {
                 coarsenedDag.SetVertexType(vertexContractionMap[vert], dagIn.VertexType(vert));
             }
-            // assert(std::all_of(dag_in.Vertices().begin(), dag_in.Vertices().end(),
-            //         [&dag_in, &vertex_contraction_map, &coarsened_dag](const auto &vert){ return
-            //         dag_in.VertexType(vert) ==  coarsened_dag.VertexType(vertex_contraction_map[vert]); })
-            //                 && "Contracted vertices must be of the same type");
         }
 
         if constexpr (HasEdgeWeightsV<GraphTIn> && IsModifiableCdagCommEdgeV<GraphTOut>) {
@@ -154,10 +150,10 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
                     continue;
                 }
 
-                const auto [cont_edge, found] = edge_desc(src, tgt, coarsenedDag);
+                const auto [contEdge, found] = EdgeDesc(src, tgt, coarsenedDag);
                 assert(found && "The edge should already exist");
                 coarsenedDag.SetEdgeCommWeight(
-                    cont_edge, ECommAccMethod()(coarsenedDag.EdgeCommWeight(cont_edge), dagIn.EdgeCommWeight(oriEdge)));
+                    contEdge, ECommAccMethod()(coarsenedDag.EdgeCommWeight(contEdge), dagIn.EdgeCommWeight(oriEdge)));
             }
         }
         return true;
@@ -194,10 +190,6 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
             for (const VertexIdxT<GraphTIn> &vert : dagIn.Vertices()) {
                 coarsenedDag.SetVertexType(vertexContractionMap[vert], dagIn.VertexType(vert));
             }
-            // assert(std::all_of(dag_in.Vertices().begin(), dag_in.Vertices().end(),
-            //         [&dag_in, &vertex_contraction_map, &coarsened_dag](const auto &vert){ return
-            //         dag_in.VertexType(vert) ==  coarsened_dag.VertexType(vertex_contraction_map[vert]); })
-            //                 && "Contracted vertices must be of the same type");
         }
 
         for (const VertexIdxT<GraphTIn> &vert : dagIn.Vertices()) {
@@ -210,14 +202,13 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
                     static_assert(std::is_same_v<ECommwT<GraphTIn>, ECommwT<GraphTOut>>,
                                   "Edge weight type of in graph and out graph must be the same!");
 
-                    EdgeDescT<GraphTIn> ori_edge = EdgeDesc(vert, chld, dagIn).first;
+                    EdgeDescT<GraphTIn> oriEdge = EdgeDesc(vert, chld, dagIn).first;
                     const auto pair = EdgeDesc(vertexContractionMap[vert], vertexContractionMap[chld], coarsenedDag);
                     if (pair.second) {
                         coarsenedDag.SetEdgeCommWeight(
-                            pair.first, ECommAccMethod()(coarsenedDag.EdgeCommWeight(pair.first), dagIn.EdgeCommWeight(ori_edge)));
+                            pair.first, ECommAccMethod()(coarsenedDag.EdgeCommWeight(pair.first), dagIn.EdgeCommWeight(oriEdge)));
                     } else {
-                        coarsenedDag.AddEdge(
-                            vertexContractionMap[vert], vertexContractionMap[chld], dagIn.EdgeCommWeight(ori_edge));
+                        coarsenedDag.AddEdge(vertexContractionMap[vert], vertexContractionMap[chld], dagIn.EdgeCommWeight(oriEdge));
                     }
                 } else {
                     if (not Edge(vertexContractionMap[vert], vertexContractionMap[chld], coarsenedDag)) {
@@ -245,7 +236,7 @@ bool ConstructCoarseDag(const GraphTIn &dagIn, GraphTOut &coarsenedDag, std::vec
         static_assert(IsConstructableCdagV<GraphTOut> || IsDirectConstructableCdagV<GraphTOut>,
                       "GraphTOut must be a (direct) constructable computational DAG");
 
-        assert(check_valid_contraction_map<GraphTOut>(vertexContractionMap));
+        assert(CheckValidContractionMap<GraphTOut>(vertexContractionMap));
 
         if (vertexContractionMap.size() == 0) {
             coarsenedDag = GraphTOut();
@@ -254,18 +245,18 @@ bool ConstructCoarseDag(const GraphTIn &dagIn, GraphTOut &coarsenedDag, std::vec
         const VertexIdxT<GraphTOut> numVertQuotient
             = (*std::max_element(vertexContractionMap.cbegin(), vertexContractionMap.cend())) + 1;
 
-        std::set<std::pair<VertexIdxT<GraphTOut>, VertexIdxT<GraphTOut>>> quotient_edges;
+        std::set<std::pair<VertexIdxT<GraphTOut>, VertexIdxT<GraphTOut>>> quotientEdges;
 
         for (const VertexIdxT<GraphTIn> &vert : dagIn.Vertices()) {
             for (const VertexIdxT<GraphTIn> &chld : dagIn.Children(vert)) {
                 if (vertexContractionMap[vert] == vertexContractionMap[chld]) {
                     continue;
                 }
-                quotient_edges.emplace(vertexContractionMap[vert], vertexContractionMap[chld]);
+                quotientEdges.emplace(vertexContractionMap[vert], vertexContractionMap[chld]);
             }
         }
 
-        coarsenedDag = GraphTOut(numVertQuotient, quotient_edges);
+        coarsenedDag = GraphTOut(numVertQuotient, quotientEdges);
 
         const auto &pushforwardMap = coarsenedDag.get_pushforward_permutation();
         std::vector<VertexIdxT<GraphTOut>> combinedExpansionMap(dagIn.NumVertices());
@@ -309,10 +300,6 @@ bool ConstructCoarseDag(const GraphTIn &dagIn, GraphTOut &coarsenedDag, std::vec
             for (const VertexIdxT<GraphTIn> &vert : dagIn.Vertices()) {
                 coarsenedDag.SetVertexType(vertexContractionMap[vert], dagIn.VertexType(vert));
             }
-            // assert(std::all_of(dag_in.Vertices().begin(), dag_in.Vertices().end(),
-            //         [&dag_in, &vertex_contraction_map, &coarsened_dag](const auto &vert){ return
-            //         dag_in.VertexType(vert) ==  coarsened_dag.VertexType(vertex_contraction_map[vert]); })
-            //                 && "Contracted vertices must be of the same type");
         }
 
         if constexpr (HasEdgeWeightsV<GraphTIn> && HasEdgeWeightsV<GraphTOut>) {
@@ -338,7 +325,7 @@ bool ConstructCoarseDag(const GraphTIn &dagIn, GraphTOut &coarsenedDag, std::vec
                     continue;
                 }
 
-                const auto contEdge = coarsenedDag.edge(pushforwardMap[src], pushforwardMap[tgt]);
+                const auto contEdge = coarsenedDag.Edge(pushforwardMap[src], pushforwardMap[tgt]);
                 assert(Source(contEdge, coarsenedDag) == pushforwardMap[src]
                        && Traget(contEdge, coarsenedDag) == pushforwardMap[tgt]);
                 coarsenedDag.SetEdgeCommWeight(

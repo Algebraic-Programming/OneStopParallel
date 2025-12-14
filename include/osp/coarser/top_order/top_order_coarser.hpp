@@ -49,30 +49,29 @@ class TopOrderCoarser : public Coarser<GraphTIn, GraphTOut> {
                                  GraphTOut &dagOut,
                                  const std::vector<VertexType> &nodes,
                                  std::vector<VertexIdxT<GraphTOut>> &reverseVertexMap) {
-        dag_out.SetVertexMemWeight(current_super_node_idx, current_memory);
-        dag_out.SetVertexWorkWeight(current_super_node_idx, current_work);
-        dag_out.SetVertexCommWeight(current_super_node_idx, current_communication);
+        dagOut.SetVertexMemWeight(currentSuperNodeIdx_, currentMemory_);
+        dagOut.SetVertexWorkWeight(currentSuperNodeIdx_, currentWork_);
+        dagOut.SetVertexCommWeight(currentSuperNodeIdx_, currentCommunication_);
 
         for (const auto &node : nodes) {
             if constexpr (HasEdgeWeightsV<GraphTIn> && HasEdgeWeightsV<GraphTOut>) {
-                for (const auto &in_edge : InEdges(node, dag_in)) {
-                    const VertexType parent_rev = reverse_vertex_map[Source(in_edge, dag_in)];
-                    if (parent_rev != current_super_node_idx && parent_rev != std::numeric_limits<VertexType>::max()) {
-                        auto pair = edge_desc(parent_rev, current_super_node_idx, dag_out);
+                for (const auto &inEdge : InEdges(node, dagIn)) {
+                    const VertexType parentRev = reverseVertexMap[Source(inEdge, dagIn)];
+                    if (parentRev != currentSuperNodeIdx_ && parentRev != std::numeric_limits<VertexType>::max()) {
+                        auto pair = EdgeDesc(parentRev, currentSuperNodeIdx_, dagOut);
                         if (pair.second) {
-                            dag_out.SetEdgeCommWeight(pair.first,
-                                                      dag_out.EdgeCommWeight(pair.first) + dag_in.EdgeCommWeight(in_edge));
+                            dagOut.SetEdgeCommWeight(pair.first, dagOut.EdgeCommWeight(pair.first) + dagIn.EdgeCommWeight(inEdge));
                         } else {
-                            dag_out.add_edge(parent_rev, current_super_node_idx, dag_in.EdgeCommWeight(in_edge));
+                            dagOut.AddEdge(parentRev, currentSuperNodeIdx_, dagIn.EdgeCommWeight(inEdge));
                         }
                     }
                 }
             } else {
-                for (const auto &parent : dag_in.Parents(node)) {
-                    const VertexType parent_rev = reverse_vertex_map[parent];
-                    if (parent_rev != current_super_node_idx && parent_rev != std::numeric_limits<VertexType>::max()) {
-                        if (not edge(parent_rev, current_super_node_idx, dag_out)) {
-                            dag_out.add_edge(parent_rev, current_super_node_idx);
+                for (const auto &parent : dagIn.Parents(node)) {
+                    const VertexType parentRev = reverseVertexMap[parent];
+                    if (parentRev != currentSuperNodeIdx_ && parentRev != std::numeric_limits<VertexType>::max()) {
+                        if (not Edge(parentRev, currentSuperNodeIdx_, dagOut)) {
+                            dagOut.AddEdge(parentRev, currentSuperNodeIdx_);
                         }
                     }
                 }
@@ -90,15 +89,14 @@ class TopOrderCoarser : public Coarser<GraphTIn, GraphTOut> {
         //     }
         // }
 
-        current_memory = dag_in.VertexMemWeight(node);
-        current_work = dag_in.VertexWorkWeight(node);
-        current_communication = dag_in.VertexCommWeight(node);
+        currentMemory_ = dagIn.VertexMemWeight(node);
+        currentWork_ = dagIn.VertexWorkWeight(node);
+        currentCommunication_ = dagIn.VertexCommWeight(node);
 
         if constexpr (IsComputationalDagTypedVerticesV<GraphTIn> && IsComputationalDagTypedVerticesV<GraphTOut>) {
-            current_super_node_idx
-                = dag_out.add_vertex(current_work, current_communication, current_memory, dag_in.VertexType(node));
+            currentSuperNodeIdx_ = dagOut.AddVertex(currentWork_, currentCommunication_, currentMemory_, dagIn.VertexType(node));
         } else {
-            current_super_node_idx = dag_out.add_vertex(current_work, current_communication, current_memory);
+            currentSuperNodeIdx_ = dagOut.AddVertex(currentWork_, currentCommunication_, currentMemory_);
         }
     }
 
@@ -108,17 +106,15 @@ class TopOrderCoarser : public Coarser<GraphTIn, GraphTOut> {
 
     inline void SetDegreeThreshold(unsigned degreeThreshold) { degreeThreshold_ = degreeThreshold; }
 
-    inline void SetWorkThreshold(VWorkwT<GraphTIn> workThreshold) { work_threshold = work_threshold_; }
+    inline void SetWorkThreshold(VWorkwT<GraphTIn> workThreshold) { workThreshold_ = workThreshold; }
 
-    inline void SetMemoryThreshold(VMemwT<GraphTIn> memoryThreshold) { memory_threshold = memory_threshold_; }
+    inline void SetMemoryThreshold(VMemwT<GraphTIn> memoryThreshold) { memoryThreshold_ = memoryThreshold; }
 
     inline void SetCommunicationThreshold(VCommwT<GraphTIn> communicationThreshold) {
-        communication_threshold = communication_threshold_;
+        communicationThreshold_ = communicationThreshold;
     }
 
-    inline void SetSuperNodeSizeThreshold(VertexType superNodeSizeThreshold) {
-        super_node_size_threshold = super_node_size_threshold_;
-    }
+    inline void SetSuperNodeSizeThreshold(VertexType superNodeSizeThreshold) { superNodeSizeThreshold_ = superNodeSizeThreshold; }
 
     inline void SetNodeDistThreshold(unsigned nodeDistThreshold) { nodeDistThreshold_ = nodeDistThreshold; }
 
@@ -127,27 +123,27 @@ class TopOrderCoarser : public Coarser<GraphTIn, GraphTOut> {
 
     virtual std::string getCoarserName() const override { return "top_order_coarser"; };
 
-    virtual bool coarsenDag(const GraphTIn &dagIn, GraphTOut &dagOut, std::vector<VertexIdxT<GraphTOut>> &reverseVertexMap) override {
+    virtual bool CoarsenDag(const GraphTIn &dagIn, GraphTOut &dagOut, std::vector<VertexIdxT<GraphTOut>> &reverseVertexMap) override {
         assert(dagOut.NumVertices() == 0);
         if (dagIn.NumVertices() == 0) {
-            reverse_vertex_map = std::vector<VertexIdxT<GraphTOut>>();
+            reverseVertexMap = std::vector<VertexIdxT<GraphTOut>>();
             return true;
         }
 
         std::vector<VertexType> topOrdering = topSortFunc(dagIn);
 
-        std::vector<unsigned> sourceNodeDist = get_top_node_distance(dagIn);
+        std::vector<unsigned> sourceNodeDist = GetTopNodeDistance(dagIn);
 
-        reverse_vertex_map.resize(dag_in.NumVertices(), std::numeric_limits<VertexType>::max());
+        reverseVertexMap.resize(dagIn.NumVertices(), std::numeric_limits<VertexType>::max());
 
         std::vector<std::vector<VertexType>> vertexMap;
-        vertex_map.push_back(std::vector<VertexType>({top_ordering[0]}));
+        vertexMap.push_back(std::vector<VertexType>({topOrdering[0]}));
 
-        add_new_super_node(dag_in, dag_out, top_ordering[0]);
-        reverse_vertex_map[top_ordering[0]] = current_super_node_idx;
+        AddNewSuperNode(dagIn, dagOut, topOrdering[0]);
+        reverseVertexMap[topOrdering[0]] = currentSuperNodeIdx_;
 
         for (size_t i = 1; i < topOrdering.size(); i++) {
-            const auto v = top_ordering[i];
+            const auto v = topOrdering[i];
 
             // int node_mem = dag_in.VertexMemWeight(v);
 
@@ -158,50 +154,50 @@ class TopOrderCoarser : public Coarser<GraphTIn, GraphTOut> {
             //     }
             // }
 
-            const unsigned dist = sourceNodeDist[v] - sourceNodeDist[top_ordering[i - 1]];
+            const unsigned dist = sourceNodeDist[v] - sourceNodeDist[topOrdering[i - 1]];
 
             // start new super node if thresholds are exceeded
-            if (((current_memory + dag_in.VertexMemWeight(v) > memory_threshold)
-                 || (current_work + dag_in.VertexWorkWeight(v) > work_threshold)
-                 || (vertex_map.back().size() >= super_node_size_threshold)
-                 || (current_communication + dag_in.VertexCommWeight(v) > communication_threshold))
-                || (dist > node_dist_threshold) ||
+            if (((currentMemory_ + dagIn.VertexMemWeight(v) > memoryThreshold_)
+                 || (currentWork_ + dagIn.VertexWorkWeight(v) > workThreshold_)
+                 || (vertexMap.back().size() >= superNodeSizeThreshold_)
+                 || (currentCommunication_ + dagIn.VertexCommWeight(v) > communicationThreshold_))
+                || (dist > nodeDistThreshold_) ||
                 // or prev node high out degree
-                (dag_in.OutDegree(top_ordering[i - 1]) > degree_threshold)) {
-                finish_super_node_add_edges(dag_in, dag_out, vertex_map.back(), reverse_vertex_map);
-                vertex_map.push_back(std::vector<VertexType>({v}));
-                add_new_super_node(dag_in, dag_out, v);
+                (dagIn.OutDegree(topOrdering[i - 1]) > degreeThreshold_)) {
+                FinishSuperNodeAddEdges(dagIn, dagOut, vertexMap.back(), reverseVertexMap);
+                vertexMap.push_back(std::vector<VertexType>({v}));
+                AddNewSuperNode(dagIn, dagOut, v);
 
             } else {    // grow current super node
 
                 if constexpr (IsComputationalDagTypedVerticesV<GraphTIn> && IsComputationalDagTypedVerticesV<GraphTOut>) {
-                    if (dag_out.VertexType(current_super_node_idx) != dag_in.VertexType(v)) {
-                        finish_super_node_add_edges(dag_in, dag_out, vertex_map.back(), reverse_vertex_map);
-                        vertex_map.push_back(std::vector<VertexType>({v}));
-                        add_new_super_node(dag_in, dag_out, v);
+                    if (dagOut.VertexType(currentSuperNodeIdx_) != dagIn.VertexType(v)) {
+                        FinishSuperNodeAddEdges(dagIn, dagOut, vertexMap.back(), reverseVertexMap);
+                        vertexMap.push_back(std::vector<VertexType>({v}));
+                        AddNewSuperNode(dagIn, dagOut, v);
 
                     } else {
-                        current_memory += dag_in.VertexMemWeight(v);
-                        current_work += dag_in.VertexWorkWeight(v);
-                        current_communication += dag_in.VertexCommWeight(v);
+                        currentMemory_ += dagIn.VertexMemWeight(v);
+                        currentWork_ += dagIn.VertexWorkWeight(v);
+                        currentCommunication_ += dagIn.VertexCommWeight(v);
 
                         vertexMap.back().push_back(v);
                     }
 
                 } else {
-                    current_memory += dag_in.VertexMemWeight(v);
-                    current_work += dag_in.VertexWorkWeight(v);
-                    current_communication += dag_in.VertexCommWeight(v);
+                    currentMemory_ += dagIn.VertexMemWeight(v);
+                    currentWork_ += dagIn.VertexWorkWeight(v);
+                    currentCommunication_ += dagIn.VertexCommWeight(v);
 
                     vertexMap.back().push_back(v);
                 }
             }
 
-            reverse_vertex_map[v] = current_super_node_idx;
+            reverseVertexMap[v] = currentSuperNodeIdx_;
         }
 
-        if (!vertex_map.back().empty()) {
-            finish_super_node_add_edges(dag_in, dag_out, vertex_map.back(), reverse_vertex_map);
+        if (!vertexMap.back().empty()) {
+            FinishSuperNodeAddEdges(dagIn, dagOut, vertexMap.back(), reverseVertexMap);
         }
 
         return true;
