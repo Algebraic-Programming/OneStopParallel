@@ -457,7 +457,7 @@ struct PriorityQueueWrapper {
 
     VertexIdxT<GraphT> PopNext() {
         std::pop_heap(heap_.begin(), heap_.end());
-        const auto currentNode = heap_.back().node;
+        const auto currentNode = heap_.back().node_;
         heap_.pop_back();
         return currentNode;
     }

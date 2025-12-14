@@ -92,19 +92,19 @@ int main(int argc, char *argv[]) {
     if (recomp) {
         BspScheduleRecomp<ComputationalDag> schedule(instance);
 
-        auto statusSchedule = scheduler.computeScheduleRecomp(schedule);
+        auto statusSchedule = scheduler.ComputeScheduleRecomp(schedule);
 
         if (statusSchedule == ReturnStatus::OSP_SUCCESS || statusSchedule == ReturnStatus::BEST_FOUND) {
             DotFileWriter dotWriter;
-            dotWriter.write_schedule_recomp(nameGraph + "_" + nameMachine + "_maxS_" + std::to_string(steps) + "_"
-                                                + scheduler.getScheduleName() + "_recomp_schedule.dot",
-                                            schedule);
+            dotWriter.WriteScheduleRecomp(nameGraph + "_" + nameMachine + "_maxS_" + std::to_string(steps) + "_"
+                                              + scheduler.GetScheduleName() + "_recomp_schedule.dot",
+                                          schedule);
 
-            dotWriter.write_schedule_recomp_duplicate(nameGraph + "_" + nameMachine + "_maxS_" + std::to_string(steps) + "_"
-                                                          + scheduler.getScheduleName() + "_duplicate_recomp_schedule.dot",
-                                                      schedule);
+            dotWriter.WriteScheduleRecompDuplicate(nameGraph + "_" + nameMachine + "_maxS_" + std::to_string(steps) + "_"
+                                                       + scheduler.GetScheduleName() + "_duplicate_recomp_schedule.dot",
+                                                   schedule);
 
-            std::cout << "Recomp Schedule computed with costs: " << schedule.computeCosts() << std::endl;
+            std::cout << "Recomp Schedule computed with costs: " << schedule.ComputeCosts() << std::endl;
 
         } else {
             std::cout << "Computing schedule failed." << std::endl;
@@ -118,11 +118,11 @@ int main(int argc, char *argv[]) {
 
         if (statusSchedule == ReturnStatus::OSP_SUCCESS || statusSchedule == ReturnStatus::BEST_FOUND) {
             DotFileWriter dotWriter;
-            dotWriter.write_schedule(nameGraph + "_" + nameMachine + "_maxS_" + std::to_string(steps) + "_"
-                                         + scheduler.getScheduleName() + "_schedule.dot",
-                                     schedule);
+            dotWriter.WriteSchedule(nameGraph + "_" + nameMachine + "_maxS_" + std::to_string(steps) + "_"
+                                        + scheduler.GetScheduleName() + "_schedule.dot",
+                                    schedule);
 
-            std::cout << "Schedule computed with costs: " << schedule.computeCosts() << std::endl;
+            std::cout << "Schedule computed with costs: " << schedule.ComputeCosts() << std::endl;
 
         } else {
             std::cout << "Computing schedule failed." << std::endl;

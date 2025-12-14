@@ -386,7 +386,7 @@ class DotFileWriter {
             } else {
                 std::vector<size_t> idxs;
                 for (unsigned i = 0; i < schedule.Assignments(node).size(); ++i) {
-                    g2.add_vertex(g.VertexWorkWeight(node), g.VertexCommWeight(node), g.VertexMemWeight(node), g.VertexType(node));
+                    g2.AddVertex(g.VertexWorkWeight(node), g.VertexCommWeight(node), g.VertexMemWeight(node), g.VertexType(node));
 
                     names[idxNew] = std::to_string(node).append("_").append(std::to_string(i));
                     nodeToProc[idxNew] = schedule.Assignments(node)[i].first;
@@ -432,7 +432,7 @@ class DotFileWriter {
     template <typename GraphT>
     void WriteScheduleRecompDuplicate(const std::string &filename, const BspScheduleRecomp<GraphT> &schedule) const {
         std::ofstream os(filename);
-        write_schedule_recomp_duplicate(os, schedule);
+        WriteScheduleRecompDuplicate(os, schedule);
     }
 
     template <typename GraphT, typename ColorContainerT>

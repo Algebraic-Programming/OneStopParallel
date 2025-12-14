@@ -111,10 +111,10 @@ HypergraphT ConvertFromCdagAsDag(const GraphT &dag) {
     using MemwType = typename HypergraphT::vertex_mem_weight_type;
     using CommwType = typename HypergraphT::vertex_comm_weight_type;
 
-    static_assert(std::is_same_v<VertexIdxT<GraphT>, index_type>, "Index type mismatch, cannot convert DAG to hypergraph.");
-    static_assert(std::is_same_v<VWorkwT<GraphT>, workw_type>, "Work weight type mismatch, cannot convert DAG to hypergraph.");
-    static_assert(std::is_same_v<VMemwT<GraphT>, memw_type>, "Memory weight type mismatch, cannot convert DAG to hypergraph.");
-    static_assert(!HasEdgeWeightsV<GraphT> || std::is_same_v<ECommwT<GraphT>, commw_type>,
+    static_assert(std::is_same_v<VertexIdxT<GraphT>, IndexType>, "Index type mismatch, cannot convert DAG to hypergraph.");
+    static_assert(std::is_same_v<VWorkwT<GraphT>, WorkwType>, "Work weight type mismatch, cannot convert DAG to hypergraph.");
+    static_assert(std::is_same_v<VMemwT<GraphT>, MemwType>, "Memory weight type mismatch, cannot convert DAG to hypergraph.");
+    static_assert(!HasEdgeWeightsV<GraphT> || std::is_same_v<ECommwT<GraphT>, CommwType>,
                   "Communication weight type mismatch, cannot convert DAG to hypergraph.");
 
     HypergraphT hgraph(dag.NumVertices(), 0);
@@ -139,10 +139,10 @@ HypergraphT ConvertFromCdagAsHyperdag(const GraphT &dag) {
     using MemwType = typename HypergraphT::vertex_mem_weight_type;
     using CommwType = typename HypergraphT::vertex_comm_weight_type;
 
-    static_assert(std::is_same_v<VertexIdxT<GraphT>, index_type>, "Index type mismatch, cannot convert DAG to hypergraph.");
-    static_assert(std::is_same_v<VWorkwT<GraphT>, workw_type>, "Work weight type mismatch, cannot convert DAG to hypergraph.");
-    static_assert(std::is_same_v<VMemwT<GraphT>, memw_type>, "Memory weight type mismatch, cannot convert DAG to hypergraph.");
-    static_assert(std::is_same_v<VCommwT<GraphT>, commw_type>,
+    static_assert(std::is_same_v<VertexIdxT<GraphT>, IndexType>, "Index type mismatch, cannot convert DAG to hypergraph.");
+    static_assert(std::is_same_v<VWorkwT<GraphT>, WorkwType>, "Work weight type mismatch, cannot convert DAG to hypergraph.");
+    static_assert(std::is_same_v<VMemwT<GraphT>, MemwType>, "Memory weight type mismatch, cannot convert DAG to hypergraph.");
+    static_assert(std::is_same_v<VCommwT<GraphT>, CommwType>,
                   "Communication weight type mismatch, cannot convert DAG to hypergraph.");
 
     HypergraphT hgraph(dag.NumVertices(), 0);

@@ -78,7 +78,7 @@ class BspSptrsvStatsModule : public IStatisticModule<TargetObjectType> {
   public:
     explicit BspSptrsvStatsModule(ScheduleNodePermutationModes mode = NO_PERMUTE) : mode_(mode) {}
 
-    std::vector<std::string> get_metric_headers() const override {
+    std::vector<std::string> GetMetricHeaders() const override {
         const std::string prefix = ModeTag(mode_);
         return {prefix + "SpTrSV_Runtime_Geomean(ns)",
                 prefix + "SpTrSV_Runtime_Stddev",
@@ -86,7 +86,7 @@ class BspSptrsvStatsModule : public IStatisticModule<TargetObjectType> {
                 prefix + "SpTrSV_Runtime_Q75(ns)"};
     }
 
-    std::map<std::string, std::string> record_statistics(const TargetObjectType &schedule, std::ofstream &) const override {
+    std::map<std::string, std::string> RecordStatistics(const TargetObjectType &schedule, std::ofstream &) const override {
         std::map<std::string, std::string> stats;
 
         if constexpr (std::is_same_v<TargetObjectType, osp::BspSchedule<osp::SparseMatrixImp<int32_t>>>

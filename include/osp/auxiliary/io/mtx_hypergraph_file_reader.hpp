@@ -153,7 +153,7 @@ bool ReadHypergraphMartixMarketFormat(const std::string &filename, Hypergraph<In
         return false;
     }
 
-    if (!isPathSafe(filename)) {
+    if (!IsPathSafe(filename)) {
         std::cerr << "Error: Unsafe file path (potential traversal attack).\n";
         return false;
     }

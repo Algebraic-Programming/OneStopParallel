@@ -91,7 +91,7 @@ class VarianceFillup : public Scheduler<GraphT> {
 
     std::vector<std::vector<std::vector<unsigned>>> ProcTypesCompatibleWithNodeTypeOmitProcType(
         const BspInstance<GraphT> &instance) const {
-        const std::vector<std::vector<unsigned>> procTypesCompatibleWithNodeType = instance.getProcTypesCompatibleWithNodeType();
+        const std::vector<std::vector<unsigned>> procTypesCompatibleWithNodeType = instance.GetProcTypesCompatibleWithNodeType();
 
         std::vector<std::vector<std::vector<unsigned>>> procTypesCompatibleWithNodeTypeSkip(
             instance.GetArchitecture().GetNumberOfProcessorTypes(),
@@ -319,7 +319,7 @@ class VarianceFillup : public Scheduler<GraphT> {
         std::vector<std::set<std::pair<VertexType, double>, VarianceCompare>> allReady(
             instance.GetArchitecture().GetNumberOfProcessorTypes());
 
-        const std::vector<std::vector<unsigned>> procTypesCompatibleWithNodeType = instance.getProcTypesCompatibleWithNodeType();
+        const std::vector<std::vector<unsigned>> procTypesCompatibleWithNodeType = instance.GetProcTypesCompatibleWithNodeType();
         const std::vector<std::vector<std::vector<unsigned>>> procTypesCompatibleWithNodeTypeSkipProctype
             = ProcTypesCompatibleWithNodeTypeOmitProcType(instance);
 

@@ -144,7 +144,7 @@ class BspScheduleCS : public BspSchedule<GraphT> {
     inline bool HasValidCommSchedule() const { return CheckCommScheduleValidity(commSchedule_); }
 
     void AddCommunicationScheduleEntry(KeyTriple key, unsigned step) {
-        if (step >= BspSchedule<GraphT>::number_of_supersteps) {
+        if (step >= BspSchedule<GraphT>::numberOfSupersteps_) {
             throw std::invalid_argument("Invalid Argument while adding communication schedule entry: step out of range.");
         }
 

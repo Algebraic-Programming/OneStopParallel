@@ -37,7 +37,7 @@ limitations under the License.
 
 using namespace osp;
 
-using Graph = computational_dag_vector_impl_def_int_t;
+using Graph = ComputationalDagVectorImplDefIntT;
 using Hypergraph = HypergraphDefT;
 
 int main(int argc, char *argv[]) {

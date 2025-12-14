@@ -81,7 +81,7 @@ ReturnStatus GreedyRecomputer<GraphT>::ComputeRecompSchedule(BspScheduleCS<Graph
             neededOnProc[pred][proc].insert(step);
         }
 
-        outSchedule.assignments(node).emplace_back(proc, step);
+        outSchedule.Assignments(node).emplace_back(proc, step);
     }
     for (const std::pair<KeyTriple, unsigned> item : initialSchedule.getCommunicationSchedule()) {
         const vertex_idx &node = std::get<0>(item.first);
@@ -177,7 +177,7 @@ ReturnStatus GreedyRecomputer<GraphT>::ComputeRecompSchedule(BspScheduleCS<Graph
 
                 // execute the modification
                 toErase.emplace_back(entry);
-                outSchedule.assignments(node).emplace_back(to_proc, best_step);
+                outSchedule.Assignments(node).emplace_back(to_proc, best_step);
 
                 send_cost[from_proc][step] -= comm_induced;
                 rec_cost[to_proc][step] -= comm_induced;

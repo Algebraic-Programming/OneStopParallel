@@ -91,13 +91,13 @@ class MaxBspScheduleCS : public BspScheduleCS<GraphT> {
     virtual ~MaxBspScheduleCS() = default;
 
     virtual VWorkwT<GraphT> ComputeCosts() const override {
-        std::vector<std::vector<VCommwT<GraphT>>> rec(this->instance->NumberOfProcessors(),
+        std::vector<std::vector<VCommwT<GraphT>>> rec(this->instance_->NumberOfProcessors(),
                                                       std::vector<VCommwT<GraphT>>(this->NumberOfSupersteps(), 0));
 
-        std::vector<std::vector<VCommwT<GraphT>>> send(this->instance->NumberOfProcessors(),
+        std::vector<std::vector<VCommwT<GraphT>>> send(this->instance_->NumberOfProcessors(),
                                                        std::vector<VCommwT<GraphT>>(this->NumberOfSupersteps(), 0));
 
-        this->compute_cs_communication_costs_helper(rec, send);
+        this->ComputeCsCommunicationCostsHelper(rec, send);
         const std::vector<VCommwT<GraphT>> maxCommPerStep = cost_helpers::ComputeMaxCommPerStep(*this, rec, send);
         const std::vector<VWorkwT<GraphT>> maxWorkPerStep = cost_helpers::ComputeMaxWorkPerStep(*this);
 
@@ -107,7 +107,7 @@ class MaxBspScheduleCS : public BspScheduleCS<GraphT> {
             costs += std::max(stepCommCost, maxWorkPerStep[step]);
 
             if (stepCommCost > static_cast<VCommwT<GraphT>>(0)) {
-                costs += this->instance->SynchronisationCosts();
+                costs += this->instance_->SynchronisationCosts();
             }
         }
         return costs;

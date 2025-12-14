@@ -180,11 +180,11 @@ class CilkScheduler : public Scheduler<GraphT> {
                         if (nrPredecDone[succ] == instance.GetComputationalDag().InDegree(succ)) {
                             ready.insert(succ);
                             if (mode_ == CILK) {
-                                procQueue[schedule.proc[node]].push_back(succ);
+                                procQueue[schedule.proc_[node]].push_back(succ);
                             }
                         }
                     }
-                    procFree[schedule.proc[node]] = true;
+                    procFree[schedule.proc_[node]] = true;
                     ++nrProcFree;
                 }
             }
@@ -197,7 +197,7 @@ class CilkScheduler : public Scheduler<GraphT> {
                 Choose(instance, procQueue, ready, procFree, nextNode, nextProc);
 
                 ready.erase(nextNode);
-                schedule.proc[nextNode] = nextProc;
+                schedule.proc_[nextNode] = nextProc;
                 schedule.time[nextNode] = time;
 
                 finishTimes.insert({time + instance.GetComputationalDag().VertexWorkWeight(nextNode), nextNode});

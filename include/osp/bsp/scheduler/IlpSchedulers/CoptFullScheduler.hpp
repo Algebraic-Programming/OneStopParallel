@@ -102,7 +102,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
         std::vector<std::vector<VarArray>> *nodeToProcessorSuperstepVarPtr_;
         std::vector<std::vector<std::vector<VarArray>>> *commProcessorToProcessorSuperstepNodeVarPtr_;
 
-        void Callback() override {
+        void callback() override {
             if (Where() == COPT_CBCONTEXT_MIPSOL && counter_ < maxNumberSolution_ && GetIntInfo(COPT_CBINFO_HASINCUMBENT)) {
                 try {
                     if (GetDblInfo(COPT_CBINFO_BESTOBJ) < bestObj_ && 0.0 < GetDblInfo(COPT_CBINFO_BESTBND)) {
@@ -151,7 +151,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
                                 if (GetSolution((*commProcessorToProcessorSuperstepNodeVarPtr_)[pFrom][pTo][static_cast<unsigned>(
                                         step)][static_cast<int>(node)])
                                     >= .99) {
-                                    schedule.addCommunicationScheduleEntry(node, pFrom, pTo, static_cast<unsigned>(step));
+                                    schedule.AddCommunicationScheduleEntry(node, pFrom, pTo, static_cast<unsigned>(step));
                                 }
                             }
                         }
@@ -170,7 +170,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
                 for (unsigned int processor = 0; processor < instancePtr_->NumberOfProcessors(); processor++) {
                     for (unsigned step = 0; step < static_cast<unsigned>((*nodeToProcessorSuperstepVarPtr_)[0][0].Size()); step++) {
                         if (GetSolution((*nodeToProcessorSuperstepVarPtr_)[node][processor][static_cast<int>(step)]) >= .99) {
-                            schedule.assignments(node).emplace_back(processor, step);
+                            schedule.Assignments(node).emplace_back(processor, step);
 
                             if (step >= numberOfSupersteps) {
                                 numberOfSupersteps = step + 1;
@@ -191,7 +191,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
                                 if (GetSolution(
                                         (*commProcessorToProcessorSuperstepNodeVarPtr_)[pFrom][pTo][step][static_cast<int>(node)])
                                     >= .99) {
-                                    schedule.addCommunicationScheduleEntry(node, pFrom, pTo, step);
+                                    schedule.AddCommunicationScheduleEntry(node, pFrom, pTo, step);
                                 }
                             }
                         }
@@ -241,7 +241,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
             --numberOfSupersteps;
         }
 
-        schedule.getCommunicationSchedule().clear();
+        schedule.GetCommunicationSchedule().clear();
         for (const auto &node : instance.Vertices()) {
             for (unsigned int pFrom = 0; pFrom < instance.NumberOfProcessors(); pFrom++) {
                 for (unsigned int pTo = 0; pTo < instance.NumberOfProcessors(); pTo++) {
@@ -250,7 +250,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
                             if (commProcessorToProcessorSuperstepNodeVar_[pFrom][pTo][step][static_cast<int>(node)].Get(
                                     COPT_DBLINFO_VALUE)
                                 >= .99) {
-                                schedule.addCommunicationScheduleEntry(node, pFrom, pTo, step);
+                                schedule.AddCommunicationScheduleEntry(node, pFrom, pTo, step);
                             }
                         }
                     }
@@ -279,13 +279,13 @@ class CoptFullScheduler : public Scheduler<GraphT> {
             for (unsigned processor = 0; processor < schedule.GetInstance().NumberOfProcessors(); processor++) {
                 for (unsigned step = 0; step < numberOfSupersteps - 1; step++) {
                     if (nodeToProcessorSuperstepVar_[node][processor][static_cast<int>(step)].Get(COPT_DBLINFO_VALUE) >= .99) {
-                        schedule.assignments(node).emplace_back(processor, step);
+                        schedule.Assignments(node).emplace_back(processor, step);
                     }
                 }
             }
         }
 
-        schedule.getCommunicationSchedule().clear();
+        schedule.GetCommunicationSchedule().clear();
         for (unsigned int node = 0; node < schedule.GetInstance().NumberOfVertices(); node++) {
             for (unsigned int pFrom = 0; pFrom < schedule.GetInstance().NumberOfProcessors(); pFrom++) {
                 for (unsigned int pTo = 0; pTo < schedule.GetInstance().NumberOfProcessors(); pTo++) {
@@ -294,7 +294,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
                             if (commProcessorToProcessorSuperstepNodeVar_[pFrom][pTo][step][static_cast<int>(node)].Get(
                                     COPT_DBLINFO_VALUE)
                                 >= .99) {
-                                schedule.addCommunicationScheduleEntry(node, pFrom, pTo, step);
+                                schedule.AddCommunicationScheduleEntry(node, pFrom, pTo, step);
                             }
                         }
                     }
@@ -337,8 +337,8 @@ class CoptFullScheduler : public Scheduler<GraphT> {
         const unsigned &numSupersteps = useInitialScheduleRecomp_ ? initialScheduleRecomp_->NumberOfSupersteps()
                                                                   : initialSchedule_->NumberOfSupersteps();
 
-        const auto &cs = useInitialScheduleRecomp_ ? initialScheduleRecomp_->getCommunicationSchedule()
-                                                   : initialSchedule_->getCommunicationSchedule();
+        const auto &cs = useInitialScheduleRecomp_ ? initialScheduleRecomp_->GetCommunicationSchedule()
+                                                   : initialSchedule_->GetCommunicationSchedule();
 
         assert(maxNumberSupersteps_ <= static_cast<unsigned>(std::numeric_limits<int>::max()));
         for (unsigned step = 0; step < maxNumberSupersteps_; step++) {
@@ -356,7 +356,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
         std::vector<std::set<std::pair<unsigned, unsigned>>> computed(dag.NumVertices());
         for (const auto &node : dag.Vertices()) {
             if (useInitialScheduleRecomp_) {
-                for (const std::pair<unsigned, unsigned> &assignment : initialScheduleRecomp_->assignments(node)) {
+                for (const std::pair<unsigned, unsigned> &assignment : initialScheduleRecomp_->Assignments(node)) {
                     computed[node].emplace(assignment);
                 }
             } else {
@@ -368,7 +368,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
                                                    std::vector<unsigned>(numProcessors, std::numeric_limits<unsigned>::max()));
         for (const auto &node : dag.Vertices()) {
             if (useInitialScheduleRecomp_) {
-                for (const std::pair<unsigned, unsigned> &assignment : initialScheduleRecomp_->assignments(node)) {
+                for (const std::pair<unsigned, unsigned> &assignment : initialScheduleRecomp_->Assignments(node)) {
                     firstAt[node][assignment.first] = std::min(firstAt[node][assignment.first], assignment.second);
                 }
             } else {
@@ -429,7 +429,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
 
         if (useInitialScheduleRecomp_) {
             for (const auto &node : initialScheduleRecomp_->GetInstance().Vertices()) {
-                for (const std::pair<unsigned, unsigned> &assignment : initialScheduleRecomp_->assignments(node)) {
+                for (const std::pair<unsigned, unsigned> &assignment : initialScheduleRecomp_->Assignments(node)) {
                     work[assignment.second][assignment.first] += dag.VertexWorkWeight(node);
                 }
             }
@@ -446,10 +446,10 @@ class CoptFullScheduler : public Scheduler<GraphT> {
 
         for (const auto &[key, val] : cs) {
             send[val][std::get<1>(key)]
-                += dag.VertexCommWeight(std::get<0>(key)) * arch.sendCosts(std::get<1>(key), std::get<2>(key));
+                += dag.VertexCommWeight(std::get<0>(key)) * arch.SendCosts(std::get<1>(key), std::get<2>(key));
 
             rec[val][std::get<2>(key)]
-                += dag.VertexCommWeight(std::get<0>(key)) * arch.sendCosts(std::get<1>(key), std::get<2>(key));
+                += dag.VertexCommWeight(std::get<0>(key)) * arch.SendCosts(std::get<1>(key), std::get<2>(key));
         }
 
         for (unsigned step = 0; step < maxNumberSupersteps_; step++) {
@@ -521,7 +521,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
                                 * instance.GetComputationalDag().VertexMemWeight(node);
                     }
 
-                    model.AddConstr(expr <= instance.GetArchitecture().memoryBound(processor));
+                    model.AddConstr(expr <= instance.GetArchitecture().MemoryBound(processor));
                 }
             }
         }
@@ -670,7 +670,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
                 for (const auto &node : instance.Vertices()) {
                     for (unsigned int pTo = 0; pTo < instance.NumberOfProcessors(); pTo++) {
                         if (processor != pTo) {
-                            expr += instance.GetComputationalDag().VertexCommWeight(node) * instance.sendCosts(processor, pTo)
+                            expr += instance.GetComputationalDag().VertexCommWeight(node) * instance.SendCosts(processor, pTo)
                                     * commProcessorToProcessorSuperstepNodeVar_[processor][pTo][step][static_cast<int>(node)];
                         }
                     }
@@ -686,7 +686,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
                 for (const auto &node : instance.Vertices()) {
                     for (unsigned int pFrom = 0; pFrom < instance.NumberOfProcessors(); pFrom++) {
                         if (processor != pFrom) {
-                            expr += instance.GetComputationalDag().VertexCommWeight(node) * instance.sendCosts(pFrom, processor)
+                            expr += instance.GetComputationalDag().VertexCommWeight(node) * instance.SendCosts(pFrom, processor)
                                     * commProcessorToProcessorSuperstepNodeVar_[pFrom][processor][step][static_cast<int>(node)];
                         }
                     }
@@ -699,7 +699,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
         // vertex type restrictions
         for (const VertexIdxT<GraphT> &node : instance.Vertices()) {
             for (unsigned int processor = 0; processor < instance.NumberOfProcessors(); processor++) {
-                if (!instance.isCompatible(node, processor)) {
+                if (!instance.IsCompatible(node, processor)) {
                     for (unsigned int step = 0; step < maxNumberSupersteps_; step++) {
                         model.AddConstr(nodeToProcessorSuperstepVar_[node][processor][static_cast<int>(step)] == 0);
                     }
@@ -814,7 +814,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
      */
     virtual ReturnStatus ComputeSchedule(BspSchedule<GraphT> &schedule) override {
         BspScheduleCS<GraphT> scheduleCs(schedule.GetInstance());
-        ReturnStatus status = RunScheduler(scheduleCs);
+        ReturnStatus status = RunSchedulerInternal(scheduleCs);
         if (status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND) {
             schedule = std::move(scheduleCs);
             return status;
@@ -830,7 +830,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
 
     virtual ReturnStatus ComputeMaxBspSchedule(MaxBspSchedule<GraphT> &schedule) {
         MaxBspScheduleCS<GraphT> scheduleCs(schedule.GetInstance());
-        ReturnStatus status = computeMaxBspScheduleCS(scheduleCs);
+        ReturnStatus status = ComputeMaxBspScheduleCs(scheduleCs);
         if (status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND) {
             schedule = std::move(scheduleCs);
             return status;

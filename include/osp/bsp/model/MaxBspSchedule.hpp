@@ -92,9 +92,9 @@ class MaxBspSchedule : public BspSchedule<GraphT> {
     virtual ~MaxBspSchedule() = default;
 
     virtual VWorkwT<GraphT> ComputeCosts() const override {
-        std::vector<std::vector<VCommwT<GraphT>>> rec(this->instance->NumberOfProcessors(),
+        std::vector<std::vector<VCommwT<GraphT>>> rec(this->instance_->NumberOfProcessors(),
                                                       std::vector<VCommwT<GraphT>>(this->NumberOfSupersteps(), 0));
-        std::vector<std::vector<VCommwT<GraphT>>> send(this->instance->NumberOfProcessors(),
+        std::vector<std::vector<VCommwT<GraphT>>> send(this->instance_->NumberOfProcessors(),
                                                        std::vector<VCommwT<GraphT>>(this->NumberOfSupersteps(), 0));
 
         ComputeLazyCommunicationCosts(*this, rec, send);
@@ -107,7 +107,7 @@ class MaxBspSchedule : public BspSchedule<GraphT> {
             costs += std::max(stepCommCost, maxWorkPerStep[step]);
 
             if (stepCommCost > static_cast<VCommwT<GraphT>>(0)) {
-                costs += this->instance->SynchronisationCosts();
+                costs += this->instance_->SynchronisationCosts();
             }
         }
         return costs;

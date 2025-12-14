@@ -107,7 +107,7 @@ class StepByStepCoarser : public CoarserGenContractionMap<GraphT, GraphT> {
   public:
     virtual ~StepByStepCoarser() = default;
 
-    virtual std::string getCoarserName() const override { return "StepByStepCoarsening"; }
+    virtual std::string GetCoarserName() const override { return "StepByStepCoarsening"; }
 
     // DAG coarsening
     virtual std::vector<VertexIdxT<GraphT>> GenerateVertexContractionMap(const GraphT &dagIn) override;

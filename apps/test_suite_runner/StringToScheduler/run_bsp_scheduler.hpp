@@ -112,7 +112,7 @@ std::unique_ptr<Scheduler<GraphT>> GetBaseBspSchedulerByName(const ConfigParser 
         params.minSuperstepSize_ = algorithm.get_child("parameters").get_child("minSuperstepSize").get_value<unsigned>();
         params.syncCostMultiplierMinSuperstepWeight_
             = algorithm.get_child("parameters").get_child("syncCostMultiplierMinSuperstepWeight").get_value<VWorkwT<GraphT>>();
-        params.syncCostMultiplierParallelCheck
+        params.syncCostMultiplierParallelCheck_
             = algorithm.get_child("parameters").get_child("syncCostMultiplierParallelCheck").get_value<VWorkwT<GraphT>>();
 
         return std::make_unique<GrowLocalAutoCores<GraphT>>(params);
@@ -128,15 +128,15 @@ std::unique_ptr<Scheduler<GraphT>> GetBaseBspSchedulerByName(const ConfigParser 
 
     } else if (id == "Cilk") {
         auto scheduler = std::make_unique<CilkScheduler<GraphT>>();
-        algorithm.get_child("parameters").get_child("mode").get_value<std::string>() == "SJF" ? scheduler->setMode(CilkMode::SJF)
-                                                                                              : scheduler->setMode(CilkMode::CILK);
+        algorithm.get_child("parameters").get_child("mode").get_value<std::string>() == "SJF" ? scheduler->SetMode(CilkMode::SJF)
+                                                                                              : scheduler->SetMode(CilkMode::CILK);
         return scheduler;
 
     } else if (id == "Etf") {
         auto scheduler = std::make_unique<EtfScheduler<GraphT>>();
         algorithm.get_child("parameters").get_child("mode").get_value<std::string>() == "BL_EST"
-            ? scheduler->setMode(EtfMode::BL_EST)
-            : scheduler->setMode(EtfMode::ETF);
+            ? scheduler->SetMode(EtfMode::BL_EST)
+            : scheduler->SetMode(EtfMode::ETF);
         return scheduler;
 
     } else if (id == "GreedyRandom") {
@@ -163,12 +163,12 @@ std::unique_ptr<Scheduler<GraphT>> GetBaseBspSchedulerByName(const ConfigParser 
             const unsigned timeLimit = parser.globalParams_.get_child("timeLimit").get_value<unsigned>();
 
             unsigned step = algorithm.get_child("parameters").get_child("hill_climbing_steps").get_value<unsigned>();
-            scheduler->setNumberOfHcSteps(step);
+            scheduler->SetNumberOfHcSteps(step);
 
             const double contractionRate = algorithm.get_child("parameters").get_child("contraction_rate").get_value<double>();
-            scheduler->setContractionRate(contractionRate);
-            scheduler->useLinearRefinementSteps(20U);
-            scheduler->setMinTargetNrOfNodes(100U);
+            scheduler->SetContractionRate(contractionRate);
+            scheduler->UseLinearRefinementSteps(20U);
+            scheduler->SetMinTargetNrOfNodes(100U);
             return scheduler;
         }
     }

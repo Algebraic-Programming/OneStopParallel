@@ -111,7 +111,7 @@ class PartitioningWithReplication {
 };
 
 template <typename HypergraphT>
-typename HypergraphT::vertex_comm_weight_type PartitioningWithReplication<HypergraphT>::ComputeConnectivityCost() const {
+typename HypergraphT::VertexCommWeightType PartitioningWithReplication<HypergraphT>::ComputeConnectivityCost() const {
     // naive implementation. in the worst-case this is exponential in the number of parts
     if (instance_->GetNumberOfPartitions() > 16) {
         throw std::invalid_argument("Computing connectivity cost is not supported for more than 16 partitions.");
@@ -173,7 +173,7 @@ typename HypergraphT::vertex_comm_weight_type PartitioningWithReplication<Hyperg
 }
 
 template <typename HypergraphT>
-typename HypergraphT::vertex_comm_weight_type PartitioningWithReplication<HypergraphT>::ComputeCutNetCost() const {
+typename HypergraphT::VertexCommWeightType PartitioningWithReplication<HypergraphT>::ComputeCutNetCost() const {
     CommwType total = 0;
     for (IndexType edgeIdx = 0; edgeIdx < instance_->GetHypergraph().NumHyperedges(); ++edgeIdx) {
         const std::vector<IndexType> &hyperedge = instance_->GetHypergraph().GetVerticesInHyperedge(edgeIdx);
