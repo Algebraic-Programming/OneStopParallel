@@ -167,12 +167,12 @@ BOOST_AUTO_TEST_CASE(TestDagEdgeIdx) {
 
         i = 0;
         for (const auto &e : graph.out_edges(v)) {
-            BOOST_CHECK_EQUAL(Traget(e, graph), outNeighbors[v][i++]);
+            BOOST_CHECK_EQUAL(Target(e, graph), outNeighbors[v][i++]);
         }
 
         i = 0;
         for (const auto &e : graph.out_edges(v)) {
-            BOOST_CHECK_EQUAL(graph.Traget(e), outNeighbors[v][i++]);
+            BOOST_CHECK_EQUAL(graph.Target(e), outNeighbors[v][i++]);
         }
 
         i = 0;
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(TestDagEdgeIdx) {
 
         i = 0;
         for (const auto &e : OutEdges(v, graph)) {
-            BOOST_CHECK_EQUAL(Traget(e, graph), outNeighbors[v][i++]);
+            BOOST_CHECK_EQUAL(Target(e, graph), outNeighbors[v][i++]);
         }
 
         BOOST_CHECK_EQUAL(graph.InDegree(v), inNeighbors[v].size());
@@ -229,7 +229,7 @@ BOOST_AUTO_TEST_CASE(TestUtil1) {
     const auto pair = edge_desc(0, 1, graph);
     BOOST_CHECK_EQUAL(pair.second, true);
     BOOST_CHECK_EQUAL(Source(pair.first, graph), 0);
-    BOOST_CHECK_EQUAL(Traget(pair.first, graph), 1);
+    BOOST_CHECK_EQUAL(Target(pair.first, graph), 1);
     BOOST_CHECK_EQUAL(edge(0, 1, graph), true);
 
     const auto pair2 = edge_desc(0, 4, graph);
@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE(TestUtil1) {
     const auto pair3 = edge_desc(1, 4, graph);
     BOOST_CHECK_EQUAL(pair3.second, true);
     BOOST_CHECK_EQUAL(Source(pair3.first, graph), 1);
-    BOOST_CHECK_EQUAL(Traget(pair3.first, graph), 4);
+    BOOST_CHECK_EQUAL(Target(pair3.first, graph), 4);
     BOOST_CHECK_EQUAL(edge(1, 4, graph), true);
 
     BOOST_CHECK_EQUAL(has_path(0, 1, graph), true);

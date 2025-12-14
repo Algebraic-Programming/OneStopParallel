@@ -69,21 +69,21 @@ class AbstractTestSuiteRunner {
     virtual bool ParseCommonConfig() {
         try {
             executableDir_ = GetExecutablePath().remove_filename().string();
-            timeLimitSeconds_ = parser_.global_params.get_child("timeLimit").get_value<unsigned>();
-            writeTargetObjectToFile_ = parser_.global_params.get_child("outputSchedule").get_value_optional<bool>().value_or(false);
+            timeLimitSeconds_ = parser_.globalParams_.get_child("timeLimit").get_value<unsigned>();
+            writeTargetObjectToFile_ = parser_.globalParams_.get_child("outputSchedule").get_value_optional<bool>().value_or(false);
 
-            graphDirPath_ = parser_.global_params.get_child("graphDirectory").get_value<std::string>();
+            graphDirPath_ = parser_.globalParams_.get_child("graphDirectory").get_value<std::string>();
             if (graphDirPath_.substr(0, 1) != "/") {
                 graphDirPath_ = executableDir_ + graphDirPath_;
             }
 
-            machineDirPath_ = parser_.global_params.get_child("archDirectory").get_value<std::string>();
+            machineDirPath_ = parser_.globalParams_.get_child("archDirectory").get_value<std::string>();
             if (machineDirPath_.substr(0, 1) != "/") {
                 machineDirPath_ = executableDir_ + machineDirPath_;
             }
 
             if (writeTargetObjectToFile_) {
-                outputTargetObjectDirPath_ = parser_.global_params.get_child("scheduleDirectory").get_value<std::string>();
+                outputTargetObjectDirPath_ = parser_.globalParams_.get_child("scheduleDirectory").get_value<std::string>();
                 if (outputTargetObjectDirPath_.substr(0, 1) != "/") {
                     outputTargetObjectDirPath_ = executableDir_ + outputTargetObjectDirPath_;
                 }
@@ -92,12 +92,12 @@ class AbstractTestSuiteRunner {
                 }
             }
 
-            logFilePath_ = parser_.global_params.get_child("outputLogFile").get_value<std::string>();
+            logFilePath_ = parser_.globalParams_.get_child("outputLogFile").get_value<std::string>();
             if (logFilePath_.substr(0, 1) != "/") {
                 logFilePath_ = executableDir_ + logFilePath_;
             }
 
-            statisticsOutputFilePath_ = parser_.global_params.get_child("outputStatsFile").get_value<std::string>();
+            statisticsOutputFilePath_ = parser_.globalParams_.get_child("outputStatsFile").get_value<std::string>();
             if (statisticsOutputFilePath_.substr(0, 1) != "/") {
                 statisticsOutputFilePath_ = executableDir_ + statisticsOutputFilePath_;
             }
@@ -191,7 +191,7 @@ class AbstractTestSuiteRunner {
 
     int Run(int argc, char *argv[]) {
         try {
-            parser_.parse_args(argc, argv);
+            parser_.ParseArgs(argc, argv);
         } catch (const std::exception &e) {
             std::cerr << "Error parsing command line arguments: " << e.what() << std::endl;
             return 1;
@@ -205,7 +205,7 @@ class AbstractTestSuiteRunner {
 
         std::vector<std::string> activeModuleNamesFromConfig;
         try {
-            for (const auto &item : parser.global_params.get_child("activeStatisticModules")) {
+            for (const auto &item : parser.globalParams_.get_child("activeStatisticModules")) {
                 active_module_names_from_config.push_back(item.second.get_value<std::string>());
             }
         } catch (const pt::ptree_bad_path &e) {

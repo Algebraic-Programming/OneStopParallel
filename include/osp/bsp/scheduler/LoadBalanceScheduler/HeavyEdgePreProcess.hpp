@@ -28,7 +28,7 @@ std::vector<std::vector<VertexIdxT<GraphT>>> HeavyEdgePreprocess(const GraphT &g
                                                                  const double heavyIsXTimesMedian,
                                                                  const double minPercentComponentsRetained,
                                                                  const double boundComponentWeightPercent) {
-    static_assert(isComputationalDagEdgeDescV<GraphT>,
+    static_assert(IsComputationalDagEdgeDescV<GraphT>,
                   "HeavyEdgePreProcess can only be used with computational DAGs with edge weights.");
 
     using VertexType = VertexIdxT<GraphT>;

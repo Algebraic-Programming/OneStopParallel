@@ -269,7 +269,7 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
                         continue;
                     }
 
-                    const VertexIdxT &child = Traget(outEdge, graph);
+                    const VertexIdxT &child = Target(outEdge, graph);
 
                     if (parentsNotInGroup.find(child) != parentsNotInGroup.cend()) {
                         parentsNotInGroup[child] -= 1;
@@ -296,7 +296,7 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
                         continue;
                     }
 
-                    const VertexIdxT &child = Traget(outEdge, graph);
+                    const VertexIdxT &child = Target(outEdge, graph);
                     if (parentsNotInGroup[child] == 0) {
                         nextVertexProcessingFifo.emplace_back(child);
                     }

@@ -26,7 +26,7 @@ limitations under the License.
 #include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 
 using namespace osp;
-using GraphT = computational_dag_edge_idx_vector_impl_def_int_t;
+using GraphT = ComputationalDagEdgeIdxVectorImplDefIntT;
 
 int main(int argc, char *argv[]) {
     if (argc < 3) {
@@ -38,22 +38,22 @@ int main(int argc, char *argv[]) {
     std::string graphName = graphFile.substr(graphFile.rfind("/") + 1, graphFile.rfind(".") - graphFile.rfind("/") - 1);
 
     GraphT graph;
-    bool status = file_reader::readGraph(graphFile, graph);
+    bool status = file_reader::ReadGraph(graphFile, graph);
     if (!status) {
         std::cout << "Failed to read graph\n";
         return 1;
     }
 
     SarkarParams::MulParameters<VWorkwT<GraphT>> params;
-    params.commCostVec = std::vector<VWorkwT<GraphT>>({1, 2, 5, 10, 20, 50, 100, 200, 500, 1000});
-    params.max_num_iteration_without_changes = 3;
-    params.leniency = 0.005;
-    params.maxWeight = 15000;
-    params.smallWeightThreshold = 4000;
-    params.buffer_merge_mode = SarkarParams::BufferMergeMode::FULL;
+    params.commCostVec_ = std::vector<VWorkwT<GraphT>>({1, 2, 5, 10, 20, 50, 100, 200, 500, 1000});
+    params.maxNumIterationWithoutChanges_ = 3;
+    params.leniency_ = 0.005;
+    params.maxWeight_ = 15000;
+    params.smallWeightThreshold_ = 4000;
+    params.bufferMergeMode_ = SarkarParams::BufferMergeMode::FULL;
 
     SarkarMul<GraphT, GraphT> coarser;
-    coarser.setParameters(params);
+    coarser.SetParameters(params);
 
     GraphT coarseGraph;
     std::vector<VertexIdxT<GraphT>> contractionMap;
@@ -67,7 +67,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    coarser.coarsenDag(graphCopy, coarseGraph, contractionMap);
+    coarser.CoarsenDag(graphCopy, coarseGraph, contractionMap);
 
     std::vector<unsigned> colours(contractionMap.size());
     for (std::size_t i = 0; i < contractionMap.size(); ++i) {
@@ -81,7 +81,7 @@ int main(int argc, char *argv[]) {
     }
 
     DotFileWriter writer;
-    writer.write_colored_graph(outDot, graph, colours);
+    writer.WriteColoredGraph(outDot, graph, colours);
 
     if (argc >= 4) {
         std::ofstream coarseOutDot(argv[3]);
@@ -93,7 +93,7 @@ int main(int argc, char *argv[]) {
         std::vector<unsigned> coarseColours(coarseGraph.NumVertices());
         std::iota(coarseColours.begin(), coarseColours.end(), 0);
 
-        writer.write_colored_graph(coarseOutDot, coarseGraph, coarseColours);
+        writer.WriteColoredGraph(coarseOutDot, coarseGraph, coarseColours);
     }
 
     return 0;

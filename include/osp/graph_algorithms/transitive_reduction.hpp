@@ -72,7 +72,7 @@ void TransitiveReductionSparse(const GraphTIn &graphIn, GraphTOut &graphOut) {
     // An edge (u, v) is transitive if there exists a child w of u (w != v) that can reach v.
     for (const auto &edge : Edges(graphIn)) {
         const auto u = Source(edge, graphIn);
-        const auto v = Traget(edge, graphIn);
+        const auto v = Target(edge, graphIn);
         bool isTransitive = false;
         for (const auto &w : graphIn.Children(u)) {
             if (w != v && HasPath(w, v, graphIn)) {
@@ -135,7 +135,7 @@ void TransitiveReductionDense(const GraphTIn &graphIn, GraphTOut &graphOut) {
     // 2. Compute transitive closure (reachability matrix).
     std::vector<std::vector<bool>> reachable(numV, std::vector<bool>(numV, false));
     for (const auto &edge : Edges(graphIn)) {
-        reachable[Source(edge, graphIn)][Traget(edge, graphIn)] = true;
+        reachable[Source(edge, graphIn)][Target(edge, graphIn)] = true;
     }
 
     const auto topOrder = GetTopOrder(graphIn);
@@ -154,7 +154,7 @@ void TransitiveReductionDense(const GraphTIn &graphIn, GraphTOut &graphOut) {
     // 3. Add an edge (u, v) to the reduction if it's not transitive.
     for (const auto &edge : Edges(graphIn)) {
         const auto u = Source(edge, graphIn);
-        const auto v = Traget(edge, graphIn);
+        const auto v = Target(edge, graphIn);
         bool isTransitive = false;
         for (const auto &w : graphIn.Children(u)) {
             if (w != v && reachable[w][v]) {

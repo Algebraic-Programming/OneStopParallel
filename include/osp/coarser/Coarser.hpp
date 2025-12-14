@@ -131,7 +131,7 @@ class CoarserGenExpansionMap : public Coarser<GraphTIn, GraphTOut> {
      * @brief Get the name of the coarsening algorithm.
      * @return A human-readable name of the coarsening algorithm, typically used for identification or logging purposes.
      */
-    virtual std::string getCoarserName() const override = 0;
+    virtual std::string GetCoarserName() const override = 0;
 
     /**
      * @brief Destructor for the CoarserGenExpansionMap class.

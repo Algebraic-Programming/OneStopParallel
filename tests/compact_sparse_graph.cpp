@@ -303,7 +303,7 @@ BOOST_AUTO_TEST_CASE(Graph1KeepOrder) {
 
         cntr = 0;
         for (const auto &e : osp::out_edges(vert, graph)) {
-            BOOST_CHECK_EQUAL(Traget(e, graph), outEdges[vert][cntr++]);
+            BOOST_CHECK_EQUAL(Target(e, graph), outEdges[vert][cntr++]);
         }
     }
 

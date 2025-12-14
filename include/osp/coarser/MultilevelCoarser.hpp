@@ -71,7 +71,7 @@ class MultilevelCoarser : public Coarser<GraphT, GraphTCoarse> {
     ReturnStatus Run(const GraphT &graph);
     ReturnStatus Run(const BspInstance<GraphT> &inst);
 
-    virtual std::string getCoarserName() const override = 0;
+    virtual std::string GetCoarserName() const override = 0;
 };
 
 template <typename GraphT, typename GraphTCoarse>
@@ -243,7 +243,7 @@ bool MultilevelCoarser<GraphT, GraphTCoarse>::CoarsenDag(const GraphT &dagIn,
                                                          std::vector<VertexIdxT<GraphTCoarse>> &vertexContractionMap) {
     ClearComputationData();
 
-    ReturnStatus status = run(dagIn);
+    ReturnStatus status = Run(dagIn);
 
     if (status != ReturnStatus::OSP_SUCCESS && status != ReturnStatus::BEST_FOUND) {
         return false;

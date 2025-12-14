@@ -229,7 +229,7 @@ class ComputationalDagEdgeIdxVectorImpl {
 
     inline const VImpl &GetVertexImpl(VertexIdx v) const { return vertices_[v]; }
 
-    inline const EImpl &GetEdgeImpl(DirectedEdgeDescriptor e) const { return edges_[e.idx]; }
+    inline const EImpl &GetEdgeImpl(DirectedEdgeDescriptor e) const { return edges_[e.idx_]; }
 };
 
 template <typename VImpl, typename EImpl>

@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(TestDag) {
 
         i = 0;
         for (const auto &e : OutEdges(v, graph)) {
-            BOOST_CHECK_EQUAL(Traget(e, graph), outNeighbors[v][i++]);
+            BOOST_CHECK_EQUAL(Target(e, graph), outNeighbors[v][i++]);
         }
 
         i = 0;
@@ -260,7 +260,7 @@ BOOST_AUTO_TEST_CASE(TestDagVectorAdapter) {
 
         i = 0;
         for (const auto &e : OutEdges(v, graph)) {
-            BOOST_CHECK_EQUAL(Traget(e, graph), outNeighbors[vv][i++]);
+            BOOST_CHECK_EQUAL(Target(e, graph), outNeighbors[vv][i++]);
         }
 
         i = 0;

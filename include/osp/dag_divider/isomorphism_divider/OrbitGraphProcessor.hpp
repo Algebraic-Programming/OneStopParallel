@@ -324,7 +324,7 @@ class OrbitGraphProcessor {
             changed = false;
             for (const auto &edge : Edges(currentCoarseGraph)) {
                 VertexType u = Source(edge, currentCoarseGraph);
-                VertexType v = Traget(edge, currentCoarseGraph);
+                VertexType v = Target(edge, currentCoarseGraph);
 
                 if (non_viable_edges_cache_.count({u, v}) || non_viable_crit_path_edges_cache_.count({u, v})) {
                     continue;
@@ -407,7 +407,7 @@ class OrbitGraphProcessor {
             changed = false;
             for (const auto &edge : Edges(currentCoarseGraph)) {
                 VertexType u = Source(edge, currentCoarseGraph);
-                VertexType v = Traget(edge, currentCoarseGraph);
+                VertexType v = Target(edge, currentCoarseGraph);
 
                 if (non_viable_edges_cache_.count({u, v}) || non_viable_crit_path_edges_cache_.count({u, v})) {
                     if constexpr (verbose_) {

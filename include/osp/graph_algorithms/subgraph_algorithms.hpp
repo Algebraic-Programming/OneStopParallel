@@ -122,11 +122,11 @@ bool CheckOrderedIsomorphism(const GraphT &first, const GraphT &second) {
             std::set<std::pair<VertexIdxT<GraphT>, ECommwT<GraphT>>> firstChildren, secondChildren;
 
             for (const auto &outEdge : OutEdges(node, first)) {
-                firstChildren.emplace(Traget(out_edge, first), first.EdgeCommWeight(out_edge));
+                firstChildren.emplace(Target(out_edge, first), first.EdgeCommWeight(out_edge));
             }
 
             for (const auto &outEdge : OutEdges(node, second)) {
-                secondChildren.emplace(Traget(out_edge, second), second.EdgeCommWeight(out_edge));
+                secondChildren.emplace(Target(out_edge, second), second.EdgeCommWeight(out_edge));
             }
 
             auto itr = firstChildren.begin(), secondItr = secondChildren.begin();
@@ -196,7 +196,7 @@ std::vector<GraphTOut> CreateInducedSubgraphs(const GraphTIn &dagIn, const std::
     if constexpr (HasEdgeWeightsV<GraphTIn> and HasEdgeWeightsV<GraphTOut>) {
         for (const auto node : dagIn.Vertices()) {
             for (const auto &outEdge : OutEdges(node, dagIn)) {
-                auto succ = Traget(outEdge, dagIn);
+                auto succ = Target(outEdge, dagIn);
 
                 if (partitionIDs[node] == partitionIDs[succ]) {
                     splitDags[partitionIDs[node]].AddEdge(localIdx[node], localIdx[succ], dagIn.EdgeCommWeight(outEdge));

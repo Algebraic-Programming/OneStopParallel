@@ -73,7 +73,7 @@ class SparseMatrixImp {
     size_t NumVertices() const noexcept { return static_cast<size_t>(lCsrP_->rows()); }
 
     /// @brief Return a range over all vertices [0, NumVertices)
-    auto Vertices() const { return osp::integral_range<size_t>(NumVertices()); }
+    auto Vertices() const { return osp::IntegralRange<size_t>(NumVertices()); }
 
     /// @brief Number of edges = total non-zeros minus diagonal elements
     VertexIdx NumEdges() const noexcept { return static_cast<VertexIdx>(lCsrP_->nonZeros() - lCsrP_->rows()); }

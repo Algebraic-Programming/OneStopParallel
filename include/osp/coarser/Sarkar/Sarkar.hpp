@@ -34,7 +34,7 @@ limitations under the License.
 
 namespace osp {
 
-namespace sarkar_params {
+namespace SarkarParams {
 
 enum class Mode {
     LINES,
@@ -60,12 +60,12 @@ struct Parameters {
     bool useTopPoset_{true};
 };
 
-}    // namespace sarkar_params
+}    // namespace SarkarParams
 
 template <typename GraphTIn, typename GraphTOut>
 class Sarkar : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
   private:
-    sarkar_params::Parameters<VWorkwT<GraphTIn>> params_;
+    SarkarParams::Parameters<VWorkwT<GraphTIn>> params_;
 
     std::vector<VertexIdxT<GraphTIn>> GetBotPosetMap(const GraphTIn &graph) const;
     std::vector<VWorkwT<GraphTIn>> GetTopDistance(VWorkwT<GraphTIn> commCost, const GraphTIn &graph) const;
@@ -100,16 +100,16 @@ class Sarkar : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
                                                const std::vector<VWorkwT<GraphTIn>> &dist) const;
 
   public:
-    virtual std::vector<std::vector<VertexIdxT<GraphTIn>>> generate_vertex_expansion_map(const GraphTIn &dagIn) override;
+    virtual std::vector<std::vector<VertexIdxT<GraphTIn>>> GenerateVertexExpansionMap(const GraphTIn &dagIn) override;
     std::vector<std::vector<VertexIdxT<GraphTIn>>> GenerateVertexExpansionMap(const GraphTIn &dagIn, VertexIdxT<GraphTIn> &diff);
 
-    inline void SetParameters(const sarkar_params::Parameters<VWorkwT<GraphTIn>> &params) { params = params_; };
+    inline void SetParameters(const SarkarParams::Parameters<VWorkwT<GraphTIn>> &params) { params_ = params; };
 
-    inline sarkar_params::Parameters<VWorkwT<GraphTIn>> &GetParameters() { return params_; };
+    inline SarkarParams::Parameters<VWorkwT<GraphTIn>> &GetParameters() { return params_; };
 
-    inline const sarkar_params::Parameters<VWorkwT<GraphTIn>> &GetParameters() const { return params_; };
+    inline const SarkarParams::Parameters<VWorkwT<GraphTIn>> &GetParameters() const { return params_; };
 
-    Sarkar(sarkar_params::Parameters<VWorkwT<GraphTIn>> params = sarkar_params::Parameters<VWorkwT<GraphTIn>>())
+    Sarkar(SarkarParams::Parameters<VWorkwT<GraphTIn>> params = SarkarParams::Parameters<VWorkwT<GraphTIn>>())
         : params_(params) {};
 
     Sarkar(const Sarkar &) = default;
@@ -118,7 +118,7 @@ class Sarkar : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
     Sarkar &operator=(Sarkar &&) = default;
     virtual ~Sarkar() override = default;
 
-    std::string getCoarserName() const override { return "Sarkar"; }
+    std::string GetCoarserName() const override { return "Sarkar"; }
 };
 
 template <typename GraphTIn, typename GraphTOut>
@@ -626,37 +626,37 @@ std::vector<std::vector<VertexIdxT<GraphTIn>>> Sarkar<GraphTIn, GraphTOut>::Gene
 
     // std::cout << "Mode: " << static_cast<int>(params.mode) << "\n";
     switch (params_.mode_) {
-        case sarkar_params::Mode::LINES: {
+        case SarkarParams::Mode::LINES: {
             diff = SingleContraction(params_.commCost_, dagIn, expansionMap);
         } break;
 
-        case sarkar_params::Mode::FAN_IN_FULL: {
+        case SarkarParams::Mode::FAN_IN_FULL: {
             diff = AllParentsContraction(params_.commCost_, dagIn, expansionMap);
         } break;
 
-        case sarkar_params::Mode::FAN_IN_PARTIAL: {
+        case SarkarParams::Mode::FAN_IN_PARTIAL: {
             diff = SomeParentsContraction(params_.commCost_, dagIn, expansionMap);
         } break;
 
-        case sarkar_params::Mode::FAN_OUT_FULL: {
+        case SarkarParams::Mode::FAN_OUT_FULL: {
             diff = AllChildrenContraction(params_.commCost_, dagIn, expansionMap);
         } break;
 
-        case sarkar_params::Mode::FAN_OUT_PARTIAL: {
+        case SarkarParams::Mode::FAN_OUT_PARTIAL: {
             diff = SomeChildrenContraction(params_.commCost_, dagIn, expansionMap);
         } break;
 
-        case sarkar_params::Mode::LEVEL_EVEN: {
+        case SarkarParams::Mode::LEVEL_EVEN: {
             diff = LevelContraction(params_.commCost_, dagIn, expansionMap);
         } break;
 
-        case sarkar_params::Mode::LEVEL_ODD: {
+        case SarkarParams::Mode::LEVEL_ODD: {
             diff = LevelContraction(params_.commCost_, dagIn, expansionMap);
         } break;
 
-        case sarkar_params::Mode::FAN_IN_BUFFER:
-        case sarkar_params::Mode::FAN_OUT_BUFFER:
-        case sarkar_params::Mode::HOMOGENEOUS_BUFFER: {
+        case SarkarParams::Mode::FAN_IN_BUFFER:
+        case SarkarParams::Mode::FAN_OUT_BUFFER:
+        case SarkarParams::Mode::HOMOGENEOUS_BUFFER: {
             diff = HomogeneousBufferMerge(params_.commCost_, dagIn, expansionMap);
         } break;
 
@@ -674,7 +674,7 @@ std::vector<std::vector<VertexIdxT<GraphTIn>>> Sarkar<GraphTIn, GraphTOut>::Gene
 }
 
 template <typename GraphTIn, typename GraphTOut>
-std::vector<std::vector<VertexIdxT<GraphTIn>>> Sarkar<GraphTIn, GraphTOut>::generate_vertex_expansion_map(const GraphTIn &dagIn) {
+std::vector<std::vector<VertexIdxT<GraphTIn>>> Sarkar<GraphTIn, GraphTOut>::GenerateVertexExpansionMap(const GraphTIn &dagIn) {
     VertexIdxT<GraphTIn> dummy;
     return GenerateVertexExpansionMap(dagIn, dummy);
 }
@@ -1071,7 +1071,7 @@ VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::LevelContraction(
     const VertexIdxT<GraphTIn> minLevel = *std::min_element(vertexPoset.cbegin(), vertexPoset.cend());
     const VertexIdxT<GraphTIn> maxLevel = *std::max_element(vertexPoset.cbegin(), vertexPoset.cend());
 
-    const VertexIdxT<GraphTIn> parity = params_.mode_ == sarkar_params::Mode::LEVEL_EVEN ? 0 : 1;
+    const VertexIdxT<GraphTIn> parity = params_.mode_ == SarkarParams::Mode::LEVEL_EVEN ? 0 : 1;
 
     std::vector<std::vector<VertexIdxT<GraphTIn>>> levels(maxLevel - minLevel + 1);
     for (const VertexType &vert : graph.Vertices()) {
@@ -1310,7 +1310,7 @@ VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::HomogeneousBufferMerge(
 
     std::vector<std::size_t> hashValuesCombined(graph.NumVertices(), 1729U);
 
-    if (params_.mode_ == sarkar_params::Mode::FAN_OUT_BUFFER || params_.mode_ == sarkar_params::Mode::HOMOGENEOUS_BUFFER) {
+    if (params_.mode_ == SarkarParams::Mode::FAN_OUT_BUFFER || params_.mode_ == SarkarParams::Mode::HOMOGENEOUS_BUFFER) {
         const std::vector<std::size_t> hashValues = ComputeNodeHashes(graph, vertexTopPoset, topDist);
         std::vector<std::size_t> hashValuesWithParents = hashValues;
         for (const VertexType &par : graph.Vertices()) {
@@ -1322,7 +1322,7 @@ VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::HomogeneousBufferMerge(
             HashCombine(hashValuesCombined[vert], hashValuesWithParents[vert]);
         }
     }
-    if (params_.mode_ == sarkar_params::Mode::FAN_IN_BUFFER || params_.mode_ == sarkar_params::Mode::HOMOGENEOUS_BUFFER) {
+    if (params_.mode_ == SarkarParams::Mode::FAN_IN_BUFFER || params_.mode_ == SarkarParams::Mode::HOMOGENEOUS_BUFFER) {
         const std::vector<std::size_t> hashValues = ComputeNodeHashes(graph, vertexBotPoset, botDist);
         std::vector<std::size_t> hashValuesWithChildren = hashValues;
         for (const VertexType &chld : graph.Vertices()) {
@@ -1369,14 +1369,14 @@ VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::HomogeneousBufferMerge(
         }
 
         std::set<VertexType> parents;
-        if (params_.mode_ == sarkar_params::Mode::FAN_OUT_BUFFER || params_.mode_ == sarkar_params::Mode::HOMOGENEOUS_BUFFER) {
+        if (params_.mode_ == SarkarParams::Mode::FAN_OUT_BUFFER || params_.mode_ == SarkarParams::Mode::HOMOGENEOUS_BUFFER) {
             for (const VertexType &par : graph.Parents(vert)) {
                 parents.emplace(par);
             }
         }
 
         std::set<VertexType> children;
-        if (params_.mode_ == sarkar_params::Mode::FAN_IN_BUFFER || params_.mode_ == sarkar_params::Mode::HOMOGENEOUS_BUFFER) {
+        if (params_.mode_ == SarkarParams::Mode::FAN_IN_BUFFER || params_.mode_ == SarkarParams::Mode::HOMOGENEOUS_BUFFER) {
             for (const VertexType &chld : graph.Children(vert)) {
                 children.emplace(chld);
             }
@@ -1405,7 +1405,7 @@ VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::HomogeneousBufferMerge(
                 }
             }
 
-            if (params_.mode_ == sarkar_params::Mode::FAN_OUT_BUFFER || params_.mode_ == sarkar_params::Mode::HOMOGENEOUS_BUFFER) {
+            if (params_.mode_ == SarkarParams::Mode::FAN_OUT_BUFFER || params_.mode_ == SarkarParams::Mode::HOMOGENEOUS_BUFFER) {
                 std::set<VertexType> candidateParents;
                 for (const VertexType &par : graph.Parents(vertCandidate)) {
                     candidateParents.emplace(par);
@@ -1415,7 +1415,7 @@ VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::HomogeneousBufferMerge(
                 }
             }
 
-            if (params_.mode_ == sarkar_params::Mode::FAN_IN_BUFFER || params_.mode_ == sarkar_params::Mode::HOMOGENEOUS_BUFFER) {
+            if (params_.mode_ == SarkarParams::Mode::FAN_IN_BUFFER || params_.mode_ == SarkarParams::Mode::HOMOGENEOUS_BUFFER) {
                 std::set<VertexType> candidateChildren;
                 for (const VertexType &chld : graph.Children(vertCandidate)) {
                     candidateChildren.emplace(chld);

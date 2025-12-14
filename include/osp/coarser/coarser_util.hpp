@@ -144,7 +144,7 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
 
             for (const auto &oriEdge : Edges(dagIn)) {
                 VertexIdxT<GraphTOut> src = vertexContractionMap[Source(oriEdge, dagIn)];
-                VertexIdxT<GraphTOut> tgt = vertexContractionMap[Traget(oriEdge, dagIn)];
+                VertexIdxT<GraphTOut> tgt = vertexContractionMap[Target(oriEdge, dagIn)];
 
                 if (src == tgt) {
                     continue;
@@ -308,7 +308,7 @@ bool ConstructCoarseDag(const GraphTIn &dagIn, GraphTOut &coarsenedDag, std::vec
 
             for (const auto &oriEdge : Edges(dagIn)) {
                 VertexIdxT<GraphTOut> src = vertexContractionMap[Source(oriEdge, dagIn)];
-                VertexIdxT<GraphTOut> tgt = vertexContractionMap[Traget(oriEdge, dagIn)];
+                VertexIdxT<GraphTOut> tgt = vertexContractionMap[Target(oriEdge, dagIn)];
 
                 if (src == tgt) {
                     continue;
@@ -319,7 +319,7 @@ bool ConstructCoarseDag(const GraphTIn &dagIn, GraphTOut &coarsenedDag, std::vec
 
             for (const auto &oriEdge : Edges(dagIn)) {
                 VertexIdxT<GraphTOut> src = vertexContractionMap[Source(oriEdge, dagIn)];
-                VertexIdxT<GraphTOut> tgt = vertexContractionMap[Traget(oriEdge, dagIn)];
+                VertexIdxT<GraphTOut> tgt = vertexContractionMap[Target(oriEdge, dagIn)];
 
                 if (src == tgt) {
                     continue;
@@ -327,7 +327,7 @@ bool ConstructCoarseDag(const GraphTIn &dagIn, GraphTOut &coarsenedDag, std::vec
 
                 const auto contEdge = coarsenedDag.Edge(pushforwardMap[src], pushforwardMap[tgt]);
                 assert(Source(contEdge, coarsenedDag) == pushforwardMap[src]
-                       && Traget(contEdge, coarsenedDag) == pushforwardMap[tgt]);
+                       && Target(contEdge, coarsenedDag) == pushforwardMap[tgt]);
                 coarsenedDag.SetEdgeCommWeight(
                     src, tgt, ECommAccMethod()(coarsenedDag.EdgeCommWeight(contEdge), dagIn.EdgeCommWeight(oriEdge)));
             }
@@ -465,7 +465,7 @@ void ReorderExpansionMap(const GraphTIn &graph, std::vector<std::vector<VertexId
     }
     assert(topOrder.size() == vertexExpansionMap.size());
 
-    inverse_permute_inplace(vertexExpansionMap, topOrder);
+    InversePermuteInplace(vertexExpansionMap, topOrder);
 
     return;
 }

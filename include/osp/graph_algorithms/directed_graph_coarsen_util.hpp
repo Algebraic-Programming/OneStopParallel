@@ -40,7 +40,7 @@ std::vector<EdgeDescT<GraphT>> GetContractableEdgesFromPosetIntMap(const std::ve
 
     for (const auto &edge : Edges(graph)) {
         VertexIdxT<GraphT> src = Source(edge, graph);
-        VertexIdxT<GraphT> tgt = Traget(edge, graph);
+        VertexIdxT<GraphT> tgt = Target(edge, graph);
 
         if (posetIntMap[tgt] == posetIntMap[src] + 1) {
             output.emplace_back(edge);

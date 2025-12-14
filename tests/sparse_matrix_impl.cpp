@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(TestSparseMatrixAdapter1) {
 
         i = 0;
         for (const auto &e : OutEdges(v, graph)) {
-            BOOST_CHECK_EQUAL(Traget(e, graph), outNeighbors[vi][i++]);
+            BOOST_CHECK_EQUAL(Target(e, graph), outNeighbors[vi][i++]);
         }
 
         i = 0;

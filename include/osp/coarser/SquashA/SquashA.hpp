@@ -85,7 +85,7 @@ class SquashA : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
             for (const auto &wtEdge : edgeWeights) {
                 const auto &edgeD = wtEdge.first;
                 const VertexIdxT<GraphTIn> edgeSource = Source(edgeD, dagIn);
-                const VertexIdxT<GraphTIn> edgeTarget = Traget(edgeD, dagIn);
+                const VertexIdxT<GraphTIn> edgeTarget = Target(edgeD, dagIn);
 
                 // Previously merged
                 if (mergedNodes[edgeSource]) {
@@ -281,8 +281,8 @@ std::vector<std::vector<VertexIdxT<GraphTIn>>> SquashA<GraphTIn, GraphTOut>::gen
             std::vector<EdgeDescT<GraphTIn>> contractableEdges
                 = GetContractableEdgesFromPosetIntMap<GraphTIn>(posetIntMapping, dagIn);
             for (const auto &edge : contractableEdges) {
-                std::size_t numCommonTriangles = NumCommonParents(dagIn, Source(edge, dagIn), Traget(edge, dagIn));
-                numCommonTriangles += NumCommonChildren(dagIn, Source(edge, dagIn), Traget(edge, dagIn));
+                std::size_t numCommonTriangles = NumCommonParents(dagIn, Source(edge, dagIn), Target(edge, dagIn));
+                numCommonTriangles += NumCommonChildren(dagIn, Source(edge, dagIn), Target(edge, dagIn));
                 edgeWeights.emplace(edge, numCommonTriangles);
             }
         }

@@ -340,7 +340,7 @@ std::vector<int> GetStrictPosetIntegerMap(unsigned const noise, double const poi
         int maxTemp = std::numeric_limits<int>::min();
 
         for (const auto &edge : OutEdges(*iter, graph)) {
-            int temp = newBot[Traget(edge, graph)];
+            int temp = newBot[Target(edge, graph)];
             if (!upOrDown.at(edge)) {
                 temp += 1 + poissonGen(gen);
             }

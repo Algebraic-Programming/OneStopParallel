@@ -24,7 +24,7 @@ limitations under the License.
 
 namespace osp {
 
-template <typename GraphT, typename InterpolationT, typename MemoryConstraintT = no_memory_constraint>
+template <typename GraphT, typename InterpolationT, typename MemoryConstraintT = NoMemoryConstraint>
 class VariancePartitioner : public LoadBalancerBase<GraphT, InterpolationT> {
     static_assert(IsComputationalDagV<GraphT>, "VariancePartitioner can only be used with computational DAGs.");
 
@@ -37,11 +37,11 @@ class VariancePartitioner : public LoadBalancerBase<GraphT, InterpolationT> {
     };
 
   protected:
-    constexpr static bool useMemoryConstraint_ = IsMemoryConstraintV<MemoryConstraint_t>
-                                                 or IsMemoryConstraintScheduleV<MemoryConstraint_t>;
+    constexpr static bool useMemoryConstraint_ = IsMemoryConstraintV<MemoryConstraintT>
+                                                 or IsMemoryConstraintScheduleV<MemoryConstraintT>;
 
     static_assert(not useMemoryConstraint_ or std::is_same_v<GraphT, typename MemoryConstraintT::Graph_impl_t>,
-                  "Graph_t must be the same as MemoryConstraint_t::Graph_impl_t.");
+                  "Graph_t must be the same as MemoryConstraintT::Graph_impl_t.");
 
     MemoryConstraintT memoryConstraint_;
 
@@ -111,9 +111,9 @@ class VariancePartitioner : public LoadBalancerBase<GraphT, InterpolationT> {
 
         unsigned superstep = 0;
 
-        if constexpr (IsMemoryConstraintV<MemoryConstraint_t>) {
+        if constexpr (IsMemoryConstraintV<MemoryConstraintT>) {
             memoryConstraint_.initialize(instance);
-        } else if constexpr (IsMemoryConstraintScheduleV<MemoryConstraint_t>) {
+        } else if constexpr (IsMemoryConstraintScheduleV<MemoryConstraintT>) {
             memoryConstraint_.initialize(schedule, superstep);
         }
 
@@ -180,17 +180,17 @@ class VariancePartitioner : public LoadBalancerBase<GraphT, InterpolationT> {
                 // std::cout << "\nCall for new superstep - parallelism.\n";
             }
             std::vector<float> processorPriorities
-                = LoadBalancerBase<GraphT, InterpolationT>::computeProcessorPrioritiesInterpolation(
-                    superstep_partition_work, total_partition_work, total_work, instance);
+                = LoadBalancerBase<GraphT, InterpolationT>::ComputeProcessorPrioritiesInterpolation(
+                    superstepPartitionWork, totalPartitionWork, totalWork, instance);
             float minPriority = processorPriorities[0];
             float maxPriority = processorPriorities[0];
-            for (const auto &prio : processor_priorities) {
-                min_priority = std::min(min_priority, prio);
-                max_priority = std::max(max_priority, prio);
+            for (const auto &prio : processorPriorities) {
+                minPriority = std::min(minPriority, prio);
+                maxPriority = std::max(maxPriority, prio);
             }
             if (numUnableToPartitionNodeLoop == 0
                 && (maxPriority - minPriority)
-                       > maxPriorityDifferencePercent_ * static_cast<float>(total_work) / static_cast<float>(nProcessors)) {
+                       > maxPriorityDifferencePercent_ * static_cast<float>(totalWork) / static_cast<float>(nProcessors)) {
                 endsuperstep = true;
                 // std::cout << "\nCall for new superstep - difference.\n";
             }
@@ -201,7 +201,7 @@ class VariancePartitioner : public LoadBalancerBase<GraphT, InterpolationT> {
                 for (unsigned proc = 0; proc < nProcessors; proc++) {
                     for (const auto &item : procReady[proc]) {
                         procReadyPrior[proc].insert(item);
-                        which_proc_ready_prior[item.first] = proc;
+                        whichProcReadyPrior[item.first] = proc;
                     }
                     procReady[proc].clear();
 
@@ -223,8 +223,8 @@ class VariancePartitioner : public LoadBalancerBase<GraphT, InterpolationT> {
 
             // Choosing next processor
             std::vector<unsigned> processorsInOrder = LoadBalancerBase<GraphT, InterpolationT>::computeProcessorPriority(
-                superstep_partition_work, total_partition_work, total_work, instance, slack_);
-            for (unsigned &proc : processors_in_order) {
+                superstepPartitionWork, totalPartitionWork, totalWork, instance, slack_);
+            for (unsigned &proc : processorsInOrder) {
                 if ((free_processors.find(proc)) != free_processors.cend()) {
                     continue;
                 }
@@ -308,8 +308,8 @@ class VariancePartitioner : public LoadBalancerBase<GraphT, InterpolationT> {
                     num_unable_to_partition_node_loop = 0;
 
                     // Updating loads
-                    total_partition_work[proc] += graph.VertexWorkWeight(next_node);
-                    superstep_partition_work[proc] += graph.VertexWorkWeight(next_node);
+                    totalPartitionWork[proc] += graph.VertexWorkWeight(next_node);
+                    superstepPartitionWork[proc] += graph.VertexWorkWeight(next_node);
 
                     if constexpr (use_memory_constraint) {
                         memory_constraint.add(next_node, proc);
@@ -321,8 +321,8 @@ class VariancePartitioner : public LoadBalancerBase<GraphT, InterpolationT> {
                     procReady[proc].erase(pair);
                     procReadyPrior[proc].erase(pair);
                     allReady.erase(pair);
-                    if (which_proc_ready_prior[next_node] != n_processors) {
-                        procReadyPrior[which_proc_ready_prior[next_node]].erase(pair);
+                    if (whichProcReadyPrior[next_node] != n_processors) {
+                        procReadyPrior[whichProcReadyPrior[next_node]].erase(pair);
                     }
 
                     // Checking children

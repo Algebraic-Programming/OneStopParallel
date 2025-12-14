@@ -62,29 +62,29 @@ class LoadBalancerBase : public Scheduler<GraphT> {
                                                                const BspInstance<GraphT> &instance,
                                                                const float slack = 0.0) {
         VWorkwT<GraphT> workTillNow = 0;
-        for (const auto &part_work : total_partition_work) {
-            work_till_now += part_work;
+        for (const auto &partWork : totalPartitionWork) {
+            workTillNow += partWork;
         }
 
-        float percentageComplete = static_cast<float>(work_till_now) / static_cast<float>(total_work);
+        float percentageComplete = static_cast<float>(workTillNow) / static_cast<float>(totalWork);
 
         float value = InterpolationT()(percentageComplete, slack);
 
         std::vector<float> procPrio(instance.NumberOfProcessors());
         for (size_t i = 0; i < procPrio.size(); i++) {
-            assert(static_cast<double>(total_partition_work[i]) < std::numeric_limits<float>::max()
-                   && static_cast<double>(superstep_partition_work[i]) < std::numeric_limits<float>::max());
-            procPrio[i] = ((1 - value) * static_cast<float>(superstep_partition_work[i]))
-                          + (value * static_cast<float>(total_partition_work[i]));
+            assert(static_cast<double>(totalPartitionWork[i]) < std::numeric_limits<float>::max()
+                   && static_cast<double>(superstepPartitionWork[i]) < std::numeric_limits<float>::max());
+            procPrio[i] = ((1 - value) * static_cast<float>(superstepPartitionWork[i]))
+                          + (value * static_cast<float>(totalPartitionWork[i]));
         }
 
         return procPrio;
     }
 
     /// @brief Computes processor priorities
-    /// @param superstep_partition_work vector with current work distribution in current superstep
-    /// @param total_partition_work vector with current work distribution overall
-    /// @param total_work total work weight of all nodes of the graph
+    /// @param superstepPartitionWork vector with current work distribution in current superstep
+    /// @param totalPartitionWork vector with current work distribution overall
+    /// @param totalWork total work weight of all nodes of the graph
     /// @param instance bsp instance
     /// @param slack how much to ignore global balance
     /// @return vector with the processors in order of priority
@@ -93,8 +93,8 @@ class LoadBalancerBase : public Scheduler<GraphT> {
                                                    const VWorkwT<GraphT> &totalWork,
                                                    const BspInstance<GraphT> &instance,
                                                    const float slack = 0.0) {
-        return sorting_arrangement<float, unsigned>(
-            computeProcessorPrioritiesInterpolation(superstep_partition_work, total_partition_work, total_work, instance, slack));
+        return SortingArrangement<float, unsigned>(
+            ComputeProcessorPrioritiesInterpolation(superstepPartitionWork, totalPartitionWork, totalWork, instance, slack));
     }
 
   public:

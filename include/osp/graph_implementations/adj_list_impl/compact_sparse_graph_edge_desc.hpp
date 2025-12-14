@@ -585,7 +585,7 @@ Target(const EdgeDescT<Compact_Sparse_Graph_EdgeDesc<keep_vertex_order,
                                         MemWeightType,
                                         ECommWeightType,
                                         VertexTypeTemplateType> &graph) {
-    return graph.Traget(edge);
+    return graph.Target(edge);
 }
 
 template <bool keepVertexOrder,

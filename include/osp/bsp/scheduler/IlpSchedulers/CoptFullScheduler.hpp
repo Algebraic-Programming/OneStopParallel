@@ -111,16 +111,16 @@ class CoptFullScheduler : public Scheduler<GraphT> {
                         if (allowRecomputationCb_) {
                             auto sched = ConstructBspScheduleRecompFromCallback();
                             DotFileWriter schedWriter;
-                            schedWriter.write_schedule_recomp(writeSolutionsPathCb_ + "intmed_sol_" + solutionFilePrefixCb_ + "_"
-                                                                  + std::to_string(counter_) + "_schedule.dot",
-                                                              sched);
+                            schedWriter.WriteScheduleRecomp(writeSolutionsPathCb_ + "intmed_sol_" + solutionFilePrefixCb_ + "_"
+                                                                + std::to_string(counter_) + "_schedule.dot",
+                                                            sched);
 
                         } else {
                             BspSchedule<GraphT> sched = ConstructBspScheduleFromCallback();
                             DotFileWriter schedWriter;
-                            schedWriter.write_schedule(writeSolutionsPathCb_ + "intmed_sol_" + solutionFilePrefixCb_ + "_"
-                                                           + std::to_string(counter_) + "_schedule.dot",
-                                                       sched);
+                            schedWriter.WriteSchedule(writeSolutionsPathCb_ + "intmed_sol_" + solutionFilePrefixCb_ + "_"
+                                                          + std::to_string(counter_) + "_schedule.dot",
+                                                      sched);
                         }
                         counter_++;
                     }
@@ -425,7 +425,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
             }
         }
 
-        std::vector<std::vector<VWorkwT<GraphT>>> work(max_number_supersteps, std::vector<VWorkwT<GraphT>>(num_processors, 0));
+        std::vector<std::vector<VWorkwT<GraphT>>> work(maxNumberSupersteps_, std::vector<VWorkwT<GraphT>>(numProcessors, 0));
 
         if (useInitialScheduleRecomp_) {
             for (const auto &node : initialScheduleRecomp_->GetInstance().Vertices()) {
@@ -440,9 +440,9 @@ class CoptFullScheduler : public Scheduler<GraphT> {
             }
         }
 
-        std::vector<std::vector<VCommwT<GraphT>>> send(max_number_supersteps, std::vector<VCommwT<GraphT>>(num_processors, 0));
+        std::vector<std::vector<VCommwT<GraphT>>> send(maxNumberSupersteps_, std::vector<VCommwT<GraphT>>(numProcessors, 0));
 
-        std::vector<std::vector<VCommwT<GraphT>>> rec(max_number_supersteps, std::vector<VCommwT<GraphT>>(num_processors, 0));
+        std::vector<std::vector<VCommwT<GraphT>>> rec(maxNumberSupersteps_, std::vector<VCommwT<GraphT>>(numProcessors, 0));
 
         for (const auto &[key, val] : cs) {
             send[val][std::get<1>(key)]
@@ -455,23 +455,23 @@ class CoptFullScheduler : public Scheduler<GraphT> {
         for (unsigned step = 0; step < maxNumberSupersteps_; step++) {
             VWorkwT<GraphT> maxWork = 0;
             for (unsigned i = 0; i < numProcessors; i++) {
-                if (max_work < work[step][i]) {
+                if (maxWork < work[step][i]) {
                     maxWork = work[step][i];
                 }
             }
 
             VCommwT<GraphT> maxComm = 0;
             for (unsigned i = 0; i < numProcessors; i++) {
-                if (max_comm < send[step][i]) {
+                if (maxComm < send[step][i]) {
                     maxComm = send[step][i];
                 }
-                if (max_comm < rec[step][i]) {
+                if (maxComm < rec[step][i]) {
                     maxComm = rec[step][i];
                 }
             }
 
-            model.SetMipStart(maxWorkSuperstepVar_[static_cast<int>(step)], max_work);
-            model.SetMipStart(maxCommSuperstepVar_[static_cast<int>(step)], max_comm);
+            model.SetMipStart(maxWorkSuperstepVar_[static_cast<int>(step)], maxWork);
+            model.SetMipStart(maxCommSuperstepVar_[static_cast<int>(step)], maxComm);
         }
 
         model.LoadMipStart();
@@ -647,10 +647,10 @@ class CoptFullScheduler : public Scheduler<GraphT> {
         }
 
         maxCommSuperstepVar_ = model.AddVars(static_cast<int>(maxNumberSupersteps_), COPT_INTEGER, "max_comm_superstep");
-        // coptModel.AddVars(max_number_supersteps, 0, COPT_INFINITY, 0, COPT_INTEGER, "max_comm_superstep");
+        // coptModel.AddVars(maxNumberSupersteps_, 0, COPT_INFINITY, 0, COPT_INTEGER, "max_comm_superstep");
 
         maxWorkSuperstepVar_ = model.AddVars(static_cast<int>(maxNumberSupersteps_), COPT_INTEGER, "max_work_superstep");
-        // coptModel.AddVars(max_number_supersteps, 0, COPT_INFINITY, 0, COPT_INTEGER, "max_work_superstep");
+        // coptModel.AddVars(maxNumberSupersteps_, 0, COPT_INFINITY, 0, COPT_INTEGER, "max_work_superstep");
 
         for (unsigned int step = 0; step < maxNumberSupersteps_; step++) {
             for (unsigned int processor = 0; processor < instance.NumberOfProcessors(); processor++) {
@@ -700,8 +700,8 @@ class CoptFullScheduler : public Scheduler<GraphT> {
         for (const VertexIdxT<GraphT> &node : instance.Vertices()) {
             for (unsigned int processor = 0; processor < instance.NumberOfProcessors(); processor++) {
                 if (!instance.isCompatible(node, processor)) {
-                    for (unsigned int step = 0; step < max_number_supersteps; step++) {
-                        model.AddConstr(node_to_processor_superstep_var[node][processor][static_cast<int>(step)] == 0);
+                    for (unsigned int step = 0; step < maxNumberSupersteps_; step++) {
+                        model.AddConstr(nodeToProcessorSuperstepVar_[node][processor][static_cast<int>(step)] == 0);
                     }
                 }
             }
@@ -736,7 +736,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
         model.SetObjective(expr, COPT_MINIMIZE);
     }
 
-    ReturnStatus RunScheduler(BspScheduleCS<GraphT> &schedule) {
+    ReturnStatus RunSchedulerInternal(BspScheduleCS<GraphT> &schedule) {
         auto &instance = schedule.GetInstance();
         Envr env;
         Model model = env.CreateModel("bsp_schedule");
@@ -777,7 +777,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
           maxNumberSupersteps_(steps) {
         // solution_callback.comm_processor_to_processor_superstep_node_var_ptr =
         //     &comm_processor_to_processor_superstep_node_var;
-        // solution_callback.node_to_processor_superstep_var_ptr = &node_to_processor_superstep_var;
+        // solution_callback.node_to_processor_superstep_var_ptr = &nodeToProcessorSuperstepVar_;
     }
 
     CoptFullScheduler(const BspScheduleCS<GraphT> &schedule)
@@ -789,7 +789,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
           maxNumberSupersteps_(schedule.NumberOfSupersteps()) {
         // solution_callback.comm_processor_to_processor_superstep_node_var_ptr =
         //     &comm_processor_to_processor_superstep_node_var;
-        // solution_callback.node_to_processor_superstep_var_ptr = &node_to_processor_superstep_var;
+        // solution_callback.node_to_processor_superstep_var_ptr = &nodeToProcessorSuperstepVar_;
     }
 
     CoptFullScheduler(const BspScheduleRecomp<GraphT> &schedule)
@@ -814,7 +814,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
      */
     virtual ReturnStatus ComputeSchedule(BspSchedule<GraphT> &schedule) override {
         BspScheduleCS<GraphT> scheduleCs(schedule.GetInstance());
-        ReturnStatus status = computeScheduleCS(schedule_cs);
+        ReturnStatus status = RunScheduler(scheduleCs);
         if (status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND) {
             schedule = std::move(scheduleCs);
             return status;
@@ -830,7 +830,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
 
     virtual ReturnStatus ComputeMaxBspSchedule(MaxBspSchedule<GraphT> &schedule) {
         MaxBspScheduleCS<GraphT> scheduleCs(schedule.GetInstance());
-        ReturnStatus status = computeMaxBspScheduleCS(schedule_cs);
+        ReturnStatus status = computeMaxBspScheduleCS(scheduleCs);
         if (status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND) {
             schedule = std::move(scheduleCs);
             return status;
@@ -842,13 +842,13 @@ class CoptFullScheduler : public Scheduler<GraphT> {
     virtual ReturnStatus ComputeMaxBspScheduleCs(MaxBspScheduleCS<GraphT> &schedule) {
         allowRecomputation_ = false;
         isMaxBsp_ = true;
-        return run_scheduler(schedule);
+        return RunSchedulerInternal(schedule);
     }
 
-    virtual ReturnStatus computeScheduleCS(BspScheduleCS<GraphT> &schedule) override {
+    virtual ReturnStatus ComputeScheduleCs(BspScheduleCS<GraphT> &schedule) override {
         allowRecomputation_ = false;
         isMaxBsp_ = false;
-        return run_scheduler(schedule);
+        return RunSchedulerInternal(schedule);
     }
 
     virtual ReturnStatus ComputeScheduleRecomp(BspScheduleRecomp<GraphT> &schedule) {
