@@ -108,7 +108,7 @@ ReturnStatus MultiLevelHillClimbingScheduler<GraphT>::ComputeSchedule(BspSchedul
     const auto numVertices = schedule.GetInstance().NumberOfVertices();
     SetParameter(numVertices);
 
-    newVertexId = coarser.generate_vertex_contraction_map(schedule.GetInstance().GetComputationalDag());
+    newVertexId = coarser.GenerateVertexContractionMap(schedule.GetInstance().GetComputationalDag());
     coarseDAG = coarser.Contract(newVertexId);
 
     BspInstance<GraphT> coarseInstance(coarseDAG, schedule.GetInstance().GetArchitecture());

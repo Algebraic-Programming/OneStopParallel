@@ -110,7 +110,7 @@ class StepByStepCoarser : public CoarserGenContractionMap<GraphT, GraphT> {
     virtual std::string getCoarserName() const override { return "StepByStepCoarsening"; }
 
     // DAG coarsening
-    virtual std::vector<VertexIdxT<GraphT>> generate_vertex_contraction_map(const GraphT &dagIn) override;
+    virtual std::vector<VertexIdxT<GraphT>> GenerateVertexContractionMap(const GraphT &dagIn) override;
 
     // Coarsening for pebbling problems - leaves source nodes intact, considers memory bound
     void CoarsenForPebbling(const GraphT &dagIn, GraphT &coarsenedDag, std::vector<VertexIdxT<GraphT>> &newVertexId);
@@ -130,7 +130,7 @@ class StepByStepCoarser : public CoarserGenContractionMap<GraphT, GraphT> {
 };
 
 template <typename GraphT>
-std::vector<VertexIdxT<GraphT>> StepByStepCoarser<GraphT>::generate_vertex_contraction_map(const GraphT &dagIn) {
+std::vector<VertexIdxT<GraphT>> StepByStepCoarser<GraphT>::GenerateVertexContractionMap(const GraphT &dagIn) {
     const unsigned n = static_cast<unsigned>(dagIn.NumVertices());
 
     gFull_ = dagIn;

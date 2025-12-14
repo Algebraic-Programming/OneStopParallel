@@ -109,8 +109,8 @@ std::unique_ptr<Scheduler<GraphT>> GetBaseBspSchedulerByName(const ConfigParser 
 
     } else if (id == "GrowLocal") {
         GrowLocalAutoCoresParams<VWorkwT<GraphT>> params;
-        params.minSuperstepSize = algorithm.get_child("parameters").get_child("minSuperstepSize").get_value<unsigned>();
-        params.syncCostMultiplierMinSuperstepWeight
+        params.minSuperstepSize_ = algorithm.get_child("parameters").get_child("minSuperstepSize").get_value<unsigned>();
+        params.syncCostMultiplierMinSuperstepWeight_
             = algorithm.get_child("parameters").get_child("syncCostMultiplierMinSuperstepWeight").get_value<VWorkwT<GraphT>>();
         params.syncCostMultiplierParallelCheck
             = algorithm.get_child("parameters").get_child("syncCostMultiplierParallelCheck").get_value<VWorkwT<GraphT>>();

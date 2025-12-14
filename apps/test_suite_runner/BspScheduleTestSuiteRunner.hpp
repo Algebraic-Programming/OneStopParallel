@@ -41,7 +41,7 @@ class BspScheduleTestSuiteRunner : public AbstractTestSuiteRunner<BspSchedule<Co
 
         const auto startTime = std::chrono::high_resolution_clock::now();
 
-        ReturnStatus status = run_bsp_scheduler(this->parser_, algoConfig, *schedule);
+        ReturnStatus status = RunBspScheduler(this->parser_, algoConfig, *schedule);
 
         const auto finishTime = std::chrono::high_resolution_clock::now();
         computationTimeMs = std::chrono::duration_cast<std::chrono::milliseconds>(finishTime - startTime).count();
@@ -51,21 +51,21 @@ class BspScheduleTestSuiteRunner : public AbstractTestSuiteRunner<BspSchedule<Co
 
     void CreateAndRegisterStatisticModules(const std::string &moduleName) override {
         if (moduleName == "BasicBspStats") {
-            this->active_stats_modules.push_back(std::make_unique<BasicBspStatsModule<BspSchedule<ConcreteGraphT>>>());
+            this->activeStatsModules_.push_back(std::make_unique<BasicBspStatsModule<BspSchedule<ConcreteGraphT>>>());
         } else if (moduleName == "BspCommStats") {
-            this->active_stats_modules.push_back(std::make_unique<BspCommStatsModule<ConcreteGraphT>>());
+            this->activeStatsModules_.push_back(std::make_unique<BspCommStatsModule<ConcreteGraphT>>());
 #ifdef EIGEN_FOUND
         } else if (moduleName == "BspSptrsvStats") {
-            this->active_stats_modules.push_back(std::make_unique<BspSptrsvStatsModule<BspSchedule<ConcreteGraphT>>>(NO_PERMUTE));
+            this->activeStatsModules_.push_back(std::make_unique<BspSptrsvStatsModule<BspSchedule<ConcreteGraphT>>>(NO_PERMUTE));
         } else if (moduleName == "BspSptrsvPermLoopProcessorsStats") {
-            this->active_stats_modules.push_back(
+            this->activeStatsModules_.push_back(
                 std::make_unique<BspSptrsvStatsModule<BspSchedule<ConcreteGraphT>>>(LOOP_PROCESSORS));
         } else if (moduleName == "BspSptrsvPermSnakeProcessorsStats") {
-            this->active_stats_modules.push_back(
+            this->activeStatsModules_.push_back(
                 std::make_unique<BspSptrsvStatsModule<BspSchedule<ConcreteGraphT>>>(SNAKE_PROCESSORS));
 #endif
         } else if (moduleName == "GraphStats") {
-            this->active_stats_modules.push_back(std::make_unique<GraphStatsModule<BspSchedule<ConcreteGraphT>>>());
+            this->activeStatsModules_.push_back(std::make_unique<GraphStatsModule<BspSchedule<ConcreteGraphT>>>());
         }
     }
 

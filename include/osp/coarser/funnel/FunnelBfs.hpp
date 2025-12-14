@@ -64,7 +64,7 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
 
     virtual ~FunnelBfs() = default;
 
-    virtual std::vector<std::vector<VertexIdxT<GraphTIn>>> generate_vertex_expansion_map(const GraphTIn &graph) override {
+    virtual std::vector<std::vector<VertexIdxT<GraphTIn>>> GenerateVertexExpansionMap(const GraphTIn &graph) override {
         if constexpr (useArchitectureMemoryContraints) {
             if (maxMemoryPerVertexType_.size() < graph.NumVertexTypes()) {
                 throw std::runtime_error("FunnelBfs: max_memory_per_vertex_type has insufficient size.");
@@ -82,7 +82,7 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
         return partition;
     }
 
-    std::string getCoarserName() const override { return "FunnelBfs"; }
+    std::string GetCoarserName() const override { return "FunnelBfs"; }
 
     std::vector<VMemwT<GraphTIn>> &GetMaxMemoryPerVertexType() { return maxMemoryPerVertexType_; }
 

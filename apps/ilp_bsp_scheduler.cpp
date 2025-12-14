@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
     // }
 
     CoptFullScheduler<ComputationalDag> scheduler;
-    scheduler.setMaxNumberOfSupersteps(steps);
+    scheduler.SetMaxNumberOfSupersteps(steps);
 
     if (recomp) {
         BspScheduleRecomp<ComputationalDag> schedule(instance);

@@ -50,8 +50,8 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
     constexpr static bool useMemoryConstraint_ = IsMemoryConstraintV<MemoryConstraintT>
                                                  or IsMemoryConstraintScheduleV<MemoryConstraintT>;
 
-    static_assert(not useMemoryConstraint_ or std::is_same_v<GraphT, typename MemoryConstraintT::Graph_impl_t>,
-                  "GraphT must be the same as MemoryConstraintT::Graph_impl_t.");
+    static_assert(not useMemoryConstraint_ or std::is_same_v<GraphT, typename MemoryConstraintT::GraphImplT>,
+                  "GraphT must be the same as MemoryConstraintT::GraphImplT.");
 
     MemoryConstraintT memoryConstraint_;
 
@@ -124,7 +124,7 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
 
             if (topNode.score_ > maxScore) {
                 if constexpr (useMemoryConstraint_) {
-                    if (memoryConstraint_.can_add(topNode.node_, proc)) {
+                    if (memoryConstraint_.CanAdd(topNode.node_, proc)) {
                         maxScore = topNode.score_;
                         node = topNode.node_;
                         p = proc;
@@ -172,7 +172,7 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
                         const HeapNode &topNode = maxProcScoreHeap_[i].top();
 
                         // todo check if this is correct
-                        if (memoryConstraint_.can_add(topNode.node_, i)) {
+                        if (memoryConstraint_.CanAdd(topNode.node_, i)) {
                             return true;
                         }
                     } else {
@@ -189,7 +189,7 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
                         const HeapNode &topNode = maxAllProcScoreHeap_[i].top();
 
                         // todo check if this is correct
-                        if (memoryConstraint_.can_add(topNode.node_, i)) {
+                        if (memoryConstraint_.CanAdd(topNode.node_, i)) {
                             return true;
                         }
                     }
@@ -210,7 +210,7 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
         std::vector<unsigned> procsPerType = nrProcsPerType;
         for (unsigned procType = 0; procType < instance.GetArchitecture().GetNumberOfProcessorTypes(); ++procType) {
             for (unsigned nodeType = 0; nodeType < instance.GetComputationalDag().NumVertexTypes(); ++nodeType) {
-                if (instance.isCompatibleType(nodeType, procType)) {
+                if (instance.IsCompatibleType(nodeType, procType)) {
                     unsigned matched = std::min(readyNodesPerType[nodeType], procsPerType[procType]);
                     nrNodes += matched;
                     readyNodesPerType[nodeType] -= matched;
@@ -253,9 +253,9 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
         unsigned supstepIdx = 0;
 
         if constexpr (IsMemoryConstraintV<MemoryConstraintT>) {
-            memoryConstraint_.initialize(instance);
+            memoryConstraint_.Initialize(instance);
         } else if constexpr (IsMemoryConstraintScheduleV<MemoryConstraintT>) {
-            memoryConstraint_.initialize(schedule, supstepIdx);
+            memoryConstraint_.Initialize(schedule, supstepIdx);
         }
 
         const std::size_t &n = instance.NumberOfVertices();
@@ -294,7 +294,7 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
             ++nrReadyNodesPerType[g.VertexType(v)];
 
             for (unsigned proc = 0; proc < paramsP; ++proc) {
-                if (instance.isCompatible(v, proc)) {
+                if (instance.IsCompatible(v, proc)) {
                     HeapNode newNode(v, 0.0);
                     nodeAllProcHeapHandles_[proc][v] = maxAllProcScoreHeap_[proc].push(newNode);
                 }
@@ -310,7 +310,7 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
                     nodeProcHeapHandles_[proc].clear();
 
                     if constexpr (useMemoryConstraint_) {
-                        memoryConstraint_.reset(proc);
+                        memoryConstraint_.Reset(proc);
                     }
                 }
 
@@ -323,7 +323,7 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
 
                 for (const auto &v : ready) {
                     for (unsigned proc = 0; proc < paramsP; ++proc) {
-                        if (!instance.isCompatible(v, proc)) {
+                        if (!instance.IsCompatible(v, proc)) {
                             continue;
                         }
 
@@ -365,13 +365,13 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
 
                             if constexpr (useMemoryConstraint_) {
                                 if (canAdd) {
-                                    if (not memoryConstraint_.can_add(succ, schedule.AssignedProcessor(node))) {
+                                    if (not memoryConstraint_.CanAdd(succ, schedule.AssignedProcessor(node))) {
                                         canAdd = false;
                                     }
                                 }
                             }
 
-                            if (!instance.isCompatible(succ, schedule.AssignedProcessor(node))) {
+                            if (!instance.IsCompatible(succ, schedule.AssignedProcessor(node))) {
                                 canAdd = false;
                             }
 
@@ -420,7 +420,7 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
                     allReady.erase(nextNode);
 
                     for (unsigned proc = 0; proc < instance.NumberOfProcessors(); ++proc) {
-                        if (instance.isCompatible(nextNode, proc)) {
+                        if (instance.IsCompatible(nextNode, proc)) {
                             maxAllProcScoreHeap_[proc].erase(nodeAllProcHeapHandles_[proc][nextNode]);
                             nodeAllProcHeapHandles_[proc].erase(nextNode);
                         }
@@ -433,11 +433,11 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
                 schedule.SetAssignedSuperstep(nextNode, supstepIdx);
 
                 if constexpr (useMemoryConstraint_) {
-                    memoryConstraint_.add(nextNode, nextProc);
+                    memoryConstraint_.Add(nextNode, nextProc);
 
                     std::vector<VertexType> toErase;
                     for (const auto &node : procReady[nextProc]) {
-                        if (not memoryConstraint_.can_add(node, nextProc)) {
+                        if (not memoryConstraint_.CanAdd(node, nextProc)) {
                             toErase.push_back(node);
                         }
                     }
@@ -471,7 +471,7 @@ class GreedyBspScheduler : public Scheduler<GraphT> {
                             maxProcScoreHeap_[nextProc].update(nodeProcHeapHandles_[nextProc][child]);
                         }
 
-                        if (child != nextNode && allReady.find(child) != allReady.end() && instance.isCompatible(child, nextProc)) {
+                        if (child != nextNode && allReady.find(child) != allReady.end() && instance.IsCompatible(child, nextProc)) {
                             (*nodeAllProcHeapHandles_[nextProc][child]).score_
                                 += static_cast<double>(instance.GetComputationalDag().VertexCommWeight(pred))
                                    / static_cast<double>(instance.GetComputationalDag().OutDegree(pred));

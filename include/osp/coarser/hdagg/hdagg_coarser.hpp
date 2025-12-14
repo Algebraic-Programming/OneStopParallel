@@ -66,9 +66,9 @@ class HdaggCoarser : public CoarserGenContractionMap<GraphTIn, GraphTOut> {
 
     virtual ~HdaggCoarser() = default;
 
-    virtual std::string getCoarserName() const override { return "hdagg_coarser"; };
+    virtual std::string GetCoarserName() const override { return "hdagg_coarser"; };
 
-    virtual std::vector<VertexIdxT<GraphTOut>> generate_vertex_contraction_map(const GraphTIn &dagIn) override {
+    virtual std::vector<VertexIdxT<GraphTOut>> GenerateVertexContractionMap(const GraphTIn &dagIn) override {
         std::vector<bool> visited(dagIn.NumVertices(), false);
         std::vector<VertexTypeOut> reverseVertexMap(dagIn.NumVertices());
 

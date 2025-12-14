@@ -52,8 +52,8 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
     constexpr static bool useMemoryConstraint_ = IsMemoryConstraintV<MemoryConstraint_t>
                                                  or IsMemoryConstraintScheduleV<MemoryConstraint_t>;
 
-    static_assert(not useMemoryConstraint_ or std::is_same_v<GraphT, typename MemoryConstraintT::Graph_impl_t>,
-                  "Graph_t must be the same as MemoryConstraint_t::Graph_impl_t.");
+    static_assert(not useMemoryConstraint_ or std::is_same_v<GraphT, typename MemoryConstraintT::GraphImplT>,
+                  "Graph_t must be the same as MemoryConstraint_t::GraphImplT.");
 
     MemoryConstraintT memoryConstraint_;
     double maxPercentIdleProcessors_;
@@ -161,7 +161,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
                     const unsigned procType = instance.GetArchitecture().ProcessorType(i);
 
                     if constexpr (useMemoryConstraint_) {
-                        if (memoryConstraint_.can_add(it->first, i)) {
+                        if (memoryConstraint_.CanAdd(it->first, i)) {
                             node = it->first;
                             p = i;
                             foundAllocation = true;
@@ -233,7 +233,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
 
                 if (score > maxScore) {
                     if constexpr (useMemoryConstraint_) {
-                        if (memoryConstraint_.can_add(it->first, i)) {
+                        if (memoryConstraint_.CanAdd(it->first, i)) {
                             node = it->first;
                             p = i;
 
@@ -280,7 +280,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
                         const std::pair<VertexType, double> &nodePair = *procReady[i].begin();
                         VertexType topNode = node_pair.first;
 
-                        if (memoryConstraint_.can_add(top_node, i)) {
+                        if (memoryConstraint_.CanAdd(top_node, i)) {
                             return true;
                         }
                     }
@@ -294,7 +294,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
                     const std::pair<VertexType, double> &nodePair = *allReady[instance.GetArchitecture().ProcessorType(i)].begin();
                     VertexType topNode = node_pair.first;
 
-                    if (memoryConstraint_.can_add(top_node, i)) {
+                    if (memoryConstraint_.CanAdd(top_node, i)) {
                         return true;
                     }
                 }
@@ -367,9 +367,9 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
         unsigned supstepIdx = 0;
 
         if constexpr (IsMemoryConstraintV<MemoryConstraint_t>) {
-            memoryConstraint_.initialize(instance);
+            memoryConstraint_.Initialize(instance);
         } else if constexpr (IsMemoryConstraintScheduleV<MemoryConstraint_t>) {
-            memoryConstraint_.initialize(schedule, supstepIdx);
+            memoryConstraint_.Initialize(schedule, supstepIdx);
         }
 
         const std::vector<double> workVariances = ComputeWorkVariance(g);
@@ -464,7 +464,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
                 if constexpr (useMemoryConstraint_) {
                     if (instance.GetArchitecture().GetMemoryConstraintType() == MemoryConstraintType::LOCAL) {
                         for (unsigned proc = 0; proc < p; proc++) {
-                            memoryConstraint_.reset(proc);
+                            memoryConstraint_.Reset(proc);
                         }
                     }
                 }
@@ -508,7 +508,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
 
                                 if constexpr (use_memory_constraint) {
                                     if (earliest_add == supstepIdx) {
-                                        memory_ok = memory_constraint.can_add(succ, proc_of_node);
+                                        memory_ok = memory_constraint.CanAdd(succ, proc_of_node);
                                     }
                                 }
                                 for (unsigned step_to_add = earliest_add; step_to_add < supstepIdx + stale; ++step_to_add) {
@@ -581,11 +581,11 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
                 ableToScheduleInStep = true;
 
                 if constexpr (useMemoryConstraint_) {
-                    memoryConstraint_.add(nextNode, nextProc);
+                    memoryConstraint_.Add(nextNode, nextProc);
 
                     std::vector<std::pair<VertexType, double>> toErase;
                     for (const auto &node_pair : procReady[supstepIdx % stale][nextProc]) {
-                        if (!memory_constraint.can_add(node_pair.first, nextProc)) {
+                        if (!memory_constraint.CanAdd(node_pair.first, nextProc)) {
                             toErase.push_back(node_pair);
                         }
                     }

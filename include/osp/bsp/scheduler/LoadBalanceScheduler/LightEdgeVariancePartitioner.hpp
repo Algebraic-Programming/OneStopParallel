@@ -75,9 +75,9 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
         unsigned superstep = 0;
 
         if constexpr (IsMemoryConstraintV<MemoryConstraintT>) {
-            Base::memory_constraint.initialize(instance);
+            Base::memoryConstraint_.Initialize(instance);
         } else if constexpr (IsMemoryConstraintScheduleV<MemoryConstraintT>) {
-            Base::memory_constraint.initialize(schedule, superstep);
+            Base::memoryConstraint_.Initialize(schedule, superstep);
         }
 
         std::vector<bool> hasVertexBeenAssigned(nVert, false);
@@ -89,7 +89,7 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
 
         std::vector<unsigned> whichProcReadyPrior(nVert, nProcessors);
 
-        std::vector<double> variancePriorities = Base::compute_work_variance(graph, Base::variance_power);
+        std::vector<double> variancePriorities = Base::ComputeWorkVariance(graph, Base::variancePower_);
         std::vector<VertexType> numUnallocatedParents(nVert, 0);
 
         VWorkwT<GraphT> totalWork = 0;
@@ -110,7 +110,7 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
         std::vector<VWorkwT<GraphT>> totalPartitionWork(nProcessors, 0);
         std::vector<VWorkwT<GraphT>> superstepPartitionWork(nProcessors, 0);
 
-        std::vector<std::vector<VertexType>> preprocessedPartition = heavy_edge_preprocess(
+        std::vector<std::vector<VertexType>> preprocessedPartition = HeavyEdgePreprocess(
             graph, heavyIsXTimesMedian_, minPercentComponentsRetained_, boundComponentWeightPercent_ / nProcessors);
 
         std::vector<size_t> whichPreprocessPartition(graph.NumVertices());
@@ -146,7 +146,7 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
                 endsuperstep = true;
                 // std::cout << "\nCall for new superstep - unable to schedule.\n";
             } else {
-                if constexpr (Base::use_memory_constraint) {
+                if constexpr (Base::useMemoryConstraint_) {
                     if (numUnableToPartitionNodeLoop >= 2) {
                         return ReturnStatus::ERROR;
                     }
@@ -154,13 +154,13 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
             }
 
             // Checking if new superstep is needed
-            // std::cout << "freeprocessor " << freeProcessors.size() << " idle thresh " << max_percent_idle_processors
+            // std::cout << "freeprocessor " << freeProcessors.size() << " idle thresh " << maxPercentIdleProcessors_
             // * nProcessors << " ready size " << ready.size() << " small increase " << 1.2 * (nProcessors -
             // freeProcessors.size()) << " large increase " << nProcessors - freeProcessors.size() +  (0.5 *
             // freeProcessors.size()) << "\n";
             if (numUnableToPartitionNodeLoop == 0
-                && static_cast<double>(freeProcessors.size()) > Base::max_percent_idle_processors * nProcessors
-                && ((!Base::increase_parallelism_in_new_superstep) || ready.size() >= nProcessors
+                && static_cast<double>(freeProcessors.size()) > Base::maxPercentIdleProcessors_ * nProcessors
+                && ((!Base::increaseParallelismInNewSuperstep_) || ready.size() >= nProcessors
                     || static_cast<double>(ready.size()) >= 1.2 * (nProcessors - static_cast<double>(freeProcessors.size()))
                     || static_cast<double>(ready.size()) >= nProcessors - static_cast<double>(freeProcessors.size())
                                                                 + (0.5 * static_cast<double>(freeProcessors.size())))) {
@@ -169,7 +169,7 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
             }
 
             std::vector<float> processorPriorities
-                = Base::computeProcessorPrioritiesInterpolation(superstepPartitionWork, totalPartitionWork, totalWork, instance);
+                = Base::ComputeProcessorPrioritiesInterpolation(superstepPartitionWork, totalPartitionWork, totalWork, instance);
 
             float minPriority = processorPriorities[0];
             float maxPriority = processorPriorities[0];
@@ -178,8 +178,8 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
                 maxPriority = std::max(maxPriority, prio);
             }
             if (numUnableToPartitionNodeLoop == 0
-                && (maxPriority - minPriority) > Base::max_priority_difference_percent * static_cast<float>(totalWork)
-                                                     / static_cast<float>(nProcessors)) {
+                && (maxPriority - minPriority)
+                       > Base::maxPriorityDifferencePercent_ * static_cast<float>(totalWork) / static_cast<float>(nProcessors)) {
                 endsuperstep = true;
                 // std::cout << "\nCall for new superstep - difference.\n";
             }
@@ -198,9 +198,9 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
                 }
                 freeProcessors.clear();
 
-                if constexpr (Base::use_memory_constraint) {
+                if constexpr (Base::useMemoryConstraint_) {
                     for (unsigned proc = 0; proc < nProcessors; proc++) {
-                        Base::memory_constraint.reset(proc);
+                        Base::memoryConstraint_.Reset(proc);
                     }
                 }
 
@@ -212,7 +212,7 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
 
             // Choosing next processor
             std::vector<unsigned> processorsInOrder
-                = Base::computeProcessorPriority(superstepPartitionWork, totalPartitionWork, totalWork, instance, Base::slack);
+                = Base::ComputeProcessorPriority(superstepPartitionWork, totalPartitionWork, totalWork, instance, Base::slack_);
 
             for (unsigned &proc : processorsInOrder) {
                 if ((freeProcessors.find(proc)) != freeProcessors.cend()) {
@@ -243,9 +243,9 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
                     }
 
                     const VertexType &vert = vertex_prior_pair_iter->first;
-                    if constexpr (base::use_memory_constraint) {
-                        if (has_vertex_been_assigned[vert]
-                            || base::memory_constraint.can_add(
+                    if constexpr (Base::useMemoryConstraint_) {
+                        if (hasVertexBeenAssigned[vert]
+                            || Base::memoryConstraint_.CanAdd(
                                 proc,
                                 memoryCostOfPreprocessedPartition[whichPreprocessPartition[vert]],
                                 transientCostOfPreprocessedPartition[whichPreprocessPartition[vert]])) {
@@ -266,9 +266,9 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
                     }
 
                     const VertexType &vert = vertex_prior_pair_iter->first;
-                    if constexpr (base::use_memory_constraint) {
-                        if (has_vertex_been_assigned[vert]
-                            || base::memory_constraint.can_add(
+                    if constexpr (Base::useMemoryConstraint_) {
+                        if (hasVertexBeenAssigned[vert]
+                            || Base::memoryConstraint_.CanAdd(
                                 proc,
                                 memoryCostOfPreprocessedPartition[whichPreprocessPartition[vert]],
                                 transientCostOfPreprocessedPartition[whichPreprocessPartition[vert]])) {
@@ -287,9 +287,9 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
                     }
 
                     const VertexType &vert = vertex_prior_pair_iter->first;
-                    if constexpr (base::use_memory_constraint) {
-                        if (has_vertex_been_assigned[vert]
-                            || base::memory_constraint.can_add(
+                    if constexpr (Base::useMemoryConstraint_) {
+                        if (hasVertexBeenAssigned[vert]
+                            || Base::memoryConstraint_.CanAdd(
                                 proc,
                                 memoryCostOfPreprocessedPartition[whichPreprocessPartition[vert]],
                                 transientCostOfPreprocessedPartition[whichPreprocessPartition[vert]])) {
@@ -306,7 +306,7 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
                     freeProcessors.insert(proc);
                 } else {
                     // Assignments
-                    if (has_vertex_been_assigned[next_node]) {
+                    if (hasVertexBeenAssigned[next_node]) {
                         unsigned proc_alloc_prior = schedule.AssignedProcessor(next_node);
 
                         // std::cout << "Allocated node " << next_node << " to processor " << proc_alloc_prior << "
@@ -320,7 +320,7 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
                         superstepPartitionWork[proc_alloc_prior] += graph.VertexWorkWeight(next_node);
 
                         // Deletion from Queues
-                        std::pair<VertexType, double> pair = std::make_pair(next_node, variance_priorities[next_node]);
+                        std::pair<VertexType, double> pair = std::make_pair(next_node, variancePriorities[next_node]);
                         ready.erase(pair);
                         procReady[proc].erase(pair);
                         procReadyPrior[proc].erase(pair);
@@ -331,10 +331,10 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
 
                         // Checking children
                         for (const auto &chld : graph.Children(next_node)) {
-                            num_unallocated_parents[chld] -= 1;
-                            if (num_unallocated_parents[chld] == 0) {
+                            numUnallocatedParents[chld] -= 1;
+                            if (numUnallocatedParents[chld] == 0) {
                                 // std::cout << "Inserting child " << chld << " into ready.\n";
-                                ready.insert(std::make_pair(chld, variance_priorities[chld]));
+                                ready.insert(std::make_pair(chld, variancePriorities[chld]));
                                 bool is_proc_ready = true;
                                 for (const auto &parent : graph.Parents(chld)) {
                                     if ((schedule.AssignedProcessor(parent) != proc_alloc_prior)
@@ -344,7 +344,7 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
                                     }
                                 }
                                 if (is_proc_ready) {
-                                    procReady[proc_alloc_prior].insert(std::make_pair(chld, variance_priorities[chld]));
+                                    procReady[proc_alloc_prior].insert(std::make_pair(chld, variancePriorities[chld]));
                                     // std::cout << "Inserting child " << chld << " into procReady for processor " <<
                                     // proc_alloc_prior << ".\n";
                                 }
@@ -352,7 +352,7 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
                         }
                     } else {
                         schedule.SetAssignedProcessor(next_node, proc);
-                        has_vertex_been_assigned[next_node] = true;
+                        hasVertexBeenAssigned[next_node] = true;
                         // std::cout << "Allocated node " << next_node << " to processor " << proc << ".\n";
 
                         schedule.SetAssignedSuperstep(next_node, superstep);
@@ -362,15 +362,15 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
                         totalPartitionWork[proc] += graph.VertexWorkWeight(next_node);
                         superstepPartitionWork[proc] += graph.VertexWorkWeight(next_node);
 
-                        if constexpr (base::use_memory_constraint) {
-                            base::memory_constraint.add(next_node, proc);
+                        if constexpr (Base::useMemoryConstraint_) {
+                            Base::memoryConstraint_.Add(next_node, proc);
                         }
                         // total_partition_memory[proc] += graph.VertexMemWeight(next_node);
                         // transient_partition_memory[proc] =
                         //     std::max(transient_partition_memory[proc], graph.VertexCommWeight(next_node));
 
                         // Deletion from Queues
-                        std::pair<VertexType, double> pair = std::make_pair(next_node, variance_priorities[next_node]);
+                        std::pair<VertexType, double> pair = std::make_pair(next_node, variancePriorities[next_node]);
                         ready.erase(pair);
                         procReady[proc].erase(pair);
                         procReadyPrior[proc].erase(pair);
@@ -381,10 +381,10 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
 
                         // Checking children
                         for (const auto &chld : graph.Children(next_node)) {
-                            num_unallocated_parents[chld] -= 1;
-                            if (num_unallocated_parents[chld] == 0) {
+                            numUnallocatedParents[chld] -= 1;
+                            if (numUnallocatedParents[chld] == 0) {
                                 // std::cout << "Inserting child " << chld << " into ready.\n";
-                                ready.insert(std::make_pair(chld, variance_priorities[chld]));
+                                ready.insert(std::make_pair(chld, variancePriorities[chld]));
                                 bool is_proc_ready = true;
                                 for (const auto &parent : graph.Parents(chld)) {
                                     if ((schedule.AssignedProcessor(parent) != proc)
@@ -394,7 +394,7 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
                                     }
                                 }
                                 if (is_proc_ready) {
-                                    procReady[proc].insert(std::make_pair(chld, variance_priorities[chld]));
+                                    procReady[proc].insert(std::make_pair(chld, variancePriorities[chld]));
                                     // std::cout << "Inserting child " << chld << " into procReady for processor " <<
                                     // proc << ".\n";
                                 }
@@ -409,14 +409,14 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
 
                             // Allocation
                             schedule.SetAssignedProcessor(node_in_same_partition, proc);
-                            has_vertex_been_assigned[node_in_same_partition] = true;
+                            hasVertexBeenAssigned[node_in_same_partition] = true;
                             // std::cout << "Allocated node " << next_node << " to processor " << proc << ".\n";
 
                             // Update loads
                             totalPartitionWork[proc] += graph.VertexWorkWeight(node_in_same_partition);
 
-                            if constexpr (base::use_memory_constraint) {
-                                base::memory_constraint.add(node_in_same_partition, proc);
+                            if constexpr (Base::useMemoryConstraint_) {
+                                Base::memoryConstraint_.Add(node_in_same_partition, proc);
                             }
 
                             // total_partition_memory[proc] += graph.VertexMemWeight(node_in_same_partition);

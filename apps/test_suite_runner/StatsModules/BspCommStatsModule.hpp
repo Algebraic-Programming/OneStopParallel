@@ -37,10 +37,10 @@ class BspCommStatsModule : public IStatisticModule<BspSchedule<GraphT>> {
     const std::vector<std::string> metricHeaders_ = {"TotalCommCost", "TotalLambdaCommCost", "BufferedSendingCosts"};
 
   public:
-    std::vector<std::string> get_metric_headers() const override { return metricHeaders_; }
+    std::vector<std::string> GetMetricHeaders() const override { return metricHeaders_; }
 
-    std::map<std::string, std::string> record_statistics(const BspSchedule<GraphT> &schedule,
-                                                         std::ofstream & /*log_stream*/) const override {
+    std::map<std::string, std::string> RecordStatistics(const BspSchedule<GraphT> &schedule,
+                                                        std::ofstream & /*log_stream*/) const override {
         std::map<std::string, std::string> stats;
         stats["TotalCommCost"] = std::to_string(TotalCommunicationCost<GraphT>()(schedule));
         stats["TotalLambdaCommCost"] = std::to_string(TotalLambdaCommunicationCost<GraphT>()(schedule));

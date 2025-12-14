@@ -54,8 +54,8 @@ class BspLocking : public Scheduler<GraphT> {
     constexpr static bool useMemoryConstraint_ = IsMemoryConstraintV<MemoryConstraintT>
                                                  or IsMemoryConstraintScheduleV<MemoryConstraintT>;
 
-    static_assert(not useMemoryConstraint_ or std::is_same_v<GraphT, typename MemoryConstraintT::Graph_impl_t>,
-                  "GraphT must be the same as MemoryConstraintT::Graph_impl_t.");
+    static_assert(not useMemoryConstraint_ or std::is_same_v<GraphT, typename MemoryConstraintT::GraphImplT>,
+                  "GraphT must be the same as MemoryConstraintT::GraphImplT.");
 
     MemoryConstraintT memoryConstraint_;
 
@@ -129,7 +129,7 @@ class BspLocking : public Scheduler<GraphT> {
                     if (!procReady[i].empty()) {
                         VertexType topNode = maxProcScoreHeap_[i].top();
 
-                        if (memoryConstraint_.can_add(topNode, i)) {
+                        if (memoryConstraint_.CanAdd(topNode, i)) {
                             return true;
                         }
                     }
@@ -139,7 +139,7 @@ class BspLocking : public Scheduler<GraphT> {
                     for (unsigned i = 0; i < instance.NumberOfProcessors(); ++i) {
                         VertexType topNode = maxAllProcScoreHeap_[i].top();
 
-                        if (memoryConstraint_.can_add(topNode, i)) {
+                        if (memoryConstraint_.CanAdd(topNode, i)) {
                             return true;
                         }
                     }
@@ -227,7 +227,7 @@ class BspLocking : public Scheduler<GraphT> {
             Priority topPriority = maxAllProcScoreHeap_[proc].get_value(topNode);
             if (!foundNode || PriorityCompare{}(topPriority, bestPriority)) {
                 if constexpr (useMemoryConstraint_) {
-                    if (memoryConstraint_.can_add(topNode, proc)) {
+                    if (memoryConstraint_.CanAdd(topNode, proc)) {
                         bestPriority = topPriority;
                         node = topNode;
                         p = proc;
@@ -315,9 +315,9 @@ class BspLocking : public Scheduler<GraphT> {
         unsigned supstepIdx = 0;
 
         if constexpr (IsMemoryConstraintV<MemoryConstraintT>) {
-            memoryConstraint_.initialize(instance);
+            memoryConstraint_.Initialize(instance);
         } else if constexpr (IsMemoryConstraintScheduleV<MemoryConstraintT>) {
-            memoryConstraint_.initialize(schedule, supstepIdx);
+            memoryConstraint_.Initialize(schedule, supstepIdx);
         }
 
         const auto &n = instance.NumberOfVertices();
@@ -390,7 +390,7 @@ class BspLocking : public Scheduler<GraphT> {
                     maxProcScoreHeap_[proc].clear();
 
                     if constexpr (useMemoryConstraint_) {
-                        memoryConstraint_.reset(proc);
+                        memoryConstraint_.Reset(proc);
                     }
                 }
 

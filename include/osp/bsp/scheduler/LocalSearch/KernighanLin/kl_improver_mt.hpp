@@ -105,7 +105,7 @@ class KlImproverMt : public KlImprover<GraphT, CommCostFunctionT, MemoryConstrai
 
     void SetMaxNumThreads(const unsigned numThreads) { maxNumThreads_ = numThreads; }
 
-    virtual ReturnStatus improveSchedule(BspSchedule<GraphT> &schedule) override {
+    virtual ReturnStatus ImproveSchedule(BspSchedule<GraphT> &schedule) override {
         if (schedule.GetInstance().NumberOfProcessors() < 2) {
             return ReturnStatus::BEST_FOUND;
         }

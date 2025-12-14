@@ -55,8 +55,8 @@ class VarianceFillup : public Scheduler<GraphT> {
     constexpr static bool useMemoryConstraint_ = IsMemoryConstraintV<MemoryConstraintT>
                                                  or IsMemoryConstraintScheduleV<MemoryConstraintT>;
 
-    static_assert(not useMemoryConstraint_ or std::is_same_v<GraphT, typename MemoryConstraintT::Graph_impl_t>,
-                  "GraphT must be the same as MemoryConstraintT::Graph_impl_t.");
+    static_assert(not useMemoryConstraint_ or std::is_same_v<GraphT, typename MemoryConstraintT::GraphImplT>,
+                  "GraphT must be the same as MemoryConstraintT::GraphImplT.");
 
     MemoryConstraintT memoryConstraint_;
 
@@ -126,7 +126,7 @@ class VarianceFillup : public Scheduler<GraphT> {
                         const std::pair<VertexType, double> &nodePair = *procReady[i].begin();
                         VertexType topNode = nodePair.first;
 
-                        if (memoryConstraint_.can_add(topNode, i)) {
+                        if (memoryConstraint_.CanAdd(topNode, i)) {
                             return true;
                         }
                     }
@@ -140,7 +140,7 @@ class VarianceFillup : public Scheduler<GraphT> {
                     const std::pair<VertexType, double> &nodePair = *allReady[instance.GetArchitecture().ProcessorType(i)].begin();
                     VertexType topNode = nodePair.first;
 
-                    if (memoryConstraint_.can_add(topNode, i)) {
+                    if (memoryConstraint_.CanAdd(topNode, i)) {
                         return true;
                     }
                 }
@@ -201,7 +201,7 @@ class VarianceFillup : public Scheduler<GraphT> {
 
                     if (score > maxScore) {
                         if constexpr (useMemoryConstraint_) {
-                            if (memoryConstraint_.can_add(it->first, i)) {
+                            if (memoryConstraint_.CanAdd(it->first, i)) {
                                 node = it->first;
                                 p = i;
 
@@ -303,9 +303,9 @@ class VarianceFillup : public Scheduler<GraphT> {
         unsigned supstepIdx = 0;
 
         if constexpr (IsMemoryConstraintV<MemoryConstraintT>) {
-            memoryConstraint_.initialize(instance);
+            memoryConstraint_.Initialize(instance);
         } else if constexpr (IsMemoryConstraintScheduleV<MemoryConstraintT>) {
-            memoryConstraint_.initialize(schedule, supstepIdx);
+            memoryConstraint_.Initialize(schedule, supstepIdx);
         }
 
         const auto &n = instance.NumberOfVertices();
@@ -355,7 +355,7 @@ class VarianceFillup : public Scheduler<GraphT> {
                     procReady[i].clear();
 
                     if constexpr (useMemoryConstraint_) {
-                        memoryConstraint_.reset(i);
+                        memoryConstraint_.Reset(i);
                     }
                 }
 
@@ -400,7 +400,7 @@ class VarianceFillup : public Scheduler<GraphT> {
 
                             if constexpr (useMemoryConstraint_) {
                                 if (canAdd) {
-                                    if (not memoryConstraint_.can_add(succ, schedule.AssignedProcessor(node))) {
+                                    if (not memoryConstraint_.CanAdd(succ, schedule.AssignedProcessor(node))) {
                                         canAdd = false;
                                     }
                                 }
@@ -449,12 +449,12 @@ class VarianceFillup : public Scheduler<GraphT> {
                 schedule.SetAssignedSuperstep(nextNode, supstepIdx);
 
                 if constexpr (useMemoryConstraint_) {
-                    memoryConstraint_.add(nextNode, nextProc);
+                    memoryConstraint_.Add(nextNode, nextProc);
 
                     std::vector<std::pair<VertexType, double>> toErase;
 
                     for (const auto &nodePair : procReady[nextProc]) {
-                        if (not memoryConstraint_.can_add(nodePair.first, nextProc)) {
+                        if (not memoryConstraint_.CanAdd(nodePair.first, nextProc)) {
                             toErase.push_back(nodePair);
                         }
                     }

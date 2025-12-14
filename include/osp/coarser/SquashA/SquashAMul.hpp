@@ -47,7 +47,7 @@ class SquashAMul : public MultilevelCoarser<GraphT, GraphTCoarse> {
 
     void SetMinimumNumberVertices(VertexIdxT<GraphT> num) { minNodes_ = num; };
 
-    std::string getCoarserName() const override { return "SquashA"; };
+    std::string GetCoarserName() const override { return "SquashA"; };
 };
 
 template <typename GraphT, typename GraphTCoarse>

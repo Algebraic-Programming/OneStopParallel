@@ -798,7 +798,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
 #endif
 
                 const auto prevWorkData = activeSchedule_.GetPreMoveWorkData(bestMove);
-                const typename CommCostFunctionT::PreMoveCommData prevCommData = commCostF_.GetPreMoveCommData(bestMove);
+                const typename CommCostFunctionT::PreMoveCommDataT prevCommData = commCostF_.GetPreMoveCommDataT(bestMove);
                 const CostT changeInCost = ApplyMove(bestMove, threadData);
 #ifdef KL_DEBUG_COST_CHECK
                 activeSchedule_.GetVectorSchedule().numberOfSupersteps = threadDataVec_[0].NumSteps();
@@ -1026,7 +1026,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
                                  std::map<VertexType, KlGainUpdateInfo> &recomputeMaxGain,
                                  std::vector<VertexType> &newNodes,
                                  const PreMoveWorkData<VertexWorkWeightT> &prevWorkData,
-                                 const typename CommCostFunctionT::PreMoveCommData &prevCommData) {
+                                 const typename CommCostFunctionT::PreMoveCommDataT &prevCommData) {
         if constexpr (CommCostFunctionT::isMaxCommCostFunction_) {
             commCostF_.UpdateNodeCommAffinity(
                 bestMove,
@@ -1069,7 +1069,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
             }
 
             for (const auto &[step, stepInfo] : prevCommData.stepData_) {
-                // typename CommCostFunctionT::PreMoveCommData::StepInfo currentInfo;
+                // typename CommCostFunctionT::PreMoveCommDataT::StepInfo currentInfo;
                 // Query current values
                 const auto currentMax = commCostF_.commDS_.StepMaxComm(step);
                 const auto currentSecondMax = commCostF_.commDS_.StepSecondMaxComm(step);
@@ -1355,7 +1355,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
 
     virtual ~KlImprover() = default;
 
-    virtual ReturnStatus improveSchedule(BspSchedule<GraphT> &schedule) override {
+    virtual ReturnStatus ImproveSchedule(BspSchedule<GraphT> &schedule) override {
         if (schedule.GetInstance().NumberOfProcessors() < 2) {
             return ReturnStatus::BEST_FOUND;
         }
@@ -1390,9 +1390,9 @@ class KlImprover : public ImprovementScheduler<GraphT> {
         }
     }
 
-    virtual ReturnStatus improveScheduleWithTimeLimit(BspSchedule<GraphT> &schedule) override {
+    virtual ReturnStatus ImproveScheduleWithTimeLimit(BspSchedule<GraphT> &schedule) override {
         computeWithTimeLimit_ = true;
-        return improveSchedule(schedule);
+        return ImproveSchedule(schedule);
     }
 
     virtual void SetTimeQualityParameter(const double timeQuality) { this->parameters_.timeQuality_ = timeQuality; }

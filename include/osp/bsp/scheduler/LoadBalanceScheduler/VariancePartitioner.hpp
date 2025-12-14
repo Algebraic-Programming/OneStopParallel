@@ -40,8 +40,8 @@ class VariancePartitioner : public LoadBalancerBase<GraphT, InterpolationT> {
     constexpr static bool useMemoryConstraint_ = IsMemoryConstraintV<MemoryConstraintT>
                                                  or IsMemoryConstraintScheduleV<MemoryConstraintT>;
 
-    static_assert(not useMemoryConstraint_ or std::is_same_v<GraphT, typename MemoryConstraintT::Graph_impl_t>,
-                  "Graph_t must be the same as MemoryConstraintT::Graph_impl_t.");
+    static_assert(not useMemoryConstraint_ or std::is_same_v<GraphT, typename MemoryConstraintT::GraphImplT>,
+                  "Graph_t must be the same as MemoryConstraintT::GraphImplT.");
 
     MemoryConstraintT memoryConstraint_;
 
@@ -112,9 +112,9 @@ class VariancePartitioner : public LoadBalancerBase<GraphT, InterpolationT> {
         unsigned superstep = 0;
 
         if constexpr (IsMemoryConstraintV<MemoryConstraintT>) {
-            memoryConstraint_.initialize(instance);
+            memoryConstraint_.Initialize(instance);
         } else if constexpr (IsMemoryConstraintScheduleV<MemoryConstraintT>) {
-            memoryConstraint_.initialize(schedule, superstep);
+            memoryConstraint_.Initialize(schedule, superstep);
         }
 
         VWorkwT<GraphT> totalWork = 0;
@@ -211,7 +211,7 @@ class VariancePartitioner : public LoadBalancerBase<GraphT, InterpolationT> {
 
                 if constexpr (useMemoryConstraint_) {
                     for (unsigned proc = 0; proc < nProcessors; proc++) {
-                        memoryConstraint_.reset(proc);
+                        memoryConstraint_.Reset(proc);
                     }
                 }
 
@@ -222,7 +222,7 @@ class VariancePartitioner : public LoadBalancerBase<GraphT, InterpolationT> {
             bool assignedANode = false;
 
             // Choosing next processor
-            std::vector<unsigned> processorsInOrder = LoadBalancerBase<GraphT, InterpolationT>::computeProcessorPriority(
+            std::vector<unsigned> processorsInOrder = LoadBalancerBase<GraphT, InterpolationT>::ComputeProcessorPriority(
                 superstepPartitionWork, totalPartitionWork, totalWork, instance, slack_);
             for (unsigned &proc : processorsInOrder) {
                 if ((freeProcessors.find(proc)) != freeProcessors.cend()) {
@@ -253,7 +253,7 @@ class VariancePartitioner : public LoadBalancerBase<GraphT, InterpolationT> {
                     }
 
                     if constexpr (IsMemoryConstraintV<MemoryConstraintT> || IsMemoryConstraintScheduleV<MemoryConstraintT>) {
-                        if (memoryConstraint_.can_add(vertexPriorPairIter->first, proc)) {
+                        if (memoryConstraint_.CanAdd(vertexPriorPairIter->first, proc)) {
                             nextNode = vertexPriorPairIter->first;
                             assignedANode = true;
                         }
@@ -270,7 +270,7 @@ class VariancePartitioner : public LoadBalancerBase<GraphT, InterpolationT> {
                     }
 
                     if constexpr (IsMemoryConstraintV<MemoryConstraintT> || IsMemoryConstraintScheduleV<MemoryConstraintT>) {
-                        if (memoryConstraint_.can_add(vertexPriorPairIter->first, proc)) {
+                        if (memoryConstraint_.CanAdd(vertexPriorPairIter->first, proc)) {
                             nextNode = vertexPriorPairIter->first;
                             assignedANode = true;
                         }
@@ -286,7 +286,7 @@ class VariancePartitioner : public LoadBalancerBase<GraphT, InterpolationT> {
                     }
 
                     if constexpr (IsMemoryConstraintV<MemoryConstraintT> || IsMemoryConstraintScheduleV<MemoryConstraintT>) {
-                        if (memoryConstraint_.can_add(vertexPriorPairIter->first, proc)) {
+                        if (memoryConstraint_.CanAdd(vertexPriorPairIter->first, proc)) {
                             nextNode = vertexPriorPairIter->first;
                             assignedANode = true;
                         }
@@ -310,7 +310,7 @@ class VariancePartitioner : public LoadBalancerBase<GraphT, InterpolationT> {
                     superstepPartitionWork[proc] += graph.VertexWorkWeight(nextNode);
 
                     if constexpr (IsMemoryConstraintV<MemoryConstraintT> || IsMemoryConstraintScheduleV<MemoryConstraintT>) {
-                        memoryConstraint_.add(nextNode, proc);
+                        memoryConstraint_.Add(nextNode, proc);
                     }
 
                     // Deletion from Queues

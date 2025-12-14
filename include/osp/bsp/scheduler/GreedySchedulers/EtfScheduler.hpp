@@ -159,29 +159,29 @@ class EtfScheduler : public Scheduler<GraphT> {
                                   std::vector<VWorkwT<GraphT>> &rec) const {
         std::vector<tv_pair> predec;
         for (const auto &pred : instance.GetComputationalDag().Parents(node)) {
-            predec.emplace_back(schedule.time[pred] + instance.GetComputationalDag().VertexWorkWeight(pred), pred);
+            predec.emplace_back(schedule.time_[pred] + instance.GetComputationalDag().VertexWorkWeight(pred), pred);
         }
 
         std::sort(predec.begin(), predec.end());
 
         VWorkwT<GraphT> est = procAvailableFrom;
         for (const auto &next : predec) {
-            VWorkwT<GraphT> t = schedule.time[next.second] + instance.GetComputationalDag().VertexWorkWeight(next.second);
-            if (schedule.proc[next.second] != proc) {
-                t = std::max(t, send[schedule.proc[next.second]]);
+            VWorkwT<GraphT> t = schedule.time_[next.second] + instance.GetComputationalDag().VertexWorkWeight(next.second);
+            if (schedule.proc_[next.second] != proc) {
+                t = std::max(t, send[schedule.proc_[next.second]]);
                 t = std::max(t, rec[proc]);
 
                 if constexpr (HasEdgeWeightsV<GraphT>) {
                     t += instance.GetComputationalDag().EdgeCommWeight(
                              EdgeDesc(next.second, node, instance.GetComputationalDag()).first)
-                         * instance.SendCosts(schedule.proc[next.second], proc);
+                         * instance.SendCosts(schedule.proc_[next.second], proc);
 
                 } else {
                     t += instance.GetComputationalDag().VertexCommWeight(next.second)
-                         * instance.SendCosts(schedule.proc[next.second], proc);
+                         * instance.SendCosts(schedule.proc_[next.second], proc);
                 }
 
-                send[schedule.proc[next.second]] = t;
+                send[schedule.proc_[next.second]] = t;
                 rec[proc] = t;
             }
             est = std::max(est, t);
@@ -306,11 +306,11 @@ class EtfScheduler : public Scheduler<GraphT> {
             }
             const auto node = bestTv.second;
 
-            schedule.proc[node] = bestProc;
+            schedule.proc_[node] = bestProc;
             greedyProcLists[bestProc].push_back(node);
 
-            schedule.time[node] = bestTv.first;
-            finishTimes[bestProc] = schedule.time[node] + instance.GetComputationalDag().VertexWorkWeight(node);
+            schedule.time_[node] = bestTv.first;
+            finishTimes[bestProc] = schedule.time_[node] + instance.GetComputationalDag().VertexWorkWeight(node);
 
             if constexpr (useMemoryConstraint_) {
                 memoryConstraint_.Add(node, bestProc);
@@ -324,7 +324,7 @@ class EtfScheduler : public Scheduler<GraphT> {
             }
 
             if constexpr (useMemoryConstraint_) {
-                if (not CheckMemoryFeasibility(instance, ready)) {
+                if (not CheckMemFeasibility(instance, ready)) {
                     return ReturnStatus::ERROR;
                 }
             }

@@ -54,7 +54,7 @@ class BspScheduleCoarser : public CoarserGenContractionMap<GraphTIn, GraphTOut> 
     //                        std::vector<std::vector<VertexIdxT<GraphTIn>>> &vertex_map,
     //                        std::vector<VertexIdxT<GraphTOut>> &reverse_vertex_map) override {
 
-    virtual std::vector<VertexIdxT<GraphTOut>> generate_vertex_contraction_map(const GraphTIn &dagIn) override {
+    virtual std::vector<VertexIdxT<GraphTOut>> GenerateVertexContractionMap(const GraphTIn &dagIn) override {
         using VertexType_in = VertexIdxT<GraphTIn>;
         using VertexType_out = VertexIdxT<GraphTOut>;
 

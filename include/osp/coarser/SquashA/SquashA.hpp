@@ -209,7 +209,7 @@ class SquashA : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
     }
 
   public:
-    virtual std::vector<std::vector<VertexIdxT<GraphTIn>>> generate_vertex_expansion_map(const GraphTIn &dagIn) override;
+    virtual std::vector<std::vector<VertexIdxT<GraphTIn>>> GenerateVertexExpansionMap(const GraphTIn &dagIn) override;
 
     SquashA(squash_a_params::Parameters params = squash_a_params::Parameters()) : params_(params) {};
 
@@ -223,7 +223,7 @@ class SquashA : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
 
     inline void SetParams(squash_a_params::Parameters params) { params_ = params; }
 
-    std::string getCoarserName() const override { return "SquashA"; }
+    std::string GetCoarserName() const override { return "SquashA"; }
 };
 
 template <typename GraphTIn, typename GraphTOut>
@@ -246,7 +246,7 @@ std::vector<int> SquashA<GraphTIn, GraphTOut>::GeneratePosetInMap(const GraphTIn
 }
 
 template <typename GraphTIn, typename GraphTOut>
-std::vector<std::vector<VertexIdxT<GraphTIn>>> SquashA<GraphTIn, GraphTOut>::generate_vertex_expansion_map(const GraphTIn &dagIn) {
+std::vector<std::vector<VertexIdxT<GraphTIn>>> SquashA<GraphTIn, GraphTOut>::GenerateVertexExpansionMap(const GraphTIn &dagIn) {
     static_assert(IsDirectedGraphEdgeDescV<GraphTIn>, "GraphTIn must satisfy the directed_graph_edge_desc concept");
     static_assert(IsComputationalDagEdgeDescV<GraphTIn>, "GraphTIn must satisfy the is_computational_dag_edge_desc concept");
     // static_assert(has_hashable_edge_desc_v<GraphTIn>, "GraphTIn must have hashable edge descriptors");

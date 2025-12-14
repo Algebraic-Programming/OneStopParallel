@@ -126,7 +126,7 @@ class HillClimbingScheduler : public ImprovementScheduler<GraphT> {
 
     void SetShrink(bool shrink) { shrink_ = shrink; }
 
-    virtual std::string getScheduleName() const override { return "HillClimbing"; }
+    virtual std::string GetScheduleName() const override { return "HillClimbing"; }
 };
 
 template <typename GraphT>

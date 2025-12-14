@@ -48,7 +48,7 @@ ReturnStatus RunBspRecompScheduler(const ConfigParser &parser,
     if (algorithm.get_child("name").get_value<std::string>() == "GreedyRecomputer") {
         BspSchedule<GraphT> bspSchedule(schedule.GetInstance());
 
-        ReturnStatus status = run_bsp_scheduler(parser, algorithm.get_child("parameters").get_child("scheduler"), bspSchedule);
+        ReturnStatus status = RunBspScheduler(parser, algorithm.get_child("parameters").get_child("scheduler"), bspSchedule);
 
         BspScheduleCS<GraphT> initialSchedule(std::move(bspSchedule));
 
@@ -58,7 +58,7 @@ ReturnStatus RunBspRecompScheduler(const ConfigParser &parser,
 
         GreedyRecomputer<GraphT> scheduler;
 
-        return scheduler.computeRecompSchedule(initialSchedule, schedule);
+        return scheduler.ComputeRecompSchedule(initialSchedule, schedule);
 
     } else {
         throw std::invalid_argument("Parameter error: Unknown algorithm.\n");

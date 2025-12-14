@@ -121,7 +121,7 @@ class TopOrderCoarser : public Coarser<GraphTIn, GraphTOut> {
     // inline void set_memory_constraint_type(MemoryConstraintType memory_constraint_type_) { memory_constraint_type =
     // memory_constraint_type_; }
 
-    virtual std::string getCoarserName() const override { return "top_order_coarser"; };
+    virtual std::string GetCoarserName() const override { return "top_order_coarser"; };
 
     virtual bool CoarsenDag(const GraphTIn &dagIn, GraphTOut &dagOut, std::vector<VertexIdxT<GraphTOut>> &reverseVertexMap) override {
         assert(dagOut.NumVertices() == 0);
