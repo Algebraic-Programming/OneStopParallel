@@ -117,7 +117,7 @@ class UnionFindUniverse {
         std::vector<T> componentNames;
         componentNames.reserve(componentIndices_.size());
         for (auto &indx : componentIndices_) {
-            componentNames.emplace_back(universe_[indx].name);
+            componentNames.emplace_back(universe_[indx].name_);
         }
         return componentNames;
     }
@@ -127,7 +127,7 @@ class UnionFindUniverse {
         std::vector<std::pair<T, WorkwT>> componentNamesAndWeights;
         componentNamesAndWeights.reserve(componentIndices_.size());
         for (auto &indx : componentIndices_) {
-            componentNamesAndWeights.emplace_back({universe_[indx].name, universe_[indx].weight});
+            componentNamesAndWeights.emplace_back({universe_[indx].name_, universe_[indx].weight});
         }
         return componentNamesAndWeights;
     }
@@ -137,7 +137,7 @@ class UnionFindUniverse {
         std::vector<std::tuple<T, WorkwT, MemwT>> componentNamesWeightsAndMemory;
         componentNamesWeightsAndMemory.reserve(componentIndices_.size());
         for (auto &indx : componentIndices_) {
-            componentNamesWeightsAndMemory.emplace_back({universe_[indx].name, universe_[indx].weight, universe_[indx].memory});
+            componentNamesWeightsAndMemory.emplace_back({universe_[indx].name_, universe_[indx].weight, universe_[indx].memory});
         }
         return componentNamesWeightsAndMemory;
     }
@@ -175,7 +175,7 @@ class UnionFindUniverse {
             std::vector<T> namesInComp;
             namesInComp.reserve(comp.size());
             for (const auto &indx : comp) {
-                namesInComp.emplace_back(universe_[indx].name);
+                namesInComp.emplace_back(universe_[indx].name_);
             }
             connectedComponentsByName.push_back(namesInComp);
         }
@@ -204,7 +204,7 @@ class UnionFindUniverse {
             std::vector<T> namesInComp;
             namesInComp.reserve(comp.size());
             for (auto &indx : comp) {
-                namesInComp.emplace_back(universe_[indx].name_);
+                namesInComp.emplace_back(universe_[indx].name__);
             }
             connectedComponentsByNameInclWeight.emplace_back(namesInComp, compWeight);
         }
@@ -234,7 +234,7 @@ class UnionFindUniverse {
             std::vector<T> namesInComp;
             namesInComp.reserve(comp.size());
             for (auto &indx : comp) {
-                namesInComp.emplace_back(universe_[indx].name_);
+                namesInComp.emplace_back(universe_[indx].name__);
             }
             connectedComponentsByNameInclWeightMemory.emplace_back(namesInComp, compWeight, compMemory);
         }
@@ -388,7 +388,6 @@ class UnionFindUniverse {
 };
 
 template <typename GraphT>
-using UnionFindUniverseT
-    = UnionFindUniverse<VertexIdxT<GraphT>, VertexIdxT<GraphT>, VWorkwT<GraphT>, VMemwT<GraphT>>;
+using UnionFindUniverseT = UnionFindUniverse<VertexIdxT<GraphT>, VertexIdxT<GraphT>, VWorkwT<GraphT>, VMemwT<GraphT>>;
 
 }    // namespace osp

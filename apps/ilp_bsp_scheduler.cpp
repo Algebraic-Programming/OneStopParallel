@@ -34,7 +34,7 @@ limitations under the License.
 
 using namespace osp;
 
-using ComputationalDag = computational_dag_edge_idx_vector_impl_def_int_t;
+using ComputationalDag = ComputationalDagEdgeIdxVectorImplDefIntT;
 
 int main(int argc, char *argv[]) {
     if (argc < 4) {
@@ -71,8 +71,8 @@ int main(int argc, char *argv[]) {
     BspInstance<ComputationalDag> instance;
     ComputationalDag &graph = instance.GetComputationalDag();
 
-    bool statusGraph = file_reader::readGraph(filenameGraph, graph);
-    bool statusArch = file_reader::readBspArchitecture(filenameMachine, instance.GetArchitecture());
+    bool statusGraph = file_reader::ReadGraph(filenameGraph, graph);
+    bool statusArch = file_reader::ReadBspArchitecture(filenameMachine, instance.GetArchitecture());
     // instance.setDiagonalCompatibilityMatrix(graph.NumVertexTypes());
     // instance.GetArchitecture().setProcessorsWithTypes({0,0,1,1,1,1});
 

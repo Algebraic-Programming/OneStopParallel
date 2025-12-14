@@ -363,14 +363,14 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
      *
      * @return The work costs of the schedule.
      */
-    virtual VWorkwT<GraphT> computeWorkCosts() const override { return cost_helpers::ComputeWorkCosts(*this); }
+    virtual VWorkwT<GraphT> ComputeWorkCosts() const override { return cost_helpers::ComputeWorkCosts(*this); }
 
     /**
      * @brief Computes the costs of the schedule accoring to lazy communication cost evaluation.
      *
      * @return The costs of the schedule.
      */
-    virtual VWorkwT<GraphT> computeCosts() const override { return LazyCommunicationCost<GraphT>()(*this); }
+    virtual VWorkwT<GraphT> ComputeCosts() const override { return LazyCommunicationCost<GraphT>()(*this); }
 
     /**
      * @brief Checks if the schedule is valid.

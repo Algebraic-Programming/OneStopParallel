@@ -39,7 +39,7 @@ limitations under the License.
 namespace pt = boost::property_tree;
 using namespace osp;
 
-using GraphT = computational_dag_edge_idx_vector_impl_def_int_t;
+using GraphT = ComputationalDagEdgeIdxVectorImplDefIntT;
 
 std::filesystem::path GetExecutablePath() { return std::filesystem::canonical("/proc/self/exe"); }
 
@@ -66,21 +66,21 @@ int main(int argc, char *argv[]) {
         std::string nameMachine
             = filenameMachine.substr(filenameMachine.rfind("/") + 1, filenameMachine.rfind(".") - filenameMachine.rfind("/") - 1);
 
-        bool statusArchitecture = file_reader::readBspArchitecture(filenameMachine, bspInstance.GetArchitecture());
+        bool statusArchitecture = file_reader::ReadBspArchitecture(filenameMachine, bspInstance.GetArchitecture());
 
         if (!statusArchitecture) {
             std::cerr << "Reading architecture files " + filenameMachine << " failed." << std::endl;
             continue;
         }
 
-        bool statusGraph = file_reader::readGraph(filenameGraph, bspInstance.GetComputationalDag());
+        bool statusGraph = file_reader::ReadGraph(filenameGraph, bspInstance.GetComputationalDag());
         if (!statusGraph) {
             std::cerr << "Reading graph files " + filenameGraph << " failed." << std::endl;
             continue;
         }
 
         std::cout << "Warning: assuming all node types can be scheduled on all processor types!\n";
-        bspInstance.setAllOnesCompatibilityMatrix();
+        bspInstance.SetAllOnesCompatibilityMatrix();
 
         std::vector<std::string> schedulersName(parser.scheduler_.size(), "");
         std::vector<bool> schedulersFailed(parser.scheduler_.size(), false);
@@ -99,7 +99,7 @@ int main(int argc, char *argv[]) {
             BspSchedule<GraphT> schedule(bspInstance);
 
             try {
-                returnStatus = run_bsp_scheduler(parser, algorithm.second, schedule);
+                returnStatus = RunBspScheduler(parser, algorithm.second, schedule);
             } catch (...) {
                 schedulersFailed[algorithmCounter] = true;
                 std::cerr << "Error during execution of Scheduler " + algorithm.second.get_child("name").get_value<std::string>()
@@ -129,15 +129,15 @@ int main(int argc, char *argv[]) {
                               << std::endl;
                 }
             } else {
-                schedulersCosts[algorithmCounter] = BspScheduleCS<GraphT>(schedule).computeCosts();
-                schedulersWorkCosts[algorithmCounter] = schedule.computeWorkCosts();
+                schedulersCosts[algorithmCounter] = BspScheduleCS<GraphT>(schedule).ComputeCosts();
+                schedulersWorkCosts[algorithmCounter] = schedule.ComputeWorkCosts();
                 schedulersSupersteps[algorithmCounter] = schedule.NumberOfSupersteps();
 
                 if (parser.globalParams_.get_child("outputSchedule").get_value<bool>()) {
                     try {
-                        file_writer::write_txt(nameGraph + "_" + nameMachine + "_"
-                                                   + algorithm.second.get_child("name").get_value<std::string>() + "_schedule.txt",
-                                               schedule);
+                        file_writer::WriteTxt(nameGraph + "_" + nameMachine + "_"
+                                                  + algorithm.second.get_child("name").get_value<std::string>() + "_schedule.txt",
+                                              schedule);
                     } catch (std::exception &e) {
                         std::cerr << "Writing schedule file for " + nameGraph + ", " + nameMachine + ", "
                                          + schedulersName[algorithmCounter] + " has failed."
@@ -148,10 +148,10 @@ int main(int argc, char *argv[]) {
 
                 if (parser.globalParams_.get_child("outputSankeySchedule").get_value<bool>()) {
                     try {
-                        file_writer::write_sankey(nameGraph + "_" + nameMachine + "_"
-                                                      + algorithm.second.get_child("name").get_value<std::string>()
-                                                      + "_sankey.sankey",
-                                                  BspScheduleCS<GraphT>(schedule));
+                        file_writer::WriteSankey(nameGraph + "_" + nameMachine + "_"
+                                                     + algorithm.second.get_child("name").get_value<std::string>()
+                                                     + "_sankey.sankey",
+                                                 BspScheduleCS<GraphT>(schedule));
                     } catch (std::exception &e) {
                         std::cerr << "Writing sankey file for " + nameGraph + ", " + nameMachine + ", "
                                          + schedulersName[algorithmCounter] + " has failed."
@@ -163,10 +163,10 @@ int main(int argc, char *argv[]) {
                 if (parser.globalParams_.get_child("outputDotSchedule").get_value<bool>()) {
                     try {
                         DotFileWriter schedWriter;
-                        schedWriter.write_schedule(nameGraph + "_" + nameMachine + "_"
-                                                       + algorithm.second.get_child("name").get_value<std::string>()
-                                                       + "_schedule.dot",
-                                                   schedule);
+                        schedWriter.WriteSchedule(nameGraph + "_" + nameMachine + "_"
+                                                      + algorithm.second.get_child("name").get_value<std::string>()
+                                                      + "_schedule.dot",
+                                                  schedule);
 
                     } catch (std::exception &e) {
                         std::cerr << "Writing dot file for " + nameGraph + ", " + nameMachine + ", "

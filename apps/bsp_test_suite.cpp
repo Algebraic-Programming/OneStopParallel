@@ -23,7 +23,7 @@ limitations under the License.
 #include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 #include "test_suite_runner/BspScheduleRecompTestSuiteRunner.hpp"
 
-using GraphT = osp::computational_dag_edge_idx_vector_impl_def_int_t;
+using GraphT = osp::ComputationalDagEdgeIdxVectorImplDefIntT;
 
 int main(int argc, char *argv[]) {
     osp::BspScheduleRecompTestSuiteRunner<GraphT> runner;

@@ -205,8 +205,8 @@ class AbstractTestSuiteRunner {
 
         std::vector<std::string> activeModuleNamesFromConfig;
         try {
-            for (const auto &item : parser.globalParams_.get_child("activeStatisticModules")) {
-                active_module_names_from_config.push_back(item.second.get_value<std::string>());
+            for (const auto &item : parser_.globalParams_.get_child("activeStatisticModules")) {
+                activeModuleNamesFromConfig.push_back(item.second.get_value<std::string>());
             }
         } catch (const pt::ptree_bad_path &e) {
             logStream_ << "Warning: 'activeStatisticModules' not found. No statistics modules will be run. " << e.what()
@@ -235,7 +235,7 @@ class AbstractTestSuiteRunner {
             }
 
             BspArchitecture<GraphType> arch;
-            if (!file_reader::readBspArchitecture(filename_machine, arch)) {
+            if (!file_reader::ReadBspArchitecture(filenameMachine, arch)) {
                 logStream_ << "Reading architecture file " << filenameMachine << " failed." << std::endl;
                 continue;
             }
@@ -302,7 +302,7 @@ class AbstractTestSuiteRunner {
                     }
                 } else {
 #endif
-                    graph_status = file_reader::readGraph(filename_graph, bsp_instance.GetComputationalDag());
+                    graphStatus = file_reader::ReadGraph(filenameGraph, bspInstance.GetComputationalDag());
 
 #ifdef EIGEN_FOUND
                 }
@@ -312,53 +312,51 @@ class AbstractTestSuiteRunner {
                     continue;
                 }
 
-                for (auto &algorithm_config_pair : parser.scheduler) {
-                    const pt::ptree &algo_config = algorithm_config_pair.second;
+                for (auto &algorithmConfigPair : parser_.scheduler_) {
+                    const pt::ptree &algoConfig = algorithmConfigPair.second;
 
-                    std::string current_algo_name = algo_config.get_child("name").get_value<std::string>();
-                    log_stream << "Start Algorithm " + current_algo_name + "\n";
+                    std::string currentAlgoName = algoConfig.get_child("name").get_value<std::string>();
+                    logStream_ << "Start Algorithm " + currentAlgoName + "\n";
 
-                    long long computation_time_ms;
-                    std::unique_ptr<TargetObjectType> target_object;
+                    long long computationTimeMs;
+                    std::unique_ptr<TargetObjectType> targetObject;
 
-                    ReturnStatus exec_status
-                        = compute_target_object_impl(bsp_instance, target_object, algo_config, computation_time_ms);
+                    ReturnStatus execStatus = ComputeTargetObjectImpl(bspInstance, targetObject, algoConfig, computationTimeMs);
 
-                    if (exec_status != ReturnStatus::OSP_SUCCESS && exec_status != ReturnStatus::BEST_FOUND) {
-                        if (exec_status == ReturnStatus::ERROR) {
-                            log_stream << "Error computing with " << current_algo_name << "." << std::endl;
-                        } else if (exec_status == ReturnStatus::TIMEOUT) {
-                            log_stream << "Scheduler " << current_algo_name << " timed out." << std::endl;
+                    if (execStatus != ReturnStatus::OSP_SUCCESS && execStatus != ReturnStatus::BEST_FOUND) {
+                        if (execStatus == ReturnStatus::ERROR) {
+                            logStream_ << "Error computing with " << currentAlgoName << "." << std::endl;
+                        } else if (execStatus == ReturnStatus::TIMEOUT) {
+                            logStream_ << "Scheduler " << currentAlgoName << " timed out." << std::endl;
                         }
                         continue;
                     }
 
-                    if (write_target_object_to_file) {
+                    if (writeTargetObjectToFile_) {
                         try {
-                            write_target_object_hook(*target_object, name_graph, name_machine, current_algo_name);
+                            WriteTargetObjectHook(*targetObject, nameGraph, nameMachine, currentAlgoName);
                         } catch (const std::exception &e) {
-                            log_stream << "Writing target object file for " << name_graph << ", " << name_machine << ", "
-                                       << current_algo_name << " has failed: " << e.what() << std::endl;
+                            logStream_ << "Writing target object file for " << nameGraph << ", " << nameMachine << ", "
+                                       << currentAlgoName << " has failed: " << e.what() << std::endl;
                         }
                     }
 
-                    if (stats_out_stream.is_open()) {
-                        std::map<std::string, std::string> current_row_values;
-                        current_row_values["Graph"] = name_graph;
-                        current_row_values["Machine"] = name_machine;
-                        current_row_values["Algorithm"] = current_algo_name;
-                        current_row_values["TimeToCompute(ms)"] = std::to_string(computation_time_ms);
+                    if (statsOutStream_.is_open()) {
+                        std::map<std::string, std::string> currentRowValues;
+                        currentRowValues["Graph"] = nameGraph;
+                        currentRowValues["Machine"] = nameMachine;
+                        currentRowValues["Algorithm"] = currentAlgoName;
+                        currentRowValues["TimeToCompute(ms)"] = std::to_string(computationTimeMs);
 
-                        for (auto &stat_module : active_stats_modules) {
-                            auto module_metrics = stat_module->record_statistics(*target_object, log_stream);
-                            current_row_values.insert(module_metrics.begin(), module_metrics.end());
+                        for (auto &statModule : activeStatsModules_) {
+                            auto moduleMetrics = statModule->record_statistics(*targetObject, logStream_);
+                            currentRowValues.insert(moduleMetrics.begin(), moduleMetrics.end());
                         }
 
-                        for (size_t i = 0; i < all_csv_headers.size(); ++i) {
-                            stats_out_stream << current_row_values[all_csv_headers[i]]
-                                             << (i == all_csv_headers.size() - 1 ? "" : ",");
+                        for (size_t i = 0; i < allCsvHeaders_.size(); ++i) {
+                            statsOutStream_ << currentRowValues[allCsvHeaders_[i]] << (i == allCsvHeaders_.size() - 1 ? "" : ",");
                         }
-                        stats_out_stream << "\n";
+                        statsOutStream_ << "\n";
                     }
                 }
             }

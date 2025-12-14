@@ -264,7 +264,7 @@ class BspScheduleCS : public BspSchedule<GraphT> {
 
     void SetAutoCommunicationSchedule() {
         std::map<KeyTriple, unsigned> bestCommSchedule;
-        VWorkwT<GraphT> bestCommCost = std::numeric_limits<VWorkwT<GraphT>>::max();    // computeCosts retunrs VWorkwT<GraphT>
+        VWorkwT<GraphT> bestCommCost = std::numeric_limits<VWorkwT<GraphT>>::max();    // ComputeCosts retunrs VWorkwT<GraphT>
 
         if (HasValidCommSchedule()) {
             VWorkwT<GraphT> costsCom = BspSchedule<GraphT>::ComputeCosts();
@@ -454,7 +454,7 @@ class BspScheduleCS : public BspSchedule<GraphT> {
         }
     }
 
-    virtual void shrinkByMergingSupersteps() override {
+    virtual void ShrinkByMergingSupersteps() override {
         std::vector<unsigned> superstepLatestDependency(this->numberOfSupersteps_, 0);
         std::vector<std::vector<unsigned>> firstAt = GetFirstPresence();
 
