@@ -280,7 +280,7 @@ static_assert(IsComputationalDagTypedVerticesEdgeDescV<ComputationalDagEdgeIdxVe
 
 template <typename VImpl>
 struct std::hash<osp::DirectedEdgeDescriptorImpl<VImpl>> {
-    using VertexIdx = typename VImpl::vertex_idx_type;
+    using VertexIdx = typename VImpl::VertexIdxType;
 
     std::size_t operator()(const osp::DirectedEdgeDescriptorImpl<VImpl> &p) const noexcept {
         auto h1 = std::hash<VertexIdx>{}(p.source);

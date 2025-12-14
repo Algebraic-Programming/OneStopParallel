@@ -35,10 +35,10 @@ class BasicBspStatsModule : public IStatisticModule<TargetObjectType> {
     const std::vector<std::string> metricHeaders_ = {"BspCost", "WorkCost", "CommCost", "Supersteps"};
 
   public:
-    std::vector<std::string> get_metric_headers() const override { return metricHeaders_; }
+    std::vector<std::string> GetMetricHeaders() const override { return metricHeaders_; }
 
-    std::map<std::string, std::string> record_statistics(const TargetObjectType &schedule,
-                                                         std::ofstream & /*log_stream*/) const override {
+    std::map<std::string, std::string> RecordStatistics(const TargetObjectType &schedule,
+                                                        std::ofstream & /*log_stream*/) const override {
         std::map<std::string, std::string> stats;
         const auto bspCost = schedule.computeCosts();
         const auto workCost = schedule.computeWorkCosts();

@@ -192,7 +192,7 @@ int main(int argc, char *argv[]) {
             ct = std::max(ct, 1 + int(std::log10(schedulersComputeTime[i])));
         }
 
-        std::vector<size_t> ordering = sorting_arrangement(schedulersCosts);
+        std::vector<size_t> ordering = SortingArrangement(schedulersCosts);
 
         std::cout << std::endl << nameGraph << " - " << nameMachine << std::endl;
         std::cout << "Number of Vertices: " + std::to_string(bspInstance.GetComputationalDag().NumVertices())

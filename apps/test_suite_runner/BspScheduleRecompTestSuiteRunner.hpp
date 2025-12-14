@@ -38,12 +38,12 @@ class BspScheduleRecompTestSuiteRunner : public AbstractTestSuiteRunner<IBspSche
     bool useMemoryConstraintForBsp_;
 
   protected:
-    ReturnStatus compute_target_object_impl(const BspInstance<ConcreteGraphT> &instance,
-                                            std::unique_ptr<IBspScheduleEval<ConcreteGraphT>> &schedule,
-                                            const pt::ptree &algoConfig,
-                                            long long &computationTimeMs) override {
+    ReturnStatus ComputeTargetObjectImpl(const BspInstance<ConcreteGraphT> &instance,
+                                         std::unique_ptr<IBspScheduleEval<ConcreteGraphT>> &schedule,
+                                         const pt::ptree &algoConfig,
+                                         long long &computationTimeMs) override {
         std::string algoName = algoConfig.get_child("id").get_value<std::string>();
-        const std::set<std::string> schedulerNames = get_available_bsp_scheduler_names();
+        const std::set<std::string> schedulerNames = GetAvailableBspSchedulerNames();
         const std::set<std::string> schedulerRecompNames = GetAvailableBspRecompSchedulerNames();
 
         if (schedulerNames.find(algoName) != schedulerNames.end()) {
@@ -51,7 +51,7 @@ class BspScheduleRecompTestSuiteRunner : public AbstractTestSuiteRunner<IBspSche
 
             const auto startTime = std::chrono::high_resolution_clock::now();
 
-            ReturnStatus status = run_bsp_scheduler(this->parser_, algoConfig, *bspSchedule);
+            ReturnStatus status = RunBspScheduler(this->parser_, algoConfig, *bspSchedule);
 
             const auto finishTime = std::chrono::high_resolution_clock::now();
             computationTimeMs = std::chrono::duration_cast<std::chrono::milliseconds>(finishTime - startTime).count();
@@ -65,7 +65,7 @@ class BspScheduleRecompTestSuiteRunner : public AbstractTestSuiteRunner<IBspSche
 
             const auto startTime = std::chrono::high_resolution_clock::now();
 
-            ReturnStatus status = run_bsp_recomp_scheduler(this->parser_, algoConfig, *bspRecompSchedule);
+            ReturnStatus status = RunBspRecompScheduler(this->parser_, algoConfig, *bspRecompSchedule);
 
             const auto finishTime = std::chrono::high_resolution_clock::now();
             computationTimeMs = std::chrono::duration_cast<std::chrono::milliseconds>(finishTime - startTime).count();
@@ -79,7 +79,7 @@ class BspScheduleRecompTestSuiteRunner : public AbstractTestSuiteRunner<IBspSche
         }
     }
 
-    void create_and_register_statistic_modules(const std::string &moduleName) override {
+    void CreateAndRegisterStatisticModules(const std::string &moduleName) override {
         if (moduleName == "BasicBspStats") {
             this->activeStatsModules_.push_back(std::make_unique<BasicBspStatsModule<IBspScheduleEval<ConcreteGraphT>>>());
         } else if (moduleName == "GraphStats") {

@@ -197,14 +197,14 @@ ReturnStatus RunBspScheduler(const ConfigParser &parser,
 
         std::unique_ptr<ImprovementScheduler<GraphT>> improver
             = GetBspImproverByName<GraphT>(parser, algorithm.get_child("parameters").get_child("improver"));
-        return improver->improveSchedule(schedule);
+        return improver->ImproveSchedule(schedule);
 #ifdef COPT
     } else if (id == "FullILP") {
         CoptFullScheduler<GraphT> scheduler;
         const unsigned timeLimit = parser.globalParams_.get_child("timeLimit").get_value<unsigned>();
 
         // max supersteps
-        scheduler.setMaxNumberOfSupersteps(
+        scheduler.SetMaxNumberOfSupersteps(
             algorithm.get_child("parameters").get_child("max_number_of_supersteps").get_value<unsigned>());
 
         // initial solution
@@ -224,17 +224,17 @@ ReturnStatus RunBspScheduler(const ConfigParser &parser,
                 throw std::invalid_argument("Error while computing initial solution.\n");
             }
             BspScheduleCS<GraphT> initialScheduleCs(initialSchedule);
-            scheduler.setInitialSolutionFromBspSchedule(initialScheduleCs);
+            scheduler.SetInitialSolutionFromBspSchedule(initialScheduleCs);
         }
 
         // intermediate solutions
         if (algorithm.get_child("parameters").get_child("write_intermediate_solutions").get_value<bool>()) {
-            scheduler.enableWriteIntermediateSol(
+            scheduler.EnableWriteIntermediateSol(
                 algorithm.get_child("parameters").get_child("intermediate_solutions_directory").get_value<std::string>(),
                 algorithm.get_child("parameters").get_child("intermediate_solutions_prefix").get_value<std::string>());
         }
 
-        return scheduler.computeScheduleWithTimeLimit(schedule, timeLimit);
+        return scheduler.ComputeScheduleWithTimeLimit(schedule, timeLimit);
 #endif
     } else if (id == "Coarser") {
         std::unique_ptr<Coarser<GraphT, boost_graph_t>> coarser
@@ -248,7 +248,7 @@ ReturnStatus RunBspScheduler(const ConfigParser &parser,
         }
 
         instanceCoarse.GetArchitecture() = instance.GetArchitecture();
-        instanceCoarse.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());
+        instanceCoarse.SetNodeProcessorCompatibility(instance.GetProcessorCompatibilityMatrix());
         BspSchedule<boost_graph_t> scheduleCoarse(instanceCoarse);
 
         const auto statusCoarse = RunBspScheduler(parser, algorithm.get_child("parameters").get_child("scheduler"), scheduleCoarse);

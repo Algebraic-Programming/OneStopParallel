@@ -27,7 +27,7 @@ using GraphT = osp::ComputationalDagEdgeIdxVectorImplDefIntT;
 
 int main(int argc, char *argv[]) {
     osp::BspScheduleRecompTestSuiteRunner<GraphT> runner;
-    return runner.run(argc, argv);
+    return runner.Run(argc, argv);
 
     return 0;
 }

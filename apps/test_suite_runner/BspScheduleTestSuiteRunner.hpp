@@ -33,15 +33,15 @@ template <typename ConcreteGraphT>
 class BspScheduleTestSuiteRunner : public AbstractTestSuiteRunner<BspSchedule<ConcreteGraphT>, ConcreteGraphT> {
   private:
   protected:
-    ReturnStatus compute_target_object_impl(const BspInstance<ConcreteGraphT> &instance,
-                                            std::unique_ptr<BspSchedule<ConcreteGraphT>> &schedule,
-                                            const pt::ptree &algoConfig,
-                                            long long &computationTimeMs) override {
+    ReturnStatus ComputeTargetObjectImpl(const BspInstance<ConcreteGraphT> &instance,
+                                         std::unique_ptr<BspSchedule<ConcreteGraphT>> &schedule,
+                                         const pt::ptree &algoConfig,
+                                         long long &computationTimeMs) override {
         schedule = std::make_unique<BspSchedule<ConcreteGraphT>>(instance);
 
         const auto startTime = std::chrono::high_resolution_clock::now();
 
-        ReturnStatus status = run_bsp_scheduler(this->parser, algoConfig, *schedule);
+        ReturnStatus status = run_bsp_scheduler(this->parser_, algoConfig, *schedule);
 
         const auto finishTime = std::chrono::high_resolution_clock::now();
         computationTimeMs = std::chrono::duration_cast<std::chrono::milliseconds>(finishTime - startTime).count();
@@ -49,7 +49,7 @@ class BspScheduleTestSuiteRunner : public AbstractTestSuiteRunner<BspSchedule<Co
         return status;
     }
 
-    void create_and_register_statistic_modules(const std::string &moduleName) override {
+    void CreateAndRegisterStatisticModules(const std::string &moduleName) override {
         if (moduleName == "BasicBspStats") {
             this->active_stats_modules.push_back(std::make_unique<BasicBspStatsModule<BspSchedule<ConcreteGraphT>>>());
         } else if (moduleName == "BspCommStats") {

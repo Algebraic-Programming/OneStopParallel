@@ -260,7 +260,7 @@ class BspScheduleCS : public BspSchedule<GraphT> {
         return costs;
     }
 
-    virtual VWorkwT<GraphT> ComputeCosts() const override { return ComputeCsCommunicationCosts() + this->computeWorkCosts(); }
+    virtual VWorkwT<GraphT> ComputeCosts() const override { return ComputeCsCommunicationCosts() + this->ComputeWorkCosts(); }
 
     void SetAutoCommunicationSchedule() {
         std::map<KeyTriple, unsigned> bestCommSchedule;

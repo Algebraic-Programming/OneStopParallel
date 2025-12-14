@@ -1013,7 +1013,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
      *
      * @return The name of the schedule.
      */
-    virtual std::string getScheduleName() const override { return "FullIlp"; }
+    virtual std::string GetScheduleName() const override { return "FullIlp"; }
 };
 
 }    // namespace osp

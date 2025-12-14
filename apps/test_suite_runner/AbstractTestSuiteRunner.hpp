@@ -121,7 +121,7 @@ class AbstractTestSuiteRunner {
 
         std::set<std::string> uniqueModuleMetricHeaders;
         for (const auto &mod : activeStatsModules_) {
-            for (const auto &header : mod->get_metric_headers()) {
+            for (const auto &header : mod->GetMetricHeaders()) {
                 auto pair = uniqueModuleMetricHeaders.insert(header);
 
                 if (!pair.second) {
@@ -286,9 +286,9 @@ class AbstractTestSuiteRunner {
                             return -1;
                         }
 
-                        bspInstance.GetComputationalDag().setCSR(&lCsrInt32);
+                        bspInstance.GetComputationalDag().SetCsr(&lCsrInt32);
                         lCscInt32 = lCsrInt32;
-                        bspInstance.GetComputationalDag().setCSC(&lCscInt32);
+                        bspInstance.GetComputationalDag().SetCsc(&lCscInt32);
                     } else {
                         graphStatus = Eigen::loadMarket(lCsrInt64, filenameGraph);
                         if (!graphStatus) {
@@ -296,9 +296,9 @@ class AbstractTestSuiteRunner {
                             return -1;
                         }
 
-                        bspInstance.GetComputationalDag().setCSR(&lCsrInt64);
+                        bspInstance.GetComputationalDag().SetCsr(&lCsrInt64);
                         lCscInt64 = lCsrInt64;
-                        bspInstance.GetComputationalDag().setCSC(&lCscInt64);
+                        bspInstance.GetComputationalDag().SetCsc(&lCscInt64);
                     }
                 } else {
 #endif
@@ -349,7 +349,7 @@ class AbstractTestSuiteRunner {
                         currentRowValues["TimeToCompute(ms)"] = std::to_string(computationTimeMs);
 
                         for (auto &statModule : activeStatsModules_) {
-                            auto moduleMetrics = statModule->record_statistics(*targetObject, logStream_);
+                            auto moduleMetrics = statModule->RecordStatistics(*targetObject, logStream_);
                             currentRowValues.insert(moduleMetrics.begin(), moduleMetrics.end());
                         }
 

@@ -94,9 +94,9 @@ class EigenCSRRange {
 
     EigenCSRRange(const Graph &graph, EigenIdxType idx) : graph_(graph), index_(idx) {}
 
-    Iterator begin() const { return Iterator(*graph_.getCSR(), index_); }
+    Iterator begin() const { return Iterator(*graph_.GetCsr(), index_); }
 
-    Iterator end() const { return Iterator(*graph_.getCSR(), index_, true); }
+    Iterator end() const { return Iterator(*graph_.GetCsr(), index_, true); }
 };
 
 template <typename Graph, typename EigenIdxType>
@@ -167,9 +167,9 @@ class EigenCSCRange {
 
     EigenCSCRange(const Graph &graph, EigenIdxType idx) : graph_(graph), index_(idx) {}
 
-    Iterator begin() const { return Iterator(*graph_.getCSC(), index_); }
+    Iterator begin() const { return Iterator(*graph_.GetCsc(), index_); }
 
-    Iterator end() const { return Iterator(*graph_.getCSC(), index_, true); }
+    Iterator end() const { return Iterator(*graph_.GetCsc(), index_, true); }
 };
 
 }    // namespace osp
