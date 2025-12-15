@@ -146,7 +146,7 @@ ReturnStatus GreedyRecomputer<GraphT>::ComputeRecompSchedule(BspScheduleCS<Graph
                     continue;
                 }
 
-                if (!initialSchedule.GetInstance().isCompatible(node, toProc)) {
+                if (!initialSchedule.GetInstance().IsCompatible(node, toProc)) {
                     continue;
                 }
 

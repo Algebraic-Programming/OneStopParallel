@@ -638,7 +638,7 @@ bool PebblingSchedule<GraphT>::HasValidSolution(const BspInstance<GraphT> &insta
 
     for (VTypeT<GraphT> nodeType = 0; node_type < instance.GetComputationalDag().NumVertexTypes(); ++node_type) {
         for (unsigned proc = 0; proc < instance.NumberOfProcessors(); ++proc) {
-            if (instance.isCompatibleType(node_type, instance.GetArchitecture().ProcessorType(proc))
+            if (instance.IsCompatibleType(node_type, instance.GetArchitecture().ProcessorType(proc))
                 && instance.GetArchitecture().memoryBound(proc) >= memory_required[node_type]) {
                 hasEnoughMemory[node_type] = true;
                 break;
@@ -1171,7 +1171,7 @@ bool PebblingSchedule<GraphT>::IsValid() const {
         for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); ++proc) {
             // computation phase
             for (const auto &computeStep : computeStepsForProcSuperstep_[proc][step]) {
-                if (!instance_->isCompatible(computeStep.node, proc)) {
+                if (!instance_->IsCompatible(computeStep.node, proc)) {
                     return false;
                 }
 

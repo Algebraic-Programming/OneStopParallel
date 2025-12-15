@@ -113,7 +113,7 @@ struct KlBspCommCostFunction {
 
     inline const std::string Name() const { return "bsp_comm"; }
 
-    inline bool IsCompatible(VertexType node, unsigned proc) { return activeSchedule_->GetInstance().isCompatible(node, proc); }
+    inline bool IsCompatible(VertexType node, unsigned proc) { return activeSchedule_->GetInstance().IsCompatible(node, proc); }
 
     inline unsigned StartIdx(const unsigned nodeStep, const unsigned startStep) {
         return (nodeStep < windowSize + startStep) ? windowSize - (nodeStep - startStep) : 0;

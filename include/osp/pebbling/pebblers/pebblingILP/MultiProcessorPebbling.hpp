@@ -478,7 +478,7 @@ void MultiProcessorPebbling<GraphT>::SetupBaseVariablesConstraints(const BspInst
 
     for (vertex_idx node = 0; node < instance.NumberOfVertices(); node++) {
         for (unsigned processor = 0; processor < instance.NumberOfProcessors(); processor++) {
-            if (!instance.isCompatible(node, processor)) {
+            if (!instance.IsCompatible(node, processor)) {
                 for (unsigned t = 0; t < maxTime_; t++) {
                     compute_exists[node][processor][t] = false;
                     send_up_exists[node][processor][t] = false;

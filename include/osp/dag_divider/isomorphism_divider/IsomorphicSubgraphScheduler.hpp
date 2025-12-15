@@ -233,7 +233,7 @@ class IsomorphicSubgraphScheduler {
 
                     bool foundCompatibleProcessor = false;
                     for (unsigned procTypeIdx = 0; procTypeIdx < procTypeCounts.size(); ++procTypeIdx) {
-                        if (instance.isCompatibleType(common_node_type, procTypeIdx)) {
+                        if (instance.IsCompatibleType(common_node_type, procTypeIdx)) {
                             minCompatibleProcessors = std::min(minCompatibleProcessors, procTypeCounts[procTypeIdx]);
                             foundCompatibleProcessor = true;
                         }
@@ -348,7 +348,7 @@ class IsomorphicSubgraphScheduler {
                     const auto vertexWork = originalInstance.GetComputationalDag().VertexWorkWeight(vertex);
                     const auto vertexType = originalInstance.GetComputationalDag().VertexType(vertex);
                     for (unsigned j = 0; j < numProcTypes; ++j) {
-                        if (originalInstance.isCompatibleType(vertexType, j)) {
+                        if (originalInstance.IsCompatibleType(vertexType, j)) {
                             result.required_proc_types[coarseNodeIdx][j] += vertexWork;
                         }
                     }

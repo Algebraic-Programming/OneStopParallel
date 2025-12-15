@@ -225,7 +225,7 @@ std::vector<std::pair<VertexIdxT<GraphT>, unsigned>> SubproblemMultiScheduling<G
 
         for (const auto &succ : instance.GetComputationalDag().Children(last_node_on_proc[proc])) {
             if (nodes_available.find({-longest_outgoing_path[succ], succ}) != nodes_available.end()
-                && instance.isCompatible(succ, proc) && assigned_nodes.find(succ) == assigned_nodes.end()) {
+                && instance.IsCompatible(succ, proc) && assigned_nodes.find(succ) == assigned_nodes.end()) {
                 assignments.emplace_back(succ, proc);
                 assigned_nodes.insert(succ);
                 assigned_procs[proc] = true;
@@ -238,7 +238,7 @@ std::vector<std::pair<VertexIdxT<GraphT>, unsigned>> SubproblemMultiScheduling<G
         if (!assigned_procs[proc]) {
             for (auto itr = nodes_available.begin(); itr != nodes_available.end(); ++itr) {
                 vertex_idx node = itr->second;
-                if (instance.isCompatible(node, proc) && assigned_nodes.find(node) == assigned_nodes.end()) {
+                if (instance.IsCompatible(node, proc) && assigned_nodes.find(node) == assigned_nodes.end()) {
                     assignments.emplace_back(node, proc);
                     assigned_nodes.insert(node);
                     break;
