@@ -51,7 +51,7 @@ class AbstractWavefrontDivider : public IDagDivider<GraphT> {
     std::vector<std::vector<VertexType>> GetComponentsForRange(size_t startLevel,
                                                                size_t endLevel,
                                                                const std::vector<std::vector<VertexType>> &levelSets) const {
-        union_find_universe_t<GraphT> uf;
+        UnionFindUniverseT<GraphT> uf;
         for (size_t i = startLevel; i < endLevel; ++i) {
             for (const auto vertex : levelSets[i]) {
                 uf.AddObject(vertex, dagPtr_->VertexWorkWeight(vertex), dagPtr_->VertexMemWeight(vertex));

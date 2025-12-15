@@ -55,7 +55,7 @@ class SequenceGenerator {
         std::vector<double> seq;
         seq.reserve(fwdStats.size());
         for (const auto &stat : fwdStats) {
-            seq.push_back(static_cast<double>(stat.connected_components_vertices.size()));
+            seq.push_back(static_cast<double>(stat.connectedComponentsVertices_.size()));
         }
         return seq;
     }

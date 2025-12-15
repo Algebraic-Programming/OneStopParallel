@@ -294,7 +294,7 @@ BOOST_AUTO_TEST_CASE(TestDotGraph) {
 
     ComputationalDagVectorImplDefUnsignedT graph;
 
-    bool status = file_reader::readComputationalDagDotFormat((cwd / "data/dot/smpl_dot_graph_1.dot").string(), graph);
+    bool status = file_reader::ReadComputationalDagDotFormat((cwd / "data/dot/smpl_dot_graph_1.dot").string(), graph);
 
     BOOST_CHECK(status);
     BOOST_CHECK_EQUAL(graph.NumVertices(), 11);
@@ -323,7 +323,7 @@ BOOST_AUTO_TEST_CASE(TestDotGraphBoost) {
 
     BoostGraphIntT graph;
 
-    bool status = file_reader::readComputationalDagDotFormat((cwd / "data/dot/smpl_dot_graph_1.dot").string(), graph);
+    bool status = file_reader::ReadComputationalDagDotFormat((cwd / "data/dot/smpl_dot_graph_1.dot").string(), graph);
 
     BOOST_CHECK(status);
     BOOST_CHECK_EQUAL(graph.NumVertices(), 11);

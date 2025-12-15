@@ -64,7 +64,7 @@ void CheckPartitioning(const GraphT &dag, const OrbitGraphProcessor<GraphT, Grap
 // BOOST_AUTO_TEST_CASE(OrbitGraphProcessor_SmokeTest) {
 //     // The test reads a file, but the path is absolute, so we don't need the project root here.
 //     graph_t dag;
-//     file_reader::readComputationalDagDotFormat("", dag);
+//     file_reader::ReadComputationalDagDotFormat("", dag);
 
 //     OrbitGraphProcessor<graph_t, graph_t> processor(2); // Using a symmetry threshold of 2
 //     MerkleHashComputer<graph_t, bwd_merkle_node_hash_func<graph_t>, true> hasher(dag, dag);

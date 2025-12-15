@@ -298,7 +298,7 @@ BOOST_FIXTURE_TEST_SUITE(scan_wavefront_divider_test_suite, TestFixture)
 
 BOOST_AUTO_TEST_CASE(LargestStepDivisionTest) {
     osp::ScanWavefrontDivider<Graph> divider;
-    divider.set_metric(osp::SequenceMetric::AVAILABLE_PARALLELISM);
+    divider.SetMetric(osp::SequenceMetric::AVAILABLE_PARALLELISM);
     divider.use_largest_step_splitter(0.9, 1);
 
     auto sections = divider.divide(dag_);
@@ -316,7 +316,7 @@ BOOST_AUTO_TEST_CASE(LargestStepDivisionTest) {
 
 BOOST_AUTO_TEST_CASE(ThresholdScanDivisionTest) {
     osp::ScanWavefrontDivider<Graph> divider;
-    divider.set_metric(osp::SequenceMetric::AVAILABLE_PARALLELISM);
+    divider.SetMetric(osp::SequenceMetric::AVAILABLE_PARALLELISM);
     divider.use_threshold_scan_splitter(2.0, 11.5);
 
     auto sections = divider.divide(dag_);
@@ -336,7 +336,7 @@ BOOST_AUTO_TEST_CASE(ThresholdScanDivisionTest) {
 
 BOOST_AUTO_TEST_CASE(NoCutDivisionTest) {
     osp::ScanWavefrontDivider<Graph> divider;
-    divider.set_metric(osp::SequenceMetric::COMPONENT_COUNT);
+    divider.SetMetric(osp::SequenceMetric::COMPONENT_COUNT);
     divider.use_largest_step_splitter(2.0, 2);
 
     auto sections = divider.divide(dag_);
@@ -529,7 +529,7 @@ BOOST_AUTO_TEST_CASE(VarianceSplitterTest) {
     osp::RecursiveWavefrontDivider<Graph> divider;
     // var_mult of 0.99 ensures any reduction is accepted.
     // var_threshold of 0.1 ensures we start splitting.
-    divider.use_variance_splitter(0.99, 0.1, 2);
+    divider.UseVarianceSplitter(0.99, 0.1, 2);
     auto sections = divider.divide(dag_);
 
     // The variance splitter should also identify the two main merge points.

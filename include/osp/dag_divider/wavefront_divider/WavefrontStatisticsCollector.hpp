@@ -43,7 +43,7 @@ struct WavefrontStatistics {
 template <typename GraphT>
 class WavefrontStatisticsCollector {
     using VertexType = VertexIdxT<GraphT>;
-    using UnionFind = union_find_universe_t<GraphT>;
+    using UnionFind = UnionFindUniverseT<GraphT>;
 
   public:
     WavefrontStatisticsCollector(const GraphT &dag, const std::vector<std::vector<VertexType>> &levelSets)
@@ -103,15 +103,15 @@ class WavefrontStatisticsCollector {
 
     void CollectStatsForLevel(WavefrontStatistics<GraphT> &stats, UnionFind &uf) const {
         const auto components = uf.GetConnectedComponentsWeightsAndMemories();
-        stats.connected_components_vertices.reserve(components.size());
-        stats.connected_components_weights.reserve(components.size());
-        stats.connected_components_memories.reserve(components.size());
+        stats.connectedComponentsVertices_.reserve(components.size());
+        stats.connectedComponentsWeights_.reserve(components.size());
+        stats.connectedComponentsMemories_.reserve(components.size());
 
         for (const auto &comp : components) {
             auto &[vertices, weight, memory] = comp;
-            stats.connected_components_vertices.emplace_back(vertices);
-            stats.connected_components_weights.emplace_back(weight);
-            stats.connected_components_memories.emplace_back(memory);
+            stats.connectedComponentsVertices_.emplace_back(vertices);
+            stats.connectedComponentsWeights_.emplace_back(weight);
+            stats.connectedComponentsMemories_.emplace_back(memory);
         }
     }
 

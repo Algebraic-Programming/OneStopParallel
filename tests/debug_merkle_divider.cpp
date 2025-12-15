@@ -67,7 +67,7 @@ int main(int argc, char *argv[]) {
     using GraphT2 = GraphT;
 
     BspInstance<GraphT2> instance;
-    if (!file_reader::readComputationalDagDotFormat(dotFilePath, instance.GetComputationalDag())) {
+    if (!file_reader::ReadComputationalDagDotFormat(dotFilePath, instance.GetComputationalDag())) {
         std::cerr << "Failed to read graph from " << dotFilePath << std::endl;
         return 1;
     }

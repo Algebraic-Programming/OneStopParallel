@@ -31,8 +31,6 @@ limitations under the License.
 #include "osp/bsp/scheduler/GreedySchedulers/VarianceFillup.hpp"
 #include "osp/bsp/scheduler/LoadBalanceScheduler/LightEdgeVariancePartitioner.hpp"
 #include "osp/bsp/scheduler/LoadBalanceScheduler/VariancePartitioner.hpp"
-#include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_total_comm.hpp"
-#include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_total_cut.hpp"
 #include "osp/bsp/scheduler/Serial.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"

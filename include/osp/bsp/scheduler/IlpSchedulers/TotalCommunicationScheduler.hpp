@@ -22,7 +22,6 @@ limitations under the License.
 #include <coptcpp_pch.h>
 
 #include "osp/auxiliary/io/DotFileWriter.hpp"
-#include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_total_comm.hpp"
 #include "osp/bsp/scheduler/Scheduler.hpp"
 #include "osp/graph_algorithms/directed_graph_edge_view.hpp"
 

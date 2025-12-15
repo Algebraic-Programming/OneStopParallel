@@ -234,7 +234,7 @@ class UnionFindUniverse {
             std::vector<T> namesInComp;
             namesInComp.reserve(comp.size());
             for (auto &indx : comp) {
-                namesInComp.emplace_back(universe_[indx].name__);
+                namesInComp.emplace_back(universe_[indx].name_);
             }
             connectedComponentsByNameInclWeightMemory.emplace_back(namesInComp, compWeight, compMemory);
         }

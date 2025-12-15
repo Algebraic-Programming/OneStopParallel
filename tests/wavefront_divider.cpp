@@ -22,8 +22,6 @@ limitations under the License.
 #include "osp/auxiliary/io/dot_graph_file_reader.hpp"
 #include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/BspLocking.hpp"
-#include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_total_comm.hpp"
-#include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_total_cut.hpp"
 #include "osp/dag_divider/WavefrontComponentScheduler.hpp"
 #include "osp/dag_divider/wavefront_divider/RecursiveWavefrontDivider.hpp"
 #include "osp/dag_divider/wavefront_divider/ScanWavefrontDivider.hpp"
@@ -66,7 +64,7 @@ BOOST_AUTO_TEST_CASE(WavefrontComponentDivider) {
         BspInstance<GraphT> instance;
         auto &graph = instance.GetComputationalDag();
 
-        auto statusGraph = file_reader::readComputationalDagDotFormat((projectRoot / filenameGraph).string(), graph);
+        auto statusGraph = file_reader::ReadComputationalDagDotFormat((projectRoot / filenameGraph).string(), graph);
 
         if (!statusGraph) {
             std::cout << "Reading files failed." << std::endl;
@@ -76,7 +74,7 @@ BOOST_AUTO_TEST_CASE(WavefrontComponentDivider) {
         }
 
         ScanWavefrontDivider<GraphT> wavefront;
-        auto maps = wavefront.divide(graph);
+        auto maps = wavefront.Divide(graph);
 
         if (!maps.empty()) {
             BOOST_CHECK(CheckVertexMaps(maps, graph));
@@ -105,10 +103,10 @@ BOOST_AUTO_TEST_CASE(WavefrontComponentParallelismDivider) {
         }
 
         ScanWavefrontDivider<GraphT> wavefront;
-        wavefront.set_metric(SequenceMetric::AVAILABLE_PARALLELISM);
-        wavefront.use_variance_splitter(1.0, 1.0, 1);
+        wavefront.SetMetric(SequenceMetric::AVAILABLE_PARALLELISM);
+        wavefront.UseVarianceSplitter(1.0, 1.0, 1);
 
-        auto maps = wavefront.divide(graph);
+        auto maps = wavefront.Divide(graph);
 
         if (!maps.empty()) {
             BOOST_CHECK(CheckVertexMaps(maps, graph));
