@@ -139,7 +139,7 @@ std::vector<VertexIdxT<GraphT>> StepByStepCoarser<GraphT>::GenerateVertexContrac
         gCoarse_.RemoveVertex(node);
     }
 
-    osp::constructComputationalDag(gFull_, gCoarse_);
+    osp::ConstructComputationalDag(gFull_, gCoarse_);
 
     contractionHistory_.clear();
 

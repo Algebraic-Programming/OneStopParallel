@@ -203,7 +203,7 @@ class BoostGraph {
 
         graph_.m_vertices.reserve(other.NumVertices());
 
-        osp::constructComputationalDag(other, *this);
+        osp::ConstructComputationalDag(other, *this);
     }
 
     inline const BoostGraphImplT &GetBoostGraph() const { return graph_; }
