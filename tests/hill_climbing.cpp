@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(HillClimbing) {
     BOOST_CHECK_EQUAL(schedule2.SatisfiesPrecedenceConstraints(), true);
 
     BspSchedule<Graph> schedule3 = bspInitial;
-    scheduler.setTimeLimitSeconds(1U);
+    scheduler.SetTimeLimitSeconds(1U);
     scheduler.improveScheduleWithTimeLimit(schedule3);
     BOOST_CHECK_EQUAL(schedule3.SatisfiesPrecedenceConstraints(), true);
 

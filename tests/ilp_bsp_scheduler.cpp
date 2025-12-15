@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(TestTotal) {
     BspSchedule<graph> scheduleTo(instance);
 
     TotalCommunicationScheduler<graph> schedulerTo;
-    schedulerTo.setTimeLimitSeconds(10);
+    schedulerTo.SetTimeLimitSeconds(10);
 
     const auto resultTo = scheduler_to.ComputeSchedule(schedule_to);
     BOOST_CHECK(result_to == ReturnStatus::OSP_SUCCESS || result_to == ReturnStatus::BEST_FOUND);
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(TestTotal) {
     BspSchedule<graph> schedule(instance);
 
     TotalCommunicationScheduler<graph> scheduler;
-    scheduler.setTimeLimitSeconds(3600);
+    scheduler.SetTimeLimitSeconds(3600);
     const auto result = scheduler.ComputeSchedule(schedule);
 
     BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(TestFull) {
     BspScheduleCS<graph> scheduleTo(instance);
 
     CoptFullScheduler<graph> schedulerTo;
-    schedulerTo.setTimeLimitSeconds(10);
+    schedulerTo.SetTimeLimitSeconds(10);
 
     const auto resultTo = scheduler_to.ComputeScheduleCS(schedule_to);
     BOOST_CHECK_EQUAL(ReturnStatus::BEST_FOUND, result_to);
@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(TestFull) {
 
     CoptFullScheduler<graph> schedulerRecomp;
     BspScheduleRecomp<graph> scheduleRecomp(instance);
-    schedulerRecomp.setTimeLimitSeconds(10);
+    schedulerRecomp.SetTimeLimitSeconds(10);
     schedulerRecomp.computeScheduleRecomp(schedule_recomp);
     BOOST_CHECK(scheduleRecomp.SatisfiesConstraints());
 
@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(TestFull) {
     // initialize with standard schedule, return standard schedule
     CoptFullScheduler<graph> schedulerInit;
     BspScheduleCS<graph> scheduleImproved(instance);
-    schedulerInit.setTimeLimitSeconds(10);
+    schedulerInit.SetTimeLimitSeconds(10);
     schedulerInit.setInitialSolutionFromBspSchedule(schedule_init_cs);
     const auto resultInit = scheduler_init.ComputeScheduleCS(schedule_improved);
     BOOST_CHECK_EQUAL(ReturnStatus::BEST_FOUND, result_init);
@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(TestFull) {
     // initialize with standard schedule, return recomputing schedule
     CoptFullScheduler<graph> schedulerInit2(scheduleInitCs);
     BspScheduleRecomp<graph> scheduleImproved2(instance);
-    schedulerInit2.setTimeLimitSeconds(10);
+    schedulerInit2.SetTimeLimitSeconds(10);
     const auto resultInit2 = scheduler_init2.computeScheduleRecomp(schedule_improved2);
     BOOST_CHECK_EQUAL(ReturnStatus::BEST_FOUND, result_init2);
     BOOST_CHECK(scheduleImproved2.SatisfiesConstraints());
@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(TestFull) {
     // initialize with recomputing schedule, return recomputing schedule
     BspScheduleRecomp<graph> scheduleImproved3(instance), schedule_init3(schedule_init_cs);
     CoptFullScheduler<graph> SchedulerInit3(schedule_init3);
-    SchedulerInit3.setTimeLimitSeconds(10);
+    SchedulerInit3.SetTimeLimitSeconds(10);
     const auto resultInit3 = scheduler_init3.computeScheduleRecomp(schedule_improved3);
     BOOST_CHECK_EQUAL(ReturnStatus::BEST_FOUND, result_init3);
     BOOST_CHECK(scheduleImproved3.SatisfiesConstraints());
@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(TestFull) {
 
     CoptFullScheduler<graph> schedulerTyped;
     BspScheduleCS<graph> scheduleTypedCs(scheduleTyped);
-    schedulerTyped.setTimeLimitSeconds(10);
+    schedulerTyped.SetTimeLimitSeconds(10);
     schedulerTyped.setInitialSolutionFromBspSchedule(schedule_typed_cs);
     const auto resultTyped = scheduler_typed.ComputeSchedule(schedule_typed);
     BOOST_CHECK_EQUAL(ReturnStatus::BEST_FOUND, result_typed);
@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE(TestFull) {
     // with MaxBSP schedule
     CoptFullScheduler<graph> schedulerMax;
     MaxBspScheduleCS<graph> scheduleMax(instance);
-    schedulerMax.setTimeLimitSeconds(10);
+    schedulerMax.SetTimeLimitSeconds(10);
     const auto resultMax = scheduler_max.computeMaxBspScheduleCS(schedule_max);
     BOOST_CHECK(result_max == ReturnStatus::OSP_SUCCESS || result_max == ReturnStatus::BEST_FOUND);
     BOOST_CHECK(scheduleMax.SatisfiesPrecedenceConstraints());
@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_CASE(TestFull) {
     BspScheduleCS<graph> schedule(instance);
 
     CoptFullScheduler<graph> scheduler;
-    scheduler.setTimeLimitSeconds(3600);
+    scheduler.SetTimeLimitSeconds(3600);
     const auto result = scheduler.ComputeScheduleCS(schedule);
 
     BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
@@ -224,7 +224,7 @@ BOOST_AUTO_TEST_CASE(TestCs) {
     BOOST_CHECK(scheduleCs.HasValidCommSchedule());
 
     CoptCommScheduleOptimizer<graph> scheduler;
-    scheduler.setTimeLimitSeconds(10);
+    scheduler.SetTimeLimitSeconds(10);
     const auto before = schedule_cs.compute_cs_communication_costs();
     const auto result = scheduler.ImproveSchedule(schedule_cs);
     BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
@@ -265,7 +265,7 @@ BOOST_AUTO_TEST_CASE(TestPartial) {
     BOOST_CHECK(schedule.HasValidCommSchedule());
 
     CoptPartialScheduler<graph> scheduler;
-    scheduler.setTimeLimitSeconds(10);
+    scheduler.SetTimeLimitSeconds(10);
     scheduler.setStartAndEndSuperstep(0, 2);
     auto costBefore = schedule.ComputeCosts();
     auto result = scheduler.ImproveSchedule(schedule);

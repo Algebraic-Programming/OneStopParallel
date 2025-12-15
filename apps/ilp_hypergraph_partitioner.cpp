@@ -123,14 +123,16 @@ int main(int argc, char *argv[]) {
         }
         if (partition.SatisfiesBalanceConstraint()) {
             partitioner.SetUseInitialSolution(true);
+            partitioner.SetUseInitialSolution(true);
         }
 
         partitioner.SetTimeLimitSeconds(600);
+        partitioner.SetTimeLimitSeconds(600);
         if (replicate == 2) {
-            partitioner.SetReplicationModel(
-                HypergraphPartitioningILPWithReplication<HypergraphDefT>::ReplicationModelInIlp::GENERAL);
+            partitioner.SetReplicationModel(HypergraphPartitioningILPWithReplication<HypergraphImpl>::ReplicationModelInIlp::GENERAL);
         }
 
+        auto solveStatus = partitioner.ComputePartitioning(partition);
         auto solveStatus = partitioner.ComputePartitioning(partition);
 
         if (solveStatus == ReturnStatus::OSP_SUCCESS || solveStatus == ReturnStatus::BEST_FOUND) {

@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(TestFull) {
     BOOST_CHECK(initialSol.isValid());
 
     MultiProcessorPebbling<graph> mpp;
-    mpp.setTimeLimitSeconds(10);
+    mpp.SetTimeLimitSeconds(10);
     PebblingSchedule<graph> schedule(instance);
     mpp.computePebblingWithInitialSolution(initial_sol, schedule);
     schedule.cleanSchedule();

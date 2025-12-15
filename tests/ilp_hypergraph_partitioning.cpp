@@ -55,8 +55,8 @@ BOOST_AUTO_TEST_CASE(TestFull) {
     // ILP without replication
 
     HypergraphPartitioningILP<HypergraphImpl> partitioner;
-    partitioner.setTimeLimitSeconds(60);
-    partitioner.computePartitioning(partition);
+    partitioner.SetTimeLimitSeconds(60);
+    partitioner.ComputePartitioning(partition);
 
     BOOST_CHECK(partition.satisfiesBalanceConstraint());
     BOOST_CHECK(partition.computeConnectivityCost() >= partition.computeCutNetCost());
@@ -65,15 +65,15 @@ BOOST_AUTO_TEST_CASE(TestFull) {
         partition.setAssignedPartition(node, node % 3);
     }
 
-    partitioner.setUseInitialSolution(true);
-    partitioner.computePartitioning(partition);
+    partitioner.SetUseInitialSolution(true);
+    partitioner.ComputePartitioning(partition);
 
     BOOST_CHECK(partition.satisfiesBalanceConstraint());
     int cutNetCost = partition.computeCutNetCost(), connectivityCost = partition.computeConnectivityCost();
     BOOST_CHECK(connectivityCost >= cutNetCost);
 
     instance.setMaxMemoryWeightExplicitly(37);
-    partitioner.computePartitioning(partition);
+    partitioner.ComputePartitioning(partition);
     BOOST_CHECK(partition.satisfiesBalanceConstraint());
     BOOST_CHECK(cutNetCost == partition.computeCutNetCost());
     BOOST_CHECK(connectivityCost == partition.computeConnectivityCost());
@@ -84,54 +84,54 @@ BOOST_AUTO_TEST_CASE(TestFull) {
     HypergraphPartitioningILPWithReplication<HypergraphImpl> partitionerRep;
     PartitioningWithReplication partitionRep(instance);
 
-    partitionerRep.setTimeLimitSeconds(60);
-    partitionerRep.computePartitioning(partition_rep);
+    partitionerRep.SetTimeLimitSeconds(60);
+    partitionerRep.ComputePartitioning(partition_rep);
 
     BOOST_CHECK(partitionRep.satisfiesBalanceConstraint());
     BOOST_CHECK(partitionRep.computeConnectivityCost() == 0);
 
-    partitionerRep.setUseInitialSolution(true);
+    partitionerRep.SetUseInitialSolution(true);
     for (unsigned node = 0; node < hgraph.NumVertices(); ++node) {
-        partitionRep.setAssignedPartitions(node, {node % 3});
+        partitionRep.SetAssignedPartitions(node, {node % 3});
     }
 
-    partitionerRep.computePartitioning(partition_rep);
+    partitionerRep.ComputePartitioning(partition_rep);
     BOOST_CHECK(partitionRep.satisfiesBalanceConstraint());
     BOOST_CHECK(partitionRep.computeConnectivityCost() == 0);
 
     instance.setMaxWorkWeightExplicitly(60);
     for (unsigned node = 0; node < hgraph.NumVertices(); ++node) {
-        partitionRep.setAssignedPartitions(node, {node % 3, (node + 1) % 3});
+        partitionRep.SetAssignedPartitions(node, {node % 3, (node + 1) % 3});
     }
 
-    partitionerRep.computePartitioning(partition_rep);
+    partitionerRep.ComputePartitioning(partition_rep);
     BOOST_CHECK(partitionRep.satisfiesBalanceConstraint());
     BOOST_CHECK(partitionRep.computeConnectivityCost() == 0);
 
     // same tests with other replication formulation
     instance.setMaxWorkWeightExplicitly(35);
-    partitioner_rep.setReplicationModel(HypergraphPartitioningILPWithReplication<HypergraphImpl>::REPLICATION_MODEL_IN_ILP::GENERAL);
-    partitionerRep.setUseInitialSolution(false);
-    partitionerRep.computePartitioning(partition_rep);
+    partitioner_rep.SetReplicationModel(HypergraphPartitioningILPWithReplication<HypergraphImpl>::REPLICATION_MODEL_IN_ILP::GENERAL);
+    partitionerRep.SetUseInitialSolution(false);
+    partitionerRep.ComputePartitioning(partition_rep);
 
     BOOST_CHECK(partitionRep.satisfiesBalanceConstraint());
     BOOST_CHECK(partitionRep.computeConnectivityCost() == 0);
 
-    partitionerRep.setUseInitialSolution(true);
+    partitionerRep.SetUseInitialSolution(true);
     for (unsigned node = 0; node < hgraph.NumVertices(); ++node) {
-        partitionRep.setAssignedPartitions(node, {node % 3});
+        partitionRep.SetAssignedPartitions(node, {node % 3});
     }
 
-    partitionerRep.computePartitioning(partition_rep);
+    partitionerRep.ComputePartitioning(partition_rep);
     BOOST_CHECK(partitionRep.satisfiesBalanceConstraint());
     BOOST_CHECK(partitionRep.computeConnectivityCost() == 0);
 
     instance.setMaxWorkWeightExplicitly(60);
     for (unsigned node = 0; node < hgraph.NumVertices(); ++node) {
-        partitionRep.setAssignedPartitions(node, {node % 3, (node + 1) % 3});
+        partitionRep.SetAssignedPartitions(node, {node % 3, (node + 1) % 3});
     }
 
-    partitionerRep.computePartitioning(partition_rep);
+    partitionerRep.ComputePartitioning(partition_rep);
     BOOST_CHECK(partitionRep.satisfiesBalanceConstraint());
     BOOST_CHECK(partitionRep.computeConnectivityCost() == 0);
 };

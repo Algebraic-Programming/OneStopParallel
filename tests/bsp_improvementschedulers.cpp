@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(HungarianAlgProcessPermuterTest) {
 // BOOST_AUTO_TEST_CASE(LKTotalCommScheduler_test) {
 //     kl_total_comm test;
 
-//     test.setTimeLimitSeconds(10);
+//     test.SetTimeLimitSeconds(10);
 //     test.set_compute_with_time_limit(true);
 //     run_test(&test);
 // }
