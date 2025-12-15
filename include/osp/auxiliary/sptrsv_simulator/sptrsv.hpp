@@ -168,10 +168,10 @@ class Sptrsv {
         numSupersteps_ = schedule.NumberOfSupersteps();
 
         val_.clear();
-        val_.reserve(static_cast<size_t>(instance_->GetComputationalDag().GetCSR()->NonZeros()));
+        val_.reserve(static_cast<size_t>(instance_->GetComputationalDag().GetCSR()->nonZeros()));
 
         colIdx_.clear();
-        colIdx_.reserve(static_cast<size_t>(instance_->GetComputationalDag().GetCSR()->NonZeros()));
+        colIdx_.reserve(static_cast<size_t>(instance_->GetComputationalDag().GetCSR()->nonZeros()));
 
         rowPtr_.clear();
         rowPtr_.reserve(instance_->NumberOfVertices() + 1);

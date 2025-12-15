@@ -39,7 +39,7 @@ struct BufferedSendingCost {
         unsigned numberOfSupersteps = schedule.NumberOfSupersteps();
         const auto &nodeToProcessorAssignment = schedule.AssignedProcessors();
         const auto &nodeToSuperstepAssignment = schedule.AssignedSupersteps();
-        const auto staleness = schedule.Staleness();
+        const auto staleness = schedule.GetStaleness();
 
         std::vector<std::vector<VCommwT<GraphT>>> rec(instance.NumberOfProcessors(),
                                                       std::vector<VCommwT<GraphT>>(numberOfSupersteps, 0));

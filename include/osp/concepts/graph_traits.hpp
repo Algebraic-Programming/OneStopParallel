@@ -19,6 +19,7 @@ limitations under the License.
 #pragma once
 
 #include "iterator_concepts.hpp"
+#include "osp/auxiliary/hash_util.hpp"
 
 /**
  * @file graph_traits.hpp
@@ -274,8 +275,9 @@ template <typename GraphT>
 struct std::hash<osp::DirectedEdge<GraphT>> {
     std::size_t operator()(const osp::DirectedEdge<GraphT> &p) const noexcept {
         // Combine hashes of source and target
-        std::size_t h1 = std::hash<osp::VertexIdxT<GraphT>>{}(p.source);
-        std::size_t h2 = std::hash<osp::VertexIdxT<GraphT>>{}(p.target);
-        return h1 ^ (h2 << 1);    // Simple hash combining
+        std::size_t h1 = std::hash<osp::VertexIdxT<GraphT>>{}(p.source_);
+        std::size_t h2 = std::hash<osp::VertexIdxT<GraphT>>{}(p.target_);
+        osp::HashCombine(h1, h2);
+        return h1;
     }
 };
