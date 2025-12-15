@@ -83,7 +83,7 @@ ReturnStatus GreedyRecomputer<GraphT>::ComputeRecompSchedule(BspScheduleCS<Graph
 
         outSchedule.Assignments(node).emplace_back(proc, step);
     }
-    for (const std::pair<KeyTriple, unsigned> item : initialSchedule.getCommunicationSchedule()) {
+    for (const std::pair<KeyTriple, unsigned> item : initialSchedule.GetCommunicationSchedule()) {
         const vertex_idx &node = std::get<0>(item.first);
         const unsigned &from_proc = std::get<1>(item.first);
         const unsigned &to_proc = std::get<2>(item.first);
@@ -210,7 +210,7 @@ ReturnStatus GreedyRecomputer<GraphT>::ComputeRecompSchedule(BspScheduleCS<Graph
 
     for (unsigned step = 0; step < s; ++step) {
         for (const KeyTriple &entry : commSteps[step]) {
-            outSchedule.getCommunicationSchedule().emplace(entry, step);
+            outSchedule.GetCommunicationSchedule().emplace(entry, step);
         }
     }
 

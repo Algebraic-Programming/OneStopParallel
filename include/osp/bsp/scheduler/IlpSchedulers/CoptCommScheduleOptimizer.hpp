@@ -115,7 +115,7 @@ bool CoptCommScheduleOptimizer<GraphT>::CanShrinkResultingSchedule(unsigned numb
 
 template <typename GraphT>
 void CoptCommScheduleOptimizer<GraphT>::UpdateCommSchedule(BspScheduleCS<GraphT> &schedule) const {
-    std::map<KeyTriple, unsigned int> &cs = schedule.getCommunicationSchedule();
+    std::map<KeyTriple, unsigned int> &cs = schedule.GetCommunicationSchedule();
     cs.clear();
 
     for (const auto &node : schedule.GetInstance().Vertices()) {
@@ -141,7 +141,7 @@ void CoptCommScheduleOptimizer<GraphT>::SetInitialSolution(BspScheduleCS<GraphT>
     const BspArchitecture<GraphT> &arch = schedule.GetInstance().GetArchitecture();
     const unsigned &numProcessors = schedule.GetInstance().NumberOfProcessors();
     const unsigned &numSupersteps = schedule.NumberOfSupersteps();
-    const auto &cs = schedule.getCommunicationSchedule();
+    const auto &cs = schedule.GetCommunicationSchedule();
 
     std::vector<std::vector<unsigned>> firstAt(DAG.NumVertices(),
                                                std::vector<unsigned>(num_processors, std::numeric_limits<unsigned>::max()));

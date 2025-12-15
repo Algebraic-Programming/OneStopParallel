@@ -177,7 +177,7 @@ void HillClimbingForCommSteps<GraphT>::Init() {
 
     // overwrite with original comm schedule, wherever possible
     const std::map<std::tuple<vertex_idx, unsigned, unsigned>, unsigned int> originalCommSchedule
-        = schedule_->getCommunicationSchedule();
+        = schedule_->GetCommunicationSchedule();
     for (vertex_idx node = 0; node < n; ++node) {
         for (unsigned proc = 0; proc < p; ++proc) {
             if (commSchedule_[node][proc] == UINT_MAX) {

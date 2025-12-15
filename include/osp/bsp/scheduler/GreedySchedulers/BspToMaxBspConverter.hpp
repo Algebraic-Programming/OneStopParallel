@@ -59,7 +59,7 @@ MaxBspScheduleCS<GraphT> GreedyBspToMaxBspConverter<GraphT>::Convert(const BspSc
 
     // Initialize data structures
     std::vector<double> priorities;
-    std::vector<std::vector<std::deque<vertex_idx>>> procList = createSuperstepLists(schedule, priorities);
+    std::vector<std::vector<std::deque<vertex_idx>>> procList = CreateSuperstepLists(schedule, priorities);
     std::vector<std::vector<cost_type>> workRemainingProcSuperstep(schedule.GetInstance().NumberOfProcessors(),
                                                                    std::vector<cost_type>(schedule.NumberOfSupersteps(), 0));
     std::vector<vertex_idx> nodesRemainingSuperstep(schedule.NumberOfSupersteps(), 0);
@@ -79,7 +79,7 @@ MaxBspScheduleCS<GraphT> GreedyBspToMaxBspConverter<GraphT>::Convert(const BspSc
 
     std::vector<std::set<std::pair<KeyTriple, unsigned>>> freeCommStepsForSuperstep(schedule.NumberOfSupersteps());
     std::vector<std::vector<std::pair<KeyTriple, unsigned>>> dependentCommStepsForNode(schedule.GetInstance().NumberOfVertices());
-    for (auto const &[key, val] : schedule.getCommunicationSchedule()) {
+    for (auto const &[key, val] : schedule.GetCommunicationSchedule()) {
         if (schedule.AssignedSuperstep(std::get<0>(key)) == val) {
             dependentCommStepsForNode[std::get<0>(key)].emplace_back(key, val);
 
@@ -373,7 +373,7 @@ std::vector<std::vector<std::deque<VertexIdxT<GraphT>>>> GreedyBspToMaxBspConver
 
     // compute for each node the amount of dependent send cost in the same superstep
     std::vector<cost_type> commDependency(dag.NumVertices(), 0);
-    for (auto const &[key, val] : schedule.getCommunicationSchedule()) {
+    for (auto const &[key, val] : schedule.GetCommunicationSchedule()) {
         if (schedule.AssignedSuperstep(std::get<0>(key)) == val) {
             commDependency[std::get<0>(key)]
                 += dag.VertexCommWeight(std::get<0>(key))

@@ -126,7 +126,7 @@ template <typename GraphT>
 void CoptPartialScheduler<GraphT>::SetInitialSolution(const BspScheduleCS<GraphT> &schedule, Model &model) {
     const GraphT &dag = schedule.GetInstance().GetComputationalDag();
     const unsigned &numProcessors = schedule.GetInstance().NumberOfProcessors();
-    const auto &cs = schedule.getCommunicationSchedule();
+    const auto &cs = schedule.GetCommunicationSchedule();
 
     for (const VertexIdxT<GraphT> &node : DAG.Vertices()) {
         if (node_local_ID.find(node) == node_local_ID.end()) {
@@ -233,10 +233,10 @@ void CoptPartialScheduler<GraphT>::UpdateSchedule(BspScheduleCS<GraphT> &schedul
         }
     }
 
-    std::map<KeyTriple, unsigned int> &commSchedule = schedule.getCommunicationSchedule();
+    std::map<KeyTriple, unsigned int> &commSchedule = schedule.GetCommunicationSchedule();
 
     std::vector<KeyTriple> toErase;
-    for (const auto &[key, val] : schedule.getCommunicationSchedule()) {
+    for (const auto &[key, val] : schedule.GetCommunicationSchedule()) {
         if (val > endSuperstep_) {
             commSchedule[key] = static_cast<unsigned>(static_cast<int>(val) + offset);
         } else if (static_cast<int>(val) >= static_cast<int>(startSuperstep_) - 1) {
@@ -717,8 +717,8 @@ void CoptPartialScheduler<GraphT>::SetupVertexMaps(const BspScheduleCS<GraphT> &
                 if (proc1 == proc2) {
                     continue;
                 }
-                auto itr = schedule.getCommunicationSchedule().find(std::make_tuple(source, proc1, proc2));
-                if (itr != schedule.getCommunicationSchedule().end() && itr->second > end_superstep) {
+                auto itr = schedule.GetCommunicationSchedule().find(std::make_tuple(source, proc1, proc2));
+                if (itr != schedule.GetCommunicationSchedule().end() && itr->second > end_superstep) {
                     procs_needing_this.insert(schedule.AssignedProcessor(proc1));
                 }
             }
@@ -742,8 +742,8 @@ void CoptPartialScheduler<GraphT>::SetupVertexMaps(const BspScheduleCS<GraphT> &
 
         for (unsigned proc1 = 0; proc1 < schedule.GetInstance().NumberOfProcessors(); ++proc1) {
             for (unsigned proc2 = 0; proc2 < schedule.GetInstance().NumberOfProcessors(); ++proc2) {
-                auto itr = schedule.getCommunicationSchedule().find(std::make_tuple(node, proc1, proc2));
-                if (itr != schedule.getCommunicationSchedule().end() && proc1 != proc2 && itr->second > end_superstep) {
+                auto itr = schedule.GetCommunicationSchedule().find(std::make_tuple(node, proc1, proc2));
+                if (itr != schedule.GetCommunicationSchedule().end() && proc1 != proc2 && itr->second > end_superstep) {
                     procs_needing_this.insert(schedule.AssignedProcessor(proc1));
                 }
             }
@@ -758,7 +758,7 @@ void CoptPartialScheduler<GraphT>::SetupVertexMaps(const BspScheduleCS<GraphT> &
 
     // comm steps that just happen to be in this interval, but not connected to the nodes within
     hasFixedCommInPrecedingStep_ = false;
-    for (const auto &[key, val] : schedule.getCommunicationSchedule()) {
+    for (const auto &[key, val] : schedule.GetCommunicationSchedule()) {
         VertexIdxT<GraphT> source = std::get<0>(key);
         if (source_local_ID.find(source) == source_local_ID.end() && schedule.AssignedSuperstep(source) < start_superstep
             && val >= start_superstep - 1 && val <= end_superstep) {
