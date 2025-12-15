@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE(ChildrenTest) {
 }
 
 BOOST_AUTO_TEST_CASE(LockingTest) {
-    BspLocking<computational_dag_vector_impl_def_int_t> test;
+    BspLocking<ComputationalDagVectorImplDefIntT> test;
     RunTest(&test);
 }
 

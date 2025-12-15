@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(TestDag) {
 }
 
 BOOST_AUTO_TEST_CASE(TestConstrDag) {
-    computational_dag_vector_impl_def_int_t graph;
+    ComputationalDagVectorImplDefIntT graph;
 
     graph.AddVertex(1, 2, 3);
     graph.AddVertex(5, 6, 7);
@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE(TestConstrDag) {
     graph.AddEdge(0, 2);
     graph.AddEdge(0, 3);
 
-    computational_dag_vector_impl_def_int_t graph2(graph);
+    ComputationalDagVectorImplDefIntT graph2(graph);
 
     BOOST_CHECK_EQUAL(graph2.NumEdges(), 3);
     BOOST_CHECK_EQUAL(graph2.NumVertices(), 4);
@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE(TestConstrDag) {
 
     bG1.AddEdge(0, 1, 9);
 
-    computational_dag_vector_impl_def_int_t graph3(bG1);
+    ComputationalDagVectorImplDefIntT graph3(bG1);
 
     BOOST_CHECK_EQUAL(graph3.NumEdges(), 1);
     BOOST_CHECK_EQUAL(graph3.NumVertices(), 2);
@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE(TestConstrDag) {
     BOOST_CHECK_EQUAL(graph3.VertexCommWeight(1), 6);
     BOOST_CHECK_EQUAL(graph3.VertexMemWeight(1), 7);
 
-    computational_dag_vector_impl_def_int_t graph4(graph3);
+    ComputationalDagVectorImplDefIntT graph4(graph3);
 
     BOOST_CHECK_EQUAL(graph4.NumEdges(), 1);
     BOOST_CHECK_EQUAL(graph4.NumVertices(), 2);
@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_CASE(TestConstrDag) {
     BOOST_CHECK_EQUAL(graph4.VertexCommWeight(1), 6);
     BOOST_CHECK_EQUAL(graph4.VertexMemWeight(1), 7);
 
-    computational_dag_vector_impl_def_int_t graphMove1(std::move(graph4));
+    ComputationalDagVectorImplDefIntT graphMove1(std::move(graph4));
 
     BOOST_CHECK_EQUAL(graph4.NumEdges(), 0);
     BOOST_CHECK_EQUAL(graph4.NumVertices(), 0);

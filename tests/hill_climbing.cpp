@@ -110,15 +110,15 @@ BOOST_AUTO_TEST_CASE(HillClimbingForCommSchedule) {
     BspScheduleCS<Graph> initialCs(std::move(initial));
     // initial_cs.SetAutoCommunicationSchedule();
     initialCs.setEagerCommunicationSchedule();
-    BOOST_CHECK_EQUAL(initialCs.hasValidCommSchedule(), true);
+    BOOST_CHECK_EQUAL(initialCs.HasValidCommSchedule(), true);
 
     HillClimbingForCommSteps<Graph> hcCs;
     BspScheduleCS<Graph> schedule1 = initialCs;
     hcCs.ImproveSchedule(schedule1);
-    BOOST_CHECK_EQUAL(schedule1.hasValidCommSchedule(), true);
+    BOOST_CHECK_EQUAL(schedule1.HasValidCommSchedule(), true);
 
     BspScheduleCS<Graph> schedule2 = initialCs;
     hcCs.setSteepestAscend(true);
     hcCs.ImproveSchedule(schedule2);
-    BOOST_CHECK_EQUAL(schedule2.hasValidCommSchedule(), true);
+    BOOST_CHECK_EQUAL(schedule2.HasValidCommSchedule(), true);
 }

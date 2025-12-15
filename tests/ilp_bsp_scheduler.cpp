@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(TestFull) {
     greedy.ComputeSchedule(schedule_init);
     BOOST_CHECK(scheduleInit.SatisfiesPrecedenceConstraints());
     BspScheduleCS<graph> scheduleInitCs(scheduleInit);
-    BOOST_CHECK(scheduleInitCs.hasValidCommSchedule());
+    BOOST_CHECK(scheduleInitCs.HasValidCommSchedule());
 
     // initialize with standard schedule, return standard schedule
     CoptFullScheduler<graph> schedulerInit;
@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(TestFull) {
     const auto resultInit = scheduler_init.ComputeScheduleCS(schedule_improved);
     BOOST_CHECK_EQUAL(ReturnStatus::BEST_FOUND, result_init);
     BOOST_CHECK(scheduleImproved.SatisfiesPrecedenceConstraints());
-    BOOST_CHECK(scheduleImproved.hasValidCommSchedule());
+    BOOST_CHECK(scheduleImproved.HasValidCommSchedule());
 
     // initialize with standard schedule, return recomputing schedule
     CoptFullScheduler<graph> schedulerInit2(scheduleInitCs);
@@ -176,13 +176,13 @@ BOOST_AUTO_TEST_CASE(TestFull) {
     const auto resultMax = scheduler_max.computeMaxBspScheduleCS(schedule_max);
     BOOST_CHECK(result_max == ReturnStatus::OSP_SUCCESS || result_max == ReturnStatus::BEST_FOUND);
     BOOST_CHECK(scheduleMax.SatisfiesPrecedenceConstraints());
-    BOOST_CHECK(scheduleMax.hasValidCommSchedule());
+    BOOST_CHECK(scheduleMax.HasValidCommSchedule());
 
     schedulerMax.setInitialSolutionFromBspSchedule(schedule_max);
     const auto resultMax2 = scheduler_max.computeMaxBspScheduleCS(schedule_max);
     BOOST_CHECK(result_max2 == ReturnStatus::OSP_SUCCESS || result_max2 == ReturnStatus::BEST_FOUND);
     BOOST_CHECK(scheduleMax.SatisfiesPrecedenceConstraints());
-    BOOST_CHECK(scheduleMax.hasValidCommSchedule());
+    BOOST_CHECK(scheduleMax.HasValidCommSchedule());
 
     // longer time
     BspScheduleCS<graph> schedule(instance);
@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_CASE(TestCs) {
     greedy.ComputeSchedule(schedule);
     BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
     BspScheduleCS<graph> scheduleCs(schedule);
-    BOOST_CHECK(scheduleCs.hasValidCommSchedule());
+    BOOST_CHECK(scheduleCs.HasValidCommSchedule());
 
     CoptCommScheduleOptimizer<graph> scheduler;
     scheduler.setTimeLimitSeconds(10);
@@ -232,7 +232,7 @@ BOOST_AUTO_TEST_CASE(TestCs) {
     std::cout << before << " --cs--> " << after << std::endl;
 
     BOOST_CHECK(scheduleCs.SatisfiesPrecedenceConstraints());
-    BOOST_CHECK(scheduleCs.hasValidCommSchedule());
+    BOOST_CHECK(scheduleCs.HasValidCommSchedule());
     BOOST_CHECK(before >= after);
 };
 
@@ -262,23 +262,23 @@ BOOST_AUTO_TEST_CASE(TestPartial) {
     greedy.ComputeSchedule(schedule_init);
     BOOST_CHECK(scheduleInit.SatisfiesPrecedenceConstraints());
     BspScheduleCS<graph> schedule(scheduleInit);
-    BOOST_CHECK(schedule.hasValidCommSchedule());
+    BOOST_CHECK(schedule.HasValidCommSchedule());
 
     CoptPartialScheduler<graph> scheduler;
     scheduler.setTimeLimitSeconds(10);
     scheduler.setStartAndEndSuperstep(0, 2);
-    auto costBefore = schedule.computeCosts();
+    auto costBefore = schedule.ComputeCosts();
     auto result = scheduler.ImproveSchedule(schedule);
     BOOST_CHECK(result == ReturnStatus::OSP_SUCCESS || result == ReturnStatus::BEST_FOUND);
     BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
-    BOOST_CHECK(schedule.hasValidCommSchedule());
-    auto costMid = schedule.computeCosts();
+    BOOST_CHECK(schedule.HasValidCommSchedule());
+    auto costMid = schedule.ComputeCosts();
     BOOST_CHECK(costMid <= cost_before);
     scheduler.setStartAndEndSuperstep(2, 5);
     result = scheduler.ImproveSchedule(schedule);
     BOOST_CHECK(result == ReturnStatus::OSP_SUCCESS || result == ReturnStatus::BEST_FOUND);
     BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
-    BOOST_CHECK(schedule.hasValidCommSchedule());
-    auto costAfter = schedule.computeCosts();
+    BOOST_CHECK(schedule.HasValidCommSchedule());
+    auto costAfter = schedule.ComputeCosts();
     BOOST_CHECK(costAfter <= cost_mid);
 };

@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(TestInstanceBicgstab) {
         BOOST_CHECK_EQUAL(&schedule.GetInstance(), &instance);
         BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
 
-        BOOST_CHECK_EQUAL(schedule.computeCosts(), expectedBspCosts[i]);
+        BOOST_CHECK_EQUAL(schedule.ComputeCosts(), expectedBspCosts[i]);
         BOOST_CHECK_EQUAL(TotalCommunicationCost<Graph>()(schedule), expectedTotalCosts[i]);
         BOOST_CHECK_EQUAL(BufferedSendingCost<Graph>()(schedule), expectedBufferedSendingCosts[i]);
         BOOST_CHECK_EQUAL(schedule.NumberOfSupersteps(), expectedSupersteps[i]);
@@ -106,9 +106,9 @@ BOOST_AUTO_TEST_CASE(TestInstanceBicgstab) {
 
         BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, resultCs);
 
-        BOOST_CHECK(scheduleCs.hasValidCommSchedule());
+        BOOST_CHECK(scheduleCs.HasValidCommSchedule());
 
-        BOOST_CHECK_EQUAL(scheduleCs.computeCosts(), expectedBspCsCosts[i]);
+        BOOST_CHECK_EQUAL(scheduleCs.ComputeCosts(), expectedBspCsCosts[i]);
 
         i++;
 
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(TestInstanceBicgstab) {
 
 BOOST_AUTO_TEST_CASE(TestScheduleWriter) {
     using GraphT1 = ComputationalDagEdgeIdxVectorImplDefIntT;
-    using GraphT2 = computational_dag_vector_impl_def_int_t;
+    using GraphT2 = ComputationalDagVectorImplDefIntT;
 
     BspInstance<GraphT1> instance;
     instance.SetNumberOfProcessors(4);
@@ -155,10 +155,10 @@ BOOST_AUTO_TEST_CASE(TestScheduleWriter) {
     DotFileWriter schedWriter;
 
     std::cout << "Writing Graph" << std::endl;
-    schedWriter.write_graph(std::cout, instance.GetComputationalDag());
+    schedWriter.writeGraph(std::cout, instance.GetComputationalDag());
 
     std::cout << "Writing schedule_t1" << std::endl;
-    schedWriter.write_schedule(std::cout, schedule);
+    schedWriter.writeSchedule(std::cout, schedule);
 
     BspInstance<GraphT2> instanceT2(instance);
     BspSchedule<GraphT2> scheduleT2(instanceT2);
@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE(TestScheduleWriter) {
 
     std::cout << "Writing schedule_t2" << std::endl;
 
-    schedWriter.write_schedule(std::cout, scheduleT2);
+    schedWriter.writeSchedule(std::cout, scheduleT2);
 
     BspScheduleRecomp<GraphT2> scheduleRecomp(scheduleT2);
 
@@ -277,7 +277,7 @@ BOOST_AUTO_TEST_CASE(TestBspScheduleCs) {
     BspScheduleCS<Graph> scheduleCs(scheduleT5);
     BOOST_CHECK_EQUAL(scheduleCs.GetInstance().GetComputationalDag().NumVertices(), instance.GetComputationalDag().NumVertices());
     BOOST_CHECK(scheduleCs.SatisfiesPrecedenceConstraints());
-    BOOST_CHECK(scheduleCs.hasValidCommSchedule());
+    BOOST_CHECK(scheduleCs.HasValidCommSchedule());
     BOOST_CHECK_EQUAL(scheduleCs.NumberOfSupersteps(), schedule.NumberOfSupersteps());
 
     for (const auto &v : instance.GetComputationalDag().Vertices()) {
@@ -298,7 +298,7 @@ BOOST_AUTO_TEST_CASE(TestBspScheduleCs) {
     BspScheduleCS<Graph> scheduleCsT2(std::move(scheduleT5));
     BOOST_CHECK_EQUAL(scheduleCsT2.GetInstance().GetComputationalDag().NumVertices(), instance.GetComputationalDag().NumVertices());
     BOOST_CHECK(scheduleCsT2.SatisfiesPrecedenceConstraints());
-    BOOST_CHECK(scheduleCsT2.hasValidCommSchedule());
+    BOOST_CHECK(scheduleCsT2.HasValidCommSchedule());
     BOOST_CHECK_EQUAL(scheduleCsT2.NumberOfSupersteps(), schedule.NumberOfSupersteps());
 
     for (const auto &v : instance.GetComputationalDag().Vertices()) {
@@ -347,7 +347,7 @@ BOOST_AUTO_TEST_CASE(TestMaxBspSchedule) {
         // = {0, 0} -> max_work = 0. comm from SS2: 2->3 (P1->P0) needed at SS4, comm sent in SS2. comm=3*10=30. Cost = max(0,l+30) = 130.
         // Superstep 4: work = {10, 0} -> max_work = 10. comm = 0. Cost = max(10, 0) = 10.
         // Total cost = 10 + 110 + 5 + 130 + 10 = 265
-        BOOST_CHECK_EQUAL(schedule.computeCosts(), 265);
+        BOOST_CHECK_EQUAL(schedule.ComputeCosts(), 265);
     }
 
     // Test another valid schedule
@@ -372,7 +372,7 @@ BOOST_AUTO_TEST_CASE(TestMaxBspSchedule) {
         // Superstep 3: work = {0, 0} -> max_work = 0. comm from SS2: 1->3, 2->3 (P1->P0) needed at SS4, comm sent in SS2.
         // comm=(2+3)*10=50. Cost = max(0,l+50)=150. Superstep 4: work = {10, 0} -> max_work = 10. Cost = max(10, 0) = 10. Total
         // cost = 10 + 110 + 10 + 150 + 10 = 290
-        BOOST_CHECK_EQUAL(schedule.computeCosts(), 290);
+        BOOST_CHECK_EQUAL(schedule.ComputeCosts(), 290);
     }
 
     // Test an invalid schedule (violates staleness=2)
@@ -425,7 +425,7 @@ BOOST_AUTO_TEST_CASE(TestMaxBspScheduleCs) {
         schedule.addCommunicationScheduleEntry(0, 0, 1, 0);    // 0->2 (P0->P1) sent in SS0
         schedule.addCommunicationScheduleEntry(2, 1, 0, 2);    // 2->3 (P1->P0) sent in SS2
 
-        BOOST_CHECK(schedule.hasValidCommSchedule());
+        BOOST_CHECK(schedule.HasValidCommSchedule());
 
         // Manual cost calculation:
         // SS0: work={10,0}, max_work=10. comm_send(P0)=1, comm_rec(P1)=0. max_comm_h=1. Cost=max(10, 0)=10.
@@ -434,7 +434,7 @@ BOOST_AUTO_TEST_CASE(TestMaxBspScheduleCs) {
         // SS3: work={0,0}, max_work=0. comm from SS2: h=3, cost=3*10=30. Cost=max(0,30)+l=30+100=130.
         // SS4: work={10,0}, max_work=10. comm from SS3: h=0, cost=0. Cost=max(10,0)=10.
         // Total cost = 10 + 110 + 5 + 130 + 10 = 265
-        BOOST_CHECK_EQUAL(schedule.computeCosts(), 265);
+        BOOST_CHECK_EQUAL(schedule.ComputeCosts(), 265);
     }
 
     // Test an invalid schedule (violates staleness=2)

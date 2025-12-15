@@ -37,7 +37,7 @@ class BasicPebblingStatsModule : public IStatisticModule<PebblingSchedule<GraphT
     std::map<std::string, std::string> record_statistics(const PebblingSchedule<GraphT> &schedule,
                                                          std::ofstream & /*log_stream*/) const override {
         std::map<std::string, std::string> stats;
-        stats["PebblingCost"] = std::to_string(schedule.computeCosts());
+        stats["PebblingCost"] = std::to_string(schedule.ComputeCosts());
         stats["AsynchronousPebblingCost"] = std::to_string(computeAsynchronousCost());
         stats["Supersteps"] = std::to_string(schedule.NumberOfSupersteps());
         return stats;

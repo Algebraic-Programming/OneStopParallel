@@ -34,7 +34,7 @@ limitations under the License.
 using namespace osp;
 
 BOOST_AUTO_TEST_CASE(HypergraphAndPartitionTest) {
-    using Graph = computational_dag_vector_impl_def_int_t;
+    using Graph = ComputationalDagVectorImplDefIntT;
     using Hypergraph = HypergraphDefT;
 
     // Getting root git directory

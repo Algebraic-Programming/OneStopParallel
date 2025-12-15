@@ -28,9 +28,9 @@ limitations under the License.
 using namespace osp;
 
 BOOST_AUTO_TEST_CASE(ConnectedComponentPartTest) {
-    BspInstance<computational_dag_vector_impl_def_int_t> instance;
-    computational_dag_vector_impl_def_int_t &dag = instance.GetComputationalDag();
-    using VertexType = VertexIdxT<computational_dag_vector_impl_def_int_t>;
+    BspInstance<ComputationalDagVectorImplDefIntT> instance;
+    ComputationalDagVectorImplDefIntT &dag = instance.GetComputationalDag();
+    using VertexType = VertexIdxT<ComputationalDagVectorImplDefIntT>;
 
     BOOST_CHECK_EQUAL(dag.NumVertices(), 0);
     BOOST_CHECK_EQUAL(dag.NumEdges(), 0);
@@ -57,17 +57,17 @@ BOOST_AUTO_TEST_CASE(ConnectedComponentPartTest) {
     dag.AddEdge(v5, v8);
     dag.AddEdge(v4, v8);
 
-    ConnectedComponentDivider<computational_dag_vector_impl_def_int_t, computational_dag_vector_impl_def_int_t> partitioner;
+    ConnectedComponentDivider<ComputationalDagVectorImplDefIntT, ComputationalDagVectorImplDefIntT> partitioner;
 
     partitioner.divide(dag);
 
     GreedyBspScheduler<boost_graph_int_t> bspScheduler;
-    ConnectedComponentScheduler<computational_dag_vector_impl_def_int_t, boost_graph_int_t> scheduler(bspScheduler);
+    ConnectedComponentScheduler<ComputationalDagVectorImplDefIntT, boost_graph_int_t> scheduler(bspScheduler);
 
-    BspArchitecture<computational_dag_vector_impl_def_int_t> arch = instance.GetArchitecture();
+    BspArchitecture<ComputationalDagVectorImplDefIntT> arch = instance.GetArchitecture();
     arch.SetNumberOfProcessors(6);
 
-    BspSchedule<computational_dag_vector_impl_def_int_t> schedule(instance);
+    BspSchedule<ComputationalDagVectorImplDefIntT> schedule(instance);
     auto status = scheduler.ComputeSchedule(schedule);
 
     BOOST_CHECK_EQUAL(status, ReturnStatus::OSP_SUCCESS);
@@ -113,8 +113,8 @@ BOOST_AUTO_TEST_CASE(ConnectedComponentPartTest) {
         BOOST_CHECK(partitioner.get_vertex_mapping()[1].at(i - 8) <= 1 + i);
     }
 
-    BspInstance<computational_dag_vector_impl_def_int_t> instanceNew(dag, arch);
-    BspSchedule<computational_dag_vector_impl_def_int_t> scheduleNew(instanceNew);
+    BspInstance<ComputationalDagVectorImplDefIntT> instanceNew(dag, arch);
+    BspSchedule<ComputationalDagVectorImplDefIntT> scheduleNew(instanceNew);
 
     auto statusNew = scheduler.ComputeSchedule(scheduleNew);
 

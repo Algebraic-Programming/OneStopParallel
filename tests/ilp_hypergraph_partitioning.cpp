@@ -29,7 +29,7 @@ limitations under the License.
 using namespace osp;
 
 BOOST_AUTO_TEST_CASE(TestFull) {
-    using graph = computational_dag_vector_impl_def_int_t;
+    using graph = ComputationalDagVectorImplDefIntT;
     using Hypergraph = Hypergraph_def_t;
 
     // Getting root git directory

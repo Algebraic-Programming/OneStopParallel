@@ -133,7 +133,7 @@ void HillClimbingForCommSteps<GraphT>::Init() {
     const GraphT &g = schedule_->GetInstance().GetComputationalDag();
 
     CreateSupstepLists();
-    cost = schedule->computeCosts();
+    cost = schedule->ComputeCosts();
 
     nextSupstep_ = 0;
     commSchedule_.clear();

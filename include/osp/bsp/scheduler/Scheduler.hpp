@@ -79,7 +79,7 @@ class Scheduler {
      * @return ReturnStatus::OSP_SUCCESS or ReturnStatus::BEST_FOUND if a schedule was successfully computed,
      *         ReturnStatus::ERROR if an error occurred, or other status codes as appropriate.
      */
-    virtual ReturnStatus ComputeScheduleCs(BspScheduleCS<GraphT> &schedule) {
+    virtual ReturnStatus ComputeScheduleCS(BspScheduleCS<GraphT> &schedule) {
         auto result = ComputeSchedule(schedule);
         if (result == ReturnStatus::OSP_SUCCESS || result == ReturnStatus::BEST_FOUND) {
             schedule.SetAutoCommunicationSchedule();

@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
 
 //         schedule.updateNumberOfSupersteps();
 
-//         std::cout << "initial scedule with costs: " << schedule.computeCosts() << " and "
+//         std::cout << "initial scedule with costs: " << schedule.ComputeCosts() << " and "
 //                   << schedule.NumberOfSupersteps() << " number of supersteps" << std::endl;
 
 //         BspSchedule<graph> schedule_2(schedule);
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
 //         auto finish_time = std::chrono::high_resolution_clock::now();
 //         auto duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
 
-//         std::cout << "kl lambda new finished in " << duration << " seconds, costs: " << schedule.computeCosts()
+//         std::cout << "kl lambda new finished in " << duration << " seconds, costs: " << schedule.ComputeCosts()
 //                   << " and lambda costs: " << schedule.computeTotalLambdaCosts() << " with "
 //                   << schedule.NumberOfSupersteps() << " number of supersteps" << std::endl;
 
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
 //         finish_time = std::chrono::high_resolution_clock::now();
 //         duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
 
-//         std::cout << "kl new finished in " << duration << " seconds, costs: " << schedule.computeCosts() << " with "
+//         std::cout << "kl new finished in " << duration << " seconds, costs: " << schedule.ComputeCosts() << " with "
 //                   << schedule.NumberOfSupersteps() << " number of supersteps" << std::endl;
 
 //         BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
@@ -208,7 +208,7 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
 
 //         duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
 
-//         std::cout << "hc_comm_steps finished in " << duration << " seconds, costs: " << schedule_cs.computeCosts()
+//         std::cout << "hc_comm_steps finished in " << duration << " seconds, costs: " << schedule_cs.ComputeCosts()
 //                   << " with " << schedule_cs.NumberOfSupersteps() << " number of supersteps" << std::endl;
 
 //         BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
@@ -224,7 +224,7 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
 
 //         duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
 
-//         std::cout << "hc finished in " << duration << " seconds, costs: " << schedule_2.computeCosts() << " with "
+//         std::cout << "hc finished in " << duration << " seconds, costs: " << schedule_2.ComputeCosts() << " with "
 //                   << schedule_2.NumberOfSupersteps() << " number of supersteps" << std::endl;
 
 //         BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
 
 //         duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
 
-//         std::cout << "hc_comm_steps finished in " << duration << " seconds, costs: " << schedule_cs_2.computeCosts()
+//         std::cout << "hc_comm_steps finished in " << duration << " seconds, costs: " << schedule_cs_2.ComputeCosts()
 //                   << " with " << schedule_cs_2.NumberOfSupersteps() << " number of supersteps" << std::endl;
 
 //         BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);

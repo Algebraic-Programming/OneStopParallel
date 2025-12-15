@@ -845,7 +845,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
         return RunSchedulerInternal(schedule);
     }
 
-    virtual ReturnStatus ComputeScheduleCs(BspScheduleCS<GraphT> &schedule) override {
+    virtual ReturnStatus ComputeScheduleCS(BspScheduleCS<GraphT> &schedule) override {
         allowRecomputation_ = false;
         isMaxBsp_ = false;
         return RunSchedulerInternal(schedule);

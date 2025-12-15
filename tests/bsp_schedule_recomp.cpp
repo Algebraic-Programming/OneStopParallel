@@ -62,9 +62,9 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecompTest) {
     BOOST_CHECK(scheduleRecomp.satisfiesConstraints());
     BOOST_CHECK_EQUAL(scheduleRecomp.getTotalAssignments(), instance.NumberOfVertices());
     BOOST_CHECK_EQUAL(scheduleRecomp.computeWorkCosts(), schedule.computeWorkCosts());
-    BOOST_CHECK_EQUAL(scheduleRecomp.computeCosts(), scheduleCS.computeCosts());
+    BOOST_CHECK_EQUAL(scheduleRecomp.ComputeCosts(), scheduleCS.ComputeCosts());
 
     BspScheduleRecomp<Graph> scheduleRecompFromCs(scheduleCS);
     BOOST_CHECK(scheduleRecompFromCs.satisfiesConstraints());
-    BOOST_CHECK_EQUAL(scheduleRecompFromCs.computeCosts(), scheduleCS.computeCosts());
+    BOOST_CHECK_EQUAL(scheduleRecompFromCs.ComputeCosts(), scheduleCS.ComputeCosts());
 }

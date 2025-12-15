@@ -159,7 +159,7 @@ class KlImproverTest : public kl_improver<Graph_t, comm_cost_function_t, MemoryC
 
     bool IsNodeLocked(VertexType node) const { return this->thread_data_vec[0].lock_manager.is_locked(node); }
 
-    void GetActiveScheduleTest(BspSchedule<GraphT> &schedule) { this->active_schedule.write_schedule(schedule); }
+    void GetActiveScheduleTest(BspSchedule<GraphT> &schedule) { this->active_schedule.writeSchedule(schedule); }
 };
 
 }    // namespace osp

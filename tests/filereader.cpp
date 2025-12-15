@@ -230,7 +230,7 @@ BOOST_AUTO_TEST_CASE(TestArchSmplSigned) {
         cwd = cwd.parent_path();
     }
 
-    BspArchitecture<computational_dag_vector_impl_def_int_t> arch;
+    BspArchitecture<ComputationalDagVectorImplDefIntT> arch;
 
     bool status = file_reader::ReadBspArchitecture((cwd / "data/machine_params/p3.arch").string(), arch);
 

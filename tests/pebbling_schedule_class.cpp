@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(GreedyBspSchedulerTest) {
 }
 
 BOOST_AUTO_TEST_CASE(TestPebblingScheduleWriter) {
-    using Graph = computational_dag_vector_impl_def_int_t;
+    using Graph = ComputationalDagVectorImplDefIntT;
 
     BspInstance<Graph> instance;
     instance.SetNumberOfProcessors(3);

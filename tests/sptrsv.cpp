@@ -113,9 +113,9 @@ BOOST_AUTO_TEST_CASE(TestEigenSptrsv) {
     */
 
     BOOST_CHECK_EQUAL(resultCs, ReturnStatus::OSP_SUCCESS);
-    BOOST_CHECK(scheduleCs.hasValidCommSchedule());
+    BOOST_CHECK(scheduleCs.HasValidCommSchedule());
 
-    // std::cout << "Scheduling Costs:" << schedule_cs.computeCosts() << std::endl;
+    // std::cout << "Scheduling Costs:" << schedule_cs.ComputeCosts() << std::endl;
     // std::cout << "lazy com Costs:" <<schedule_cs.compute_lazy_communication_costs() << std::endl;
 
     // Eigen L solve

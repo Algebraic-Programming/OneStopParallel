@@ -266,7 +266,7 @@ bool ValidateCommDatastructures(const max_comm_datastructure<Graph, double, KlAc
                                 const std::string &context) {
     // 1. Clone Schedule
     BspSchedule<Graph> currentSchedule(instance);
-    activeSched.write_schedule(currentSchedule);
+    activeSched.writeSchedule(currentSchedule);
 
     // 2. Fresh Computation
     KlActiveScheduleT klSchedFresh;
