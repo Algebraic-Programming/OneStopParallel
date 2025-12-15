@@ -136,11 +136,9 @@ struct KlActiveScheduleWorkDatastructures {
         setSchedule_ = &sched;
         maxWorkWeight_ = 0;
         totalWorkWeight_ = 0;
-        stepProcessorWork_
-            = std::vector<std::vector<WeightProc>>(numSteps, std::vector<WeightProc>(instance_->NumberOfProcessors()));
-        stepProcessorPosition_
-            = std::vector<std::vector<unsigned>>(numSteps, std::vector<unsigned>(instance_->NumberOfProcessors(), 0));
-        stepMaxWorkProcessorCount_ = std::vector<unsigned>(numSteps, 0);
+        stepProcessorWork_.assign(numSteps, std::vector<WeightProc>(instance_->NumberOfProcessors()));
+        stepProcessorPosition_.assign(numSteps, std::vector<unsigned>(instance_->NumberOfProcessors(), 0));
+        stepMaxWorkProcessorCount_.assign(numSteps, 0);
     }
 
     inline void Clear() {

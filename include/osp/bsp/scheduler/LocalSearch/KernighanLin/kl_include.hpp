@@ -35,47 +35,47 @@ using DoubleCostT = double;
 
 template <typename GraphT,
           typename MemoryConstraintT = NoLocalSearchMemoryConstraint,
-          unsigned windowSize = 1,
-          bool useNodeCommunicationCostsArg = true>
+          unsigned WindowSize = 1,
+          bool UseNodeCommunicationCostsArg = true>
 using KlTotalCommImprover
     = KlImprover<GraphT,
-                 KlTotalCommCostFunction<GraphT, DoubleCostT, MemoryConstraintT, windowSize, useNodeCommunicationCostsArg>,
+                 KlTotalCommCostFunction<GraphT, DoubleCostT, MemoryConstraintT, WindowSize, UseNodeCommunicationCostsArg>,
                  MemoryConstraintT,
-                 windowSize,
+                 WindowSize,
                  DoubleCostT>;
 
 template <typename GraphT,
           typename MemoryConstraintT = LsLocalMemoryConstraint<GraphT>,
-          unsigned windowSize = 1,
-          bool useNodeCommunicationCostsArg = true>
+          unsigned WindowSize = 1,
+          bool UseNodeCommunicationCostsArg = true>
 using KlTotalCommImproverLocalMemConstr
     = KlImprover<GraphT,
-                 KlTotalCommCostFunction<GraphT, DoubleCostT, MemoryConstraintT, windowSize, useNodeCommunicationCostsArg>,
+                 KlTotalCommCostFunction<GraphT, DoubleCostT, MemoryConstraintT, WindowSize, UseNodeCommunicationCostsArg>,
                  MemoryConstraintT,
-                 windowSize,
+                 WindowSize,
                  DoubleCostT>;
 
-template <typename GraphT, typename MemoryConstraintT = NoLocalSearchMemoryConstraint, unsigned windowSize = 1>
+template <typename GraphT, typename MemoryConstraintT = NoLocalSearchMemoryConstraint, unsigned WindowSize = 1>
 using KlTotalLambdaCommImprover = KlImprover<GraphT,
-                                             KlHyperTotalCommCostFunction<GraphT, DoubleCostT, MemoryConstraintT, windowSize>,
+                                             KlHyperTotalCommCostFunction<GraphT, DoubleCostT, MemoryConstraintT, WindowSize>,
                                              MemoryConstraintT,
-                                             windowSize,
+                                             WindowSize,
                                              DoubleCostT>;
 
-template <typename GraphT, typename MemoryConstraintT = LsLocalMemoryConstraint<GraphT>, unsigned windowSize = 1>
+template <typename GraphT, typename MemoryConstraintT = LsLocalMemoryConstraint<GraphT>, unsigned WindowSize = 1>
 using KlTotalLambdaCommImproverLocalMemConstr
     = KlImprover<GraphT,
-                 KlHyperTotalCommCostFunction<GraphT, DoubleCostT, MemoryConstraintT, windowSize>,
+                 KlHyperTotalCommCostFunction<GraphT, DoubleCostT, MemoryConstraintT, WindowSize>,
                  MemoryConstraintT,
-                 windowSize,
+                 WindowSize,
                  DoubleCostT>;
 
-template <typename GraphT, typename MemoryConstraintT = NoLocalSearchMemoryConstraint, unsigned windowSize = 1>
+template <typename GraphT, typename MemoryConstraintT = NoLocalSearchMemoryConstraint, unsigned WindowSize = 1>
 using KlBspCommImprover
-    = KlImprover<GraphT, KlBspCommCostFunction<GraphT, DoubleCostT, MemoryConstraintT, windowSize>, MemoryConstraintT, windowSize, DoubleCostT>;
+    = KlImprover<GraphT, KlBspCommCostFunction<GraphT, DoubleCostT, MemoryConstraintT, WindowSize>, MemoryConstraintT, WindowSize, DoubleCostT>;
 
-template <typename GraphT, typename MemoryConstraintT = LsLocalMemoryConstraint<GraphT>, unsigned windowSize = 1>
+template <typename GraphT, typename MemoryConstraintT = LsLocalMemoryConstraint<GraphT>, unsigned WindowSize = 1>
 using KlBspCommImproverLocalMemConstr
-    = KlImprover<GraphT, KlBspCommCostFunction<GraphT, DoubleCostT, MemoryConstraintT, windowSize>, MemoryConstraintT, windowSize, DoubleCostT>;
+    = KlImprover<GraphT, KlBspCommCostFunction<GraphT, DoubleCostT, MemoryConstraintT, WindowSize>, MemoryConstraintT, WindowSize, DoubleCostT>;
 
 }    // namespace osp

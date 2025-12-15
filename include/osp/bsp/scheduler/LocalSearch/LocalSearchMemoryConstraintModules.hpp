@@ -99,7 +99,7 @@ struct LsLocalMemoryConstraint {
 
     inline bool CanMove(VertexIdxT<GraphT> vertex, const unsigned proc, unsigned step) const {
         return stepProcessorMemory_[step][proc] + graph_->VertexMemWeight(vertex)
-               <= setSchedule_->GetInstance().GetArchitecture().memoryBound(proc);
+               <= setSchedule_->GetInstance().GetArchitecture().MemoryBound(proc);
     }
 
     void SwapSteps(const unsigned step1, const unsigned step2) {
@@ -137,7 +137,7 @@ struct LsLocalMemoryConstraint {
     bool SatisfiedMemoryConstraint() const {
         for (unsigned step = 0; step < setSchedule_->NumberOfSupersteps(); step++) {
             for (unsigned proc = 0; proc < setSchedule_->GetInstance().NumberOfProcessors(); proc++) {
-                if (stepProcessorMemory_[step][proc] > setSchedule_->GetInstance().GetArchitecture().memoryBound(proc)) {
+                if (stepProcessorMemory_[step][proc] > setSchedule_->GetInstance().GetArchitecture().MemoryBound(proc)) {
                     return false;
                 }
             }
@@ -296,10 +296,10 @@ struct LsLocalIncEdgesMemoryConstraint {
         }
 
         if (step >= vectorSchedule_->AssignedSuperstep(vertex)) {
-            return stepProcessorMemory_[step][proc] + incMemory <= setSchedule_->GetInstance().GetArchitecture().memoryBound(proc);
+            return stepProcessorMemory_[step][proc] + incMemory <= setSchedule_->GetInstance().GetArchitecture().MemoryBound(proc);
         }
 
-        if (stepProcessorMemory_[step][proc] + incMemory > setSchedule_->GetInstance().GetArchitecture().memoryBound(proc)) {
+        if (stepProcessorMemory_[step][proc] + incMemory > setSchedule_->GetInstance().GetArchitecture().MemoryBound(proc)) {
             return false;
         }
 
@@ -309,7 +309,7 @@ struct LsLocalIncEdgesMemoryConstraint {
 
             if (succStep == vectorSchedule_->AssignedSuperstep(vertex) and succProc != vectorSchedule_->AssignedProcessor(vertex)) {
                 if (stepProcessorMemory_[succStep][succProc] + graph_->VertexCommWeight(vertex)
-                    > setSchedule_->GetInstance().GetArchitecture().memoryBound(succProc)) {
+                    > setSchedule_->GetInstance().GetArchitecture().MemoryBound(succProc)) {
                     return false;
                 }
             }
@@ -478,10 +478,10 @@ struct LsLocalSourcesIncEdgesMemoryConstraint {
         }
 
         if (vectorSchedule_->AssignedSuperstep(vertex) <= step) {
-            return stepProcessorMemory_[step][proc] + incMemory <= setSchedule_->GetInstance().GetArchitecture().memoryBound(proc);
+            return stepProcessorMemory_[step][proc] + incMemory <= setSchedule_->GetInstance().GetArchitecture().MemoryBound(proc);
         }
 
-        if (stepProcessorMemory_[step][proc] + incMemory > setSchedule_->GetInstance().GetArchitecture().memoryBound(proc)) {
+        if (stepProcessorMemory_[step][proc] + incMemory > setSchedule_->GetInstance().GetArchitecture().MemoryBound(proc)) {
             return false;
         }
 
@@ -492,7 +492,7 @@ struct LsLocalSourcesIncEdgesMemoryConstraint {
             if (succStep == vectorSchedule_->AssignedSuperstep(vertex)) {
                 if (vectorSchedule_->AssignedProcessor(vertex) != succProc || (not IsSource(vertex, *graph_))) {
                     if (stepProcessorMemory_[succStep][succProc] + graph_->VertexCommWeight(vertex)
-                        > setSchedule_->GetInstance().GetArchitecture().memoryBound(succProc)) {
+                        > setSchedule_->GetInstance().GetArchitecture().MemoryBound(succProc)) {
                         return false;
                     }
 
@@ -500,7 +500,7 @@ struct LsLocalSourcesIncEdgesMemoryConstraint {
                     if (IsSource(vertex, *graph_)) {
                         if (stepProcessorMemory_[succStep][succProc] + graph_->VertexCommWeight(vertex)
                                 - graph_->VertexMemWeight(vertex)
-                            > setSchedule_->GetInstance().GetArchitecture().memoryBound(succProc)) {
+                            > setSchedule_->GetInstance().GetArchitecture().MemoryBound(succProc)) {
                             return false;
                         }
                     }

@@ -89,7 +89,7 @@ class HillClimbingForCommSteps {
 
 template <typename GraphT>
 ReturnStatus HillClimbingForCommSteps<GraphT>::ImproveSchedule(BspScheduleCS<GraphT> &inputSchedule) {
-    return improveScheduleWithTimeLimit(input_schedule, 180);
+    return ImproveScheduleWithTimeLimit(inputSchedule, 180);
 }
 
 // Main method for hill climbing (with time limit)
@@ -133,31 +133,31 @@ void HillClimbingForCommSteps<GraphT>::Init() {
     const GraphT &g = schedule_->GetInstance().GetComputationalDag();
 
     CreateSupstepLists();
-    cost = schedule->ComputeCosts();
+    cost_ = schedule_->ComputeCosts();
 
     nextSupstep_ = 0;
     commSchedule_.clear();
     commSchedule_.resize(n, std::vector<unsigned>(p, UINT_MAX));
-    sent.clear();
-    sent.resize(M - 1, std::vector<cost_type>(P, 0));
-    received.clear();
-    received.resize(M - 1, std::vector<cost_type>(P, 0));
-    commCost.clear();
-    commCost.resize(M - 1, std::vector<cost_type>(P));
-    commCostList.clear();
-    commCostList.resize(M - 1);
-    commCostPointer.clear();
-    commCostPointer.resize(M - 1, std::vector<typename std::set<std::pair<cost_type, unsigned>>::iterator>(P));
+    sent_.clear();
+    sent_.resize(m - 1, std::vector<cost_type>(p, 0));
+    received_.clear();
+    received_.resize(m - 1, std::vector<cost_type>(p, 0));
+    commCost_.clear();
+    commCost_.resize(m - 1, std::vector<cost_type>(p));
+    commCostList_.clear();
+    commCostList_.resize(m - 1);
+    commCostPointer_.clear();
+    commCostPointer_.resize(m - 1, std::vector<typename std::set<std::pair<cost_type, unsigned>>::iterator>(p));
     commBounds_.clear();
     commBounds_.resize(n, std::vector<std::pair<unsigned, unsigned>>(p));
-    commSchedSendLists.clear();
-    commSchedSendLists.resize(M - 1, std::vector<std::list<std::pair<VertexIdx, unsigned>>>(P));
-    commSchedRecLists.clear();
-    commSchedRecLists.resize(M - 1, std::vector<std::list<std::pair<VertexIdx, unsigned>>>(P));
-    commSchedSendListPointer.clear();
-    commSchedSendListPointer.resize(N, std::vector<typename std::list<std::pair<VertexIdx, unsigned>>::iterator>(P));
-    commSchedRecListPointer.clear();
-    commSchedRecListPointer.resize(N, std::vector<typename std::list<std::pair<VertexIdx, unsigned>>::iterator>(P));
+    commSchedSendLists_.clear();
+    commSchedSendLists_.resize(m - 1, std::vector<std::list<std::pair<VertexIdx, unsigned>>>(p));
+    commSchedRecLists_.clear();
+    commSchedRecLists_.resize(m - 1, std::vector<std::list<std::pair<VertexIdx, unsigned>>>(p));
+    commSchedSendListPointer_.clear();
+    commSchedSendListPointer_.resize(n, std::vector<typename std::list<std::pair<VertexIdx, unsigned>>::iterator>(p));
+    commSchedRecListPointer_.clear();
+    commSchedRecListPointer_.resize(n, std::vector<typename std::list<std::pair<VertexIdx, unsigned>>::iterator>(p));
 
     // initialize to lazy comm schedule first - to make sure it's correct even if e.g. com scehdule has indirect sending
     for (unsigned step = 1; step < m; ++step) {
@@ -185,7 +185,7 @@ void HillClimbingForCommSteps<GraphT>::Init() {
             }
 
             const auto commScheduleKey = std::make_tuple(node, schedule_->AssignedProcessor(node), proc);
-            auto mapIterator = originalCommSchedule.find(comm_schedule_key);
+            auto mapIterator = originalCommSchedule.find(commScheduleKey);
             if (mapIterator != originalCommSchedule.end()) {
                 unsigned originalStep = mapIterator->second;
                 if (originalStep >= commBounds_[node][proc].first && originalStep <= commBounds_[node][proc].second) {
@@ -194,33 +194,33 @@ void HillClimbingForCommSteps<GraphT>::Init() {
             }
 
             unsigned step = commSchedule_[node][proc];
-            commSchedSendLists[step][schedule->AssignedProcessor(node)].emplace_front(node, proc);
-            commSchedSendListPointer[node][proc] = commSchedSendLists[step][schedule->AssignedProcessor(node)].begin();
-            commSchedRecLists[step][proc].emplace_front(node, proc);
-            commSchedRecListPointer[node][proc] = commSchedRecLists[step][proc].begin();
+            commSchedSendLists_[step][schedule->AssignedProcessor(node)].emplace_front(node, proc);
+            commSchedSendListPointer_[node][proc] = commSchedSendLists_[step][schedule->AssignedProcessor(node)].begin();
+            commSchedRecLists_[step][proc].emplace_front(node, proc);
+            commSchedRecListPointer_[node][proc] = commSchedRecLists_[step][proc].begin();
 
-            sent[step][schedule->AssignedProcessor(node)]
+            sent_[step][schedule->AssignedProcessor(node)]
                 += schedule->GetInstance().GetComputationalDag().VertexCommWeight(node)
                    * schedule->GetInstance().GetArchitecture().SendCosts(schedule->AssignedProcessor(node), proc);
-            received[step][proc] += schedule->GetInstance().GetComputationalDag().VertexCommWeight(node)
-                                    * schedule->GetInstance().GetArchitecture().SendCosts(schedule->AssignedProcessor(node), proc);
+            received_[step][proc] += schedule->GetInstance().GetComputationalDag().VertexCommWeight(node)
+                                     * schedule->GetInstance().GetArchitecture().SendCosts(schedule->AssignedProcessor(node), proc);
         }
     }
 
     for (unsigned step = 0; step < m - 1; ++step) {
         for (unsigned proc = 0; proc < p; ++proc) {
-            commCost[step][proc] = std::max(sent[step][proc], received[step][proc]);
-            commCostPointer[step][proc] = commCostList[step].emplace(commCost[step][proc], proc).first;
+            commCost_[step][proc] = std::max(sent_[step][proc], received_[step][proc]);
+            commCostPointer_[step][proc] = commCostList_[step].emplace(commCost_[step][proc], proc).first;
         }
     }
 
     // set minimum cost - differs for BSP and MaxBSP
-    minimum_cost_per_superstep.clear();
+    minimumCostPerSuperstep.clear();
     if (schedule_->GetStaleness() == 1) {
-        minimum_cost_per_superstep.resize(M - 1, 0);
+        minimumCostPerSuperstep.resize(M - 1, 0);
     } else {
-        minimum_cost_per_superstep = cost_helpers::compute_max_work_per_step(*schedule);
-        minimum_cost_per_superstep.erase(minimum_cost_per_superstep.begin());
+        minimumCostPerSuperstep = cost_helpers::ComputeMaxWorkPerStep(*schedule_);
+        minimumCostPerSuperstep.erase(minimumCostPerSuperstep.begin());
     }
 }
 
@@ -232,20 +232,20 @@ int HillClimbingForCommSteps<GraphT>::MoveCostChange(const VertexIdx node, const
     int change = 0;
 
     // Change at old place
-    auto itr = commCostList[oldStep].rbegin();
-    cost_type oldMax = std::max(itr->first * schedule->GetInstance().GetArchitecture().CommunicationCosts(),
-                                minimum_cost_per_superstep[oldStep])
-                       + schedule->GetInstance().GetArchitecture().SynchronisationCosts();
-    cost_type maxSource = std::max(sent[oldStep][sourceProc]
-                                       - schedule->GetInstance().GetComputationalDag().VertexCommWeight(node)
-                                             * schedule->GetInstance().GetArchitecture().SendCosts(sourceProc, p),
-                                   received[oldStep][sourceProc]);
-    cost_type maxTarget = std::max(sent[oldStep][p],
-                                   received[oldStep][p]
-                                       - schedule->GetInstance().GetComputationalDag().VertexCommWeight(node)
-                                             * schedule->GetInstance().GetArchitecture().SendCosts(sourceProc, p));
+    auto itr = commCostList_[oldStep].rbegin();
+    cost_type oldMax
+        = std::max(itr->first * schedule_->GetInstance().GetArchitecture().CommunicationCosts(), minimumCostPerSuperstep[oldStep])
+          + schedule_->GetInstance().GetArchitecture().SynchronisationCosts();
+    cost_type maxSource = std::max(sent_[oldStep][sourceProc]
+                                       - schedule_->GetInstance().GetComputationalDag().VertexCommWeight(node)
+                                             * schedule_->GetInstance().GetArchitecture().SendCosts(sourceProc, p),
+                                   received_[oldStep][sourceProc]);
+    cost_type maxTarget = std::max(sent_[oldStep][p],
+                                   received_[oldStep][p]
+                                       - schedule_->GetInstance().GetComputationalDag().VertexCommWeight(node)
+                                             * schedule_->GetInstance().GetArchitecture().SendCosts(sourceProc, p));
     cost_type maxOther = 0;
-    for (; itr != commCostList[oldStep].rend(); ++itr) {
+    for (; itr != commCostList_[oldStep].rend(); ++itr) {
         if (itr->second != sourceProc && itr->second != p) {
             maxOther = itr->first;
             break;
@@ -255,21 +255,21 @@ int HillClimbingForCommSteps<GraphT>::MoveCostChange(const VertexIdx node, const
     cost_type newMax
         = std::max(std::max(maxSource, maxTarget), maxOther) * schedule_->GetInstance().GetArchitecture().CommunicationCosts();
     cost_type newSync = (newMax > 0) ? schedule_->GetInstance().GetArchitecture().SynchronisationCosts() : 0;
-    newMax = std::max(newMax, minimum_cost_per_superstep[oldStep]) + newSync;
+    newMax = std::max(newMax, minimumCostPerSuperstep[oldStep]) + newSync;
     change += static_cast<int>(newMax) - static_cast<int>(oldMax);
 
     // Change at new place
-    oldMax = commCostList[step].rbegin()->first * schedule->GetInstance().GetArchitecture().CommunicationCosts();
+    oldMax = commCostList_[step].rbegin()->first * schedule_->GetInstance().GetArchitecture().CommunicationCosts();
     cost_type oldSync = (oldMax > 0) ? schedule_->GetInstance().GetArchitecture().SynchronisationCosts() : 0;
-    oldMax = std::max(oldMax, minimum_cost_per_superstep[step]);
-    maxSource = schedule->GetInstance().GetArchitecture().CommunicationCosts()
-                * (sent[step][sourceProc]
-                   + schedule->GetInstance().GetComputationalDag().VertexCommWeight(node)
-                         * schedule->GetInstance().GetArchitecture().SendCosts(sourceProc, p));
-    maxTarget = schedule->GetInstance().GetArchitecture().CommunicationCosts()
-                * (received[step][p]
-                   + schedule->GetInstance().GetComputationalDag().VertexCommWeight(node)
-                         * schedule->GetInstance().GetArchitecture().SendCosts(sourceProc, p));
+    oldMax = std::max(oldMax, minimumCostPerSuperstep[step]);
+    maxSource = schedule_->GetInstance().GetArchitecture().CommunicationCosts()
+                * (sent_[step][sourceProc]
+                   + schedule_->GetInstance().GetComputationalDag().VertexCommWeight(node)
+                         * schedule_->GetInstance().GetArchitecture().SendCosts(sourceProc, p));
+    maxTarget = schedule_->GetInstance().GetArchitecture().CommunicationCosts()
+                * (received_[step][p]
+                   + schedule_->GetInstance().GetComputationalDag().VertexCommWeight(node)
+                         * schedule_->GetInstance().GetArchitecture().SendCosts(sourceProc, p));
 
     newMax = std::max(std::max(oldMax, maxSource), maxTarget);
     change += static_cast<int>(newMax + schedule_->GetInstance().GetArchitecture().SynchronisationCosts())
@@ -283,59 +283,59 @@ template <typename GraphT>
 void HillClimbingForCommSteps<GraphT>::ExecuteMove(VertexIdx node, unsigned p, const unsigned step, const int changeCost) {
     const unsigned oldStep = commSchedule_[node][p];
     const unsigned sourceProc = schedule_->AssignedProcessor(node);
-    cost = static_cast<cost_type>(static_cast<int>(cost) + changeCost);
+    cost_ = static_cast<cost_type>(static_cast<int>(cost_) + changeCost);
 
     // Old step update
-    if (sent[oldStep][sourceProc] > received[oldStep][sourceProc]) {
-        commCostList[oldStep].erase(commCostPointer[oldStep][sourceProc]);
-        sent[oldStep][sourceProc] -= schedule->GetInstance().GetComputationalDag().VertexCommWeight(node)
-                                     * schedule->GetInstance().GetArchitecture().SendCosts(sourceProc, p);
-        commCost[oldStep][sourceProc] = std::max(sent[oldStep][sourceProc], received[oldStep][sourceProc]);
-        commCostPointer[oldStep][sourceProc] = commCostList[oldStep].emplace(commCost[oldStep][sourceProc], sourceProc).first;
+    if (sent_[oldStep][sourceProc] > received_[oldStep][sourceProc]) {
+        commCostList_[oldStep].erase(commCostPointer_[oldStep][sourceProc]);
+        sent_[oldStep][sourceProc] -= schedule_->GetInstance().GetComputationalDag().VertexCommWeight(node)
+                                      * schedule_->GetInstance().GetArchitecture().SendCosts(sourceProc, p);
+        commCost_[oldStep][sourceProc] = std::max(sent_[oldStep][sourceProc], received_[oldStep][sourceProc]);
+        commCostPointer_[oldStep][sourceProc] = commCostList_[oldStep].emplace(commCost_[oldStep][sourceProc], sourceProc).first;
     } else {
-        sent[oldStep][sourceProc] -= schedule->GetInstance().GetComputationalDag().VertexCommWeight(node)
-                                     * schedule->GetInstance().GetArchitecture().SendCosts(sourceProc, p);
+        sent_[oldStep][sourceProc] -= schedule_->GetInstance().GetComputationalDag().VertexCommWeight(node)
+                                      * schedule_->GetInstance().GetArchitecture().SendCosts(sourceProc, p);
     }
 
-    if (received[oldStep][p] > sent[oldStep][p]) {
-        commCostList[oldStep].erase(commCostPointer[oldStep][p]);
-        received[oldStep][p] -= schedule->GetInstance().GetComputationalDag().VertexCommWeight(node)
-                                * schedule->GetInstance().GetArchitecture().SendCosts(sourceProc, p);
-        commCost[oldStep][p] = std::max(sent[oldStep][p], received[oldStep][p]);
-        commCostPointer[oldStep][p] = commCostList[oldStep].emplace(commCost[oldStep][p], p).first;
+    if (received_[oldStep][p] > sent_[oldStep][p]) {
+        commCostList_[oldStep].erase(commCostPointer_[oldStep][p]);
+        received_[oldStep][p] -= schedule_->GetInstance().GetComputationalDag().VertexCommWeight(node)
+                                 * schedule_->GetInstance().GetArchitecture().SendCosts(sourceProc, p);
+        commCost_[oldStep][p] = std::max(sent_[oldStep][p], received_[oldStep][p]);
+        commCostPointer_[oldStep][p] = commCostList_[oldStep].emplace(commCost_[oldStep][p], p).first;
     } else {
-        received[oldStep][p] -= schedule->GetInstance().GetComputationalDag().VertexCommWeight(node)
-                                * schedule->GetInstance().GetArchitecture().SendCosts(sourceProc, p);
+        received_[oldStep][p] -= schedule_->GetInstance().GetComputationalDag().VertexCommWeight(node)
+                                 * schedule_->GetInstance().GetArchitecture().SendCosts(sourceProc, p);
     }
 
     // New step update
-    sent[step][sourceProc] += schedule->GetInstance().GetComputationalDag().VertexCommWeight(node)
-                              * schedule->GetInstance().GetArchitecture().SendCosts(sourceProc, p);
-    if (sent[step][sourceProc] > received[step][sourceProc]) {
-        commCostList[step].erase(commCostPointer[step][sourceProc]);
-        commCost[step][sourceProc] = sent[step][sourceProc];
-        commCostPointer[step][sourceProc] = commCostList[step].emplace(commCost[step][sourceProc], sourceProc).first;
+    sent_[step][sourceProc] += schedule_->GetInstance().GetComputationalDag().VertexCommWeight(node)
+                               * schedule_->GetInstance().GetArchitecture().SendCosts(sourceProc, p);
+    if (sent_[step][sourceProc] > received_[step][sourceProc]) {
+        commCostList_[step].erase(commCostPointer_[step][sourceProc]);
+        commCost_[step][sourceProc] = sent_[step][sourceProc];
+        commCostPointer_[step][sourceProc] = commCostList_[step].emplace(commCost_[step][sourceProc], sourceProc).first;
     }
 
-    received[step][p] += schedule->GetInstance().GetComputationalDag().VertexCommWeight(node)
-                         * schedule->GetInstance().GetArchitecture().SendCosts(sourceProc, p);
-    if (received[step][p] > sent[step][p]) {
-        commCostList[step].erase(commCostPointer[step][p]);
-        commCost[step][p] = received[step][p];
-        commCostPointer[step][p] = commCostList[step].emplace(commCost[step][p], p).first;
+    received_[step][p] += schedule_->GetInstance().GetComputationalDag().VertexCommWeight(node)
+                          * schedule_->GetInstance().GetArchitecture().SendCosts(sourceProc, p);
+    if (received_[step][p] > sent_[step][p]) {
+        commCostList_[step].erase(commCostPointer_[step][p]);
+        commCost_[step][p] = received_[step][p];
+        commCostPointer_[step][p] = commCostList_[step].emplace(commCost_[step][p], p).first;
     }
 
     // CommSched update
     commSchedule_[node][p] = step;
 
     // Comm lists
-    commSchedSendLists[oldStep][sourceProc].erase(commSchedSendListPointer[node][p]);
-    commSchedSendLists[step][sourceProc].emplace_front(node, p);
-    commSchedSendListPointer[node][p] = commSchedSendLists[step][sourceProc].begin();
+    commSchedSendLists_[oldStep][sourceProc].erase(commSchedSendListPointer_[node][p]);
+    commSchedSendLists_[step][sourceProc].emplace_front(node, p);
+    commSchedSendListPointer_[node][p] = commSchedSendLists_[step][sourceProc].begin();
 
-    commSchedRecLists[oldStep][p].erase(commSchedRecListPointer[node][p]);
-    commSchedRecLists[step][p].emplace_front(node, p);
-    commSchedRecListPointer[node][p] = commSchedRecLists[step][p].begin();
+    commSchedRecLists_[oldStep][p].erase(commSchedRecListPointer_[node][p]);
+    commSchedRecLists_[step][p].emplace_front(node, p);
+    commSchedRecListPointer_[node][p] = commSchedRecLists_[step][p].begin();
 }
 
 // Single comm. schedule hill climbing step
@@ -367,11 +367,11 @@ bool HillClimbingForCommSteps<GraphT>::Improve() {
         }
 
         // go over all processors that incur this maximal comm cost in superstep nextSupstep
-        for (; itr != commCostList[nextSupstep].rend() && itr->first == commMax; ++itr) {
+        for (; itr != commCostList_[nextSupstep].rend() && itr->first == commMax; ++itr) {
             const unsigned maxProc = itr->second;
 
-            if (sent[nextSupstep][maxProc] == commMax) {
-                for (const std::pair<VertexIdx, unsigned> &entry : commSchedSendLists[nextSupstep][maxProc]) {
+            if (sent_[nextSupstep][maxProc] == commMax) {
+                for (const std::pair<VertexIdx, unsigned> &entry : commSchedSendLists_[nextSupstep][maxProc]) {
                     const VertexIdx node = entry.first;
                     const unsigned p = entry.second;
                     // iterate over alternative supsteps to place this communication step
@@ -380,10 +380,10 @@ bool HillClimbingForCommSteps<GraphT>::Improve() {
                             continue;
                         }
 
-                        const int costDiff = moveCostChange(node, p, step);
+                        const int costDiff = MoveCostChange(node, p, step);
 
                         if (!steepestAscent && costDiff < 0) {
-                            executeMove(node, p, step, costDiff);
+                            ExecuteMove(node, p, step, costDiff);
                             return true;
                         } else if (costDiff < bestDiff) {
                             bestNode = node;
@@ -395,20 +395,20 @@ bool HillClimbingForCommSteps<GraphT>::Improve() {
                 }
             }
 
-            if (received[nextSupstep][maxProc] == commMax) {
-                for (const std::pair<VertexIdx, unsigned> &entry : commSchedRecLists[nextSupstep][maxProc]) {
+            if (received_[nextSupstep][maxProc] == commMax) {
+                for (const std::pair<VertexIdx, unsigned> &entry : commSchedRecLists_[nextSupstep][maxProc]) {
                     const VertexIdx node = entry.first;
                     const unsigned p = entry.second;
                     // iterate over alternative supsteps to place this communication step
                     for (unsigned step = commBounds[node][p].first; step < commBounds[node][p].second; ++step) {
-                        if (step == commSchedule[node][p]) {
+                        if (step == commSchedule_[node][p]) {
                             continue;
                         }
 
-                        const int costDiff = moveCostChange(node, p, step);
+                        const int costDiff = MoveCostChange(node, p, step);
 
                         if (!steepestAscent && costDiff < 0) {
-                            executeMove(node, p, step, costDiff);
+                            ExecuteMove(node, p, step, costDiff);
                             return true;
                         }
                         if (costDiff < bestDiff) {
@@ -432,7 +432,7 @@ bool HillClimbingForCommSteps<GraphT>::Improve() {
         return false;
     }
 
-    executeMove(bestNode, bestProc, bestStep, bestDiff);
+    ExecuteMove(bestNode, bestProc, bestStep, bestDiff);
 
     return true;
 }
@@ -446,7 +446,7 @@ void HillClimbingForCommSteps<GraphT>::CreateSupstepLists() {
     const unsigned m = schedule_->NumberOfSupersteps();
 
     supsteplists.clear();
-    supsteplists.resize(M, std::vector<std::list<VertexIdx>>(P));
+    supsteplists.resize(m, std::vector<std::list<VertexIdx>>(p));
 
     const std::vector<VertexIdx> topOrder = GetTopOrder(g);
     for (VertexIdx node : topOrder) {
@@ -461,7 +461,7 @@ void HillClimbingForCommSteps<GraphT>::ConvertCommSchedule() {
 
     std::map<std::tuple<VertexIdx, unsigned, unsigned>, unsigned> newCommSchedule;
 
-    for (VertexIdx node = 0; node < N; ++node) {
+    for (VertexIdx node = 0; node < n; ++node) {
         for (unsigned proc = 0; proc < p; ++proc) {
             if (commSchedule_[node][proc] != UINT_MAX) {
                 const auto commScheduleKey = std::make_tuple(node, schedule_->AssignedProcessor(node), proc);
@@ -470,7 +470,7 @@ void HillClimbingForCommSteps<GraphT>::ConvertCommSchedule() {
         }
     }
 
-    schedule_->setCommunicationSchedule(newCommSchedule);
+    schedule_->SetCommunicationSchedule(newCommSchedule);
 }
 
 }    // namespace osp
