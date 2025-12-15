@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverWithNodeTypesTest) {
 
         kl_total_lambda_comm_improver<Graph, no_local_search_memory_constraint, 1> kl;
 
-        auto status = kl.improveSchedule(schedule);
+        auto status = kl.ImproveSchedule(schedule);
 
         BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
         BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
@@ -195,7 +195,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverOnTestGraphs) {
 
         kl_total_lambda_comm_improver<Graph, no_local_search_memory_constraint, 1> kl;
 
-        auto status = kl.improveSchedule(schedule);
+        auto status = kl.ImproveSchedule(schedule);
 
         BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
         BOOST_CHECK_EQUAL(schedule.SatisfiesPrecedenceConstraints(), true);
@@ -733,7 +733,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverInnerLoopLambdaMapTest) {
 
 //         kl_total_lambda_comm_improver<graph,no_local_search_memory_constraint,1> kl;
 //         auto start_time = std::chrono::high_resolution_clock::now();
-//         auto status = kl.improveSchedule(schedule);
+//         auto status = kl.ImproveSchedule(schedule);
 //         auto finish_time = std::chrono::high_resolution_clock::now();
 //         auto duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
 
@@ -812,7 +812,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverInnerLoopLambdaMapTest) {
 
 //         kl_total_lambda_comm_improver_mt<graph,no_local_search_memory_constraint,1> kl;
 //         auto start_time = std::chrono::high_resolution_clock::now();
-//         auto status = kl.improveSchedule(schedule);
+//         auto status = kl.ImproveSchedule(schedule);
 //         auto finish_time = std::chrono::high_resolution_clock::now();
 //         auto duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
 

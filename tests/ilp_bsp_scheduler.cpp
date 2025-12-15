@@ -226,7 +226,7 @@ BOOST_AUTO_TEST_CASE(TestCs) {
     CoptCommScheduleOptimizer<graph> scheduler;
     scheduler.setTimeLimitSeconds(10);
     const auto before = schedule_cs.compute_cs_communication_costs();
-    const auto result = scheduler.improveSchedule(schedule_cs);
+    const auto result = scheduler.ImproveSchedule(schedule_cs);
     BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
     const auto after = schedule_cs.compute_cs_communication_costs();
     std::cout << before << " --cs--> " << after << std::endl;
@@ -268,14 +268,14 @@ BOOST_AUTO_TEST_CASE(TestPartial) {
     scheduler.setTimeLimitSeconds(10);
     scheduler.setStartAndEndSuperstep(0, 2);
     auto costBefore = schedule.computeCosts();
-    auto result = scheduler.improveSchedule(schedule);
+    auto result = scheduler.ImproveSchedule(schedule);
     BOOST_CHECK(result == ReturnStatus::OSP_SUCCESS || result == ReturnStatus::BEST_FOUND);
     BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
     BOOST_CHECK(schedule.hasValidCommSchedule());
     auto costMid = schedule.computeCosts();
     BOOST_CHECK(costMid <= cost_before);
     scheduler.setStartAndEndSuperstep(2, 5);
-    result = scheduler.improveSchedule(schedule);
+    result = scheduler.ImproveSchedule(schedule);
     BOOST_CHECK(result == ReturnStatus::OSP_SUCCESS || result == ReturnStatus::BEST_FOUND);
     BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
     BOOST_CHECK(schedule.hasValidCommSchedule());

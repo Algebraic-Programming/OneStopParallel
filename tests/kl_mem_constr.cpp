@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(KlLocalMemconst) {
 
             kl_total_comm_improver_local_mem_constr<Graph> kl;
 
-            auto status = kl.improveSchedule(schedule);
+            auto status = kl.ImproveSchedule(schedule);
 
             BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
             BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());

@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
 
 //         kl_total_lambda_comm_improver<graph, no_local_search_memory_constraint, 1> kl_total_lambda;
 //         auto start_time = std::chrono::high_resolution_clock::now();
-//         auto status = kl_total_lambda.improveSchedule(schedule);
+//         auto status = kl_total_lambda.ImproveSchedule(schedule);
 //         auto finish_time = std::chrono::high_resolution_clock::now();
 //         auto duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
 
@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
 //         kl_bsp_comm_improver_mt<graph, no_local_search_memory_constraint, 1> kl(42);
 //         kl.setTimeQualityParameter(2.0);
 //         start_time = std::chrono::high_resolution_clock::now();
-//         status = kl.improveSchedule(schedule);
+//         status = kl.ImproveSchedule(schedule);
 //         finish_time = std::chrono::high_resolution_clock::now();
 //         duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
 
@@ -203,7 +203,7 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
 
 //         HillClimbingForCommSteps<graph> hc_comm_steps;
 //         start_time = std::chrono::high_resolution_clock::now();
-//         status = hc_comm_steps.improveSchedule(schedule_cs);
+//         status = hc_comm_steps.ImproveSchedule(schedule_cs);
 //         finish_time = std::chrono::high_resolution_clock::now();
 
 //         duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
@@ -214,12 +214,12 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
 //         BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
 //         BOOST_CHECK_EQUAL(schedule.SatisfiesPrecedenceConstraints(), true);
 
-//         kl_total_lambda.improveSchedule(schedule_2);
+//         kl_total_lambda.ImproveSchedule(schedule_2);
 
 //         HillClimbingScheduler<graph> hc;
 
 //         start_time = std::chrono::high_resolution_clock::now();
-//         status = hc.improveSchedule(schedule_2);
+//         status = hc.ImproveSchedule(schedule_2);
 //         finish_time = std::chrono::high_resolution_clock::now();
 
 //         duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
@@ -233,7 +233,7 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
 //         BspScheduleCS<graph> schedule_cs_2(schedule_2);
 
 //         start_time = std::chrono::high_resolution_clock::now();
-//         status = hc_comm_steps.improveSchedule(schedule_cs_2);
+//         status = hc_comm_steps.ImproveSchedule(schedule_cs_2);
 //         finish_time = std::chrono::high_resolution_clock::now();
 
 //         duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();

@@ -58,12 +58,12 @@ BOOST_AUTO_TEST_CASE(HillClimbing) {
 
     HillClimbingScheduler<Graph> scheduler;
     BspSchedule<Graph> schedule1 = bspInitial;
-    scheduler.improveSchedule(schedule1);
+    scheduler.ImproveSchedule(schedule1);
     BOOST_CHECK_EQUAL(schedule1.SatisfiesPrecedenceConstraints(), true);
 
     scheduler.setSteepestAscend(true);
     BspSchedule<Graph> schedule2 = bspInitial;
-    scheduler.improveSchedule(schedule2);
+    scheduler.ImproveSchedule(schedule2);
     BOOST_CHECK_EQUAL(schedule2.SatisfiesPrecedenceConstraints(), true);
 
     BspSchedule<Graph> schedule3 = bspInitial;
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(HillClimbingForCommSchedule) {
     BOOST_CHECK_EQUAL(initial.SatisfiesPrecedenceConstraints(), true);
 
     HillClimbingScheduler<Graph> hc;
-    hc.improveSchedule(initial);
+    hc.ImproveSchedule(initial);
     BOOST_CHECK_EQUAL(initial.SatisfiesPrecedenceConstraints(), true);
 
     BspSchedule<Graph> schedule = initial;
@@ -114,11 +114,11 @@ BOOST_AUTO_TEST_CASE(HillClimbingForCommSchedule) {
 
     HillClimbingForCommSteps<Graph> hcCs;
     BspScheduleCS<Graph> schedule1 = initialCs;
-    hcCs.improveSchedule(schedule1);
+    hcCs.ImproveSchedule(schedule1);
     BOOST_CHECK_EQUAL(schedule1.hasValidCommSchedule(), true);
 
     BspScheduleCS<Graph> schedule2 = initialCs;
     hcCs.setSteepestAscend(true);
-    hcCs.improveSchedule(schedule2);
+    hcCs.ImproveSchedule(schedule2);
     BOOST_CHECK_EQUAL(schedule2.hasValidCommSchedule(), true);
 }

@@ -95,7 +95,7 @@ limitations under the License.
 //             RandomBadGreedy test0;
 
 //             std::pair<ReturnStatus, BspSchedule> result0 = test0.ComputeSchedule(instance);
-//             test_improver->improveSchedule(result0.second);
+//             test_improver->ImproveSchedule(result0.second);
 
 //             print_bsp_schedule(result0.second);
 
@@ -107,7 +107,7 @@ limitations under the License.
 //             BalDMixR test1;
 
 //             std::pair<ReturnStatus, BspSchedule> result1 = test1.ComputeSchedule(instance);
-//             test_improver->improveSchedule(result1.second);
+//             test_improver->ImproveSchedule(result1.second);
 
 //             print_bsp_schedule(result1.second);
 
@@ -119,7 +119,7 @@ limitations under the License.
 //             HDagg_simple test2;
 
 //             std::pair<ReturnStatus, BspSchedule> result2 = test2.ComputeSchedule(instance);
-//             test_improver->improveSchedule(result2.second);
+//             test_improver->ImproveSchedule(result2.second);
 
 //             print_bsp_schedule(result2.second);
 

@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(MaxbspScheduling) {
     // hill climbing
 
     HillClimbingScheduler<Graph> hc;
-    hc.improveSchedule(maxbsp);
+    hc.ImproveSchedule(maxbsp);
     BOOST_CHECK(maxbsp.SatisfiesPrecedenceConstraints());
     auto costHc = maxbsp.computeCosts();
     std::cout << "Cost after Hill Climbing: " << costHc << std::endl;
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(MaxbspScheduling) {
     // hill climbing for comm. schedule
 
     HillClimbingForCommSteps<Graph> hCcs;
-    hCcs.improveSchedule(maxbspCs);
+    hCcs.ImproveSchedule(maxbspCs);
     BOOST_CHECK(maxbspCs.SatisfiesPrecedenceConstraints());
     BOOST_CHECK(maxbspCs.hasValidCommSchedule());
     auto costHccs = maxbspCs.computeCosts();
@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(MaxbspScheduling) {
     auto costMaxbspCsLarge = maxbspCsLarge.computeCosts();
     std::cout << "Cost after maxBsp conversion on large DAG: " << costMaxbspCsLarge << std::endl;
 
-    hCcs.improveSchedule(maxbspCsLarge);
+    hCcs.ImproveSchedule(maxbspCsLarge);
     BOOST_CHECK(maxbspCsLarge.SatisfiesPrecedenceConstraints());
     BOOST_CHECK(maxbspCsLarge.hasValidCommSchedule());
     auto costHccsLarge = maxbspCsLarge.computeCosts();

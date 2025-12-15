@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(KlImproverSmokeTest) {
     using KlImproverT = kl_total_comm_improver<Graph, no_local_search_memory_constraint, 1, true>;
     KlImproverT kl;
 
-    auto status = kl.improveSchedule(schedule);
+    auto status = kl.ImproveSchedule(schedule);
 
     BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
     BOOST_CHECK_EQUAL(schedule.SatisfiesPrecedenceConstraints(), true);
@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(KlImproverOnTestGraphs) {
 
         kl_total_comm_improver<Graph> kl;
 
-        auto status = kl.improveSchedule(schedule);
+        auto status = kl.ImproveSchedule(schedule);
 
         BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
         BOOST_CHECK_EQUAL(schedule.SatisfiesPrecedenceConstraints(), true);
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(KlImproverSuperstepRemovalTest) {
     using CostF = kl_total_comm_cost_function<Graph, double, no_local_search_memory_constraint, 1, true>;
     kl_improver<Graph, CostF, no_local_search_memory_constraint, 1, double> kl;
 
-    auto status = kl.improveSchedule(schedule);
+    auto status = kl.ImproveSchedule(schedule);
 
     BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
     BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
@@ -439,7 +439,7 @@ BOOST_AUTO_TEST_CASE(KlImproverViolationHandlingTest) {
     BOOST_CHECK_EQUAL(kl.is_feasible(), false);
 
     kl_improver<Graph, CostF, no_local_search_memory_constraint, 1, double> klImprover;
-    klImprover.improveSchedule(schedule);
+    klImprover.ImproveSchedule(schedule);
 
     BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
 }
@@ -992,7 +992,7 @@ BOOST_AUTO_TEST_CASE(KlBase3) {
 //         kl_total_comm_improver<graph,no_local_search_memory_constraint,1,true> kl;
 
 //         auto start_time = std::chrono::high_resolution_clock::now();
-//         auto status = kl.improveSchedule(schedule);
+//         auto status = kl.ImproveSchedule(schedule);
 //         auto finish_time = std::chrono::high_resolution_clock::now();
 
 //         auto duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
@@ -1074,7 +1074,7 @@ BOOST_AUTO_TEST_CASE(KlBase3) {
 //         kl_total_comm_improver_mt<graph,no_local_search_memory_constraint,1,true> kl;
 
 //         auto start_time = std::chrono::high_resolution_clock::now();
-//         auto status = kl.improveSchedule(schedule);
+//         auto status = kl.ImproveSchedule(schedule);
 //         auto finish_time = std::chrono::high_resolution_clock::now();
 
 //         auto duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
