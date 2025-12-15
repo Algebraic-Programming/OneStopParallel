@@ -26,7 +26,7 @@ limitations under the License.
 
 namespace osp {
 
-template <typename GraphTIn, typename GraphTOut, std::vector<VertexIdxT<GraphTIn>> (*topSortFunc)(const GraphTIn &)>
+template <typename GraphTIn, typename GraphTOut, std::vector<VertexIdxT<GraphTIn>> (*TopSortFunc)(const GraphTIn &)>
 class TopOrderCoarser : public Coarser<GraphTIn, GraphTOut> {
   private:
     using VertexType = VertexIdxT<GraphTIn>;
@@ -130,7 +130,7 @@ class TopOrderCoarser : public Coarser<GraphTIn, GraphTOut> {
             return true;
         }
 
-        std::vector<VertexType> topOrdering = topSortFunc(dagIn);
+        std::vector<VertexType> topOrdering = TopSortFunc(dagIn);
 
         std::vector<unsigned> sourceNodeDist = GetTopNodeDistance(dagIn);
 

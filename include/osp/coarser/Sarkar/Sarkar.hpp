@@ -646,10 +646,7 @@ std::vector<std::vector<VertexIdxT<GraphTIn>>> Sarkar<GraphTIn, GraphTOut>::Gene
             diff = SomeChildrenContraction(params_.commCost_, dagIn, expansionMap);
         } break;
 
-        case SarkarParams::Mode::LEVEL_EVEN: {
-            diff = LevelContraction(params_.commCost_, dagIn, expansionMap);
-        } break;
-
+        case SarkarParams::Mode::LEVEL_EVEN:
         case SarkarParams::Mode::LEVEL_ODD: {
             diff = LevelContraction(params_.commCost_, dagIn, expansionMap);
         } break;
@@ -715,48 +712,48 @@ VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::SomeChildrenContraction(
 
         std::vector<std::pair<typename std::set<VertexType, decltype(cmp_chld)>::const_iterator,
                               typename std::set<VertexType, decltype(cmp_chld)>::const_iterator>>
-            admissble_children_groups;
-        for (auto chld_iter_start = childrenPriority.cbegin(); chld_iter_start != childrenPriority.cend();) {
+            admissbleChildrenGroups;
+        for (auto chldIterStart = childrenPriority.cbegin(); chldIterStart != childrenPriority.cend();) {
             if constexpr (HasTypedVerticesV<GraphTIn>) {
-                if (graph.VertexType(groupHead) != graph.VertexType(*chld_iter_start)) {
-                    ++chld_iter_start;
+                if (graph.VertexType(groupHead) != graph.VertexType(*chldIterStart)) {
+                    ++chldIterStart;
                     continue;
                 }
             }
 
-            const VWorkwT<GraphTIn> t_dist = topDist[*chld_iter_start];
-            const VWorkwT<GraphTIn> b_dist = botDist[*chld_iter_start];
-            auto chld_iter_end = chld_iter_start;
-            while (chld_iter_end != childrenPriority.cend() && t_dist == topDist[*chld_iter_end]
-                   && b_dist == botDist[*chld_iter_end]) {
+            const VWorkwT<GraphTIn> t_dist = topDist[*chldIterStart];
+            const VWorkwT<GraphTIn> b_dist = botDist[*chldIterStart];
+            auto chldIterEnd = chldIterStart;
+            while (chldIterEnd != childrenPriority.cend() && t_dist == topDist[*chldIterEnd]
+                   && b_dist == botDist[*chldIterEnd]) {
                 if constexpr (HasTypedVerticesV<GraphTIn>) {
-                    if (graph.VertexType(groupHead) != graph.VertexType(*chld_iter_end)) {
+                    if (graph.VertexType(groupHead) != graph.VertexType(*chldIterEnd)) {
                         break;
                     }
                 }
-                ++chld_iter_end;
+                ++chldIterEnd;
             }
 
-            admissble_children_groups.emplace_back(chld_iter_start, chld_iter_end);
-            chld_iter_start = chld_iter_end;
+            admissbleChildrenGroups.emplace_back(chldIterStart, chldIterEnd);
+            chldIterStart = chldIterEnd;
         }
 
         std::vector<VertexType> contractionEnsemble;
         std::set<VertexType> contractionChildrenSet;
         contractionEnsemble.reserve(1 + graph.OutDegree(groupHead));
         contractionEnsemble.emplace_back(groupHead);
-        VWorkwT<GraphTIn> added_weight = graph.VertexWorkWeight(groupHead);
+        VWorkwT<GraphTIn> addedWeight = graph.VertexWorkWeight(groupHead);
 
-        for (std::size_t i = 0U; i < admissble_children_groups.size(); ++i) {
-            const auto &first = admissble_children_groups[i].first;
-            const auto &last = admissble_children_groups[i].second;
+        for (std::size_t i = 0U; i < admissbleChildrenGroups.size(); ++i) {
+            const auto &first = admissbleChildrenGroups[i].first;
+            const auto &last = admissbleChildrenGroups[i].second;
 
             for (auto it = first; it != last; ++it) {
                 contractionEnsemble.emplace_back(*it);
                 contractionChildrenSet.emplace(*it);
-                added_weight += graph.VertexWorkWeight(*it);
+                addedWeight += graph.VertexWorkWeight(*it);
             }
-            if (added_weight > params_.maxWeight_) {
+            if (addedWeight > params_.maxWeight_) {
                 break;
             }
 
@@ -902,47 +899,47 @@ VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::SomeParentsContraction(
 
         std::vector<std::pair<typename std::set<VertexType, decltype(cmp_par)>::const_iterator,
                               typename std::set<VertexType, decltype(cmp_par)>::const_iterator>>
-            admissble_parent_groups;
-        for (auto par_iter_start = parentsPriority.cbegin(); par_iter_start != parentsPriority.cend();) {
+            admissbleParentGroups;
+        for (auto parIterStart = parentsPriority.cbegin(); parIterStart != parentsPriority.cend();) {
             if constexpr (HasTypedVerticesV<GraphTIn>) {
-                if (graph.VertexType(groupFoot) != graph.VertexType(*par_iter_start)) {
-                    ++par_iter_start;
+                if (graph.VertexType(groupFoot) != graph.VertexType(*parIterStart)) {
+                    ++parIterStart;
                     continue;
                 }
             }
 
-            const VWorkwT<GraphTIn> t_dist = topDist[*par_iter_start];
-            const VWorkwT<GraphTIn> b_dist = botDist[*par_iter_start];
-            auto par_iter_end = par_iter_start;
-            while (par_iter_end != parentsPriority.cend() && t_dist == topDist[*par_iter_end] && b_dist == botDist[*par_iter_end]) {
+            const VWorkwT<GraphTIn> t_dist = topDist[*parIterStart];
+            const VWorkwT<GraphTIn> b_dist = botDist[*parIterStart];
+            auto parIterEnd = parIterStart;
+            while (parIterEnd != parentsPriority.cend() && t_dist == topDist[*parIterEnd] && b_dist == botDist[*parIterEnd]) {
                 if constexpr (HasTypedVerticesV<GraphTIn>) {
-                    if (graph.VertexType(groupFoot) != graph.VertexType(*par_iter_end)) {
+                    if (graph.VertexType(groupFoot) != graph.VertexType(*parIterEnd)) {
                         break;
                     }
                 }
-                ++par_iter_end;
+                ++parIterEnd;
             }
 
-            admissble_parent_groups.emplace_back(par_iter_start, par_iter_end);
-            par_iter_start = par_iter_end;
+            admissbleParentGroups.emplace_back(parIterStart, parIterEnd);
+            parIterStart = parIterEnd;
         }
 
         std::vector<VertexType> contractionEnsemble;
         std::set<VertexType> contractionParentsSet;
         contractionEnsemble.reserve(1 + graph.InDegree(groupFoot));
         contractionEnsemble.emplace_back(groupFoot);
-        VWorkwT<GraphTIn> added_weight = graph.VertexWorkWeight(groupFoot);
+        VWorkwT<GraphTIn> addedWeight = graph.VertexWorkWeight(groupFoot);
 
-        for (std::size_t i = 0U; i < admissble_parent_groups.size(); ++i) {
-            const auto &first = admissble_parent_groups[i].first;
-            const auto &last = admissble_parent_groups[i].second;
+        for (std::size_t i = 0U; i < admissbleParentGroups.size(); ++i) {
+            const auto &first = admissbleParentGroups[i].first;
+            const auto &last = admissbleParentGroups[i].second;
 
             for (auto it = first; it != last; ++it) {
                 contractionEnsemble.emplace_back(*it);
                 contractionParentsSet.emplace(*it);
-                added_weight += graph.VertexWorkWeight(*it);
+                addedWeight += graph.VertexWorkWeight(*it);
             }
-            if (added_weight > params_.maxWeight_) {
+            if (addedWeight > params_.maxWeight_) {
                 break;
             }
 
@@ -1342,13 +1339,13 @@ VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::HomogeneousBufferMerge(
         }
 
         const std::size_t hash = hashValuesCombined[vert];
-        auto found_iter = orbits.find(hash);
-        if (found_iter == orbits.end()) {
+        auto foundIter = orbits.find(hash);
+        if (foundIter == orbits.end()) {
             orbits.emplace(std::piecewise_construct,
                            std::forward_as_tuple(hash),
                            std::forward_as_tuple(std::initializer_list<VertexIdxT<GraphTIn>>{vert}));
         } else {
-            found_iter->second.emplace(vert);
+            foundIter->second.emplace(vert);
         }
     }
 
