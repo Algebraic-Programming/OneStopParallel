@@ -30,6 +30,7 @@ limitations under the License.
 #include "osp/auxiliary/misc.hpp"
 #include "osp/graph_algorithms/directed_graph_path_util.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
+#include "osp/partitioning/model/hypergraph.hpp"
 #include "osp/partitioning/model/hypergraph_utility.hpp"
 #include "osp/partitioning/partitioners/generic_FM.hpp"
 #include "osp/partitioning/partitioners/partitioning_ILP.hpp"
@@ -38,7 +39,6 @@ limitations under the License.
 using namespace osp;
 
 using Graph = ComputationalDagVectorImplDefIntT;
-using HypergraphImpl = HypergraphDefT;
 
 int main(int argc, char *argv[]) {
     if (argc < 4) {
@@ -79,14 +79,14 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    PartitioningProblem<HypergraphImpl> instance;
+    PartitioningProblem<HypergraphDefT> instance;
 
     bool fileStatus = true;
     if (fileEnding == "hdag") {
         Graph dag;
         fileStatus = file_reader::ReadComputationalDagHyperdagFormatDB(filenameHgraph, dag);
         if (fileStatus) {
-            instance.GetHypergraph() = ConvertFromCdagAsHyperdag<HypergraphImpl, Graph>(dag);
+            instance.GetHypergraph() = ConvertFromCdagAsHyperdag<HypergraphDefT, Graph>(dag);
         }
     } else if (fileEnding == "mtx") {
         fileStatus = file_reader::ReadHypergraphMartixMarketFormat(filenameHgraph, instance.GetHypergraph());
@@ -102,8 +102,8 @@ int main(int argc, char *argv[]) {
     instance.SetNumberOfPartitions(static_cast<unsigned>(nrParts));
     instance.SetMaxWorkWeightViaImbalanceFactor(imbalance);
 
-    Partitioning<HypergraphImpl> initialPartition(instance);
-    GenericFM<HypergraphImpl> fm;
+    Partitioning<HypergraphDefT> initialPartition(instance);
+    GenericFM<HypergraphDefT> fm;
     for (size_t node = 0; node < instance.GetHypergraph().NumVertices(); ++node) {
         initialPartition.SetAssignedPartition(node, static_cast<unsigned>(node % static_cast<size_t>(nrParts)));
     }
@@ -115,22 +115,23 @@ int main(int argc, char *argv[]) {
     }
 
     if (replicate > 0) {
-        PartitioningWithReplication<HypergraphImpl> partition(instance);
-        HypergraphPartitioningILPWithReplication<HypergraphImpl> partitioner;
+        PartitioningWithReplication<HypergraphDefT> partition(instance);
+        HypergraphPartitioningILPWithReplication<HypergraphDefT> partitioner;
 
         for (size_t node = 0; node < instance.GetHypergraph().NumVertices(); ++node) {
             partition.SetAssignedPartitions(node, {initialPartition.AssignedPartition(node)});
         }
         if (partition.SatisfiesBalanceConstraint()) {
-            partitioner.setUseInitialSolution(true);
+            partitioner.SetUseInitialSolution(true);
         }
 
-        partitioner.setTimeLimitSeconds(600);
+        partitioner.SetTimeLimitSeconds(600);
         if (replicate == 2) {
-            partitioner.setReplicationModel(HypergraphPartitioningILPWithReplication<HypergraphImpl>::ReplicationModelInIlp::GENERAL);
+            partitioner.SetReplicationModel(
+                HypergraphPartitioningILPWithReplication<HypergraphDefT>::ReplicationModelInIlp::GENERAL);
         }
 
-        auto solveStatus = partitioner.computePartitioning(partition);
+        auto solveStatus = partitioner.ComputePartitioning(partition);
 
         if (solveStatus == ReturnStatus::OSP_SUCCESS || solveStatus == ReturnStatus::BEST_FOUND) {
             file_writer::WriteTxt(nameHgraph + "_" + std::to_string(nrParts) + "_" + std::to_string(imbalance) + "_ILP_rep"
@@ -144,19 +145,19 @@ int main(int argc, char *argv[]) {
         }
 
     } else {
-        Partitioning<HypergraphImpl> partition(instance);
-        HypergraphPartitioningILP<HypergraphImpl> partitioner;
+        Partitioning<HypergraphDefT> partition(instance);
+        HypergraphPartitioningILP<HypergraphDefT> partitioner;
 
         for (size_t node = 0; node < instance.GetHypergraph().NumVertices(); ++node) {
             partition.SetAssignedPartition(node, initialPartition.AssignedPartition(node));
         }
         if (partition.SatisfiesBalanceConstraint()) {
-            partitioner.setUseInitialSolution(true);
+            partitioner.SetUseInitialSolution(true);
         }
 
-        partitioner.setTimeLimitSeconds(600);
+        partitioner.SetTimeLimitSeconds(600);
 
-        auto solveStatus = partitioner.computePartitioning(partition);
+        auto solveStatus = partitioner.ComputePartitioning(partition);
 
         if (solveStatus == ReturnStatus::OSP_SUCCESS || solveStatus == ReturnStatus::BEST_FOUND) {
             file_writer::WriteTxt(nameHgraph + "_" + std::to_string(nrParts) + "_" + std::to_string(imbalance) + "_ILP_rep"

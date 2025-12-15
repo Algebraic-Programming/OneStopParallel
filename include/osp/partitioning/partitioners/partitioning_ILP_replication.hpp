@@ -180,7 +180,7 @@ void HypergraphPartitioningILPWithReplication<HypergraphT>::SetInitialSolution(
     const PartitioningWithReplication<HypergraphT> &partition, Model &model) {
     using IndexType = typename HypergraphT::VertexIdx;
 
-    const std::vector<std::vector<unsigned> > &assignments = partition.GetAssignedPartitions();
+    const std::vector<std::vector<unsigned> > &assignments = partition.AssignedPartitions();
     const unsigned &numPartitions = partition.GetInstance().GetNumberOfPartitions();
     if (assignments.size() != partition.GetInstance().GetHypergraph().NumVertices()) {
         return;

@@ -59,7 +59,7 @@ ReturnStatus HypergraphPartitioningILP<HypergraphT>::ComputePartitioning(Partiti
     this->SolveIlp(model);
 
     if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_OPTIMAL) {
-        result.setAssignedPartitions(ReadCoptAssignment(result.GetInstance(), model));
+        result.SetAssignedPartitions(ReadCoptAssignment(result.GetInstance(), model));
         return ReturnStatus::OSP_SUCCESS;
 
     } else if (model.GetIntAttr(COPT_INTATTR_MIPSTATUS) == COPT_MIPSTATUS_INF_OR_UNB) {
@@ -67,7 +67,7 @@ ReturnStatus HypergraphPartitioningILP<HypergraphT>::ComputePartitioning(Partiti
 
     } else {
         if (model.GetIntAttr(COPT_INTATTR_HASMIPSOL)) {
-            result.setAssignedPartitions(ReadCoptAssignment(result.GetInstance(), model));
+            result.SetAssignedPartitions(ReadCoptAssignment(result.GetInstance(), model));
             return ReturnStatus::OSP_SUCCESS;
 
         } else {
@@ -127,7 +127,7 @@ template <typename HypergraphT>
 void HypergraphPartitioningILP<HypergraphT>::SetInitialSolution(const Partitioning<HypergraphT> &partition, Model &model) {
     using IndexType = typename HypergraphT::VertexIdx;
 
-    const std::vector<unsigned> &assignment = partition.GetAssignedPartitions();
+    const std::vector<unsigned> &assignment = partition.AssignedPartitions();
     const unsigned &numPartitions = partition.GetInstance().GetNumberOfPartitions();
     if (assignment.size() != partition.GetInstance().GetHypergraph().NumVertices()) {
         return;
