@@ -169,7 +169,7 @@ class BspInstance {
     /**
      * @brief Returns a view over the processor indices of the BSP architecture.
      */
-    [[nodiscard]] auto Processors() const { return architecture_.processors(); }
+    [[nodiscard]] auto Processors() const { return architecture_.Processors(); }
 
     /**
      * @brief Returns the number of processors in the BSP architecture.
