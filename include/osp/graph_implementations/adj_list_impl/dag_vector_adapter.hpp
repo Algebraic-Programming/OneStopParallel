@@ -81,7 +81,7 @@ class DagVectorAdapter {
     DagVectorAdapter(const std::vector<std::vector<IndexT>> &outNeigbors, const std::vector<std::vector<IndexT>> &inNeigbors)
         : vertices_(outNeigbors.size()), outNeigbors_(&outNeigbors), inNeigbors_(&inNeigbors), numEdges_(0), numVertexTypes_(1) {
         for (VertexIdx i = 0; i < static_cast<VertexIdx>(outNeigbors.size()); ++i) {
-            vertices_[i].id = i;
+            vertices_[i].id_ = i;
             numEdges_ += outNeigbors[i].size();
         }
     }
@@ -109,7 +109,7 @@ class DagVectorAdapter {
 
         numEdges_ = 0;
         for (VertexIdx i = 0; i < static_cast<VertexIdx>(outNeigbors_->size()); ++i) {
-            vertices_[i].id = i;
+            vertices_[i].id_ = i;
             numEdges_ += outNeigbors[i].size();
         }
 
@@ -155,30 +155,30 @@ class DagVectorAdapter {
      */
     [[nodiscard]] VertexIdx OutDegree(const VertexIdx v) const { return static_cast<VertexIdx>((*outNeigbors_)[v].size()); }
 
-    [[nodiscard]] VertexWorkWeightType VertexWorkWeight(const VertexIdx v) const { return vertices_[v].work_weight; }
+    [[nodiscard]] VertexWorkWeightType VertexWorkWeight(const VertexIdx v) const { return vertices_[v].workWeight_; }
 
-    [[nodiscard]] VertexCommWeightType VertexCommWeight(const VertexIdx v) const { return vertices_[v].comm_weight; }
+    [[nodiscard]] VertexCommWeightType VertexCommWeight(const VertexIdx v) const { return vertices_[v].commWeight_; }
 
-    [[nodiscard]] VertexMemWeightType VertexMemWeight(const VertexIdx v) const { return vertices_[v].mem_weight; }
+    [[nodiscard]] VertexMemWeightType VertexMemWeight(const VertexIdx v) const { return vertices_[v].memWeight_; }
 
-    [[nodiscard]] VertexTypeType VertexType(const VertexIdx v) const { return vertices_[v].vertex_type; }
+    [[nodiscard]] VertexTypeType VertexType(const VertexIdx v) const { return vertices_[v].vertexType_; }
 
     [[nodiscard]] VertexTypeType NumVertexTypes() const { return numVertexTypes_; }
 
     [[nodiscard]] const VImpl &GetVertexImpl(const VertexIdx v) const { return vertices_[v]; }
 
     void SetVertexWorkWeight(const VertexIdx v, const VertexWorkWeightType workWeight) {
-        vertices_.at(v).work_weight = workWeight;
+        vertices_.at(v).workWeight_ = workWeight;
     }
 
     void SetVertexCommWeight(const VertexIdx v, const VertexCommWeightType commWeight) {
-        vertices_.at(v).comm_weight = commWeight;
+        vertices_.at(v).commWeight_ = commWeight;
     }
 
-    void SetVertexMemWeight(const VertexIdx v, const VertexMemWeightType memWeight) { vertices_.at(v).mem_weight = memWeight; }
+    void SetVertexMemWeight(const VertexIdx v, const VertexMemWeightType memWeight) { vertices_.at(v).memWeight_ = memWeight; }
 
     void SetVertexType(const VertexIdx v, const VertexTypeType vertexType) {
-        vertices_.at(v).vertex_type = vertexType;
+        vertices_.at(v).vertexType_ = vertexType;
         numVertexTypes_ = std::max(numVertexTypes_, vertexType + 1);
     }
 
@@ -192,16 +192,16 @@ class DagVectorAdapter {
     unsigned numVertexTypes_ = 0;
 };
 
-static_assert(IsDirectedGraphEdgeDescV<dag_vector_adapter<cdag_vertex_impl_unsigned, int>>,
+static_assert(IsDirectedGraphEdgeDescV<DagVectorAdapter<CDagVertexImplUnsigned, int>>,
               "dag_vector_adapter must satisfy the directed_graph_edge_desc concept");
 
-static_assert(HasVertexWeightsV<dag_vector_adapter<cdag_vertex_impl_unsigned, int>>,
+static_assert(HasVertexWeightsV<DagVectorAdapter<CDagVertexImplUnsigned, int>>,
               "dag_vector_adapter must satisfy the has_vertex_weights concept");
 
-static_assert(IsDirectedGraphV<dag_vector_adapter<cdag_vertex_impl_unsigned, int>>,
+static_assert(IsDirectedGraphV<DagVectorAdapter<CDagVertexImplUnsigned, int>>,
               "dag_vector_adapter must satisfy the directed_graph concept");
 
-static_assert(IsComputationalDagTypedVerticesV<dag_vector_adapter<cdag_vertex_impl_unsigned, int>>,
+static_assert(IsComputationalDagTypedVerticesV<DagVectorAdapter<CDagVertexImplUnsigned, int>>,
               "dag_vector_adapter must satisfy the is_computation_dag concept");
 
 }    // namespace osp

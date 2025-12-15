@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(TestDag) {
 
     unsigned count = 0;
     for (const auto &e : Edges(graph)) {
-        std::cout << e.source << " -> " << e.target << std::endl;
+        std::cout << e.source_ << " -> " << e.target_ << std::endl;
         count++;
     }
     BOOST_CHECK_EQUAL(count, 9);
@@ -236,8 +236,8 @@ BOOST_AUTO_TEST_CASE(TestDagVectorAdapter) {
         {4, 3}
     };
 
-    using VImpl = cdag_vertex_impl<unsigned, int, int, int, unsigned>;
-    using GraphT = dag_vector_adapter<VImpl, int>;
+    using VImpl = CDagVertexImpl<unsigned, int, int, int, unsigned>;
+    using GraphT = DagVectorAdapter<VImpl, int>;
 
     GraphT graph(outNeighbors, inNeighbors);
 
@@ -274,7 +274,7 @@ BOOST_AUTO_TEST_CASE(TestDagVectorAdapter) {
 
     unsigned count = 0;
     for (const auto &e : Edges(graph)) {
-        std::cout << e.source << " -> " << e.target << std::endl;
+        std::cout << e.source_ << " -> " << e.target_ << std::endl;
         count++;
     }
     BOOST_CHECK_EQUAL(count, 9);
