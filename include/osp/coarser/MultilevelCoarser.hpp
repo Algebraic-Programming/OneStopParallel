@@ -173,7 +173,7 @@ ReturnStatus MultilevelCoarser<GraphT, GraphTCoarse>::AddContraction(std::vector
     std::unique_ptr<GraphTCoarse> newGraph = std::make_unique<GraphTCoarse>();
 
     std::unique_ptr<std::vector<VertexIdxT<GraphTCoarse>>> contrMapPtr(
-        new std::vector<VertexIdxT<GraphTCoarse>>(std::move(contractionMap)));
+        new std::vector<VertexIdxT<GraphTCoarse>>(std::forward<std::vector<VertexIdxT<GraphTCoarse>>>(contractionMap)));
     contractionMaps_.emplace_back(std::move(contrMapPtr));
 
     bool success = false;
@@ -212,11 +212,11 @@ ReturnStatus MultilevelCoarser<GraphT, GraphTCoarse>::AddContraction(const std::
 template <typename GraphT, typename GraphTCoarse>
 ReturnStatus MultilevelCoarser<GraphT, GraphTCoarse>::AddContraction(std::vector<VertexIdxT<GraphTCoarse>> &&contractionMap,
                                                                      GraphTCoarse &&contractedGraph) {
-    std::unique_ptr<GraphTCoarse> graphPtr(new GraphTCoarse(std::move(contractedGraph)));
+    std::unique_ptr<GraphTCoarse> graphPtr(new GraphTCoarse(std::forward<GraphTCoarse>(contractedGraph)));
     dagHistory_.emplace_back(std::move(graphPtr));
 
     std::unique_ptr<std::vector<VertexIdxT<GraphTCoarse>>> contrMapPtr(
-        new std::vector<VertexIdxT<GraphTCoarse>>(std::move(contractionMap)));
+        new std::vector<VertexIdxT<GraphTCoarse>>(std::forward<std::vector<VertexIdxT<GraphTCoarse>>>(contractionMap)));
     contractionMaps_.emplace_back(std::move(contrMapPtr));
 
     CompactifyDagHistory();

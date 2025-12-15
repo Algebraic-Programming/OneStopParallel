@@ -38,6 +38,7 @@ template <typename GraphTOut>
 bool CheckValidContractionMap(const std::vector<VertexIdxT<GraphTOut>> &vertexContractionMap) {
     std::set<VertexIdxT<GraphTOut>> image(vertexContractionMap.cbegin(), vertexContractionMap.cend());
     const VertexIdxT<GraphTOut> imageSize = static_cast<VertexIdxT<GraphTOut>>(image.size());
+
     return std::all_of(image.cbegin(), image.cend(), [imageSize](const VertexIdxT<GraphTOut> &vert) {
         return (vert >= static_cast<VertexIdxT<GraphTOut>>(0)) && (vert < imageSize);
     });
@@ -258,7 +259,7 @@ bool ConstructCoarseDag(const GraphTIn &dagIn, GraphTOut &coarsenedDag, std::vec
 
         coarsenedDag = GraphTOut(numVertQuotient, quotientEdges);
 
-        const auto &pushforwardMap = coarsenedDag.get_pushforward_permutation();
+        const auto &pushforwardMap = coarsenedDag.GetPushforwardPermutation();
         std::vector<VertexIdxT<GraphTOut>> combinedExpansionMap(dagIn.NumVertices());
         for (const auto &vert : dagIn.Vertices()) {
             combinedExpansionMap[vert] = pushforwardMap[vertexContractionMap[vert]];

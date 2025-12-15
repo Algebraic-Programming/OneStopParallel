@@ -69,17 +69,17 @@ class BspScheduleCoarser : public CoarserGenContractionMap<GraphTIn, GraphTOut> 
 
         for (unsigned step = 0; step < schedule_->NumberOfSupersteps(); step++) {
             for (unsigned proc = 0; proc < schedule_->GetInstance().NumberOfProcessors(); proc++) {
-                if (setSchedule.step_processor_vertices[step][proc].size() > 0) {
+                if (setSchedule.stepProcessorVertices_[step][proc].size() > 0) {
                     VWorkwT<GraphTIn> totalWork = 0;
                     VMemwT<GraphTIn> totalMemory = 0;
                     VCommwT<GraphTIn> totalCommunication = 0;
 
                     vertexMap.push_back(std::vector<VertexType_in>());
 
-                    VTypeT<GraphTIn> type = dagIn.VertexType(*(setSchedule.step_processor_vertices[step][proc].begin()));
+                    VTypeT<GraphTIn> type = dagIn.VertexType(*(setSchedule.stepProcessorVertices_[step][proc].begin()));
                     bool homogeneousTypes = true;
 
-                    for (const auto &vertex : setSchedule.step_processor_vertices[step][proc]) {
+                    for (const auto &vertex : setSchedule.stepProcessorVertices_[step][proc]) {
                         if (dagIn.VertexType(vertex) != type) {
                             homogeneousTypes = false;
                         }

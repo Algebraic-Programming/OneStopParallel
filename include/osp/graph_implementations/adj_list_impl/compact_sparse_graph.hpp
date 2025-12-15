@@ -1069,7 +1069,7 @@ static_assert(IsDirectedGraphEdgeDescV<CSG>, "CSG must satisfy the directed_grap
 
 //     coarsened_dag = Graph_out_type(num_vert_quotient, quotient_edges);
 
-//     const auto& pushforward_map = coarsened_dag.get_pushforward_permutation();
+//     const auto& pushforward_map = coarsened_dag.GetPushforwardPermutation();
 //     std::vector<VertexIdxT<Graph_out_type>> combined_expansion_map(dag_in.NumVertices());
 //     for (const auto &vert : dag_in.Vertices()) {
 //         combined_expansion_map[vert] = pushforward_map[vertex_contraction_map[vert]];
