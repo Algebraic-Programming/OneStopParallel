@@ -102,20 +102,20 @@ class BspSptrsvStatsModule : public IStatisticModule<TargetObjectType> {
             if (mode_ == NO_PERMUTE) {
                 sim.SetupCsrNoPermutation(schedule);
             } else if (mode_ == LOOP_PROCESSORS) {
-                perm = schedule_node_permuter_basic(schedule, LOOP_PROCESSORS);
+                perm = ScheduleNodePermuterBasic(schedule, LOOP_PROCESSORS);
                 sim.SetupCsrWithPermutation(schedule, perm);
             } else if (mode_ == SNAKE_PROCESSORS) {
-                perm = schedule_node_permuter_basic(schedule, SNAKE_PROCESSORS);
+                perm = ScheduleNodePermuterBasic(schedule, SNAKE_PROCESSORS);
                 sim.SetupCsrWithPermutation(schedule, perm);
             } else {
                 std::cout << "Wrong type of permutation provided" << std::endl;
             }
 
             Eigen::VectorXd lBRef, lXRef;
-            auto n = instance.GetComputationalDag().GetCSC()->cols();
+            auto n = instance.GetComputationalDag().GetCsc()->cols();
             lXRef.resize(n);
             lBRef.resize(n);
-            auto lView = (*instance.GetComputationalDag().GetCSR()).template triangularView<Eigen::Lower>();
+            auto lView = (*instance.GetComputationalDag().GetCsr()).template triangularView<Eigen::Lower>();
             lBRef.setOnes();
             lXRef.setZero();
             lXRef = lView.solve(lBRef);

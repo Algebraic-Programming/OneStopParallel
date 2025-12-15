@@ -27,7 +27,7 @@ limitations under the License.
 
 using namespace osp;
 
-using ComputationalDag = computational_dag_vector_impl_def_int_t;
+using ComputationalDag = ComputationalDagVectorImplDefIntT;
 using VertexType = VertexIdxT<ComputationalDag>;
 
 int main(int argc, char *argv[]) {
@@ -55,7 +55,7 @@ int main(int argc, char *argv[]) {
     for (size_t j = 0; j < numGraphs; j++) {
         // Generating the graph
         ComputationalDag graph;
-        erdos_renyi_graph_gen(graph, numVert, chance);
+        ErdosRenyiGraphGen(graph, numVert, chance);
 
         //  Generating graph name
         std::string graphName = "ErdosRenyi_";

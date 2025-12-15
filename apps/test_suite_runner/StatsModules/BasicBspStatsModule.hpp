@@ -40,8 +40,8 @@ class BasicBspStatsModule : public IStatisticModule<TargetObjectType> {
     std::map<std::string, std::string> RecordStatistics(const TargetObjectType &schedule,
                                                         std::ofstream & /*log_stream*/) const override {
         std::map<std::string, std::string> stats;
-        const auto bspCost = schedule.computeCosts();
-        const auto workCost = schedule.computeWorkCosts();
+        const auto bspCost = schedule.ComputeCosts();
+        const auto workCost = schedule.ComputeWorkCosts();
         stats["BspCost"] = std::to_string(bspCost);
         stats["WorkCost"] = std::to_string(workCost);
         stats["CommCost"] = std::to_string(bspCost - workCost);

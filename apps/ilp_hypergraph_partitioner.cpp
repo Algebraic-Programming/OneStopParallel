@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
     std::string filenameHgraph = argv[1];
     std::string nameHgraph = filenameHgraph.substr(0, filenameHgraph.rfind("."));
     std::string fileEnding = filenameHgraph.substr(filenameHgraph.rfind(".") + 1);
-    if (!file_reader::isPathSafe(filenameHgraph)) {
+    if (!file_reader::IsPathSafe(filenameHgraph)) {
         std::cerr << "Error: Unsafe file path (possible traversal or invalid type).\n";
         return 1;
     }
@@ -86,7 +86,7 @@ int main(int argc, char *argv[]) {
         Graph dag;
         fileStatus = file_reader::readComputationalDagHyperdagFormatDB(filenameHgraph, dag);
         if (fileStatus) {
-            instance.getHypergraph() = convert_from_cdag_as_hyperdag<Hypergraph, Graph>(dag);
+            instance.GetHypergraph() = ConvertFromCdagAsHyperdag<Hypergraph, Graph>(dag);
         }
     } else if (fileEnding == "mtx") {
         fileStatus = file_reader::ReadHypergraphMartixMarketFormat(filenameHgraph, instance.GetHypergraph());
