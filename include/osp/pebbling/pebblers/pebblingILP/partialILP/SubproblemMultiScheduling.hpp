@@ -70,20 +70,20 @@ std::vector<VWorkwT<GraphT>> SubproblemMultiScheduling<GraphT>::GetLongestPath(c
 
     std::vector<vertex_idx> topOrder = GetTopOrder(graph);
 
-    for (auto rIter = top_order.rbegin(); rIter != top_order.crend(); r_iter++) {
-        longestPath[*r_iter] = graph.VertexWorkWeight(*r_iter);
-        if (graph.OutDegree(*r_iter) > 0) {
+    for (auto rIter = topOrder.rbegin(); rIter != topOrder.crend(); rIter++) {
+        longestPath[*rIter] = graph.VertexWorkWeight(*rIter);
+        if (graph.OutDegree(*rIter) > 0) {
             workweight_type max = 0;
-            for (const auto &child : graph.Children(*r_iter)) {
-                if (max <= longest_path[child]) {
-                    max = longest_path[child];
+            for (const auto &child : graph.Children(*rIter)) {
+                if (max <= longestPath[child]) {
+                    max = longestPath[child];
                 }
             }
-            longestPath[*r_iter] += max;
+            longestPath[*rIter] += max;
         }
     }
 
-    return longest_path;
+    return longestPath;
 }
 
 template <typename GraphT>
@@ -96,13 +96,13 @@ ReturnStatus SubproblemMultiScheduling<GraphT>::ComputeMultiSchedule(const BspIn
     processorsToNode.clear();
     processorsToNode.resize(n);
 
-    proc_task_lists.clear();
-    proc_task_lists.resize(P);
+    procTaskLists.clear();
+    procTaskLists.resize(P);
 
-    last_node_on_proc.clear();
-    last_node_on_proc.resize(P, UINT_MAX);
+    lastNodeOnProc.clear();
+    lastNodeOnProc.resize(P, UINT_MAX);
 
-    longest_outgoing_path = get_longest_path(G);
+    longestOutgoingPath = GetLongestPath(g);
 
     std::set<std::pair<unsigned, vertex_idx>> readySet;
 
@@ -110,7 +110,7 @@ ReturnStatus SubproblemMultiScheduling<GraphT>::ComputeMultiSchedule(const BspIn
     for (vertex_idx node = 0; node < n; node++) {
         nrPredecRemain[node] = static_cast<unsigned>(g.InDegree(node));
         if (g.InDegree(node) == 0) {
-            readySet.emplace(-longest_outgoing_path[node], node);
+            readySet.emplace(-longestOutgoingPath[node], node);
         }
     }
 
@@ -133,14 +133,14 @@ ReturnStatus SubproblemMultiScheduling<GraphT>::ComputeMultiSchedule(const BspIn
             finishTimes.erase(finishTimes.begin());
 
             if (node != std::numeric_limits<unsigned>::max()) {
-                for (const vertex_idx &succ : G.Children(node)) {
+                for (const vertex_idx &succ : g.Children(node)) {
                     nrPredecRemain[succ]--;
                     if (nrPredecRemain[succ] == 0) {
-                        readySet.emplace(-longest_outgoing_path[succ], succ);
+                        readySet.emplace(-longestOutgoingPath[succ], succ);
                     }
                 }
-                for (unsigned proc : processors_to_node[node]) {
-                    free_procs.insert(proc);
+                for (unsigned proc : processorsToNode[node]) {
+                    freeProcs.insert(proc);
                 }
             }
         }
@@ -154,13 +154,13 @@ ReturnStatus SubproblemMultiScheduling<GraphT>::ComputeMultiSchedule(const BspIn
             vertex_idx node = entry.first;
             unsigned proc = entry.second;
 
-            processors_to_node[node].insert(proc);
-            proc_task_lists[proc].push_back(node);
-            finishTimes.emplace(time + G.VertexWorkWeight(node), node);
-            node_finish_time[node] = time + G.VertexWorkWeight(node);
-            last_node_on_proc[proc] = node;
+            processorsToNode[node].insert(proc);
+            procTaskLists[proc].push_back(node);
+            finishTimes.emplace(time + g.VertexWorkWeight(node), node);
+            nodeFinishTime[node] = time + g.VertexWorkWeight(node);
+            lastNodeOnProc[proc] = node;
             free_procs.erase(proc);
-            readySet.erase({-longest_outgoing_path[node], node});
+            readySet.erase({-longestOutgoingPath[node], node});
         }
 
         // assign remaining free processors to already started nodes, if it helps
@@ -172,28 +172,28 @@ ReturnStatus SubproblemMultiScheduling<GraphT>::ComputeMultiSchedule(const BspIn
             std::set<std::pair<workweight_type, vertex_idx>> possibleNodes;
             while (itrLatest != finishTimes.rend() && itr_latest->first + 0.0001 > lastFinishTime) {
                 vertex_idx node = itr_latest->second;
-                double newFinishTime = time
-                                       + static_cast<double>(g.VertexWorkWeight(node))
-                                             / (static_cast<double>(processors_to_node[node].size()) + 1);
+                double newFinishTime
+                    = time
+                      + static_cast<double>(g.VertexWorkWeight(node)) / (static_cast<double>(processorsToNode[node].size()) + 1);
                 if (newFinishTime + 0.0001 < itr_latest->first) {
-                    possible_nodes.emplace(-longest_outgoing_path[node], node);
+                    possibleNodes.emplace(-longestOutgoingPath[node], node);
                 }
 
                 ++itr_latest;
             }
-            new_assingments = makeAssignment(instance, possible_nodes, free_procs);
+            new_assingments = MakeAssignment(instance, possibleNodes, free_procs);
             for (auto entry : new_assingments) {
                 vertex_idx node = entry.first;
                 unsigned proc = entry.second;
 
-                processors_to_node[node].insert(proc);
-                proc_task_lists[proc].push_back(node);
-                finishTimes.erase({node_finish_time[node], node});
-                double new_finish_time
-                    = time + static_cast<double>(G.VertexWorkWeight(node)) / (static_cast<double>(processors_to_node[node].size()));
-                finishTimes.emplace(new_finish_time, node);
-                node_finish_time[node] = new_finish_time;
-                last_node_on_proc[proc] = node;
+                processorsToNode[node].insert(proc);
+                procTaskLists[proc].push_back(node);
+                finishTimes.erase({nodeFinishTime[node], node});
+                double newFinishTime
+                    = time + static_cast<double>(g.VertexWorkWeight(node)) / (static_cast<double>(processorsToNode[node].size()));
+                finishTimes.emplace(newFinishTime, node);
+                nodeFinishTime[node] = newFinishTime;
+                lastNodeOnProc[proc] = node;
                 free_procs.erase(proc);
             }
             if (newAssingments.empty()) {
@@ -218,29 +218,29 @@ std::vector<std::pair<VertexIdxT<GraphT>, unsigned>> SubproblemMultiScheduling<G
     std::set<vertex_idx> assignedNodes;
     std::vector<bool> assignedProcs(instance.NumberOfProcessors(), false);
 
-    for (unsigned proc : procs_available) {
-        if (last_node_on_proc[proc] == UINT_MAX) {
+    for (unsigned proc : procsAvailable) {
+        if (lastNodeOnProc[proc] == UINT_MAX) {
             continue;
         }
 
-        for (const auto &succ : instance.GetComputationalDag().Children(last_node_on_proc[proc])) {
-            if (nodes_available.find({-longest_outgoing_path[succ], succ}) != nodes_available.end()
-                && instance.IsCompatible(succ, proc) && assigned_nodes.find(succ) == assigned_nodes.end()) {
+        for (const auto &succ : instance.GetComputationalDag().Children(lastNodeOnProc[proc])) {
+            if (nodesAvailable.find({-longestOutgoingPath[succ], succ}) != nodesAvailable.end()
+                && instance.IsCompatible(succ, proc) && assignedNodes.find(succ) == assignedNodes.end()) {
                 assignments.emplace_back(succ, proc);
-                assigned_nodes.insert(succ);
-                assigned_procs[proc] = true;
+                assignedNodes.insert(succ);
+                assignedProcs[proc] = true;
                 break;
             }
         }
     }
 
-    for (unsigned proc : procs_available) {
-        if (!assigned_procs[proc]) {
-            for (auto itr = nodes_available.begin(); itr != nodes_available.end(); ++itr) {
+    for (unsigned proc : procsAvailable) {
+        if (!assignedProcs[proc]) {
+            for (auto itr = nodesAvailable.begin(); itr != nodesAvailable.end(); ++itr) {
                 vertex_idx node = itr->second;
-                if (instance.IsCompatible(node, proc) && assigned_nodes.find(node) == assigned_nodes.end()) {
+                if (instance.IsCompatible(node, proc) && assignedNodes.find(node) == assignedNodes.end()) {
                     assignments.emplace_back(node, proc);
-                    assigned_nodes.insert(node);
+                    assignedNodes.insert(node);
                     break;
                 }
             }

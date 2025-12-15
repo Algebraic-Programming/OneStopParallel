@@ -31,7 +31,7 @@ class AcyclicDagDivider {
     static_assert(IsComputationalDagV<GraphT>, "PebblingSchedule can only be used with computational DAGs.");
 
   protected:
-    using vertex_idx = VertexIdxT<GraphT>;
+    using VertexIdx = VertexIdxT<GraphT>;
 
     unsigned minPartitionSize_ = 40, maxPartitionSize_ = 80;
     bool ignoreSourcesInSize_ = true;
@@ -53,8 +53,8 @@ class AcyclicDagDivider {
     inline std::pair<unsigned, unsigned> GetMinAndMaxSize() const { return std::make_pair(minPartitionSize_, maxPartitionSize_); }
 
     inline void SetMinAndMaxSize(const std::pair<unsigned, unsigned> minAndMax) {
-        minPartitionSize_ = min_and_max.first;
-        maxPartitionSize_ = min_and_max.second;
+        minPartitionSize_ = minAndMax.first;
+        maxPartitionSize_ = minAndMax.second;
     }
 
     inline void SetIgnoreSources(const bool ignore) { ignoreSourcesInSize_ = ignore; }
@@ -66,14 +66,14 @@ std::vector<unsigned> AcyclicDagDivider<GraphT>::ComputePartitioning(const BspIn
 
     // split to connected components first
     ConnectedComponentDivider<GraphT, GraphT> connectedComp;
-    connectedComp.divide(instance.GetComputationalDag());
+    connectedComp.Divide(instance.GetComputationalDag());
 
-    std::vector<GraphT> subDags = connectedComp.get_sub_dags();
-    std::vector<std::pair<unsigned, vertex_idx>> nodeToSubdagAndIndex(n);
-    std::vector<std::vector<vertex_idx>> originalId(subDags.size());
-    for (vertex_idx node = 0; node < n; ++node) {
-        nodeToSubdagAndIndex[node] = {connectedComp.get_component()[node], connectedComp.get_vertex_map()[node]};
-        originalId[connectedComp.get_component()[node]].push_back(node);
+    std::vector<GraphT> subDags = connectedComp.GetSubDags();
+    std::vector<std::pair<unsigned, VertexIdx>> nodeToSubdagAndIndex(n);
+    std::vector<std::vector<VertexIdx>> originalId(subDags.size());
+    for (VertexIdx node = 0; node < n; ++node) {
+        nodeToSubdagAndIndex[node] = {connectedComp.GetComponent()[node], connectedComp.GetVertexMap()[node]};
+        originalId[connectedComp.GetComponent()[node]].push_back(node);
     }
 
     // TODO extend with splits at directed articulation points in future?
@@ -93,7 +93,7 @@ std::vector<unsigned> AcyclicDagDivider<GraphT>::ComputePartitioning(const BspIn
                     existsTooLarge = true;
                 }
             } else {
-                for (vertex_idx localId = 0; local_ID < dag.NumVertices(); ++local_ID) {
+                for (VertexIdx localId = 0; localId < dag.NumVertices(); ++localId) {
                     if (instance.GetComputationalDag().InDegree(originalId[idx][localId]) > 0) {
                         ++dagRealSize[idx];
                     }
@@ -110,12 +110,12 @@ std::vector<unsigned> AcyclicDagDivider<GraphT>::ComputePartitioning(const BspIn
         }
 
         std::vector<GraphT> newDagList;
-        std::vector<std::vector<vertex_idx>> originalIdUpdated;
+        std::vector<std::vector<VertexIdx>> originalIdUpdated;
 
         for (unsigned idx = 0; idx < subDags.size(); ++idx) {
             const GraphT &dag = subDags[idx];
             if (!dagIsTooLarge[idx]) {
-                for (vertex_idx localId = 0; local_ID < dag.NumVertices(); ++local_ID) {
+                for (VertexIdx localId = 0; localId < dag.NumVertices(); ++localId) {
                     nodeToSubdagAndIndex[originalId[idx][localId]].first = static_cast<unsigned>(newDagList.size());
                 }
 
@@ -129,7 +129,7 @@ std::vector<unsigned> AcyclicDagDivider<GraphT>::ComputePartitioning(const BspIn
 
                 // mark the source nodes of the original DAG
                 std::vector<bool> isOriginalSource(dag.NumVertices());
-                for (vertex_idx localId = 0; local_ID < dag.NumVertices(); ++local_ID) {
+                for (VertexIdx localId = 0; localId < dag.NumVertices(); ++localId) {
                     isOriginalSource[localId] = (instance.GetComputationalDag().InDegree(originalId[idx][localId]) == 0);
                 }
 
@@ -160,9 +160,9 @@ std::vector<unsigned> AcyclicDagDivider<GraphT>::ComputePartitioning(const BspIn
                 std::cout<<std::endl;*/
 
                 // update labels
-                std::vector<vertex_idx> nodeIdxInNewSubDag(dag.NumVertices());
+                std::vector<VertexIdx> nodeIdxInNewSubDag(dag.NumVertices());
                 std::vector<unsigned> nrNodesInNewSubDag(splitDags.size(), 0);
-                for (vertex_idx localId = 0; localId < dag.NumVertices(); ++localId) {
+                for (VertexIdx localId = 0; localId < dag.NumVertices(); ++localId) {
                     nodeIdxInNewSubDag[localId] = nrNodesInNewSubDag[assignment[localId]];
                     ++nrNodesInNewSubDag[assignment[localId]];
                 }
@@ -171,7 +171,7 @@ std::vector<unsigned> AcyclicDagDivider<GraphT>::ComputePartitioning(const BspIn
                     originalIdUpdated.emplace_back(nextDag.NumVertices());
                 }
 
-                for (vertex_idx localId = 0; localId < dag.NumVertices(); ++localId) {
+                for (VertexIdx localId = 0; localId < dag.NumVertices(); ++localId) {
                     nodeToSubdagAndIndex[originalId[idx][localId]]
                         = {newDagList.size() + assignment[localId], nodeIdxInNewSubDag[localId]};
                     originalIdUpdated[newDagList.size() + assignment[localId]][nodeIdxInNewSubDag[localId]]
@@ -189,13 +189,13 @@ std::vector<unsigned> AcyclicDagDivider<GraphT>::ComputePartitioning(const BspIn
 
     // output final cost
     std::vector<unsigned> finalAssignment(n);
-    for (vertex_idx node = 0; node < n; ++node) {
-        finalAssignment[node] = node_to_subdag_and_index[node].first;
+    for (VertexIdx node = 0; node < n; ++node) {
+        finalAssignment[node] = nodeToSubdagAndIndex[node].first;
     }
-    std::cout << "Final cut cost of acyclic DAG divider is " << getSplitCost(instance.GetComputationalDag(), final_assignment)
+    std::cout << "Final cut cost of acyclic DAG divider is " << GetSplitCost(instance.GetComputationalDag(), finalAssignment)
               << std::endl;
 
-    return final_assignment;
+    return finalAssignment;
 }
 
 template <typename GraphT>
@@ -204,17 +204,17 @@ std::vector<unsigned> AcyclicDagDivider<GraphT>::GetTopologicalSplit(const Graph
                                                                      const std::vector<bool> &isOriginalSource) const {
     std::vector<unsigned> nodeToPart(g.NumVertices());
 
-    std::vector<vertex_idx> topOrder = GetTopOrder(g);
+    std::vector<VertexIdx> topOrder = GetTopOrder(g);
     std::vector<unsigned> topOrderIdx(g.NumVertices());
     for (unsigned idx = 0; idx < g.NumVertices(); ++idx) {
-        topOrderIdx[top_order[idx]] = idx;
+        topOrderIdx[topOrder[idx]] = idx;
     }
 
     std::vector<unsigned> lastNodeIdxInHyperedge(g.NumVertices());
     for (unsigned node = 0; node < g.NumVertices(); ++node) {
-        lastNodeIdxInHyperedge[node] = top_order_idx[node];
+        lastNodeIdxInHyperedge[node] = topOrderIdx[node];
         for (const auto &succ : g.Children(node)) {
-            lastNodeIdxInHyperedge[node] = std::max(last_node_idx_in_hyperedge[node], top_order_idx[succ]);
+            lastNodeIdxInHyperedge[node] = std::max(lastNodeIdxInHyperedge[node], topOrderIdx[succ]);
         }
     }
 
@@ -225,7 +225,7 @@ std::vector<unsigned> AcyclicDagDivider<GraphT>::GetTopologicalSplit(const Graph
     if (ignoreSourcesInSize_) {
         nodesRemaining = 0;
         for (unsigned node = 0; node < g.NumVertices(); ++node) {
-            if (!is_original_source[node]) {
+            if (!isOriginalSource[node]) {
                 ++nodesRemaining;
             }
         }
@@ -238,7 +238,7 @@ std::vector<unsigned> AcyclicDagDivider<GraphT>::GetTopologicalSplit(const Graph
         unsigned end;
         unsigned newlyAddedNodes = 0;
         for (end = index + 1; index < g.NumVertices() && newlyAddedNodes < minAndMax.first; ++end) {
-            if (!ignoreSourcesInSize_ || !is_original_source[end]) {
+            if (!ignoreSourcesInSize_ || !isOriginalSource[end]) {
                 ++newlyAddedNodes;
             }
         }
@@ -248,12 +248,12 @@ std::vector<unsigned> AcyclicDagDivider<GraphT>::GetTopologicalSplit(const Graph
 
             // check the extra cut cost of the potential endpoint
             for (unsigned topOrderPos = index; topOrderPos <= end; ++topOrderPos) {
-                vertex_idx node = top_order[topOrderPos];
+                VertexIdx node = topOrder[topOrderPos];
                 if (lastNodeIdxInHyperedge[node] > end) {
                     extraCost += g.VertexCommWeight(node);
                 }
 
-                for (const auto &pred : G.Parents(node)) {
+                for (const auto &pred : g.Parents(node)) {
                     if (last_node_idx_in_hyperedge[pred] > end) {
                         extra_cost += G.VertexCommWeight(pred);
                     }
@@ -271,9 +271,9 @@ std::vector<unsigned> AcyclicDagDivider<GraphT>::GetTopologicalSplit(const Graph
             }
         }
 
-        for (vertex_idx idx = index; idx <= bestEnd; ++idx) {
-            nodeToPart[top_order[idx]] = currentPartId;
-            if (!ignoreSourcesInSize_ || !is_original_source[idx]) {
+        for (VertexIdx idx = index; idx <= bestEnd; ++idx) {
+            nodeToPart[topOrder[idx]] = currentPartId;
+            if (!ignoreSourcesInSize_ || !isOriginalSource[idx]) {
                 --nodesRemaining;
             }
         }
@@ -282,25 +282,25 @@ std::vector<unsigned> AcyclicDagDivider<GraphT>::GetTopologicalSplit(const Graph
     }
 
     // remaining nodes go into last part
-    for (vertex_idx idx = index; idx < g.NumVertices(); ++idx) {
-        nodeToPart[top_order[idx]] = currentPartId;
+    for (VertexIdx idx = index; idx < g.NumVertices(); ++idx) {
+        nodeToPart[topOrder[idx]] = currentPartId;
     }
 
-    return node_to_part;
+    return nodeToPart;
 }
 
 template <typename GraphT>
 VCommwT<GraphT> AcyclicDagDivider<GraphT>::GetSplitCost(const GraphT &g, const std::vector<unsigned> &nodeToPart) {
     VCommwT<GraphT> cost = 0;
 
-    for (vertex_idx node = 0; node < g.NumVertices(); ++node) {
+    for (VertexIdx node = 0; node < g.NumVertices(); ++node) {
         std::set<unsigned> partsIncluded;
-        partsIncluded.insert(node_to_part[node]);
-        for (const auto &succ : G.Children(node)) {
-            parts_included.insert(node_to_part[succ]);
+        partsIncluded.insert(nodeToPart[node]);
+        for (const auto &succ : g.Children(node)) {
+            partsIncluded.insert(nodeToPart[succ]);
         }
 
-        cost += static_cast<VCommwT<GraphT>>(parts_included.size() - 1) * g.VertexCommWeight(node);
+        cost += static_cast<VCommwT<GraphT>>(partsIncluded.size() - 1) * g.VertexCommWeight(node);
     }
 
     return cost;
