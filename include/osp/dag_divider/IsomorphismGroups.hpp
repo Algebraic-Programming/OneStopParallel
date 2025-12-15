@@ -127,7 +127,7 @@ class IsomorphismGroups {
 
     /**
      * @brief Merges large isomorphism groups to avoid resource scarcity in the scheduler.
-     * * @param vertex_maps The original vertex maps, which will be modified in place.
+     * * @param vertexMaps The original vertex maps, which will be modified in place.
      * @param dag The full computational DAG.
      * @param merge_threshold If a group has more members than this, it will be merged.
      * @param target_group_count The number of larger groups to create from a single large group.
@@ -153,7 +153,7 @@ class IsomorphismGroups {
                     // This group is small enough, copy it over as is.
                     std::vector<std::size_t> newGroup;
                     for (const auto &originalCompIdx : group) {
-                        newVertexMapsForLevel.push_back(vertex_maps[i][originalCompIdx]);
+                        newVertexMapsForLevel.push_back(vertexMaps[i][originalCompIdx]);
                         newGroup.push_back(newComponentIdx++);
                     }
                     newIsoGroupsForLevel.push_back(newGroup);
@@ -174,7 +174,7 @@ class IsomorphismGroups {
                         size_t numToMerge = baseMult + (k < remainder ? 1 : 0);
 
                         for (size_t m = 0; m < numToMerge; ++m) {
-                            const auto &originalComp = vertex_maps[i][group[currentOriginalIdx++]];
+                            const auto &originalComp = vertexMaps[i][group[currentOriginalIdx++]];
                             mergedComponent.insert(mergedComponent.end(), originalComp.begin(), originalComp.end());
                         }
                         std::sort(mergedComponent.begin(), mergedComponent.end());

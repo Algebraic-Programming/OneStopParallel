@@ -167,7 +167,7 @@ BOOST_AUTO_TEST_CASE(TestConstrDag) {
     BOOST_CHECK_EQUAL(graph2.VertexWorkWeight(3), 13);
     BOOST_CHECK_EQUAL(graph2.VertexCommWeight(3), 14);
 
-    boost_graph_int_t bG1;
+    BoostGraphIntT bG1;
 
     bG1.AddVertex(1, 2, 3, 4);
     bG1.AddVertex(5, 6, 7, 8);

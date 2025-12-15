@@ -61,8 +61,8 @@ BOOST_AUTO_TEST_CASE(ConnectedComponentPartTest) {
 
     partitioner.divide(dag);
 
-    GreedyBspScheduler<boost_graph_int_t> bspScheduler;
-    ConnectedComponentScheduler<ComputationalDagVectorImplDefIntT, boost_graph_int_t> scheduler(bspScheduler);
+    GreedyBspScheduler<BoostGraphIntT> bspScheduler;
+    ConnectedComponentScheduler<ComputationalDagVectorImplDefIntT, BoostGraphIntT> scheduler(bspScheduler);
 
     BspArchitecture<ComputationalDagVectorImplDefIntT> arch = instance.GetArchitecture();
     arch.SetNumberOfProcessors(6);

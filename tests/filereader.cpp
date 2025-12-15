@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(TestMtxBoostGraph) {
         std::cout << cwd << std::endl;
     }
 
-    boost_graph_int_t graph;
+    BoostGraphIntT graph;
 
     bool status
         = file_reader::readComputationalDagMartixMarketFormat((cwd / "data/mtx_tests/ErdosRenyi_8_19_A.mtx").string(), graph);
@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_CASE(TestHdagBoost) {
         std::cout << cwd << std::endl;
     }
 
-    boost_graph_int_t graph;
+    BoostGraphIntT graph;
 
     bool status
         = file_reader::ReadComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(), graph);
@@ -321,7 +321,7 @@ BOOST_AUTO_TEST_CASE(TestDotGraphBoost) {
     std::vector<unsigned> mem{3, 5, 5, 3, 5, 5, 3, 5, 5, 5, 5};
     std::vector<unsigned> type{0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0};
 
-    boost_graph_int_t graph;
+    BoostGraphIntT graph;
 
     bool status = file_reader::readComputationalDagDotFormat((cwd / "data/dot/smpl_dot_graph_1.dot").string(), graph);
 

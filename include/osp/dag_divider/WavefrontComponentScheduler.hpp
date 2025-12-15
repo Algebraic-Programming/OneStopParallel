@@ -144,6 +144,6 @@ class WavefrontComponentScheduler : public AbstractWavefrontScheduler<GraphT, Co
 };
 
 template <typename Graph_t>
-using WavefrontComponentScheduler_def_int_t = WavefrontComponentScheduler<Graph_t, boost_graph_int_t>;
+using WavefrontComponentScheduler_def_int_t = WavefrontComponentScheduler<Graph_t, BoostGraphIntT>;
 
 }    // namespace osp

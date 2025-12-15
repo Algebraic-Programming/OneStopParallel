@@ -122,11 +122,11 @@ bool CheckOrderedIsomorphism(const GraphT &first, const GraphT &second) {
             std::set<std::pair<VertexIdxT<GraphT>, ECommwT<GraphT>>> firstChildren, secondChildren;
 
             for (const auto &outEdge : OutEdges(node, first)) {
-                firstChildren.emplace(Target(out_edge, first), first.EdgeCommWeight(out_edge));
+                firstChildren.emplace(Target(outEdge, first), first.EdgeCommWeight(outEdge));
             }
 
             for (const auto &outEdge : OutEdges(node, second)) {
-                secondChildren.emplace(Target(out_edge, second), second.EdgeCommWeight(out_edge));
+                secondChildren.emplace(Target(outEdge, second), second.EdgeCommWeight(outEdge));
             }
 
             auto itr = firstChildren.begin(), secondItr = secondChildren.begin();

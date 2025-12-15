@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(TestUtil1) {
 }
 
 BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
-    using VertexType = VertexIdxT<boost_graph_int_t>;
+    using VertexType = VertexIdxT<BoostGraphIntT>;
 
     const std::vector<std::vector<VertexType>> out({
         {7},
@@ -86,8 +86,8 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     const std::vector<int> workW({1, 1, 1, 1, 2, 3, 2, 1, 1, 1});
     const std::vector<int> commW({1, 1, 1, 1, 2, 3, 2, 1, 1, 1});
 
-    const boost_graph_int_t graph(out, workW, commW);
-    const boost_graph_int_t graphEmpty;
+    const BoostGraphIntT graph(out, workW, commW);
+    const BoostGraphIntT graphEmpty;
 
     std::vector<VertexType> topOrder;
     std::vector<size_t> indexInTopOrder;
@@ -274,7 +274,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 }
 
 BOOST_AUTO_TEST_CASE(TopSortTemplateOverloadCsr) {
-    using VertexType = VertexIdxT<boost_graph_int_t>;
+    using VertexType = VertexIdxT<BoostGraphIntT>;
 
     const std::vector<std::vector<VertexType>> out({
         {7},
@@ -291,7 +291,7 @@ BOOST_AUTO_TEST_CASE(TopSortTemplateOverloadCsr) {
     const std::vector<int> workW({1, 1, 1, 1, 2, 3, 2, 1, 1, 1});
     const std::vector<int> commW({1, 1, 1, 1, 2, 3, 2, 1, 1, 1});
 
-    const boost_graph_int_t graph(out, workW, commW);
+    const BoostGraphIntT graph(out, workW, commW);
 
     CompactSparseGraph<false> graphCsr(graph);
 

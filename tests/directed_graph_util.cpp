@@ -420,7 +420,7 @@ BOOST_AUTO_TEST_CASE(TestUtil1) {
 }
 
 BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
-    using VertexType = VertexIdxT<boost_graph_int_t>;
+    using VertexType = VertexIdxT<BoostGraphIntT>;
 
     const std::vector<std::vector<VertexType>> out({
         {7},
@@ -437,8 +437,8 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     const std::vector<int> workW({1, 1, 1, 1, 2, 3, 2, 1, 1, 1});
     const std::vector<int> commW({1, 1, 1, 1, 2, 3, 2, 1, 1, 1});
 
-    const boost_graph_int_t graph(out, workW, commW);
-    const boost_graph_int_t graphEmpty;
+    const BoostGraphIntT graph(out, workW, commW);
+    const BoostGraphIntT graphEmpty;
 
     BOOST_CHECK_EQUAL(graph.NumEdges(), 12);
     BOOST_CHECK_EQUAL(graph.NumVertices(), 10);
@@ -615,7 +615,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     const std::vector<int> graphSecondWorkW = {1, 1, 1, 1, 1, 1, 3};
     const std::vector<int> graphSecondCommW = graphSecondWorkW;
 
-    boost_graph_int_t graphSecond(graphSecondOut, graphSecondWorkW, graphSecondCommW);
+    BoostGraphIntT graphSecond(graphSecondOut, graphSecondWorkW, graphSecondCommW);
 
     std::vector<unsigned> topDistSecond({1, 2, 2, 3, 3, 3, 4});
     std::vector<unsigned> bottomDistSecond({4, 3, 3, 2, 1, 2, 1});

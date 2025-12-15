@@ -38,7 +38,7 @@ limitations under the License.
 using namespace osp;
 
 BOOST_AUTO_TEST_CASE(LongestEdgeTriangleParallel) {
-    using GraphT = boost_graph_int_t;
+    using GraphT = BoostGraphIntT;
 
     // static_assert(std::is_base_of<Scheduler, T>::value, "Class is not a scheduler!");
     std::vector<std::string> filenamesGraph = LargeSpaaGraphs();

@@ -29,10 +29,10 @@ limitations under the License.
 
 using namespace osp;
 
-boost_graph_int_t ConstrGraph1() {
-    boost_graph_int_t graph;
+BoostGraphIntT ConstrGraph1() {
+    BoostGraphIntT graph;
 
-    using VertexIdx = boost_graph_int_t::VertexIdx;
+    using VertexIdx = BoostGraphIntT::VertexIdx;
 
     VertexIdx v1 = graph.AddVertex(1, 2, 3, 4);
     VertexIdx v2 = graph.AddVertex(5, 6, 7, 8);
@@ -77,15 +77,15 @@ boost_graph_int_t ConstrGraph1() {
 }
 
 BOOST_AUTO_TEST_CASE(TestEmptyDagBoostGraphAdapter) {
-    boost_graph_int_t graph;
+    BoostGraphIntT graph;
     BOOST_CHECK_EQUAL(graph.NumEdges(), 0);
     BOOST_CHECK_EQUAL(graph.NumVertices(), 0);
 }
 
 BOOST_AUTO_TEST_CASE(TestBoostGraphAdapter1) {
-    boost_graph_int_t graph = ConstrGraph1();
+    BoostGraphIntT graph = ConstrGraph1();
 
-    using VertexIdx = boost_graph_int_t::VertexIdx;
+    using VertexIdx = BoostGraphIntT::VertexIdx;
 
     std::vector<VertexIdx> edgeSources{0, 0, 0, 1, 1, 2, 2, 3, 4};
     std::vector<VertexIdx> edgeTargets{1, 2, 3, 4, 6, 4, 5, 7, 7};
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(TestBoostGraphAdapter1) {
 }
 
 BOOST_AUTO_TEST_CASE(TestUtil1) {
-    const boost_graph_int_t graph = ConstrGraph1();
+    const BoostGraphIntT graph = ConstrGraph1();
 
     BOOST_CHECK_EQUAL(graph.NumEdges(), 9);
     BOOST_CHECK_EQUAL(graph.NumVertices(), 8);
@@ -252,7 +252,7 @@ BOOST_AUTO_TEST_CASE(TestUtil1) {
 }
 
 BOOST_AUTO_TEST_CASE(TestConstrDag) {
-    boost_graph_int_t graph;
+    BoostGraphIntT graph;
 
     graph.AddVertex(1, 2, 3);
     graph.AddVertex(5, 6, 7);
@@ -263,7 +263,7 @@ BOOST_AUTO_TEST_CASE(TestConstrDag) {
     graph.AddEdge(0, 2);
     graph.AddEdge(0, 3);
 
-    boost_graph_int_t graph2(graph);
+    BoostGraphIntT graph2(graph);
 
     BOOST_CHECK_EQUAL(graph2.NumEdges(), 3);
     BOOST_CHECK_EQUAL(graph2.NumVertices(), 4);
@@ -285,7 +285,7 @@ BOOST_AUTO_TEST_CASE(TestConstrDag) {
     graphOther.AddVertex(5, 6, 7, 8);
     graphOther.AddEdge(0, 1, 9);
 
-    boost_graph_int_t graph3(graphOther);
+    BoostGraphIntT graph3(graphOther);
 
     BOOST_CHECK_EQUAL(graph3.NumEdges(), 1);
     BOOST_CHECK_EQUAL(graph3.NumVertices(), 2);
@@ -298,15 +298,15 @@ BOOST_AUTO_TEST_CASE(TestConstrDag) {
 }
 
 BOOST_AUTO_TEST_CASE(TestBoostGraphConst1) {
-    boost_graph_int_t graph(10u);
+    BoostGraphIntT graph(10u);
     BOOST_CHECK_EQUAL(graph.NumEdges(), 0);
     BOOST_CHECK_EQUAL(graph.NumVertices(), 10);
 }
 
 BOOST_AUTO_TEST_CASE(TestBoostGraphConst2) {
-    boost_graph_int_t graph1 = ConstrGraph1();
+    BoostGraphIntT graph1 = ConstrGraph1();
 
-    boost_graph_int_t graphCopy(graph1);
+    BoostGraphIntT graphCopy(graph1);
     BOOST_CHECK_EQUAL(graphCopy.NumEdges(), 9);
     BOOST_CHECK_EQUAL(graphCopy.NumVertices(), 8);
 
@@ -317,7 +317,7 @@ BOOST_AUTO_TEST_CASE(TestBoostGraphConst2) {
     BOOST_CHECK_EQUAL(has_path(1, 3, graphCopy), false);
     BOOST_CHECK_EQUAL(has_path(2, 1, graphCopy), false);
 
-    boost_graph_int_t graphCopy2 = graph1;
+    BoostGraphIntT graphCopy2 = graph1;
 
     BOOST_CHECK_EQUAL(graph1.NumEdges(), 9);
     BOOST_CHECK_EQUAL(graph1.NumVertices(), 8);
@@ -339,7 +339,7 @@ BOOST_AUTO_TEST_CASE(TestBoostGraphConst2) {
     BOOST_CHECK_EQUAL(has_path(1, 3, graphCopy2), false);
     BOOST_CHECK_EQUAL(has_path(2, 1, graphCopy2), false);
 
-    boost_graph_int_t graphMove1(std::move(graphCopy));
+    BoostGraphIntT graphMove1(std::move(graphCopy));
 
     BOOST_CHECK_EQUAL(graphCopy.NumEdges(), 0);
     BOOST_CHECK_EQUAL(graphCopy.NumVertices(), 0);
@@ -354,7 +354,7 @@ BOOST_AUTO_TEST_CASE(TestBoostGraphConst2) {
     BOOST_CHECK_EQUAL(has_path(1, 3, graphMove1), false);
     BOOST_CHECK_EQUAL(has_path(2, 1, graphMove1), false);
 
-    boost_graph_int_t graphMove2 = std::move(graphCopy2);
+    BoostGraphIntT graphMove2 = std::move(graphCopy2);
     BOOST_CHECK_EQUAL(graphCopy2.NumEdges(), 0);
     BOOST_CHECK_EQUAL(graphCopy2.NumVertices(), 0);
 

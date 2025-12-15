@@ -12,7 +12,7 @@
 using namespace osp;
 
 BOOST_AUTO_TEST_CASE(HeavyEdgePartitioning) {
-    using GraphT = boost_graph_int_t;
+    using GraphT = BoostGraphIntT;
 
     std::vector<std::string> filenamesGraph = TestGraphs();
 

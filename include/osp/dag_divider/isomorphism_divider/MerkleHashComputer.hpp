@@ -67,10 +67,10 @@ class MerkleHashComputer : public HashComputer<VertexIdxT<GraphT>> {
 
         vertexHashes_[v] = hash;
 
-        if (orbits.find(hash) == orbits.end()) {
-            orbits[hash] = {v};
+        if (orbits_.find(hash) == orbits_.end()) {
+            orbits_[hash] = {v};
         } else {
-            orbits[hash].push_back(v);
+            orbits_[hash].push_back(v);
         }
     }
 
@@ -81,7 +81,7 @@ class MerkleHashComputer : public HashComputer<VertexIdxT<GraphT>> {
         for (const VertexType &v : TopSortView(graph)) {
             std::vector<std::size_t> parentHashes;
             for (const VertexType &parent : graph.Parents(v)) {
-                parentHashes.push_back(vertexHashes[parent]);
+                parentHashes.push_back(vertexHashes_[parent]);
             }
             computeHashesHelper(v, parentHashes);
         }
@@ -96,7 +96,7 @@ class MerkleHashComputer : public HashComputer<VertexIdxT<GraphT>> {
             const VertexType &v = *it;
             std::vector<std::size_t> childHashes;
             for (const VertexType &child : graph.Children(v)) {
-                childHashes.push_back(vertexHashes[child]);
+                childHashes.push_back(vertexHashes_[child]);
             }
             ComputeHashesHelper(v, childHashes);
         }
@@ -115,15 +115,15 @@ class MerkleHashComputer : public HashComputer<VertexIdxT<GraphT>> {
 
     inline const std::vector<std::size_t> &GetVertexHashes() const override { return vertexHashes_; }
 
-    inline std::size_t NumOrbits() const override { return orbits.size(); }
+    inline std::size_t NumOrbits() const override { return orbits_.size(); }
 
     inline const std::vector<VertexType> &GetOrbit(const VertexType &v) const override {
         return this->GetOrbitFromHash(this->GetVertexHash(v));
     }
 
-    inline const std::unordered_map<std::size_t, std::vector<VertexType>> &GetOrbits() const override { return orbits; }
+    inline const std::unordered_map<std::size_t, std::vector<VertexType>> &GetOrbits() const override { return orbits_; }
 
-    inline const std::vector<VertexType> &GetOrbitFromHash(const std::size_t &hash) const override { return orbits.at(hash); }
+    inline const std::vector<VertexType> &GetOrbitFromHash(const std::size_t &hash) const override { return orbits_.at(hash); }
 };
 
 template <typename GraphT, typename NodeHashFuncT = UniformNodeHashFunc<VertexIdxT<GraphT>>, bool forward = true>
