@@ -757,7 +757,7 @@ void StepByStepCoarser<GraphT>::CoarsenForPebbling(const GraphT &dagIn,
 
     targetNrOfNodes_ = std::max(targetNrOfNodes_, nrSources + 1);
 
-    CoarserGenContractionMap<GraphT, GraphT>::coarsenDag(dagIn, coarsenedDag, newVertexId);
+    CoarserGenContractionMap<GraphT, GraphT>::CoarsenDag(dagIn, coarsenedDag, newVertexId);
 }
 
 template <typename GraphT>

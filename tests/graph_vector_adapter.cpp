@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(TestDagVectorAdapterEdge) {
 
     CoarseGraphType coarseDag;
     std::vector<unsigned> reverseVertexMap;
-    coarser.coarsenDag(graph, coarseDag, reverseVertexMap);
+    coarser.CoarsenDag(graph, coarseDag, reverseVertexMap);
 
     acyc = is_acyclic(coarseDag);
     BOOST_CHECK(acyc);
@@ -213,7 +213,7 @@ BOOST_AUTO_TEST_CASE(TestDagVectorAdapter) {
 
     CoarseGraphType coarseDag;
     std::vector<unsigned> reverseVertexMap;
-    coarser.coarsenDag(graph, coarseDag, reverseVertexMap);
+    coarser.CoarsenDag(graph, coarseDag, reverseVertexMap);
 
     acyc = is_acyclic(coarseDag);
     BOOST_CHECK(acyc);

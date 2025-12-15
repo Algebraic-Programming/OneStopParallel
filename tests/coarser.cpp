@@ -137,13 +137,13 @@ BOOST_AUTO_TEST_CASE(CoarserHdaggTest) {
         std::vector<std::vector<VertexType>> vertexMap;
         std::vector<VertexType> reverseVertexMap;
 
-        hdagg_coarser<GraphT, GraphT> coarser;
+        HdaggCoarser<GraphT, GraphT> coarser;
 
         BOOST_CHECK_EQUAL(coarser.GetCoarserName(), "hdagg_coarser");
 
-        coarser.coarsenDag(instance.GetComputationalDag(), coarseInstance.GetComputationalDag(), reverseVertexMap);
+        coarser.CoarsenDag(instance.GetComputationalDag(), coarseInstance.GetComputationalDag(), reverseVertexMap);
 
-        vertexMap = coarser_util::invert_vertex_contraction_map<GraphT, GraphT>(reverseVertexMap);
+        vertexMap = coarser_util::InvertVertexContractionMap<GraphT, GraphT>(reverseVertexMap);
 
         BOOST_CHECK(CheckVertexMap(vertexMap, instance.GetComputationalDag().NumVertices()));
 
@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE(CoarserHdaggTest) {
 
         BspSchedule<GraphT> scheduleOut(instance);
 
-        BOOST_CHECK_EQUAL(coarser_util::pull_back_schedule(schedule, vertexMap, scheduleOut), true);
+        BOOST_CHECK_EQUAL(coarser_util::PullBackSchedule(schedule, vertexMap, scheduleOut), true);
         BOOST_CHECK(scheduleOut.SatisfiesPrecedenceConstraints());
 
         CoarseAndSchedule<GraphT, GraphT> coarseAndSchedule(coarser, scheduler);
@@ -208,11 +208,11 @@ BOOST_AUTO_TEST_CASE(CoarserHdaggTestDiffGraphImpl) {
         std::vector<std::vector<VertexType>> vertexMap;
         std::vector<VertexType> reverseVertexMap;
 
-        hdagg_coarser<GraphT1, GraphT2> coarser;
+        HdaggCoarser<GraphT1, GraphT2> coarser;
 
-        coarser.coarsenDag(instance.GetComputationalDag(), coarseInstance.GetComputationalDag(), reverseVertexMap);
+        coarser.CoarsenDag(instance.GetComputationalDag(), coarseInstance.GetComputationalDag(), reverseVertexMap);
 
-        vertexMap = coarser_util::invert_vertex_contraction_map<GraphT1, GraphT2>(reverseVertexMap);
+        vertexMap = coarser_util::InvertVertexContractionMap<GraphT1, GraphT2>(reverseVertexMap);
 
         BOOST_CHECK(CheckVertexMap(vertexMap, instance.GetComputationalDag().NumVertices()));
 
@@ -226,7 +226,7 @@ BOOST_AUTO_TEST_CASE(CoarserHdaggTestDiffGraphImpl) {
 
         BspSchedule<GraphT1> scheduleOut(instance);
 
-        BOOST_CHECK_EQUAL(coarser_util::pull_back_schedule(schedule, vertexMap, scheduleOut), true);
+        BOOST_CHECK_EQUAL(coarser_util::PullBackSchedule(schedule, vertexMap, scheduleOut), true);
         BOOST_CHECK(scheduleOut.SatisfiesPrecedenceConstraints());
 
         CoarseAndSchedule<GraphT1, GraphT2> coarseAndSchedule(coarser, scheduler);
@@ -285,9 +285,9 @@ BOOST_AUTO_TEST_CASE(CoarserBspscheduleTest) {
 
         BspScheduleCoarser<GraphT, GraphT> coarser(scheduleOrig);
 
-        coarser.coarsenDag(instance.GetComputationalDag(), coarseInstance.GetComputationalDag(), reverseVertexMap);
+        coarser.CoarsenDag(instance.GetComputationalDag(), coarseInstance.GetComputationalDag(), reverseVertexMap);
 
-        vertexMap = coarser_util::invert_vertex_contraction_map<GraphT, GraphT>(reverseVertexMap);
+        vertexMap = coarser_util::InvertVertexContractionMap<GraphT, GraphT>(reverseVertexMap);
 
         BOOST_CHECK(CheckVertexMap(vertexMap, instance.GetComputationalDag().NumVertices()));
 
@@ -300,7 +300,7 @@ BOOST_AUTO_TEST_CASE(CoarserBspscheduleTest) {
 
         BspSchedule<GraphT> scheduleOut(instance);
 
-        BOOST_CHECK_EQUAL(coarser_util::pull_back_schedule(schedule, vertexMap, scheduleOut), true);
+        BOOST_CHECK_EQUAL(coarser_util::PullBackSchedule(schedule, vertexMap, scheduleOut), true);
         BOOST_CHECK(scheduleOut.SatisfiesPrecedenceConstraints());
 
         CoarseAndSchedule<GraphT, GraphT> coarseAndSchedule(coarser, scheduler);
@@ -352,10 +352,10 @@ void TestCoarserSameGraph(Coarser<GraphT, GraphT> &coarser) {
         GreedyBspScheduler<GraphT> scheduler;
 
         bool coarseSuccess
-            = coarser.coarsenDag(instance.GetComputationalDag(), coarseInstance.GetComputationalDag(), reverseVertexMap);
+            = coarser.CoarsenDag(instance.GetComputationalDag(), coarseInstance.GetComputationalDag(), reverseVertexMap);
         BOOST_CHECK(coarseSuccess);
 
-        vertexMap = coarser_util::invert_vertex_contraction_map<GraphT, GraphT>(reverseVertexMap);
+        vertexMap = coarser_util::InvertVertexContractionMap<GraphT, GraphT>(reverseVertexMap);
 
         BOOST_CHECK(CheckVertexMap(vertexMap, instance.GetComputationalDag().NumVertices()));
 
@@ -368,7 +368,7 @@ void TestCoarserSameGraph(Coarser<GraphT, GraphT> &coarser) {
 
         BspSchedule<GraphT> scheduleOut(instance);
 
-        BOOST_CHECK_EQUAL(coarser_util::pull_back_schedule(schedule, vertexMap, scheduleOut), true);
+        BOOST_CHECK_EQUAL(coarser_util::PullBackSchedule(schedule, vertexMap, scheduleOut), true);
         BOOST_CHECK(scheduleOut.SatisfiesPrecedenceConstraints());
 
         CoarseAndSchedule<GraphT, GraphT> coarseAndSchedule(coarser, scheduler);
@@ -487,9 +487,9 @@ BOOST_AUTO_TEST_CASE(CoarserSquashATestDiffGraphImplCsg) {
 
         SquashA<GraphT1, GraphT2> coarser(params);
 
-        coarser.coarsenDag(instance.GetComputationalDag(), coarseInstance.GetComputationalDag(), reverseVertexMap);
+        coarser.CoarsenDag(instance.GetComputationalDag(), coarseInstance.GetComputationalDag(), reverseVertexMap);
 
-        vertexMap = coarser_util::invert_vertex_contraction_map<GraphT1, GraphT2>(reverseVertexMap);
+        vertexMap = coarser_util::InvertVertexContractionMap<GraphT1, GraphT2>(reverseVertexMap);
 
         BOOST_CHECK(CheckVertexMap(vertexMap, instance.GetComputationalDag().NumVertices()));
 
@@ -503,7 +503,7 @@ BOOST_AUTO_TEST_CASE(CoarserSquashATestDiffGraphImplCsg) {
 
         BspSchedule<GraphT1> scheduleOut(instance);
 
-        BOOST_CHECK_EQUAL(coarser_util::pull_back_schedule(schedule, vertexMap, scheduleOut), true);
+        BOOST_CHECK_EQUAL(coarser_util::PullBackSchedule(schedule, vertexMap, scheduleOut), true);
         BOOST_CHECK(scheduleOut.SatisfiesPrecedenceConstraints());
 
         CoarseAndSchedule<GraphT1, GraphT2> coarseAndSchedule(coarser, scheduler);
@@ -560,9 +560,9 @@ BOOST_AUTO_TEST_CASE(CoarserSquashATestDiffGraphImplCsge) {
 
         SquashA<GraphT1, GraphT2> coarser(params);
 
-        coarser.coarsenDag(instance.GetComputationalDag(), coarseInstance.GetComputationalDag(), reverseVertexMap);
+        coarser.CoarsenDag(instance.GetComputationalDag(), coarseInstance.GetComputationalDag(), reverseVertexMap);
 
-        vertexMap = coarser_util::invert_vertex_contraction_map<GraphT1, GraphT2>(reverseVertexMap);
+        vertexMap = coarser_util::InvertVertexContractionMap<GraphT1, GraphT2>(reverseVertexMap);
 
         BOOST_CHECK(CheckVertexMap(vertexMap, instance.GetComputationalDag().NumVertices()));
 
@@ -576,7 +576,7 @@ BOOST_AUTO_TEST_CASE(CoarserSquashATestDiffGraphImplCsge) {
 
         BspSchedule<GraphT1> scheduleOut(instance);
 
-        BOOST_CHECK_EQUAL(coarser_util::pull_back_schedule(schedule, vertexMap, scheduleOut), true);
+        BOOST_CHECK_EQUAL(coarser_util::PullBackSchedule(schedule, vertexMap, scheduleOut), true);
         BOOST_CHECK(scheduleOut.SatisfiesPrecedenceConstraints());
 
         CoarseAndSchedule<GraphT1, GraphT2> coarseAndSchedule(coarser, scheduler);

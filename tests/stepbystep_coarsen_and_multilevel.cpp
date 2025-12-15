@@ -60,12 +60,12 @@ BOOST_AUTO_TEST_CASE(StepByStepCoarserTest) {
     std::vector<std::vector<VertexIdxT<Graph>>> oldVertexIds;
     std::vector<VertexIdxT<Graph>> newVertexId;
 
-    coarser.coarsenDag(dag, coarsenedDag1, newVertexId);
-    oldVertexIds = coarser_util::invert_vertex_contraction_map<Graph, Graph>(newVertexId);
+    coarser.CoarsenDag(dag, coarsenedDag1, newVertexId);
+    oldVertexIds = coarser_util::InvertVertexContractionMap<Graph, Graph>(newVertexId);
 
     coarser.setTargetNumberOfNodes(static_cast<unsigned>(dag.NumVertices()) * 2 / 3);
     coarser.coarsenForPebbling(dag, coarsenedDag2, newVertexId);
-    oldVertexIds = coarser_util::invert_vertex_contraction_map<Graph, Graph>(newVertexId);
+    oldVertexIds = coarser_util::InvertVertexContractionMap<Graph, Graph>(newVertexId);
 }
 
 BOOST_AUTO_TEST_CASE(MultilevelTest) {
