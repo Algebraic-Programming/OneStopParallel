@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(CuthillMckee2) {
 
     for (auto &filenameGraph : filenamesGraph) {
         ComputationalDag graph;
-        auto statusGraph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(), graph);
+        auto statusGraph = file_reader::ReadComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(), graph);
 
         if (!statusGraph) {
             std::cout << "Reading files failed." << std::endl;

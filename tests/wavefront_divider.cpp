@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(WavefrontComponentParallelismDivider) {
         BspInstance<GraphT> instance;
         auto &graph = instance.GetComputationalDag();
 
-        auto statusGraph = file_reader::readComputationalDagHyperdagFormatDB((projectRoot / filenameGraph).string(), graph);
+        auto statusGraph = file_reader::ReadComputationalDagHyperdagFormatDB((projectRoot / filenameGraph).string(), graph);
 
         if (!statusGraph) {
             std::cout << "Reading files failed." << std::endl;

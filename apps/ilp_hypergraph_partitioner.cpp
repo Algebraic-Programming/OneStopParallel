@@ -84,7 +84,7 @@ int main(int argc, char *argv[]) {
     bool fileStatus = true;
     if (fileEnding == "hdag") {
         Graph dag;
-        fileStatus = file_reader::readComputationalDagHyperdagFormatDB(filenameHgraph, dag);
+        fileStatus = file_reader::ReadComputationalDagHyperdagFormatDB(filenameHgraph, dag);
         if (fileStatus) {
             instance.GetHypergraph() = ConvertFromCdagAsHyperdag<Hypergraph, Graph>(dag);
         }

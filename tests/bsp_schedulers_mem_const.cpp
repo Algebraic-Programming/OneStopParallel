@@ -80,7 +80,7 @@ void RunTestLocalMemory(Scheduler<GraphT> *testScheduler) {
 
             BspInstance<GraphT> instance;
 
-            bool statusGraph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(),
+            bool statusGraph = file_reader::ReadComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(),
                                                                                  instance.GetComputationalDag());
             bool statusArchitecture
                 = file_reader::ReadBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
@@ -137,7 +137,7 @@ void RunTestPersistentTransientMemory(Scheduler<GraphT> *testScheduler) {
 
             BspInstance<GraphT> instance;
 
-            bool statusGraph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(),
+            bool statusGraph = file_reader::ReadComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(),
                                                                                  instance.GetComputationalDag());
             bool statusArchitecture
                 = file_reader::ReadBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
@@ -194,7 +194,7 @@ void RunTestLocalInOutMemory(Scheduler<GraphT> *testScheduler) {
 
             BspInstance<GraphT> instance;
 
-            bool statusGraph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(),
+            bool statusGraph = file_reader::ReadComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(),
                                                                                  instance.GetComputationalDag());
             bool statusArchitecture
                 = file_reader::ReadBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
@@ -251,7 +251,7 @@ void RunTestLocalIncEdgesMemory(Scheduler<GraphT> *testScheduler) {
 
             BspInstance<GraphT> instance;
 
-            bool statusGraph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(),
+            bool statusGraph = file_reader::ReadComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(),
                                                                                  instance.GetComputationalDag());
             bool statusArchitecture
                 = file_reader::ReadBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
@@ -308,7 +308,7 @@ void RunTestLocalIncEdges2Memory(Scheduler<GraphT> *testScheduler) {
 
             BspInstance<GraphT> instance;
 
-            bool statusGraph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(),
+            bool statusGraph = file_reader::ReadComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(),
                                                                                  instance.GetComputationalDag());
             bool statusArchitecture
                 = file_reader::ReadBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());

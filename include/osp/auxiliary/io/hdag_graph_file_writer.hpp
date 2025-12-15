@@ -32,7 +32,7 @@ namespace file_writer {
  *
  * This function converts a given graph into a hypergraph representation where each node
  * with outgoing edges becomes a hyperedge source. The format is compatible with the
- * `readComputationalDagHyperdagFormatDB` reader.
+ * `ReadComputationalDagHyperdagFormatDB` reader.
  *
  * @tparam Graph_t The type of the graph, which must satisfy the ComputationalDag concept.
  * @param os The output stream to write to.

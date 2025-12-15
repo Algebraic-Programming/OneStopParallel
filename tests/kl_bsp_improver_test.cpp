@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
 //     for (auto &filename_graph : filenames_graph) {
 //         GreedyBspScheduler<ComputationalDagEdgeIdxVectorImplDefIntT> test_scheduler;
 //         BspInstance<graph> instance;
-//         bool status_graph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(),
+//         bool status_graph = file_reader::ReadComputationalDagHyperdagFormatDB((cwd / filename_graph).string(),
 //                                                                               instance.GetComputationalDag());
 
 //         instance.GetArchitecture().SetSynchronisationCosts(500);

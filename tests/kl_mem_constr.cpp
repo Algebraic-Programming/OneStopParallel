@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(KlLocalMemconst) {
         BspInstance<Graph> instance;
 
         bool statusGraph
-            = file_reader::readComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(), instance.GetComputationalDag());
+            = file_reader::ReadComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(), instance.GetComputationalDag());
         instance.GetArchitecture().SetSynchronisationCosts(10);
         instance.GetArchitecture().SetCommunicationCosts(5);
         instance.GetArchitecture().SetNumberOfProcessors(4);

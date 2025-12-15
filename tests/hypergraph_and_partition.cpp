@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(HypergraphAndPartitionTest) {
 
     Graph dag;
 
-    bool status = file_reader::readComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(), dag);
+    bool status = file_reader::ReadComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(), dag);
 
     BOOST_CHECK(status);
 
@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_CASE(HypergraphAndPartitionTest) {
     std::cout << originalCost << " --> " << newCost << std::endl;
 
     Graph largerDag;
-    file_reader::readComputationalDagHyperdagFormatDB((cwd / "data/spaa/large/instance_CG_N24_K22_nzP0d2.hdag").string(),
+    file_reader::ReadComputationalDagHyperdagFormatDB((cwd / "data/spaa/large/instance_CG_N24_K22_nzP0d2.hdag").string(),
                                                       largerDag);
     instance.setHypergraph(convert_from_cdag_as_hyperdag<Hypergraph, Graph>(largerDag));
 

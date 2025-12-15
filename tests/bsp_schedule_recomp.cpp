@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecompTest) {
         std::cout << cwd << std::endl;
     }
 
-    file_reader::readComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(),
+    file_reader::ReadComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(),
                                                       instance.GetComputationalDag());
 
     BspSchedule<Graph> schedule(instance);

@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(TestFull) {
 
     graph dag;
 
-    bool status = file_reader::readComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(), DAG);
+    bool status = file_reader::ReadComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(), DAG);
 
     BOOST_CHECK(status);
 

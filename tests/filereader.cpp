@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(TestBicgstab) {
     ComputationalDagVectorImplDefUnsignedT graph;
 
     bool status
-        = file_reader::readComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(), graph);
+        = file_reader::ReadComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(), graph);
 
     BOOST_CHECK(status);
     BOOST_CHECK_EQUAL(graph.NumVertices(), 54);
@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_CASE(TestHdagBoost) {
     boost_graph_int_t graph;
 
     bool status
-        = file_reader::readComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(), graph);
+        = file_reader::ReadComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(), graph);
 
     BOOST_CHECK(status);
     BOOST_CHECK_EQUAL(graph.NumVertices(), 54);
@@ -255,7 +255,7 @@ BOOST_AUTO_TEST_CASE(TestKMeans) {
 
     ComputationalDagVectorImplDefUnsignedT graph;
 
-    bool status = file_reader::readComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_k-means.hdag").string(), graph);
+    bool status = file_reader::ReadComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_k-means.hdag").string(), graph);
 
     BOOST_CHECK(status);
     BOOST_CHECK_EQUAL(graph.NumVertices(), 40);
@@ -268,7 +268,7 @@ BOOST_AUTO_TEST_CASE(TestKMeans) {
 
     ComputationalDagEdgeIdxVectorImplDefT graph2;
 
-    status = file_reader::readComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_k-means.hdag").string(), graph2);
+    status = file_reader::ReadComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_k-means.hdag").string(), graph2);
 
     BOOST_CHECK(status);
     BOOST_CHECK_EQUAL(graph2.NumVertices(), 40);

@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(KlImproverOnTestGraphs) {
         BspInstance<Graph> instance;
 
         bool statusGraph
-            = file_reader::readComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(), instance.GetComputationalDag());
+            = file_reader::ReadComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(), instance.GetComputationalDag());
 
         instance.GetArchitecture().SetSynchronisationCosts(5);
         instance.GetArchitecture().SetCommunicationCosts(5);
@@ -953,7 +953,7 @@ BOOST_AUTO_TEST_CASE(KlBase3) {
 //     for (auto &filename_graph : filenames_graph) {
 //         GreedyBspScheduler<ComputationalDagEdgeIdxVectorImplDefIntT> test_scheduler;
 //         BspInstance<graph> instance;
-//         bool status_graph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(),
+//         bool status_graph = file_reader::ReadComputationalDagHyperdagFormatDB((cwd / filename_graph).string(),
 //                                                                             instance.GetComputationalDag());
 
 //         instance.GetArchitecture().SetSynchronisationCosts(500);
@@ -1035,7 +1035,7 @@ BOOST_AUTO_TEST_CASE(KlBase3) {
 //     for (auto &filename_graph : filenames_graph) {
 //         GreedyBspScheduler<ComputationalDagEdgeIdxVectorImplDefIntT> test_scheduler;
 //         BspInstance<graph> instance;
-//         bool status_graph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(),
+//         bool status_graph = file_reader::ReadComputationalDagHyperdagFormatDB((cwd / filename_graph).string(),
 //                                                                             instance.GetComputationalDag());
 
 //         instance.GetArchitecture().SetSynchronisationCosts(500);

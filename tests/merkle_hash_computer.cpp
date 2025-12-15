@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecompTest) {
     GraphT graph;
 
     const auto projectRoot = GetProjectRoot();
-    file_reader::readComputationalDagHyperdagFormatDB((projectRoot / "data/spaa/tiny/instance_bicgstab.hdag").string(), graph);
+    file_reader::ReadComputationalDagHyperdagFormatDB((projectRoot / "data/spaa/tiny/instance_bicgstab.hdag").string(), graph);
 
     MerkleHashComputer<GraphT, uniform_node_hash_func<VertexIdxT<GraphT>>> mHash(graph);
 
@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(MerkleHashComputerTestFwBwPrecomp) {
     GraphT graphTest;
 
     const auto projectRoot = GetProjectRoot();
-    file_reader::readComputationalDagHyperdagFormatDB((projectRoot / "data/spaa/tiny/instance_bicgstab.hdag").string(), graphTest);
+    file_reader::ReadComputationalDagHyperdagFormatDB((projectRoot / "data/spaa/tiny/instance_bicgstab.hdag").string(), graphTest);
 
     std::vector<size_t> precomNodeHashes(graphTest.NumVertices(), 5);
 

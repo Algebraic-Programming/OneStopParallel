@@ -191,7 +191,7 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessorForkJoinNoMerge) {
 BOOST_AUTO_TEST_CASE(OrbitGraphProcessorPartitionCheckMediumGraph) {
     const auto projectRoot = GetProjectRoot();
     GraphT dag;
-    file_reader::readComputationalDagHyperdagFormatDB((projectRoot / "data/spaa/tiny/instance_bicgstab.hdag").string(), dag);
+    file_reader::ReadComputationalDagHyperdagFormatDB((projectRoot / "data/spaa/tiny/instance_bicgstab.hdag").string(), dag);
 
     BOOST_REQUIRE_GT(dag.NumVertices(), 0);
 

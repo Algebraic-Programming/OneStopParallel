@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(HillClimbing) {
         std::cout << cwd << std::endl;
     }
 
-    bool status = file_reader::readComputationalDagHyperdagFormatDB(
+    bool status = file_reader::ReadComputationalDagHyperdagFormatDB(
         (cwd / "data/spaa/tiny/instance_CG_N4_K1_nzP0d35.hdag").string(), instance.GetComputationalDag());
 
     BOOST_CHECK(status);
@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(HillClimbingForCommSchedule) {
         std::cout << cwd << std::endl;
     }
 
-    bool status = file_reader::readComputationalDagHyperdagFormatDB(
+    bool status = file_reader::ReadComputationalDagHyperdagFormatDB(
         (cwd / "data/spaa/tiny/instance_CG_N4_K1_nzP0d35.hdag").string(), instance.GetComputationalDag());
 
     BOOST_CHECK(status);
