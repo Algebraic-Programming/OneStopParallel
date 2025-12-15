@@ -28,7 +28,7 @@ limitations under the License.
 using namespace osp;
 
 BOOST_AUTO_TEST_CASE(BspScheduleRecompTest) {
-    using GraphT = computational_dag_vector_impl_def_t;
+    using GraphT = ComputationalDagVectorImplDefT;
     GraphT graph;
 
     const auto projectRoot = GetProjectRoot();
@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecompTest) {
 }
 
 BOOST_AUTO_TEST_CASE(MerkleHashComputerTestFwBwPrecomp) {
-    using GraphT = computational_dag_vector_impl_def_t;
+    using GraphT = ComputationalDagVectorImplDefT;
     GraphT graphTest;
 
     const auto projectRoot = GetProjectRoot();
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(MerkleHashComputerTestFwBwPrecomp) {
     BOOST_CHECK_EQUAL(num, graphTest.NumVertices());
 }
 
-using GraphType = computational_dag_vector_impl_def_t;
+using GraphType = ComputationalDagVectorImplDefT;
 using VertexType = VertexIdxT<GraphType>;
 
 BOOST_AUTO_TEST_CASE(MerkleIsomorphismTestIdenticalGraphsAreIsomorphic) {

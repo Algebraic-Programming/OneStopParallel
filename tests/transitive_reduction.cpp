@@ -26,7 +26,7 @@ limitations under the License.
 #include "test_graphs.hpp"
 
 using namespace osp;
-using graph_t = computational_dag_vector_impl_def_t;
+using graph_t = ComputationalDagVectorImplDefT;
 
 BOOST_AUTO_TEST_SUITE(transitive_reduction)
 

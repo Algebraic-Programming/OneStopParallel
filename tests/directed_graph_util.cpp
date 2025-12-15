@@ -34,10 +34,10 @@ limitations under the License.
 
 using namespace osp;
 
-computational_dag_vector_impl_def_t ConstrGraph1() {
-    computational_dag_vector_impl_def_t graph;
+ComputationalDagVectorImplDefT ConstrGraph1() {
+    ComputationalDagVectorImplDefT graph;
 
-    using VertexIdx = computational_dag_vector_impl_def_t::VertexIdx;
+    using VertexIdx = ComputationalDagVectorImplDefT::VertexIdx;
 
     VertexIdx v1 = graph.AddVertex(1, 2, 3, 4);
     VertexIdx v2 = graph.AddVertex(5, 6, 7, 8);
@@ -63,9 +63,9 @@ computational_dag_vector_impl_def_t ConstrGraph1() {
 }
 
 BOOST_AUTO_TEST_CASE(TestEmptyGraph) {
-    computational_dag_vector_impl_def_t graph;
+    ComputationalDagVectorImplDefT graph;
 
-    using VertexIdx = computational_dag_vector_impl_def_t::VertexIdx;
+    using VertexIdx = ComputationalDagVectorImplDefT::VertexIdx;
 
     BOOST_CHECK_EQUAL(graph.NumEdges(), 0);
     BOOST_CHECK_EQUAL(graph.NumVertices(), 0);
@@ -81,9 +81,9 @@ BOOST_AUTO_TEST_CASE(TestEmptyGraph) {
 }
 
 BOOST_AUTO_TEST_CASE(TestUtil1) {
-    computational_dag_vector_impl_def_t graph = ConstrGraph1();
+    ComputationalDagVectorImplDefT graph = ConstrGraph1();
 
-    using VertexIdx = computational_dag_vector_impl_def_t::VertexIdx;
+    using VertexIdx = ComputationalDagVectorImplDefT::VertexIdx;
 
     BOOST_CHECK_EQUAL(graph.NumEdges(), 9);
     BOOST_CHECK_EQUAL(graph.NumVertices(), 8);
@@ -691,7 +691,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 }
 
 BOOST_AUTO_TEST_CASE(TestEdgeViewIndexedAccess) {
-    computational_dag_vector_impl_def_t graph = ConstrGraph1();
+    ComputationalDagVectorImplDefT graph = ConstrGraph1();
     auto allEdges = EdgeView(graph);
 
     // Check initial iterator

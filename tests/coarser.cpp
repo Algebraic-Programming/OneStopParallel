@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_CASE(CoarserHdaggTestDiffGraphImpl) {
         std::cout << std::endl << "Graph: " << nameGraph << std::endl;
 
         using GraphT1 = ComputationalDagEdgeIdxVectorImplDefT;
-        using GraphT2 = computational_dag_vector_impl_def_t;
+        using GraphT2 = ComputationalDagVectorImplDefT;
 
         BspInstance<GraphT1> instance;
 
@@ -419,7 +419,7 @@ BOOST_AUTO_TEST_CASE(CoarserTopSortTest) {
 
 BOOST_AUTO_TEST_CASE(SquashATest) {
     using GraphT = ComputationalDagEdgeIdxVectorImplDefT;
-    // using graph_t = computational_dag_vector_impl_def_t;
+    // using graph_t = ComputationalDagVectorImplDefT;
 
     SquashAParams::Parameters params;
     params.mode = SquashAParams::Mode::EDGE_WEIGHT;
@@ -590,7 +590,7 @@ BOOST_AUTO_TEST_CASE(CoarserSquashATestDiffGraphImplCsge) {
 
 BOOST_AUTO_TEST_CASE(SarkarTest) {
     using GraphT = ComputationalDagEdgeIdxVectorImplDefT;
-    // using graph_t = computational_dag_vector_impl_def_t;
+    // using graph_t = ComputationalDagVectorImplDefT;
 
     SarkarParams::Parameters<VWorkwT<GraphT>> params;
     params.mode = SarkarParams::Mode::LINES;
@@ -644,7 +644,7 @@ BOOST_AUTO_TEST_CASE(SarkarTest) {
 
 BOOST_AUTO_TEST_CASE(SarkarMlTest) {
     using GraphT = ComputationalDagEdgeIdxVectorImplDefT;
-    // using graph_t = computational_dag_vector_impl_def_t;
+    // using graph_t = ComputationalDagVectorImplDefT;
 
     SarkarParams::MulParameters<VWorkwT<GraphT>> params;
     params.commCostVec = {100};
@@ -657,7 +657,7 @@ BOOST_AUTO_TEST_CASE(SarkarMlTest) {
 
 BOOST_AUTO_TEST_CASE(SarkarMlBufferMergeTest) {
     using GraphT = ComputationalDagEdgeIdxVectorImplDefT;
-    // using graph_t = computational_dag_vector_impl_def_t;
+    // using graph_t = ComputationalDagVectorImplDefT;
 
     SarkarParams::MulParameters<VWorkwT<GraphT>> params;
     params.commCostVec = {1, 2, 10, 50, 100};
@@ -671,7 +671,7 @@ BOOST_AUTO_TEST_CASE(SarkarMlBufferMergeTest) {
 
 BOOST_AUTO_TEST_CASE(SquashAmlTest) {
     using GraphT = ComputationalDagEdgeIdxVectorImplDefT;
-    // using graph_t = computational_dag_vector_impl_def_t;
+    // using graph_t = ComputationalDagVectorImplDefT;
 
     SquashAMul<GraphT, GraphT> coarser;
 
