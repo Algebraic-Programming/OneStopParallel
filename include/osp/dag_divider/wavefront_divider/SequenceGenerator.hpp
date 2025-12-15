@@ -36,7 +36,7 @@ class SequenceGenerator {
 
   public:
     SequenceGenerator(const GraphT &dag, const std::vector<std::vector<VertexType>> &levelSets)
-        : dag_(dag), level_sets_(level_sets) {}
+        : dag_(dag), levelSets_(levelSets) {}
 
     std::vector<double> Generate(SequenceMetric metric) const {
         switch (metric) {
@@ -50,8 +50,8 @@ class SequenceGenerator {
 
   private:
     std::vector<double> GenerateComponentCount() const {
-        WavefrontStatisticsCollector<GraphT> collector(dag_, level_sets_);
-        auto fwdStats = collector.compute_forward();
+        WavefrontStatisticsCollector<GraphT> collector(dag_, levelSets_);
+        auto fwdStats = collector.ComputeForward();
         std::vector<double> seq;
         seq.reserve(fwdStats.size());
         for (const auto &stat : fwdStats) {
@@ -62,12 +62,12 @@ class SequenceGenerator {
 
     std::vector<double> GenerateAvailableParallelism() const {
         std::vector<double> seq;
-        seq.reserve(level_sets_.size());
+        seq.reserve(levelSets_.size());
         double cumulativeWork = 0.0;
-        for (size_t i = 0; i < level_sets_.size(); ++i) {
+        for (size_t i = 0; i < levelSets_.size(); ++i) {
             double levelWork = 0.0;
-            for (const auto &vertex : level_sets_[i]) {
-                level_work += dag_.VertexWorkWeight(vertex);
+            for (const auto &vertex : levelSets_[i]) {
+                levelWork += dag_.VertexWorkWeight(vertex);
             }
             cumulativeWork += levelWork;
             seq.push_back(cumulativeWork / (static_cast<double>(i) + 1.0));

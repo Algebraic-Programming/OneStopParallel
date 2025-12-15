@@ -53,23 +53,23 @@ class AbstractWavefrontDivider : public IDagDivider<GraphT> {
                                                                const std::vector<std::vector<VertexType>> &levelSets) const {
         union_find_universe_t<GraphT> uf;
         for (size_t i = startLevel; i < endLevel; ++i) {
-            for (const auto vertex : level_sets[i]) {
-                uf.add_object(vertex, dag_ptr_->VertexWorkWeight(vertex), dag_ptr_->VertexMemWeight(vertex));
+            for (const auto vertex : levelSets[i]) {
+                uf.AddObject(vertex, dagPtr_->VertexWorkWeight(vertex), dagPtr_->VertexMemWeight(vertex));
             }
-            for (const auto &node : level_sets[i]) {
-                for (const auto &child : dag_ptr_->Children(node)) {
-                    if (uf.is_in_universe(child)) {
-                        uf.join_by_name(node, child);
+            for (const auto &node : levelSets[i]) {
+                for (const auto &child : dagPtr_->Children(node)) {
+                    if (uf.IsInUniverse(child)) {
+                        uf.JoinByName(node, child);
                     }
                 }
-                for (const auto &parent : dag_ptr_->Parents(node)) {
-                    if (uf.is_in_universe(parent)) {
-                        uf.join_by_name(parent, node);
+                for (const auto &parent : dagPtr_->Parents(node)) {
+                    if (uf.IsInUniverse(parent)) {
+                        uf.JoinByName(parent, node);
                     }
                 }
             }
         }
-        return uf.get_connected_components();
+        return uf.GetConnectedComponents();
     }
 
     /**
@@ -78,8 +78,8 @@ class AbstractWavefrontDivider : public IDagDivider<GraphT> {
      */
     std::vector<std::vector<VertexType>> ComputeWavefronts() const {
         std::vector<VertexType> allVertices(dagPtr_->NumVertices());
-        std::iota(all_vertices.begin(), all_vertices.end(), 0);
-        return compute_wavefronts_for_subgraph(all_vertices);
+        std::iota(allVertices.begin(), allVertices.end(), 0);
+        return ComputeWavefrontsForSubgraph(allVertices);
     }
 
     /**
@@ -97,13 +97,13 @@ class AbstractWavefrontDivider : public IDagDivider<GraphT> {
         std::queue<VertexType> q;
 
         for (const auto &v : vertices) {
-            in_degree[v] = 0;
-            for (const auto &p : dag_ptr_->Parents(v)) {
-                if (vertex_set.count(p)) {
-                    in_degree[v]++;
+            inDegree[v] = 0;
+            for (const auto &p : dagPtr_->Parents(v)) {
+                if (vertexSet.count(p)) {
+                    inDegree[v]++;
                 }
             }
-            if (in_degree[v] == 0) {
+            if (inDegree[v] == 0) {
                 q.push(v);
             }
         }
@@ -115,18 +115,18 @@ class AbstractWavefrontDivider : public IDagDivider<GraphT> {
                 VertexType u = q.front();
                 q.pop();
                 currentLevel.push_back(u);
-                for (const auto &v : dag_ptr_->Children(u)) {
-                    if (vertex_set.count(v)) {
-                        in_degree[v]--;
-                        if (in_degree[v] == 0) {
+                for (const auto &v : dagPtr_->Children(u)) {
+                    if (vertexSet.count(v)) {
+                        inDegree[v]--;
+                        if (inDegree[v] == 0) {
                             q.push(v);
                         }
                     }
                 }
             }
-            levelSets.push_back(current_level);
+            levelSets.push_back(currentLevel);
         }
-        return level_sets;
+        return levelSets;
     }
 };
 

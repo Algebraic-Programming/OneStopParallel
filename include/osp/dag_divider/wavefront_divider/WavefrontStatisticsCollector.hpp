@@ -47,19 +47,19 @@ class WavefrontStatisticsCollector {
 
   public:
     WavefrontStatisticsCollector(const GraphT &dag, const std::vector<std::vector<VertexType>> &levelSets)
-        : dag_(dag), level_sets_(level_sets) {}
+        : dag_(dag), levelSets_(levelSets) {}
 
     /**
      * @brief Computes wavefront statistics by processing levels from start to end.
      * @return A vector of statistics, one for each level.
      */
     std::vector<WavefrontStatistics<GraphT>> ComputeForward() const {
-        std::vector<WavefrontStatistics<GraphT>> stats(level_sets_.size());
+        std::vector<WavefrontStatistics<GraphT>> stats(levelSets_.size());
         UnionFind uf;
 
-        for (size_t i = 0; i < level_sets_.size(); ++i) {
-            update_union_find(uf, i);
-            collect_stats_for_level(stats[i], uf);
+        for (size_t i = 0; i < levelSets_.size(); ++i) {
+            UpdateUnionFind(uf, i);
+            CollectStatsForLevel(stats[i], uf);
         }
         return stats;
     }
@@ -69,13 +69,13 @@ class WavefrontStatisticsCollector {
      * @return A vector of statistics, one for each level (in original level order).
      */
     std::vector<WavefrontStatistics<GraphT>> ComputeBackward() const {
-        std::vector<WavefrontStatistics<GraphT>> stats(level_sets_.size());
+        std::vector<WavefrontStatistics<GraphT>> stats(levelSets_.size());
         UnionFind uf;
 
-        for (size_t i = level_sets_.size(); i > 0; --i) {
+        for (size_t i = levelSets_.size(); i > 0; --i) {
             size_t levelIdx = i - 1;
-            update_union_find(uf, level_idx);
-            collect_stats_for_level(stats[level_idx], uf);
+            UpdateUnionFind(uf, levelIdx);
+            CollectStatsForLevel(stats[levelIdx], uf);
         }
         return stats;
     }
@@ -83,26 +83,26 @@ class WavefrontStatisticsCollector {
   private:
     void UpdateUnionFind(UnionFind &uf, size_t levelIdx) const {
         // Add all vertices from the current level to the universe
-        for (const auto vertex : level_sets_[level_idx]) {
-            uf.add_object(vertex, dag_.VertexWorkWeight(vertex), dag_.VertexMemWeight(vertex));
+        for (const auto vertex : levelSets_[levelIdx]) {
+            uf.AddObject(vertex, dag_.VertexWorkWeight(vertex), dag_.VertexMemWeight(vertex));
         }
         // Join components based on edges connecting to vertices already in the universe
-        for (const auto &node : level_sets_[level_idx]) {
+        for (const auto &node : levelSets_[levelIdx]) {
             for (const auto &child : dag_.Children(node)) {
-                if (uf.is_in_universe(child)) {
-                    uf.join_by_name(node, child);
+                if (uf.IsInUniverse(child)) {
+                    uf.JoinByName(node, child);
                 }
             }
             for (const auto &parent : dag_.Parents(node)) {
-                if (uf.is_in_universe(parent)) {
-                    uf.join_by_name(parent, node);
+                if (uf.IsInUniverse(parent)) {
+                    uf.JoinByName(parent, node);
                 }
             }
         }
     }
 
     void CollectStatsForLevel(WavefrontStatistics<GraphT> &stats, UnionFind &uf) const {
-        const auto components = uf.get_connected_components_weights_and_memories();
+        const auto components = uf.GetConnectedComponentsWeightsAndMemories();
         stats.connected_components_vertices.reserve(components.size());
         stats.connected_components_weights.reserve(components.size());
         stats.connected_components_memories.reserve(components.size());

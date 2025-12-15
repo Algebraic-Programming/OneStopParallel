@@ -60,8 +60,8 @@ class RecursiveWavefrontDivider : public AbstractWavefrontDivider<GraphT> {
         }
 
         std::vector<std::vector<std::vector<VertexIdxT<GraphT>>>> allSections;
-        divide_recursive(global_level_sets.cbegin(), global_level_sets.cend(), global_level_sets, all_sections, 0);
-        return all_sections;
+        DivideRecursive(globalLevelSets.cbegin(), globalLevelSets.cend(), globalLevelSets, allSections, 0);
+        return allSections;
     }
 
     RecursiveWavefrontDivider &SetMetric(SequenceMetric metric) {
@@ -107,28 +107,28 @@ class RecursiveWavefrontDivider : public AbstractWavefrontDivider<GraphT> {
                          const std::vector<std::vector<VertexType>> &globalLevelSets,
                          std::vector<std::vector<std::vector<VertexType>>> &allSections,
                          size_t currentDepth) const {
-        const auto currentRangeSize = static_cast<size_t>(std::distance(level_begin, level_end));
-        size_t startLevelIdx = static_cast<size_t>(std::distance(global_level_sets.cbegin(), level_begin));
-        size_t endLevelIdx = static_cast<size_t>(std::distance(global_level_sets.cbegin(), level_end));
+        const auto currentRangeSize = static_cast<size_t>(std::distance(levelBegin, levelEnd));
+        size_t startLevelIdx = static_cast<size_t>(std::distance(globalLevelSets.cbegin(), levelBegin));
+        size_t endLevelIdx = static_cast<size_t>(std::distance(globalLevelSets.cbegin(), levelEnd));
 
         // --- Base Cases for Recursion ---
-        if (currentDepth >= maxDepth_ || current_range_size < minSubseqLen_) {
+        if (currentDepth >= maxDepth_ || currentRangeSize < minSubseqLen_) {
             if constexpr (enableDebugPrint_) {
                 std::cout << "[DEBUG depth " << currentDepth << "] Base case reached. Creating section from levels "
                           << startLevelIdx << " to " << endLevelIdx << "." << std::endl;
             }
             // Ensure the section is not empty before adding
             if (startLevelIdx < endLevelIdx) {
-                allSections.push_back(this->GetComponentsForRange(startLevelIdx, endLevelIdx, global_level_sets));
+                allSections.push_back(this->GetComponentsForRange(startLevelIdx, endLevelIdx, globalLevelSets));
             }
             return;
         }
 
         // --- Create a view of the levels for the current sub-problem ---
-        std::vector<std::vector<VertexType>> subLevelSets(levelBegin, level_end);
+        std::vector<std::vector<VertexType>> subLevelSets(levelBegin, levelEnd);
 
-        SequenceGenerator<GraphT> generator(*(this->dagPtr_), sub_level_sets);
-        std::vector<double> sequence = generator.generate(sequenceMetric_);
+        SequenceGenerator<GraphT> generator(*(this->dagPtr_), subLevelSets);
+        std::vector<double> sequence = generator.Generate(sequenceMetric_);
 
         if constexpr (enableDebugPrint_) {
             std::cout << "[DEBUG depth " << currentDepth << "] Analyzing sequence: ";
@@ -146,13 +146,13 @@ class RecursiveWavefrontDivider : public AbstractWavefrontDivider<GraphT> {
                 std::cout << "[DEBUG depth " << currentDepth << "] No cuts found. Creating section from levels " << startLevelIdx
                           << " to " << endLevelIdx << "." << std::endl;
             }
-            allSections.push_back(this->GetComponentsForRange(startLevelIdx, endLevelIdx, global_level_sets));
+            allSections.push_back(this->GetComponentsForRange(startLevelIdx, endLevelIdx, globalLevelSets));
             return;
         }
 
         if constexpr (enableDebugPrint_) {
             std::cout << "[DEBUG depth " << currentDepth << "] Found " << localCuts.size() << " cuts: ";
-            for (const auto c : local_cuts) {
+            for (const auto c : localCuts) {
                 std::cout << c << ", ";
             }
             std::cout << "in level range [" << startLevelIdx << ", " << endLevelIdx << "). Recursing." << std::endl;
@@ -162,17 +162,17 @@ class RecursiveWavefrontDivider : public AbstractWavefrontDivider<GraphT> {
         std::sort(localCuts.begin(), localCuts.end());
         localCuts.erase(std::unique(localCuts.begin(), localCuts.end()), localCuts.end());
 
-        auto currentSubBegin = level_begin;
-        for (const auto &local_cut_idx : local_cuts) {
-            auto cut_iterator = level_begin + static_cast<DifferenceType>(local_cut_idx);
-            if (cut_iterator > current_sub_begin) {
-                divide_recursive(current_sub_begin, cut_iterator, global_level_sets, all_sections, current_depth + 1);
+        auto currentSubBegin = levelBegin;
+        for (const auto &localCutIdx : localCuts) {
+            auto cutIterator = levelBegin + static_cast<DifferenceType>(localCutIdx);
+            if (cutIterator > currentSubBegin) {
+                divideRecursive(currentSubBegin, cutIterator, globalLevelSets, allSections, currentDepth + 1);
             }
-            current_sub_begin = cut_iterator;
+            currentSubBegin = cutIterator;
         }
         // Recurse on the final segment from the last cut to the end.
-        if (current_sub_begin < level_end) {
-            divide_recursive(current_sub_begin, level_end, global_level_sets, all_sections, current_depth + 1);
+        if (currentSubBegin < levelEnd) {
+            divideRecursive(currentSubBegin, levelEnd, globalLevelSets, allSections, currentDepth + 1);
         }
     }
 };

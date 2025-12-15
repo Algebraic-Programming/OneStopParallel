@@ -160,7 +160,7 @@ class ConnectedComponentDivider : public IDagDivider<GraphT> {
             return false;
         }
 
-        subDags_ = create_induced_subgraphs<GraphT, ConstrGraphT>(dag, component_);
+        subDags_ = CreateInducedSubgraphs<GraphT, ConstrGraphT>(dag, component_);
 
         // Create the mappings between global and local vertex indices.
         vertex_mapping.resize(sub_dags.size());

@@ -40,7 +40,7 @@ class ScanWavefrontDivider : public AbstractWavefrontDivider<GraphT> {
 
     ScanWavefrontDivider() { UseLargestStepSplitter(3.0, 4); }
 
-    std::vector<std::vector<std::vector<VertexIdxT<GraphT>>>> divide(const GraphT &dag) override {
+    std::vector<std::vector<std::vector<VertexIdxT<GraphT>>>> Divide(const GraphT &dag) override {
         this->dagPtr_ = &dag;
         if constexpr (enableDebugPrint_) {
             std::cout << "[DEBUG] Starting scan-all division." << std::endl;
@@ -51,8 +51,8 @@ class ScanWavefrontDivider : public AbstractWavefrontDivider<GraphT> {
             return {};
         }
 
-        SequenceGenerator<GraphT> generator(dag, level_sets);
-        std::vector<double> sequence = generator.generate(sequenceMetric_);
+        SequenceGenerator<GraphT> generator(dag, levelSets);
+        std::vector<double> sequence = generator.Generate(sequenceMetric_);
 
         if constexpr (enableDebugPrint_) {
             std::cout << "[DEBUG]   Metric: " << static_cast<int>(sequenceMetric_) << std::endl;
@@ -69,13 +69,13 @@ class ScanWavefrontDivider : public AbstractWavefrontDivider<GraphT> {
 
         if constexpr (enableDebugPrint_) {
             std::cout << "[DEBUG]   Final cut levels: ";
-            for (const auto &level : cut_levels) {
+            for (const auto &level : cutLevels) {
                 std::cout << level << " ";
             }
             std::cout << std::endl;
         }
 
-        return create_vertex_maps_from_cuts(cut_levels, level_sets);
+        return CreateVertexMapsFromCuts(cutLevels, levelSets);
     }
 
     ScanWavefrontDivider &SetMetric(SequenceMetric metric) {
@@ -108,7 +108,7 @@ class ScanWavefrontDivider : public AbstractWavefrontDivider<GraphT> {
         const std::vector<size_t> &cutLevels, const std::vector<std::vector<VertexType>> &levelSets) const {
         if (cutLevels.empty()) {
             // If there are no cuts, return a single section with all components.
-            return {this->GetComponentsForRange(0, level_sets.size(), level_sets)};
+            return {this->GetComponentsForRange(0, levelSets.size(), levelSets)};
         }
 
         std::vector<std::vector<std::vector<VertexType>>> vertexMaps;
@@ -116,16 +116,16 @@ class ScanWavefrontDivider : public AbstractWavefrontDivider<GraphT> {
 
         for (const auto &cutLevel : cutLevels) {
             if (startLevel < cutLevel) {    // Avoid creating empty sections
-                vertexMaps.push_back(this->GetComponentsForRange(startLevel, cutLevel, level_sets));
+                vertexMaps.push_back(this->GetComponentsForRange(startLevel, cutLevel, levelSets));
             }
             startLevel = cutLevel;
         }
         // Add the final section from the last cut to the end of the levels
         if (startLevel < levelSets.size()) {
-            vertexMaps.push_back(this->GetComponentsForRange(startLevel, level_sets.size(), level_sets));
+            vertexMaps.push_back(this->GetComponentsForRange(startLevel, levelSets.size(), levelSets));
         }
 
-        return vertex_maps;
+        return vertexMaps;
     }
 };
 

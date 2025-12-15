@@ -97,18 +97,18 @@ class IsomorphismGroups {
      * Reqires the dag to be divided before calling this function.
      */
     void ComputeIsomorphismGroups(std::vector<std::vector<std::vector<VertexIdxT<GraphT>>>> &vertexMaps, const GraphT &dag) {
-        isomorphismGroups_ = std::vector<std::vector<std::vector<std::size_t>>>(vertex_maps.size());
+        isomorphismGroups_ = std::vector<std::vector<std::vector<std::size_t>>>(vertexMaps.size());
 
-        isomorphismGroupsSubgraphs_ = std::vector<std::vector<ConstrGraphT>>(vertex_maps.size());
+        isomorphismGroupsSubgraphs_ = std::vector<std::vector<ConstrGraphT>>(vertexMaps.size());
 
         for (size_t i = 0; i < vertexMaps.size(); i++) {
             for (std::size_t j = 0; j < vertexMaps[i].size(); j++) {
                 ConstrGraphT currentSubgraph;
-                create_induced_subgraph(dag, currentSubgraph, vertex_maps[i][j]);
+                CreateInducedSubgraph(dag, currentSubgraph, vertexMaps[i][j]);
 
                 bool isomorphismGroupFound = false;
                 for (size_t k = 0; k < isomorphismGroups_[i].size(); k++) {
-                    if (are_isomorphic_by_merkle_hash(isomorphismGroupsSubgraphs_[i][k], currentSubgraph)) {
+                    if (AreIsomorphicByMerkleHash(isomorphismGroupsSubgraphs_[i][k], currentSubgraph)) {
                         isomorphismGroups_[i][k].emplace_back(j);
                         isomorphismGroupFound = true;
                         break;
@@ -175,21 +175,21 @@ class IsomorphismGroups {
 
                         for (size_t m = 0; m < numToMerge; ++m) {
                             const auto &originalComp = vertex_maps[i][group[currentOriginalIdx++]];
-                            mergedComponent.insert(merged_component.end(), original_comp.begin(), original_comp.end());
+                            mergedComponent.insert(mergedComponent.end(), originalComp.begin(), originalComp.end());
                         }
-                        std::sort(merged_component.begin(), merged_component.end());
-                        newVertexMapsForLevel.push_back(merged_component);
+                        std::sort(mergedComponent.begin(), mergedComponent.end());
+                        newVertexMapsForLevel.push_back(mergedComponent);
                         newMergedGroupIndices.push_back(newComponentIdx++);
                     }
 
                     newIsoGroupsForLevel.push_back(newMergedGroupIndices);
                     ConstrGraphT newRepSubgraph;
-                    create_induced_subgraph(dag, newRepSubgraph, new_vertex_maps_for_level.back());
+                    CreateInducedSubgraph(dag, newRepSubgraph, newVertexMapsForLevel.back());
                     newIsoSubgraphsForLevel.push_back(newRepSubgraph);
                 }
             }
             // Replace the old level data with the new, potentially merged data.
-            vertexMaps[i] = new_vertex_maps_for_level;
+            vertexMaps[i] = newVertexMapsForLevel;
             isomorphismGroups_[i] = newIsoGroupsForLevel;
             isomorphismGroupsSubgraphs_[i] = newIsoSubgraphsForLevel;
         }

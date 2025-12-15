@@ -39,23 +39,22 @@ class ConnectedComponentScheduler : public Scheduler<GraphT> {
         const GraphT &dag = instance.GetComputationalDag();
         ConnectedComponentDivider<GraphT, ConstrGraphT> partitioner;
 
-        partitioner.divide(dag);
+        partitioner.Divide(dag);
 
-        VWorkwT<GraphT> totalWorkWeight = sumOfVerticesWorkWeights(dag);
+        VWorkwT<GraphT> totalWorkWeight = SumOfVerticesWorkWeights(dag);
 
         unsigned numProcessorsOffset = 0;
 
-        for (std::size_t i = 0; i < partitioner.get_sub_dags().size(); i++) {
-            const auto &subDag = partitioner.get_sub_dags()[i];
-            const auto &mapping = partitioner.get_vertex_mapping()[i];
+        for (std::size_t i = 0; i < partitioner.GetSubDags().size(); i++) {
+            const auto &subDag = partitioner.GetSubDags()[i];
+            const auto &mapping = partitioner.GetVertexMapping()[i];
 
-            VWorkwT<Constr_Graph_t> subDagWorkWeight = sumOfVerticesWorkWeights(subDag);
+            VWorkwT<ConstrGraphT> subDagWorkWeight = SumOfVerticesWorkWeights(subDag);
 
             BspInstance<ConstrGraphT> subInstance(subDag, instance.GetArchitecture());
             BspArchitecture<ConstrGraphT> &subArchitecture = subInstance.GetArchitecture();
 
-            const double subDagWorkWeightPercent
-                = static_cast<double>(sub_dag_work_weight) / static_cast<double>(total_work_weight);
+            const double subDagWorkWeightPercent = static_cast<double>(subDagWorkWeight) / static_cast<double>(totalWorkWeight);
             const unsigned subDagProcessors = static_cast<unsigned>(subDagWorkWeightPercent * subArchitecture.NumberOfProcessors());
 
             subArchitecture.setNumberOfProcessors(subDagProcessors);

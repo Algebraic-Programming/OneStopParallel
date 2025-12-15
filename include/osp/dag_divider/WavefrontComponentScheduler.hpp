@@ -35,7 +35,7 @@ class WavefrontComponentScheduler : public AbstractWavefrontScheduler<GraphT, Co
     ReturnStatus ComputeSchedule(BspSchedule<GraphT> &schedule) override {
         const auto &instance = schedule.GetInstance();
         const auto &originalArch = instance.GetArchitecture();
-        const auto &originalProcTypeCount = originalArch.getProcessorTypeCount();
+        const auto &originalProcTypeCount = originalArch.GetProcessorTypeCount();
         const auto &computationalDag = instance.GetComputationalDag();
 
         std::vector<std::vector<unsigned>> globalIdsByType(originalArch.GetNumberOfProcessorTypes());
@@ -43,7 +43,7 @@ class WavefrontComponentScheduler : public AbstractWavefrontScheduler<GraphT, Co
             globalIdsByType[originalArch.ProcessorType(i)].push_back(i);
         }
 
-        auto vertexMaps = this->divider_->divide(computationalDag);
+        auto vertexMaps = this->divider_->Divide(computationalDag);
         unsigned superstepOffset = 0;
 
         for (std::size_t i = 0; i < vertexMaps.size(); ++i) {    // For each wavefront set
@@ -56,9 +56,9 @@ class WavefrontComponentScheduler : public AbstractWavefrontScheduler<GraphT, Co
             std::vector<std::vector<double>> workByType(components.size(), std::vector<double>(originalProcTypeCount.size(), 0.0));
 
             for (size_t j = 0; j < components.size(); ++j) {
-                create_induced_subgraph(computationalDag, subDags[j], components[j]);
+                CreateInducedSubgraph(computationalDag, subDags[j], components[j]);
                 for (unsigned typeIdx = 0; typeIdx < originalProcTypeCount.size(); ++typeIdx) {
-                    workByType[j][typeIdx] = sumOfCompatibleWorkWeights(subDags[j], instance, typeIdx);
+                    workByType[j][typeIdx] = SumOfCompatibleWorkWeights(subDags[j], instance, typeIdx);
                 }
             }
 
@@ -97,13 +97,13 @@ class WavefrontComponentScheduler : public AbstractWavefrontScheduler<GraphT, Co
                 if constexpr (this->enableDebugPrints_) {
                     std::cout << "  Component " << j << " sub-architecture: { ";
                     for (unsigned typeIdx = 0; typeIdx < subArchitecture.GetNumberOfProcessorTypes(); ++typeIdx) {
-                        std::cout << "Type " << typeIdx << ": " << subArchitecture.getProcessorTypeCount()[typeIdx] << "; ";
+                        std::cout << "Type " << typeIdx << ": " << subArchitecture.GetProcessorTypeCount()[typeIdx] << "; ";
                     }
                     std::cout << "}" << std::endl;
                 }
 
                 BspInstance<ConstrGraphT> subInstance(subDags[j], subArchitecture);
-                subInstance.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());
+                subInstance.SetNodeProcessorCompatibility(instance.GetProcessorCompatibilityMatrix());
 
                 BspSchedule<ConstrGraphT> subSchedule(subInstance);
                 const auto status = this->scheduler_->ComputeSchedule(subSchedule);
@@ -111,26 +111,25 @@ class WavefrontComponentScheduler : public AbstractWavefrontScheduler<GraphT, Co
                     return status;
                 }
 
-                const auto subProcTypeCount = subArchitecture.getProcessorTypeCount();
+                const auto subProcTypeCount = subArchitecture.GetProcessorTypeCount();
                 std::vector<unsigned> subProcTypeCorrections(subArchitecture.GetNumberOfProcessorTypes(), 0);
                 for (std::size_t k = 1; k < subProcTypeCorrections.size(); ++k) {
                     subProcTypeCorrections[k] = subProcTypeCorrections[k - 1] + subProcTypeCount[k - 1];
                 }
 
-                VertexIdxT<constr_graph_t> subdagVertex = 0;
+                VertexIdxT<ConstrGraphT> subdagVertex = 0;
                 std::vector<VertexIdxT<GraphT>> sortedComponentVertices(components[j].begin(), components[j].end());
-                std::sort(sorted_component_vertices.begin(), sorted_component_vertices.end());
+                std::sort(sortedComponentVertices.begin(), sortedComponentVertices.end());
 
-                for (const auto &vertex : sorted_component_vertices) {
-                    const unsigned proc_in_sub_sched = sub_schedule.AssignedProcessor(subdag_vertex);
-                    const unsigned proc_type = sub_architecture.ProcessorType(proc_in_sub_sched);
-                    const unsigned local_proc_id_within_type = proc_in_sub_sched - sub_proc_type_corrections[proc_type];
-                    unsigned global_proc_id
-                        = global_ids_by_type[proc_type][proc_type_offsets[proc_type] + local_proc_id_within_type];
+                for (const auto &vertex : sortedComponentVertices) {
+                    const unsigned procInSubSched = subSchedule.AssignedProcessor(subdagVertex);
+                    const unsigned procType = subArchitecture.ProcessorType(procInSubSched);
+                    const unsigned localProcIdWithinType = procInSubSched - subProcTypeCorrections[procType];
+                    unsigned globalProcId = globalIdsByType[procType][procTypeOffsets[procType] + localProcIdWithinType];
 
-                    schedule.SetAssignedProcessor(vertex, global_proc_id);
-                    schedule.SetAssignedSuperstep(vertex, superstep_offset + sub_schedule.AssignedSuperstep(subdag_vertex));
-                    subdag_vertex++;
+                    schedule.SetAssignedProcessor(vertex, globalProcId);
+                    schedule.SetAssignedSuperstep(vertex, superstepOffset + subSchedule.AssignedSuperstep(subdagVertex));
+                    subdagVertex++;
                 }
 
                 for (size_t k = 0; k < subProcTypeCount.size(); ++k) {

@@ -44,8 +44,8 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
 
         IsomorphismGroups<GraphT, ConstrGraphT> isoGroups;
         std::vector<std::vector<std::vector<VertexIdxT<GraphT>>>> vertexMaps
-            = this->divider_->divide(instance.GetComputationalDag());
-        isoGroups.compute_isomorphism_groups(vertex_maps, instance.GetComputationalDag());
+            = this->divider_->Divide(instance.GetComputationalDag());
+        isoGroups.ComputeIsomorphismGroups(vertexMaps, instance.GetComputationalDag());
 
         unsigned superstepOffset = 0;
         for (std::size_t i = 0; i < vertexMaps.size(); ++i) {
@@ -54,13 +54,13 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
             }
 
             unsigned superstepsInSet = 0;
-            auto status = process_wavefront_set(schedule,
-                                                vertex_maps[i],
-                                                iso_groups.get_isomorphism_groups()[i],
-                                                iso_groups.get_isomorphism_groups_subgraphs()[i],
-                                                global_ids_by_type,
-                                                superstep_offset,
-                                                supersteps_in_set);
+            auto status = this->ProcessWavefrontSet(schedule,
+                                                    vertexMaps[i],
+                                                    isoGroups.GetIsomorphismGroups()[i],
+                                                    isoGroups.GetIsomorphismGroupsSubgraphs()[i],
+                                                    globalIdsByType,
+                                                    superstepOffset,
+                                                    superstepsInSet);
             if (status != ReturnStatus::OSP_SUCCESS) {
                 return status;
             }
@@ -79,7 +79,7 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
                                      unsigned &superstepsInSet) {
         const auto &instance = schedule.GetInstance();
         const auto &originalArch = instance.GetArchitecture();
-        const auto &originalProcTypeCount = originalArch.getProcessorTypeCount();
+        const auto &originalProcTypeCount = originalArch.GetProcessorTypeCount();
 
         if constexpr (this->enableDebugPrints_) {
             std::cout << "  Found " << isoGroupsForSet.size() << " isomorphism groups in this wavefront set." << std::endl;
@@ -92,7 +92,7 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
         for (std::size_t j = 0; j < isoGroupsForSet.size(); ++j) {
             const ConstrGraphT &repSubDag = subgraphsForSet[j];
             for (unsigned typeIdx = 0; typeIdx < originalProcTypeCount.size(); ++typeIdx) {
-                const double repWorkForType = sumOfCompatibleWorkWeights(repSubDag, instance, typeIdx);
+                const double repWorkForType = SumOfCompatibleWorkWeights(repSubDag, instance, typeIdx);
                 groupWorkByType[j][typeIdx] = repWorkForType * static_cast<double>(isoGroupsForSet[j].size());
             }
         }
@@ -133,15 +133,15 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
 
         for (std::size_t j = 0; j < isoGroupsForSet.size(); ++j) {
             unsigned superstepsForGroup = 0;
-            auto status = schedule_isomorphism_group(schedule,
-                                                     vertex_map_for_set,
-                                                     iso_groups_for_set[j],
-                                                     subgraphs_for_set[j],
-                                                     group_proc_allocations[j],
-                                                     global_ids_by_type,
-                                                     proc_type_offsets,
-                                                     superstep_offset,
-                                                     supersteps_for_group);
+            auto status = this->ScheduleIsomorphismGroup(schedule,
+                                                         vertexMapForSet,
+                                                         isoGroupsForSet[j],
+                                                         subgraphsForSet[j],
+                                                         groupProcAllocations[j],
+                                                         globalIdsByType,
+                                                         procTypeOffsets,
+                                                         superstepOffset,
+                                                         superstepsForGroup);
             if (status != ReturnStatus::OSP_SUCCESS) {
                 return status;
             }
@@ -160,9 +160,9 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
             if (numSuperstepsPerIsoGroup[j] > 0) {    // This is the padding
                 const auto &groupMembers = isoGroupsForSet[j];
                 for (const auto &originalCompIdx : groupMembers) {
-                    const auto &componentVertices = vertex_map_for_set[originalCompIdx];
-                    for (const auto &vertex : component_vertices) {
-                        schedule.SetAssignedSuperstep(vertex, schedule.AssignedSuperstep(vertex) + num_supersteps_per_iso_group[j]);
+                    const auto &componentVertices = vertexMapForSet[originalCompIdx];
+                    for (const auto &vertex : componentVertices) {
+                        schedule.SetAssignedSuperstep(vertex, schedule.AssignedSuperstep(vertex) + numSuperstepsPerIsoGroup[j]);
                     }
                 }
             }
@@ -204,13 +204,13 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
             }
 
             BspInstance<ConstrGraphT> subInstance(repSubDag, this->CreateSubArchitecture(originalArch, procsForGroup));
-            subInstance.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());
+            subInstance.setNodeProcessorCompatibility(instance.GetProcessorCompatibilityMatrix());
             auto &subArchitecture = subInstance.GetArchitecture();
 
             if constexpr (this->enableDebugPrints_) {
                 std::cout << "    Sub-architecture for sequential scheduling: { ";
                 for (unsigned typeIdx = 0; typeIdx < subArchitecture.GetNumberOfProcessorTypes(); ++typeIdx) {
-                    std::cout << "Type " << typeIdx << ": " << subArchitecture.getProcessorTypeCount()[typeIdx] << "; ";
+                    std::cout << "Type " << typeIdx << ": " << subArchitecture.GetProcessorTypeCount()[typeIdx] << "; ";
                 }
                 std::cout << "}" << std::endl;
             }
@@ -223,28 +223,27 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
                     return status;
                 }
 
-                const auto subProcTypeCount = subArchitecture.getProcessorTypeCount();
+                const auto subProcTypeCount = subArchitecture.GetProcessorTypeCount();
                 std::vector<unsigned> subProcTypeCorrections(subArchitecture.GetNumberOfProcessorTypes(), 0);
                 for (std::size_t k = 1; k < subProcTypeCorrections.size(); ++k) {
                     subProcTypeCorrections[k] = subProcTypeCorrections[k - 1] + subProcTypeCount[k - 1];
                 }
 
                 std::vector<VertexIdxT<GraphT>> sortedComponentVertices(vertexMapForSet[groupMemberIdx].begin(),
-                                                                        vertex_map_for_set[groupMemberIdx].end());
-                std::sort(sorted_component_vertices.begin(), sorted_component_vertices.end());
+                                                                        vertexMapForSet[groupMemberIdx].end());
+                std::sort(sortedComponentVertices.begin(), sortedComponentVertices.end());
 
-                VertexIdxT<constr_graph_t> subdagVertex = 0;
-                for (const auto &vertex : sorted_component_vertices) {
-                    const unsigned proc_in_sub_sched = sub_schedule.AssignedProcessor(subdag_vertex);
-                    const unsigned proc_type = sub_architecture.ProcessorType(proc_in_sub_sched);
-                    const unsigned local_proc_id_within_type = proc_in_sub_sched - sub_proc_type_corrections[proc_type];
-                    unsigned global_proc_id
-                        = global_ids_by_type[proc_type][proc_type_offsets[proc_type] + local_proc_id_within_type];
+                VertexIdxT<ConstrGraphT> subdagVertex = 0;
+                for (const auto &vertex : sortedComponentVertices) {
+                    const unsigned procInSubSched = subSchedule.AssignedProcessor(subdagVertex);
+                    const unsigned procType = subArchitecture.ProcessorType(procInSubSched);
+                    const unsigned localProcIdWithinType = procInSubSched - subProcTypeCorrections[procType];
+                    unsigned globalProcId = globalIdsByType[procType][procTypeOffsets[procType] + localProcIdWithinType];
 
-                    schedule.SetAssignedProcessor(vertex, global_proc_id);
+                    schedule.SetAssignedProcessor(vertex, globalProcId);
                     schedule.SetAssignedSuperstep(
-                        vertex, superstep_offset + sequential_superstep_offset + sub_schedule.AssignedSuperstep(subdag_vertex));
-                    subdag_vertex++;
+                        vertex, superstepOffset + sequentialSuperstepOffset + subSchedule.AssignedSuperstep(subdagVertex));
+                    subdagVertex++;
                 }
                 sequentialSuperstepOffset += subSchedule.NumberOfSupersteps();
             }
@@ -265,13 +264,13 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
             }
 
             BspInstance<ConstrGraphT> subInstance(repSubDag, this->CreateSubArchitecture(originalArch, singleSubDagProcTypes));
-            subInstance.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());
+            subInstance.SetNodeProcessorCompatibility(instance.GetProcessorCompatibilityMatrix());
 
             if constexpr (this->enableDebugPrints_) {
                 const auto &subArch = subInstance.GetArchitecture();
                 std::cout << "    Sub-architecture for replication (per member): { ";
                 for (unsigned typeIdx = 0; typeIdx < subArch.GetNumberOfProcessorTypes(); ++typeIdx) {
-                    std::cout << "Type " << typeIdx << ": " << subArch.getProcessorTypeCount()[typeIdx] << "; ";
+                    std::cout << "Type " << typeIdx << ": " << subArch.GetProcessorTypeCount()[typeIdx] << "; ";
                 }
                 std::cout << "}" << std::endl;
             }
@@ -282,7 +281,7 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
                 return status;
             }
 
-            const auto subProcTypeCount = subSchedule.GetInstance().GetArchitecture().getProcessorTypeCount();
+            const auto subProcTypeCount = subSchedule.GetInstance().GetArchitecture().GetProcessorTypeCount();
             std::vector<unsigned> subProcTypeCorrections(subProcTypeCount.size(), 0);
             for (std::size_t k = 1; k < subProcTypeCorrections.size(); ++k) {
                 subProcTypeCorrections[k] = subProcTypeCorrections[k - 1] + subProcTypeCount[k - 1];
@@ -291,20 +290,19 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
             std::vector<unsigned> currentMemberProcOffsets = procTypeOffsets;
             for (const auto &groupMemberIdx : groupMembers) {
                 std::vector<VertexIdxT<GraphT>> sortedComponentVertices(vertexMapForSet[groupMemberIdx].begin(),
-                                                                        vertex_map_for_set[groupMemberIdx].end());
-                std::sort(sorted_component_vertices.begin(), sorted_component_vertices.end());
+                                                                        vertexMapForSet[groupMemberIdx].end());
+                std::sort(sortedComponentVertices.begin(), sortedComponentVertices.end());
 
-                VertexIdxT<constr_graph_t> subdagVertex = 0;
-                for (const auto &vertex : sorted_component_vertices) {
-                    const unsigned proc_in_sub_sched = sub_schedule.AssignedProcessor(subdag_vertex);
-                    const unsigned proc_type = sub_schedule.GetInstance().GetArchitecture().ProcessorType(proc_in_sub_sched);
-                    const unsigned local_proc_id_within_type = proc_in_sub_sched - sub_proc_type_corrections[proc_type];
-                    unsigned global_proc_id
-                        = global_ids_by_type[proc_type][current_member_proc_offsets[proc_type] + local_proc_id_within_type];
+                VertexIdxT<ConstrGraphT> subdagVertex = 0;
+                for (const auto &vertex : sortedComponentVertices) {
+                    const unsigned procInSubSched = subSchedule.AssignedProcessor(subdagVertex);
+                    const unsigned procType = subSchedule.GetInstance().GetArchitecture().ProcessorType(procInSubSched);
+                    const unsigned localProcIdWithinType = procInSubSched - subProcTypeCorrections[procType];
+                    unsigned globalProcId = globalIdsByType[procType][currentMemberProcOffsets[procType] + localProcIdWithinType];
 
-                    schedule.SetAssignedProcessor(vertex, global_proc_id);
-                    schedule.SetAssignedSuperstep(vertex, superstep_offset + sub_schedule.AssignedSuperstep(subdag_vertex));
-                    subdag_vertex++;
+                    schedule.SetAssignedProcessor(vertex, globalProcId);
+                    schedule.SetAssignedSuperstep(vertex, superstepOffset + subSchedule.AssignedSuperstep(subdagVertex));
+                    subdagVertex++;
                 }
                 for (size_t k = 0; k < subProcTypeCount.size(); ++k) {
                     currentMemberProcOffsets[k] += subProcTypeCount[k];
