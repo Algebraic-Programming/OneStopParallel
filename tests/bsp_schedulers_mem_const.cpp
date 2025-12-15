@@ -339,7 +339,7 @@ void RunTestLocalIncEdges2Memory(Scheduler<GraphT> *testScheduler) {
 }
 
 BOOST_AUTO_TEST_CASE(GreedyBspSchedulerLocalTest) {
-    using GraphImplT = computational_dag_edge_idx_vector_impl_def_int_t;
+    using GraphImplT = ComputationalDagEdgeIdxVectorImplDefIntT;
 
     GreedyBspScheduler<GraphImplT, local_memory_constraint<GraphImplT>> test1;
     RunTestLocalMemory(&test1);
@@ -355,7 +355,7 @@ BOOST_AUTO_TEST_CASE(GreedyBspSchedulerLocalTest) {
 }
 
 BOOST_AUTO_TEST_CASE(GrowLocalAutoCoresLocalTest) {
-    using GraphImplT = computational_dag_edge_idx_vector_impl_def_int_t;
+    using GraphImplT = ComputationalDagEdgeIdxVectorImplDefIntT;
 
     GrowLocalAutoCores<GraphImplT, local_memory_constraint<GraphImplT>> test1;
     RunTestLocalMemory(&test1);

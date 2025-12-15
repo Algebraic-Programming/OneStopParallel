@@ -92,8 +92,8 @@ BOOST_AUTO_TEST_CASE(TestDagVectorAdapterEdge) {
                                                        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                                                        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1});
     instance.setDiagonalCompatibilityMatrix(2);
-    instance.setSynchronisationCosts(1000);
-    instance.setCommunicationCosts(1);
+    instance.SetSynchronisationCosts(1000);
+    instance.SetCommunicationCosts(1);
 
     // Set up the scheduler
     GrowLocalAutoCores<GraphConstrT> growlocal;
@@ -181,8 +181,8 @@ BOOST_AUTO_TEST_CASE(TestDagVectorAdapter) {
                                                        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                                                        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1});
     instance.setDiagonalCompatibilityMatrix(2);
-    instance.setSynchronisationCosts(1000);
-    instance.setCommunicationCosts(1);
+    instance.SetSynchronisationCosts(1000);
+    instance.SetCommunicationCosts(1);
 
     // Set up the scheduler
     GrowLocalAutoCores<GraphConstrT> growlocal;

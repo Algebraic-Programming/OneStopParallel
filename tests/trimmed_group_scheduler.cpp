@@ -55,8 +55,8 @@ struct TrimmedGroupSchedulerFixture {
 
     TrimmedGroupSchedulerFixture() : instance_(dag_, arch_) {
         // Default architecture: 1 processor type, 100 memory bound
-        arch_.setCommunicationCosts(1);
-        arch_.setSynchronisationCosts(1);
+        arch_.SetCommunicationCosts(1);
+        arch_.SetSynchronisationCosts(1);
         instance_.setAllOnesCompatibilityMatrix();    // All node types compatible with all processor types
     }
 };
@@ -65,7 +65,7 @@ BOOST_FIXTURE_TEST_SUITE(trimmed_group_scheduler_test_suite, TrimmedGroupSchedul
 
 BOOST_AUTO_TEST_CASE(EmptyGraphTest) {
     // Graph is empty by default
-    arch_.setNumberOfProcessors(4);
+    arch_.SetNumberOfProcessors(4);
     instance_.GetArchitecture() = arch_;
 
     TrimmedGroupScheduler<GraphT> scheduler(mockSubScheduler_, 1);

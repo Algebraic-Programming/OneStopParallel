@@ -185,7 +185,7 @@ struct TestFixture {
         dag_.AddEdge(2, 3);
 
         // An architecture with 10 processors of one type
-        arch_.setNumberOfProcessors(10);
+        arch_.SetNumberOfProcessors(10);
     }
 };
 
@@ -245,7 +245,7 @@ BOOST_AUTO_TEST_CASE(MultipleSectionsTest) {
 BOOST_AUTO_TEST_CASE(StarvationReturnsErrorTest) {
     // Use an architecture with only 1 processor
     osp::BspArchitecture<GraphT> scarceArch;
-    scarceArch.setNumberOfProcessors(1);
+    scarceArch.SetNumberOfProcessors(1);
 
     // Setup the mock divider to return one section with two components
     mockDivider_.sectionsToReturn_ = {
@@ -283,7 +283,7 @@ BOOST_AUTO_TEST_SUITE_END()
 
 // BOOST_AUTO_TEST_CASE(AbundanceSchedulingTest) {
 
-//     arch.setNumberOfProcessors(6);
+//     arch.SetNumberOfProcessors(6);
 //     mock_divider.sections_to_return = {{{0, 1}, {2, 3}, {4, 5}}};
 
 //     osp::IsomorphicWavefrontComponentScheduler<graph_t, graph_t> scheduler(mock_divider, mock_sub_scheduler);
@@ -313,7 +313,7 @@ BOOST_AUTO_TEST_SUITE_END()
 
 // BOOST_AUTO_TEST_CASE(IndivisibleScarcitySchedulingTest) {
 //     // 2 isomorphic components, 1 unique. 3 processors available.
-//     arch.setNumberOfProcessors(3);
+//     arch.SetNumberOfProcessors(3);
 //     mock_divider.sections_to_return = {{{0, 1}, {2, 3}, {4, 5}}};
 
 //     osp::IsomorphicWavefrontComponentScheduler<graph_t, graph_t> scheduler(mock_divider, mock_sub_scheduler);
@@ -338,7 +338,7 @@ BOOST_AUTO_TEST_SUITE_END()
 // BOOST_AUTO_TEST_CASE(StarvationReturnsErrorTest) {
 //     // IsomorphismGroups will find 2 groups: {{0,1}, {2,3}} and {{4,5}}.
 //     // With only 1 processor, this is a starvation scenario.
-//     arch.setNumberOfProcessors(1);
+//     arch.SetNumberOfProcessors(1);
 //     mock_divider.sections_to_return = {{{0, 1}, {2, 3}, {4, 5}}};
 
 //     osp::IsomorphicWavefrontComponentScheduler<graph_t, graph_t> scheduler(mock_divider, mock_sub_scheduler);

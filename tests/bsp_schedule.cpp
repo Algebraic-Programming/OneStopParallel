@@ -50,12 +50,12 @@ limitations under the License.
 using namespace osp;
 
 BOOST_AUTO_TEST_CASE(TestInstanceBicgstab) {
-    using Graph = computational_dag_edge_idx_vector_impl_def_int_t;
+    using Graph = ComputationalDagEdgeIdxVectorImplDefIntT;
 
     BspInstance<Graph> instance;
-    instance.setNumberOfProcessors(4);
-    instance.setCommunicationCosts(3);
-    instance.setSynchronisationCosts(5);
+    instance.SetNumberOfProcessors(4);
+    instance.SetCommunicationCosts(3);
+    instance.SetSynchronisationCosts(5);
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -124,13 +124,13 @@ BOOST_AUTO_TEST_CASE(TestInstanceBicgstab) {
 }
 
 BOOST_AUTO_TEST_CASE(TestScheduleWriter) {
-    using GraphT1 = computational_dag_edge_idx_vector_impl_def_int_t;
+    using GraphT1 = ComputationalDagEdgeIdxVectorImplDefIntT;
     using GraphT2 = computational_dag_vector_impl_def_int_t;
 
     BspInstance<GraphT1> instance;
-    instance.setNumberOfProcessors(4);
-    instance.setCommunicationCosts(3);
-    instance.setSynchronisationCosts(5);
+    instance.SetNumberOfProcessors(4);
+    instance.SetCommunicationCosts(3);
+    instance.SetSynchronisationCosts(5);
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -205,12 +205,12 @@ BOOST_AUTO_TEST_CASE(TestScheduleWriter) {
 }
 
 BOOST_AUTO_TEST_CASE(TestBspScheduleCs) {
-    using Graph = computational_dag_edge_idx_vector_impl_def_int_t;
+    using Graph = ComputationalDagEdgeIdxVectorImplDefIntT;
 
     BspInstance<Graph> instance;
-    instance.setNumberOfProcessors(4);
-    instance.setCommunicationCosts(3);
-    instance.setSynchronisationCosts(5);
+    instance.SetNumberOfProcessors(4);
+    instance.SetCommunicationCosts(3);
+    instance.SetSynchronisationCosts(5);
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -308,12 +308,12 @@ BOOST_AUTO_TEST_CASE(TestBspScheduleCs) {
 }
 
 BOOST_AUTO_TEST_CASE(TestMaxBspSchedule) {
-    using Graph = computational_dag_edge_idx_vector_impl_def_int_t;
+    using Graph = ComputationalDagEdgeIdxVectorImplDefIntT;
 
     BspInstance<Graph> instance;
-    instance.setNumberOfProcessors(2);
-    instance.setCommunicationCosts(10);       // g=10
-    instance.setSynchronisationCosts(100);    // l=100 (not used in MaxBspSchedule cost model)
+    instance.SetNumberOfProcessors(2);
+    instance.SetCommunicationCosts(10);       // g=10
+    instance.SetSynchronisationCosts(100);    // l=100 (not used in MaxBspSchedule cost model)
 
     auto &dag = instance.GetComputationalDag();
     dag.AddVertex(10, 1, 0);    // Node 0
@@ -389,12 +389,12 @@ BOOST_AUTO_TEST_CASE(TestMaxBspSchedule) {
 }
 
 BOOST_AUTO_TEST_CASE(TestMaxBspScheduleCs) {
-    using Graph = computational_dag_edge_idx_vector_impl_def_int_t;
+    using Graph = ComputationalDagEdgeIdxVectorImplDefIntT;
 
     BspInstance<Graph> instance;
-    instance.setNumberOfProcessors(2);
-    instance.setCommunicationCosts(10);       // g=10
-    instance.setSynchronisationCosts(100);    // l=100
+    instance.SetNumberOfProcessors(2);
+    instance.SetCommunicationCosts(10);       // g=10
+    instance.SetSynchronisationCosts(100);    // l=100
 
     auto &dag = instance.GetComputationalDag();
     dag.AddVertex(10, 1, 0);    // Node 0

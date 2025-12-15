@@ -33,9 +33,9 @@ BOOST_AUTO_TEST_CASE(MaxbspScheduling) {
     using Graph = ComputationalDagVectorImplDefUnsignedT;
 
     BspInstance<Graph> instance;
-    instance.setNumberOfProcessors(4);
-    instance.setCommunicationCosts(3);
-    instance.setSynchronisationCosts(3);
+    instance.SetNumberOfProcessors(4);
+    instance.SetCommunicationCosts(3);
+    instance.SetSynchronisationCosts(3);
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(MaxbspScheduling) {
                                                                instance.GetComputationalDag());
 
     BOOST_CHECK(status);
-    instance.setSynchronisationCosts(7);
+    instance.SetSynchronisationCosts(7);
 
     BspSchedule<Graph> bspInitialLarge(instance);
     BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, greedy.ComputeSchedule(bspInitialLarge));

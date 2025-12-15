@@ -43,7 +43,7 @@ void CheckSccsEqual(const std::vector<std::vector<VertexType>> &result, const st
     BOOST_CHECK(resultSet == expectedSet);
 }
 
-using Graph = osp::computational_dag_edge_idx_vector_impl_def_int_t;
+using Graph = osp::ComputationalDagEdgeIdxVectorImplDefIntT;
 using VertexType = Graph::VertexIdx;
 
 BOOST_AUTO_TEST_SUITE(strongly_connected_components_test_suite)

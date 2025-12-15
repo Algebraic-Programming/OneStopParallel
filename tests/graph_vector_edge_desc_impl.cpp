@@ -304,7 +304,7 @@ BOOST_AUTO_TEST_CASE(TestUtil1) {
 }
 
 BOOST_AUTO_TEST_CASE(TestConstrDag) {
-    computational_dag_edge_idx_vector_impl_def_int_t graph;
+    ComputationalDagEdgeIdxVectorImplDefIntT graph;
 
     graph.AddVertex(1, 2, 3);
     graph.AddVertex(5, 6, 7);
@@ -315,7 +315,7 @@ BOOST_AUTO_TEST_CASE(TestConstrDag) {
     graph.AddEdge(0, 2);
     graph.AddEdge(0, 3);
 
-    computational_dag_edge_idx_vector_impl_def_int_t graph2(graph);
+    ComputationalDagEdgeIdxVectorImplDefIntT graph2(graph);
 
     BOOST_CHECK_EQUAL(graph2.NumEdges(), 3);
     BOOST_CHECK_EQUAL(graph2.NumVertices(), 4);
@@ -338,7 +338,7 @@ BOOST_AUTO_TEST_CASE(TestConstrDag) {
 
     bG1.AddEdge(0, 1, 9);
 
-    computational_dag_edge_idx_vector_impl_def_int_t graph3(bG1);
+    ComputationalDagEdgeIdxVectorImplDefIntT graph3(bG1);
 
     BOOST_CHECK_EQUAL(graph3.NumEdges(), 1);
     BOOST_CHECK_EQUAL(graph3.NumVertices(), 2);

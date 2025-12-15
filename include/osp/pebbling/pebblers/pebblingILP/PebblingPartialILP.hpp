@@ -237,7 +237,7 @@ ReturnStatus PebblingPartialILP<GraphT>::ComputePebbling(PebblingSchedule<GraphT
         }
 
         // set up sub-architecture
-        subArch[part].setNumberOfProcessors(static_cast<unsigned>(processorsToParts[part].size()));
+        subArch[part].SetNumberOfProcessors(static_cast<unsigned>(processorsToParts[part].size()));
         unsigned procIndex = 0;
         for (unsigned proc : processorsToParts[part]) {
             subArch[part].setProcessorType(procIndex, instance.GetArchitecture().ProcessorType(proc));
@@ -245,8 +245,8 @@ ReturnStatus PebblingPartialILP<GraphT>::ComputePebbling(PebblingSchedule<GraphT
             originalProcId[part][procIndex] = proc;
             ++procIndex;
         }
-        subArch[part].setCommunicationCosts(instance.GetArchitecture().CommunicationCosts());
-        subArch[part].setSynchronisationCosts(instance.GetArchitecture().SynchronisationCosts());
+        subArch[part].SetCommunicationCosts(instance.GetArchitecture().CommunicationCosts());
+        subArch[part].SetSynchronisationCosts(instance.GetArchitecture().SynchronisationCosts());
         // no NUMA parameters for now
 
         // skip if isomorphic to previous part

@@ -279,7 +279,7 @@ BOOST_AUTO_TEST_CASE(TestConstrDag) {
     BOOST_CHECK_EQUAL(graph2.VertexWorkWeight(3), 13);
     BOOST_CHECK_EQUAL(graph2.VertexCommWeight(3), 14);
 
-    computational_dag_edge_idx_vector_impl_def_int_t graphOther;
+    ComputationalDagEdgeIdxVectorImplDefIntT graphOther;
 
     graphOther.AddVertex(1, 2, 3, 4);
     graphOther.AddVertex(5, 6, 7, 8);

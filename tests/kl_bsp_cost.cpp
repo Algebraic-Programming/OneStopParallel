@@ -29,7 +29,7 @@ limitations under the License.
 #include "test_graphs.hpp"
 
 using namespace osp;
-using Graph = computational_dag_edge_idx_vector_impl_def_int_t;
+using Graph = ComputationalDagEdgeIdxVectorImplDefIntT;
 using KlActiveScheduleT = kl_active_schedule<Graph, double, no_local_search_memory_constraint>;
 
 BOOST_AUTO_TEST_CASE(TestArrangeSuperstepCommData) {
@@ -41,9 +41,9 @@ BOOST_AUTO_TEST_CASE(TestArrangeSuperstepCommData) {
     dag.AddVertex(1, 1, 1);
 
     BspArchitecture<Graph> arch;
-    arch.setNumberOfProcessors(4);
-    arch.setCommunicationCosts(1);
-    arch.setSynchronisationCosts(1);
+    arch.SetNumberOfProcessors(4);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(1);
 
     BspInstance<Graph> instance(dag, arch);
     BspSchedule<Graph> schedule(instance);
@@ -190,9 +190,9 @@ BOOST_AUTO_TEST_CASE(TestComputeCommDatastructures) {
     dag.AddEdge(4, 5, 1);
 
     BspArchitecture<Graph> arch;
-    arch.setNumberOfProcessors(3);
-    arch.setCommunicationCosts(1);
-    arch.setSynchronisationCosts(1);
+    arch.SetNumberOfProcessors(3);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(1);
 
     BspInstance<Graph> instance(dag, arch);
     BspSchedule<Graph> schedule(instance);
@@ -341,9 +341,9 @@ BOOST_AUTO_TEST_CASE(TestUpdateDatastructureAfterMove) {
     dag.AddEdge(4, 5, 1);
 
     BspArchitecture<Graph> arch;
-    arch.setNumberOfProcessors(3);
-    arch.setCommunicationCosts(1);
-    arch.setSynchronisationCosts(1);
+    arch.SetNumberOfProcessors(3);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(1);
 
     BspInstance<Graph> instance(dag, arch);
     BspSchedule<Graph> schedule(instance);
@@ -424,9 +424,9 @@ BOOST_AUTO_TEST_CASE(TestMultipleSequentialMoves) {
     dag.AddEdge(2, 3, 1);
 
     BspArchitecture<Graph> arch;
-    arch.setNumberOfProcessors(4);
-    arch.setCommunicationCosts(1);
-    arch.setSynchronisationCosts(1);
+    arch.SetNumberOfProcessors(4);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(1);
 
     BspInstance<Graph> instance(dag, arch);
     BspSchedule<Graph> schedule(instance);
@@ -501,9 +501,9 @@ BOOST_AUTO_TEST_CASE(TestNodeWithMultipleChildren) {
     dag.AddEdge(0, 3, 1);
 
     BspArchitecture<Graph> arch;
-    arch.setNumberOfProcessors(4);
-    arch.setCommunicationCosts(1);
-    arch.setSynchronisationCosts(1);
+    arch.SetNumberOfProcessors(4);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(1);
 
     BspInstance<Graph> instance(dag, arch);
     BspSchedule<Graph> schedule(instance);
@@ -578,9 +578,9 @@ BOOST_AUTO_TEST_CASE(TestCrossStepMoves) {
     dag.AddEdge(1, 2, 1);
 
     BspArchitecture<Graph> arch;
-    arch.setNumberOfProcessors(2);
-    arch.setCommunicationCosts(1);
-    arch.setSynchronisationCosts(1);
+    arch.SetNumberOfProcessors(2);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(1);
 
     BspInstance<Graph> instance(dag, arch);
     BspSchedule<Graph> schedule(instance);
@@ -649,9 +649,9 @@ BOOST_AUTO_TEST_CASE(TestComplexScenarioUserProvided) {
     dag.AddEdge(v4, v8, 9);
 
     BspArchitecture<Graph> arch;
-    arch.setNumberOfProcessors(2);    // P0, P1
-    arch.setCommunicationCosts(1);
-    arch.setSynchronisationCosts(1);
+    arch.SetNumberOfProcessors(2);    // P0, P1
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(1);
 
     BspInstance<Graph> instance(dag, arch);
     BspSchedule<Graph> schedule(instance);
@@ -757,9 +757,9 @@ BOOST_AUTO_TEST_CASE(TestGridGraphComplexMoves) {
     Graph dag = osp::construct_grid_dag<Graph>(5, 5);
 
     BspArchitecture<Graph> arch;
-    arch.setNumberOfProcessors(4);    // P0..P3
-    arch.setCommunicationCosts(1);
-    arch.setSynchronisationCosts(1);
+    arch.SetNumberOfProcessors(4);    // P0..P3
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(1);
 
     BspInstance<Graph> instance(dag, arch);
     BspSchedule<Graph> schedule(instance);
@@ -850,9 +850,9 @@ BOOST_AUTO_TEST_CASE(TestButterflyGraphMoves) {
     Graph dag = osp::construct_butterfly_dag<Graph>(2);
 
     BspArchitecture<Graph> arch;
-    arch.setNumberOfProcessors(2);
-    arch.setCommunicationCosts(1);
-    arch.setSynchronisationCosts(1);
+    arch.SetNumberOfProcessors(2);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(1);
 
     BspInstance<Graph> instance(dag, arch);
     BspSchedule<Graph> schedule(instance);
@@ -977,9 +977,9 @@ BOOST_AUTO_TEST_CASE(TestLadderGraphMoves) {
     Graph dag = osp::construct_ladder_dag<Graph>(5);
 
     BspArchitecture<Graph> arch;
-    arch.setNumberOfProcessors(2);
-    arch.setCommunicationCosts(1);
-    arch.setSynchronisationCosts(1);
+    arch.SetNumberOfProcessors(2);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(1);
 
     BspInstance<Graph> instance(dag, arch);
     BspSchedule<Graph> schedule(instance);
@@ -1098,9 +1098,9 @@ BOOST_AUTO_TEST_CASE(TestLazyAndBufferedModes) {
 
     std::cout << "Setup Arch" << std::endl;
     osp::BspArchitecture<Graph> arch;
-    arch.setNumberOfProcessors(2);
-    arch.setCommunicationCosts(1);
-    arch.setSynchronisationCosts(0);
+    arch.SetNumberOfProcessors(2);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(0);
 
     std::cout << "Setup BspInstance" << std::endl;
     osp::BspInstance<Graph> bspInstance(instance, arch);

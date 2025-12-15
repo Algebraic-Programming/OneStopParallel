@@ -82,8 +82,8 @@ int main(int argc, char *argv[]) {
     // Set up architecture
     instance.GetArchitecture().SetProcessorsConsequTypes({24, 48}, {100, 100});
     instance.setDiagonalCompatibilityMatrix(2);
-    instance.setSynchronisationCosts(2000);
-    instance.setCommunicationCosts(1);
+    instance.SetSynchronisationCosts(2000);
+    instance.SetCommunicationCosts(1);
 
     // Set up the scheduler
     GrowLocalAutoCores<GraphT> growlocal;

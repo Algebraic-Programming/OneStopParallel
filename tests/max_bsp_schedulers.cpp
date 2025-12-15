@@ -104,7 +104,7 @@ void RunTestMaxBsp(MaxBspScheduler<GraphT> *testScheduler) {
                       << "Graph: " << nameGraph << std::endl
                       << "Architecture: " << nameMachine << std::endl;
 
-            computational_dag_edge_idx_vector_impl_def_int_t graph;
+            ComputationalDagEdgeIdxVectorImplDefIntT graph;
             BspArchitecture<GraphT> arch;
 
             bool statusGraph = file_reader::ReadGraph((cwd / filenameGraph).string(), graph);
@@ -139,6 +139,6 @@ BOOST_AUTO_TEST_CASE(GreedyVarianceSspSchedulerTestEdgeIdxImpl) {
 
 // Tests ComputeSchedule(MaxBspSchedule&) → staleness = 2
 BOOST_AUTO_TEST_CASE(GreedyVarianceSspSchedulerMaxBspScheduleLargeTest) {
-    GreedyVarianceSspScheduler<computational_dag_edge_idx_vector_impl_def_int_t> test;
+    GreedyVarianceSspScheduler<ComputationalDagEdgeIdxVectorImplDefIntT> test;
     RunTestMaxBsp(&test);
 }

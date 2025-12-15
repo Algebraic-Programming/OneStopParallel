@@ -46,7 +46,7 @@ void AddMemWeights(GraphT &dag) {
 BOOST_AUTO_TEST_CASE(KlLocalMemconst) {
     std::vector<std::string> filenamesGraph = TestGraphs();
 
-    using Graph = computational_dag_edge_idx_vector_impl_def_int_t;
+    using Graph = ComputationalDagEdgeIdxVectorImplDefIntT;
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();

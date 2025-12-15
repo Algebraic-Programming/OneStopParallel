@@ -30,12 +30,12 @@ limitations under the License.
 using namespace osp;
 
 BOOST_AUTO_TEST_CASE(TestCostModelsSimpleDag) {
-    using Graph = computational_dag_edge_idx_vector_impl_def_int_t;
+    using Graph = ComputationalDagEdgeIdxVectorImplDefIntT;
 
     BspInstance<Graph> instance;
-    instance.setNumberOfProcessors(2);
-    instance.setCommunicationCosts(10);
-    instance.setSynchronisationCosts(5);
+    instance.SetNumberOfProcessors(2);
+    instance.SetCommunicationCosts(10);
+    instance.SetSynchronisationCosts(5);
 
     auto &dag = instance.GetComputationalDag();
     dag.AddVertex(10, 1, 0);

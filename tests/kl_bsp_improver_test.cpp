@@ -30,7 +30,7 @@ void AddMemWeights(GraphT &dag) {
 }
 
 BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
-    using Graph = computational_dag_edge_idx_vector_impl_def_int_t;
+    using Graph = ComputationalDagEdgeIdxVectorImplDefIntT;
     using VertexType = Graph::VertexIdx;
 
     Graph dag;
@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
 
 // BOOST_AUTO_TEST_CASE(kl_lambda_total_comm_large_test_graphs) {
 //     std::vector<std::string> filenames_graph = large_spaa_graphs();
-//     using graph = computational_dag_edge_idx_vector_impl_def_int_t;
+//     using graph = ComputationalDagEdgeIdxVectorImplDefIntT;
 //     // Getting root git directory
 //     std::filesystem::path cwd = std::filesystem::current_path();
 //     std::cout << cwd << std::endl;
@@ -138,14 +138,14 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
 //     }
 
 //     for (auto &filename_graph : filenames_graph) {
-//         GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_int_t> test_scheduler;
+//         GreedyBspScheduler<ComputationalDagEdgeIdxVectorImplDefIntT> test_scheduler;
 //         BspInstance<graph> instance;
 //         bool status_graph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(),
 //                                                                               instance.GetComputationalDag());
 
-//         instance.GetArchitecture().setSynchronisationCosts(500);
-//         instance.GetArchitecture().setCommunicationCosts(5);
-//         instance.GetArchitecture().setNumberOfProcessors(4);
+//         instance.GetArchitecture().SetSynchronisationCosts(500);
+//         instance.GetArchitecture().SetCommunicationCosts(5);
+//         instance.GetArchitecture().SetNumberOfProcessors(4);
 
 //         std::vector<std::vector<int>> send_cost = {{0, 1, 4, 4}, {1, 0, 4, 4}, {4, 4, 0, 1}, {4, 4, 1, 0}};
 

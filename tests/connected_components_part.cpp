@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(ConnectedComponentPartTest) {
     ConnectedComponentScheduler<computational_dag_vector_impl_def_int_t, boost_graph_int_t> scheduler(bspScheduler);
 
     BspArchitecture<computational_dag_vector_impl_def_int_t> arch = instance.GetArchitecture();
-    arch.setNumberOfProcessors(6);
+    arch.SetNumberOfProcessors(6);
 
     BspSchedule<computational_dag_vector_impl_def_int_t> schedule(instance);
     auto status = scheduler.ComputeSchedule(schedule);

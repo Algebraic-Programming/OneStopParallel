@@ -57,7 +57,7 @@ class ConnectedComponentScheduler : public Scheduler<GraphT> {
             const double subDagWorkWeightPercent = static_cast<double>(subDagWorkWeight) / static_cast<double>(totalWorkWeight);
             const unsigned subDagProcessors = static_cast<unsigned>(subDagWorkWeightPercent * subArchitecture.NumberOfProcessors());
 
-            subArchitecture.setNumberOfProcessors(subDagProcessors);
+            subArchitecture.SetNumberOfProcessors(subDagProcessors);
 
             BspSchedule<ConstrGraphT> subSchedule(subInstance);
             auto status = scheduler_->ComputeSchedule(subSchedule);

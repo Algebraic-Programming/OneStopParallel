@@ -34,9 +34,9 @@ BOOST_AUTO_TEST_CASE(HillClimbing) {
     using Graph = ComputationalDagVectorImplDefUnsignedT;
 
     BspInstance<Graph> instance;
-    instance.setNumberOfProcessors(4);
-    instance.setCommunicationCosts(3);
-    instance.setSynchronisationCosts(5);
+    instance.SetNumberOfProcessors(4);
+    instance.SetCommunicationCosts(3);
+    instance.SetSynchronisationCosts(5);
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -80,9 +80,9 @@ BOOST_AUTO_TEST_CASE(HillClimbingForCommSchedule) {
     using Graph = ComputationalDagVectorImplDefUnsignedT;
 
     BspInstance<Graph> instance;
-    instance.setNumberOfProcessors(2);
-    instance.setCommunicationCosts(3);
-    instance.setSynchronisationCosts(5);
+    instance.SetNumberOfProcessors(2);
+    instance.SetCommunicationCosts(3);
+    instance.SetSynchronisationCosts(5);
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();

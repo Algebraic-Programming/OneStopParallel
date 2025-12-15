@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_SUITE(isomorphic_subgraph_scheduler_test_suite)
 
 BOOST_AUTO_TEST_CASE(EmptyGraphTest) {
     BspInstance<GraphT> instance;
-    instance.GetArchitecture().setNumberOfProcessors(4);
+    instance.GetArchitecture().SetNumberOfProcessors(4);
 
     GreedyBspScheduler<ConstrGraphT> greedyScheduler;
     IsomorphicSubgraphScheduler<GraphT, ConstrGraphT> isoScheduler(greedyScheduler);

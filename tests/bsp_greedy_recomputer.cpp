@@ -32,9 +32,9 @@ BOOST_AUTO_TEST_CASE(TestRecomputer) {
     using Graph = ComputationalDagVectorImplDefUnsignedT;
 
     BspInstance<Graph> instance1;
-    instance1.setNumberOfProcessors(2);
-    instance1.setCommunicationCosts(1);
-    instance1.setSynchronisationCosts(1);
+    instance1.SetNumberOfProcessors(2);
+    instance1.SetCommunicationCosts(1);
+    instance1.SetSynchronisationCosts(1);
 
     instance1.GetComputationalDag().AddVertex(10, 1, 0);
     instance1.GetComputationalDag().AddVertex(10, 1, 0);
@@ -64,9 +64,9 @@ BOOST_AUTO_TEST_CASE(TestRecomputer) {
     // non-toy instance
 
     BspInstance<Graph> instance2;
-    instance2.setNumberOfProcessors(4);
-    instance2.setCommunicationCosts(5);
-    instance2.setSynchronisationCosts(20);
+    instance2.SetNumberOfProcessors(4);
+    instance2.SetCommunicationCosts(5);
+    instance2.SetSynchronisationCosts(20);
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();

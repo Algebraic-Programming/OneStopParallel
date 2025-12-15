@@ -28,7 +28,7 @@ limitations under the License.
 #include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 
 using namespace osp;
-using Graph = computational_dag_edge_idx_vector_impl_def_int_t;
+using Graph = ComputationalDagEdgeIdxVectorImplDefIntT;
 using KlActiveScheduleT = kl_active_schedule<Graph, double, no_local_search_memory_constraint>;
 
 // Test fixture for setting up a schedule
@@ -47,9 +47,9 @@ struct ScheduleFixture {
             dag.AddEdge(i, i + 1, 1);
         }
 
-        instance_.GetArchitecture().setNumberOfProcessors(4);
-        instance_.GetArchitecture().setCommunicationCosts(1);
-        instance_.GetArchitecture().setSynchronisationCosts(10);
+        instance_.GetArchitecture().SetNumberOfProcessors(4);
+        instance_.GetArchitecture().SetCommunicationCosts(1);
+        instance_.GetArchitecture().SetSynchronisationCosts(10);
 
         std::vector<unsigned> procs(20);
         std::vector<unsigned> steps(20);
