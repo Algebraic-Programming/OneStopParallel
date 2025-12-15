@@ -118,7 +118,7 @@ int main(int argc, char *argv[]) {
     CheckPartitionTypeHomogeneity(instance.GetComputationalDag(), partition);
 
     GraphT coraseGraph;
-    coarser_util::construct_coarse_dag(instance.GetComputationalDag(), coraseGraph, partition);
+    coarser_util::ConstructCoarseDag(instance.GetComputationalDag(), coraseGraph, partition);
     bool acyc = is_acyclic(coraseGraph);
     std::cout << "Partition is " << (acyc ? "acyclic." : "not acyclic.");
 

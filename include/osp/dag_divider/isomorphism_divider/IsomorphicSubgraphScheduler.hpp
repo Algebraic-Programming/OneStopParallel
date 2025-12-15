@@ -168,7 +168,7 @@ class IsomorphicSubgraphScheduler {
             writer.write_graph(timestamp + "iso_groups_contracted.dot", input.instance.GetComputationalDag());
             writer.write_colored_graph(timestamp + "graph_partition.dot", instance.GetComputationalDag(), partition);
             ConstrGraphT coraseGraph;
-            coarser_util::construct_coarse_dag(instance.GetComputationalDag(), corase_graph, partition);
+            coarser_util::ConstructCoarseDag(instance.GetComputationalDag(), corase_graph, partition);
             writer.write_graph(timestamp + "block_graph.dot", coraseGraph);
         }
         return partition;
@@ -357,7 +357,7 @@ class IsomorphicSubgraphScheduler {
 
             ++coarseNodeIdx;
         }
-        coarser_util::construct_coarse_dag(
+        coarser_util::ConstructCoarseDag(
             original_instance.GetComputationalDag(), result.instance.GetComputationalDag(), contraction_map);
 
         if constexpr (verbose_) {

@@ -269,14 +269,14 @@ class CompactSparseGraph {
     template <typename EdgeListType>
     CompactSparseGraph(VertexIdx numVertices, const EdgeListType &edges)
         : numberOfVertices_(numVertices), numberOfEdges_(static_cast<EdgeT>(edges.size())) {
-        static_assert(is_container_of<edge_list_type, std::pair<vertex_idx, vertex_idx>>::value
-                      || is_edge_list_type<edge_list_type, vertex_idx, edge_t>::value);
+        static_assert(IsContainerOf<EdgeListType, std::pair<VertexIdx, VertexIdx>>::value
+                      || IsEdgeListType<EdgeListType, VertexIdx, EdgeT>::value);
 
         assert((0 <= numVertices) && "Number of vertices must be non-negative.");
         assert((edges.size() < static_cast<size_t>(std::numeric_limits<EdgeT>::max()))
                && "Number of edges must be strictly smaller than the maximally representable number.");
 
-        if constexpr (is_container_of<edge_list_type, std::pair<vertex_idx, vertex_idx>>::value) {
+        if constexpr (IsContainerOf<EdgeListType, std::pair<VertexIdx, VertexIdx>>::value) {
             assert(std::all_of(edges.begin(),
                                edges.end(),
                                [numVertices](const auto &edge) {
@@ -286,7 +286,7 @@ class CompactSparseGraph {
                    && "Source and target of edges must be non-negative and less than the number of vertices.");
         }
 
-        if constexpr (is_edge_list_type_v<edge_list_type, vertex_idx, edge_t>) {
+        if constexpr (IsEdgeListTypeV<EdgeListType, VertexIdx, EdgeT>) {
             assert(std::all_of(edges.begin(),
                                edges.end(),
                                [numVertices](const auto &edge) {
@@ -297,11 +297,11 @@ class CompactSparseGraph {
         }
 
         if constexpr (keepVertexOrder) {
-            if constexpr (is_container_of<edge_list_type, std::pair<vertex_idx, vertex_idx>>::value) {
+            if constexpr (IsContainerOf<EdgeListType, std::pair<VertexIdx, VertexIdx>>::value) {
                 assert(std::all_of(edges.begin(), edges.end(), [](const auto &edge) { return edge.first < edge.second; })
                        && "Vertex order must be a topological order.");
             }
-            if constexpr (is_edge_list_type_v<edge_list_type, vertex_idx, edge_t>) {
+            if constexpr (IsEdgeListTypeV<EdgeListType, VertexIdx, EdgeT>) {
                 assert(std::all_of(edges.begin(), edges.end(), [](const auto &edge) { return edge.source < edge.target; })
                        && "Vertex order must be a topological order.");
             }
@@ -329,13 +329,13 @@ class CompactSparseGraph {
         std::vector<std::vector<VertexIdx>> childrenTmp(NumVertices());
         std::vector<EdgeT> numParentsTmp(NumVertices(), 0);
 
-        if constexpr (is_container_of<edge_list_type, std::pair<vertex_idx, vertex_idx>>::value) {
+        if constexpr (IsContainerOf<EdgeListType, std::pair<VertexIdx, VertexIdx>>::value) {
             for (const auto &edge : edges) {
                 childrenTmp[edge.first].push_back(edge.second);
                 numParentsTmp[edge.second]++;
             }
         }
-        if constexpr (is_edge_list_type_v<edge_list_type, vertex_idx, edge_t>) {
+        if constexpr (IsEdgeListTypeV<EdgeListType, VertexIdx, EdgeT>) {
             for (const auto &edge : edges) {
                 childrenTmp[edge.source].push_back(edge.target);
                 numParentsTmp[edge.target]++;
@@ -375,12 +375,12 @@ class CompactSparseGraph {
         } else {
             std::vector<std::vector<VertexIdx>> parentsTmp(NumVertices());
 
-            if constexpr (is_container_of<edge_list_type, std::pair<vertex_idx, vertex_idx>>::value) {
+            if constexpr (IsContainerOf<EdgeListType, std::pair<VertexIdx, VertexIdx>>::value) {
                 for (const auto &edge : edges) {
                     parentsTmp[edge.second].push_back(edge.first);
                 }
             }
-            if constexpr (is_edge_list_type_v<edge_list_type, vertex_idx, edge_t>) {
+            if constexpr (IsEdgeListTypeV<EdgeListType, VertexIdx, EdgeT>) {
                 for (const auto &edge : edges) {
                     parentsTmp[edge.target].push_back(edge.source);
                 }
@@ -772,35 +772,35 @@ class CompactSparseGraph {
     }
 
     template <typename GraphType>
-    CompactSparseGraph(const GraphType &graph) : CompactSparseGraph(graph.NumVertices(), edge_view(graph)) {
-        static_assert(IsDirectedGraphV<Graph_type>);
+    CompactSparseGraph(const GraphType &graph) : CompactSparseGraph(graph.NumVertices(), edgeView(graph)) {
+        static_assert(IsDirectedGraphV<GraphType>);
 
-        if constexpr (IsComputationalDagV<Graph_type> && use_work_weights) {
+        if constexpr (IsComputationalDagV<GraphType> && useWorkWeights) {
             for (const auto &vert : graph.Vertices()) {
                 SetVertexWorkWeight(vert, graph.VertexWorkWeight(vert));
             }
         }
 
-        if constexpr (IsComputationalDagV<Graph_type> && use_comm_weights) {
+        if constexpr (IsComputationalDagV<GraphType> && useCommWeights) {
             for (const auto &vert : graph.Vertices()) {
                 SetVertexCommWeight(vert, graph.VertexCommWeight(vert));
             }
         }
 
-        if constexpr (IsComputationalDagV<Graph_type> && use_mem_weights) {
+        if constexpr (IsComputationalDagV<GraphType> && useMemWeights) {
             for (const auto &vert : graph.Vertices()) {
                 SetVertexMemWeight(vert, graph.VertexMemWeight(vert));
             }
         }
 
-        if constexpr (IsComputationalDagTypedVerticesV<Graph_type> && use_vert_types) {
+        if constexpr (IsComputationalDagTypedVerticesV<GraphType> && useVertTypes) {
             for (const auto &vert : graph.Vertices()) {
                 SetVertexType(vert, graph.VertexType(vert));
             }
         }
     }
 
-    inline auto Vertices() const { return integral_range<VertexIdx>(numberOfVertices_); };
+    inline auto Vertices() const { return IntegralRange<VertexIdx>(numberOfVertices_); };
 
     inline VertT NumVertices() const { return numberOfVertices_; };
 
@@ -949,17 +949,17 @@ template <bool keepVertexOrder,
           typename CommWeightType,
           typename MemWeightType,
           typename VertexTypeTemplateType>
-struct IsCompactSparseGraph<Compact_Sparse_Graph<keep_vertex_order,
-                                                 use_work_weights,
-                                                 use_comm_weights,
-                                                 use_mem_weights,
-                                                 use_vert_types,
-                                                 vert_t,
-                                                 edge_t,
-                                                 work_weight_type,
-                                                 comm_weight_type,
-                                                 mem_weight_type,
-                                                 vertex_type_template_type>,
+struct IsCompactSparseGraph<CompactSparseGraph<keepVertexOrder,
+                                                 useWorkWeights,
+                                                 useCommWeights,
+                                                 useMemWeights,
+                                                 useVertTypes,
+                                                 VertT,
+                                                 EdgeT,
+                                                 WorkWeightType,
+                                                 CommWeightType,
+                                                 MemWeightType,
+                                                 VertexTypeTemplateType>,
                             void> : std::true_type {};
 
 template <bool useWorkWeights,
@@ -972,57 +972,57 @@ template <bool useWorkWeights,
           typename CommWeightType,
           typename MemWeightType,
           typename VertexTypeTemplateType>
-struct IsCompactSparseGraphReorder<Compact_Sparse_Graph<false,
-                                                        use_work_weights,
-                                                        use_comm_weights,
-                                                        use_mem_weights,
-                                                        use_vert_types,
-                                                        vert_t,
-                                                        edge_t,
-                                                        work_weight_type,
-                                                        comm_weight_type,
-                                                        mem_weight_type,
-                                                        vertex_type_template_type>,
+struct IsCompactSparseGraphReorder<CompactSparseGraph<false,
+                                                        useWorkWeights,
+                                                        useCommWeights,
+                                                        useMemWeights,
+                                                        useVertTypes,
+                                                        VertT,
+                                                        EdgeT,
+                                                        WorkWeightType,
+                                                        CommWeightType,
+                                                        MemWeightType,
+                                                        VertexTypeTemplateType>,
                                    void> : std::true_type {};
 
-static_assert(is_Compact_Sparse_Graph_v<Compact_Sparse_Graph<true>>);
-static_assert(is_Compact_Sparse_Graph_v<Compact_Sparse_Graph<false>>);
-static_assert(!is_Compact_Sparse_Graph_reorder_v<Compact_Sparse_Graph<true>>);
-static_assert(is_Compact_Sparse_Graph_reorder_v<Compact_Sparse_Graph<false>>);
+static_assert(IsCompactSparseGraphV<CompactSparseGraph<true>>);
+static_assert(IsCompactSparseGraphV<CompactSparseGraph<false>>);
+static_assert(!IsCompactSparseGraphReorderV<CompactSparseGraph<true>>);
+static_assert(IsCompactSparseGraphReorderV<CompactSparseGraph<false>>);
 
-static_assert(HasVertexWeightsV<Compact_Sparse_Graph<true, true>>,
-              "Compact_Sparse_Graph must satisfy the has_vertex_weights concept");
+static_assert(HasVertexWeightsV<CompactSparseGraph<true, true>>,
+              "CompactSparseGraph must satisfy the has_vertex_weights concept");
 
-static_assert(HasVertexWeightsV<Compact_Sparse_Graph<false, true>>,
-              "Compact_Sparse_Graph must satisfy the has_vertex_weights concept");
+static_assert(HasVertexWeightsV<CompactSparseGraph<false, true>>,
+              "CompactSparseGraph must satisfy the has_vertex_weights concept");
 
-static_assert(IsDirectedGraphV<Compact_Sparse_Graph<false, false, false, false, false>>,
-              "Compact_Sparse_Graph must satisfy the directed_graph concept");
+static_assert(IsDirectedGraphV<CompactSparseGraph<false, false, false, false, false>>,
+              "CompactSparseGraph must satisfy the directed_graph concept");
 
-static_assert(IsDirectedGraphV<Compact_Sparse_Graph<false, true, true, true, true>>,
-              "Compact_Sparse_Graph must satisfy the directed_graph concept");
+static_assert(IsDirectedGraphV<CompactSparseGraph<false, true, true, true, true>>,
+              "CompactSparseGraph must satisfy the directed_graph concept");
 
-static_assert(IsDirectedGraphV<Compact_Sparse_Graph<true, false, false, false, false>>,
-              "Compact_Sparse_Graph must satisfy the directed_graph concept");
+static_assert(IsDirectedGraphV<CompactSparseGraph<true, false, false, false, false>>,
+              "CompactSparseGraph must satisfy the directed_graph concept");
 
-static_assert(IsDirectedGraphV<Compact_Sparse_Graph<true, true, true, true, true>>,
-              "Compact_Sparse_Graph must satisfy the directed_graph concept");
+static_assert(IsDirectedGraphV<CompactSparseGraph<true, true, true, true, true>>,
+              "CompactSparseGraph must satisfy the directed_graph concept");
 
-static_assert(IsComputationalDagV<Compact_Sparse_Graph<false, true, true, true, false>>,
-              "Compact_Sparse_Graph must satisfy the is_computation_dag concept");
+static_assert(IsComputationalDagV<CompactSparseGraph<false, true, true, true, false>>,
+              "CompactSparseGraph must satisfy the is_computation_dag concept");
 
-static_assert(IsComputationalDagV<Compact_Sparse_Graph<true, true, true, true, false>>,
-              "Compact_Sparse_Graph must satisfy the is_computation_dag concept");
+static_assert(IsComputationalDagV<CompactSparseGraph<true, true, true, true, false>>,
+              "CompactSparseGraph must satisfy the is_computation_dag concept");
 
-static_assert(IsComputationalDagTypedVerticesV<Compact_Sparse_Graph<false, true, true, true, true>>,
-              "Compact_Sparse_Graph must satisfy the is_computation_dag with types concept");
+static_assert(IsComputationalDagTypedVerticesV<CompactSparseGraph<false, true, true, true, true>>,
+              "CompactSparseGraph must satisfy the is_computation_dag with types concept");
 
-static_assert(IsComputationalDagTypedVerticesV<Compact_Sparse_Graph<true, true, true, true, true>>,
-              "Compact_Sparse_Graph must satisfy the is_computation_dag with types concept");
+static_assert(IsComputationalDagTypedVerticesV<CompactSparseGraph<true, true, true, true, true>>,
+              "CompactSparseGraph must satisfy the is_computation_dag with types concept");
 
-static_assert(IsDirectConstructableCdagV<Compact_Sparse_Graph<true, true>>, "Compact_Sparse_Graph must be directly constructable");
+static_assert(IsDirectConstructableCdagV<CompactSparseGraph<true, true>>, "CompactSparseGraph must be directly constructable");
 
-static_assert(IsDirectConstructableCdagV<Compact_Sparse_Graph<false, true>>, "Compact_Sparse_Graph must be directly constructable");
+static_assert(IsDirectConstructableCdagV<CompactSparseGraph<false, true>>, "CompactSparseGraph must be directly constructable");
 
 using CSG = CompactSparseGraph<false, true, true, true, true, std::size_t, std::size_t, unsigned, unsigned, unsigned, unsigned>;
 
@@ -1032,26 +1032,26 @@ static_assert(IsDirectedGraphEdgeDescV<CSG>, "CSG must satisfy the directed_grap
 
 // template<typename GraphTIn, typename v_work_acc_method, typename v_comm_acc_method, typename v_mem_acc_method, typename
 // e_comm_acc_method,
-//          bool use_work_weights, bool use_comm_weights, bool use_mem_weights, bool use_vert_types, typename vert_t, typename
-//          edge_t, typename work_weight_type, typename comm_weight_type, typename mem_weight_type, typename
-//          vertex_type_template_type>
-// bool coarser_util::construct_coarse_dag(
+//          bool useWorkWeights, bool useCommWeights, bool useMemWeights, bool useVertTypes, typename VertT, typename
+//          EdgeT, typename WorkWeightType, typename CommWeightType, typename MemWeightType, typename
+//          VertexTypeTemplateType>
+// bool coarser_util::ConstructCoarseDag(
 //             const GraphTIn &dag_in,
-//             Compact_Sparse_Graph<false, use_work_weights, use_comm_weights, use_mem_weights, use_vert_types, vert_t, edge_t,
-//             work_weight_type, comm_weight_type, mem_weight_type, vertex_type_template_type> &coarsened_dag,
-//             std::vector<VertexIdxT<Compact_Sparse_Graph<false, use_work_weights, use_comm_weights, use_mem_weights,
-//             use_vert_types, vert_t, edge_t, work_weight_type, comm_weight_type, mem_weight_type, vertex_type_template_type>>>
+//             CompactSparseGraph<false, useWorkWeights, useCommWeights, useMemWeights, useVertTypes, VertT, EdgeT,
+//             WorkWeightType, CommWeightType, MemWeightType, VertexTypeTemplateType> &coarsened_dag,
+//             std::vector<VertexIdxT<CompactSparseGraph<false, useWorkWeights, useCommWeights, useMemWeights,
+//             useVertTypes, VertT, EdgeT, WorkWeightType, CommWeightType, MemWeightType, VertexTypeTemplateType>>>
 //             &vertex_contraction_map) {
 
-//     using Graph_out_type = Compact_Sparse_Graph<false, use_work_weights, use_comm_weights, use_mem_weights, use_vert_types,
-//     vert_t, edge_t, work_weight_type, comm_weight_type, mem_weight_type, vertex_type_template_type>;
+//     using Graph_out_type = CompactSparseGraph<false, useWorkWeights, useCommWeights, useMemWeights, useVertTypes,
+//     VertT, EdgeT, WorkWeightType, CommWeightType, MemWeightType, VertexTypeTemplateType>;
 
 //     static_assert(IsDirectedGraphV<GraphTIn> && IsDirectedGraphV<Graph_out_type>, "Graph types need to satisfy the
 //     is_directed_graph concept."); static_assert(IsComputationalDagV<GraphTIn>, "GraphTIn must be a computational DAG");
 //     static_assert(IsConstructableCdagV<Graph_out_type> || IsDirectConstructableCdagV<Graph_out_type>, "Graph_out_type
 //     must be a (direct) constructable computational DAG");
 
-//     assert(check_valid_contraction_map<Graph_out_type>(vertex_contraction_map));
+//     assert(CheckValidContractionMap<Graph_out_type>(vertex_contraction_map));
 
 //     const VertexIdxT<Graph_out_type> num_vert_quotient =
 //         (*std::max_element(vertex_contraction_map.cbegin(), vertex_contraction_map.cend())) + 1;

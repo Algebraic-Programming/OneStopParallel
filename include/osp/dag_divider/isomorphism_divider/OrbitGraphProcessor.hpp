@@ -132,7 +132,7 @@ class OrbitGraphProcessor {
         tempContractionMap[v] = temp_contraction_map[u];
 
         ConstrGraphT tempCoarseGraph;
-        coarser_util::construct_coarse_dag(current_coarse_graph, temp_coarse_graph, temp_contraction_map);
+        coarser_util::ConstructCoarseDag(current_coarse_graph, temp_coarse_graph, temp_contraction_map);
 
         return {std::move(tempCoarseGraph), std::move(temp_contraction_map)};
     }
@@ -672,7 +672,7 @@ class OrbitGraphProcessor {
             std::cout << "--------------------------------\n";
         }
 
-        coarser_util::construct_coarse_dag(dag, coarse_graph_, contraction_map_);
+        coarser_util::ConstructCoarseDag(dag, coarse_graph_, contraction_map_);
 
         if (useAdaptiveSymmetryThreshold_) {
             perform_coarsening_adaptive_symmetry(dag, coarse_graph_, lock_threshold_per_type, symmetry_levels_to_test);

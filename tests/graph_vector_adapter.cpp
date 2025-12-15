@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(TestDagVectorAdapterEdge) {
     auto partition = isoScheduler.compute_partition(instance);
 
     GraphConstrT coraseGraph;
-    coarser_util::construct_coarse_dag(instance.GetComputationalDag(), coraseGraph, partition);
+    coarser_util::ConstructCoarseDag(instance.GetComputationalDag(), coraseGraph, partition);
     bool acyc = is_acyclic(coraseGraph);
     BOOST_CHECK(acyc);
 
@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE(TestDagVectorAdapter) {
     auto partition = isoScheduler.compute_partition(instance);
 
     GraphConstrT coraseGraph;
-    coarser_util::construct_coarse_dag(instance.GetComputationalDag(), coraseGraph, partition);
+    coarser_util::ConstructCoarseDag(instance.GetComputationalDag(), coraseGraph, partition);
     bool acyc = is_acyclic(coraseGraph);
     BOOST_CHECK(acyc);
 
