@@ -30,7 +30,7 @@ limitations under the License.
 using namespace osp;
 
 BOOST_AUTO_TEST_CASE(MaxbspScheduling) {
-    using Graph = ComputationalDagVectorImplDefT;
+    using Graph = ComputationalDagVectorImplDefUnsignedT;
 
     BspInstance<Graph> instance;
     instance.setNumberOfProcessors(4);

@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(TestMtxComputationalDagVectorImpl) {
         std::cout << cwd << std::endl;
     }
 
-    ComputationalDagVectorImplDefT graph;
+    ComputationalDagVectorImplDefUnsignedT graph;
 
     bool status
         = file_reader::readComputationalDagMartixMarketFormat((cwd / "data/mtx_tests/ErdosRenyi_8_19_A.mtx").string(), graph);
@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(TestBicgstab) {
         std::cout << cwd << std::endl;
     }
 
-    ComputationalDagVectorImplDefT graph;
+    ComputationalDagVectorImplDefUnsignedT graph;
 
     bool status
         = file_reader::readComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(), graph);
@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(TestArchSmpl) {
         cwd = cwd.parent_path();
     }
 
-    BspArchitecture<ComputationalDagVectorImplDefT> arch;
+    BspArchitecture<ComputationalDagVectorImplDefUnsignedT> arch;
 
     bool status = file_reader::ReadBspArchitecture((cwd / "data/machine_params/p3.arch").string(), arch);
 
@@ -253,7 +253,7 @@ BOOST_AUTO_TEST_CASE(TestKMeans) {
     std::vector<int> comm{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                           1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-    ComputationalDagVectorImplDefT graph;
+    ComputationalDagVectorImplDefUnsignedT graph;
 
     bool status = file_reader::readComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_k-means.hdag").string(), graph);
 
@@ -292,7 +292,7 @@ BOOST_AUTO_TEST_CASE(TestDotGraph) {
     std::vector<unsigned> mem{3, 5, 5, 3, 5, 5, 3, 5, 5, 5, 5};
     std::vector<unsigned> type{0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0};
 
-    ComputationalDagVectorImplDefT graph;
+    ComputationalDagVectorImplDefUnsignedT graph;
 
     bool status = file_reader::readComputationalDagDotFormat((cwd / "data/dot/smpl_dot_graph_1.dot").string(), graph);
 

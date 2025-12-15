@@ -32,7 +32,7 @@ limitations under the License.
 using namespace osp;
 
 BOOST_AUTO_TEST_CASE(TestFull) {
-    using graph = ComputationalDagVectorImplDefT;
+    using graph = ComputationalDagVectorImplDefUnsignedT;
 
     BspInstance<graph> instance;
     instance.setNumberOfProcessors(4);
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(TestFull) {
 };
 
 BOOST_AUTO_TEST_CASE(TestPartial) {
-    using graph = ComputationalDagVectorImplDefT;
+    using graph = ComputationalDagVectorImplDefUnsignedT;
 
     BspInstance<graph> instance;
     instance.setNumberOfProcessors(2);

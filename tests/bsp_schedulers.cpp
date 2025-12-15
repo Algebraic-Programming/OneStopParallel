@@ -143,7 +143,7 @@ void RunTest2(Scheduler<GraphT> *testScheduler) {
 }
 
 BOOST_AUTO_TEST_CASE(GreedyBspSchedulerTest) {
-    GreedyBspScheduler<ComputationalDagVectorImplDefT> test;
+    GreedyBspScheduler<ComputationalDagVectorImplDefUnsignedT> test;
     RunTest(&test);
 }
 
@@ -153,34 +153,34 @@ BOOST_AUTO_TEST_CASE(GreedyBspSchedulerTest2) {
 }
 
 BOOST_AUTO_TEST_CASE(SerialTest) {
-    Serial<ComputationalDagVectorImplDefT> test;
+    Serial<ComputationalDagVectorImplDefUnsignedT> test;
     RunTest(&test);
 }
 
 BOOST_AUTO_TEST_CASE(CilkTest1) {
-    CilkScheduler<ComputationalDagVectorImplDefT> test;
+    CilkScheduler<ComputationalDagVectorImplDefUnsignedT> test;
     test.setMode(CILK);
     RunTest(&test);
 }
 
 BOOST_AUTO_TEST_CASE(CilkTest2) {
-    CilkScheduler<ComputationalDagVectorImplDefT> test;
+    CilkScheduler<ComputationalDagVectorImplDefUnsignedT> test;
     test.setMode(SJF);
     RunTest(&test);
 }
 
 BOOST_AUTO_TEST_CASE(EtfTest) {
-    EtfScheduler<ComputationalDagVectorImplDefT> test;
+    EtfScheduler<ComputationalDagVectorImplDefUnsignedT> test;
     RunTest(&test);
 }
 
 BOOST_AUTO_TEST_CASE(RandomTest) {
-    RandomGreedy<ComputationalDagVectorImplDefT> test;
+    RandomGreedy<ComputationalDagVectorImplDefUnsignedT> test;
     RunTest(&test);
 }
 
 BOOST_AUTO_TEST_CASE(ChildrenTest) {
-    GreedyChildren<ComputationalDagVectorImplDefT> test;
+    GreedyChildren<ComputationalDagVectorImplDefUnsignedT> test;
     RunTest(&test);
 }
 
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(LockingTest) {
 }
 
 BOOST_AUTO_TEST_CASE(VariancefillupTest) {
-    VarianceFillup<ComputationalDagVectorImplDefT> test;
+    VarianceFillup<ComputationalDagVectorImplDefUnsignedT> test;
     RunTest(&test);
 }
 
@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(GrowLocalAutoTestEdgeDescImpl) {
 
 BOOST_AUTO_TEST_CASE(GrowLocalAutoParallelTopTest1) {
     {
-        using GraphT = ComputationalDagVectorImplDefT;
+        using GraphT = ComputationalDagVectorImplDefUnsignedT;
         GrowLocalAutoCoresParallel_Params<VertexIdxT<GraphT>, VWorkwT<GraphT>> params;
 
         params.numThreads = 1;
@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE(GrowLocalAutoParallelTopTest1) {
 
 BOOST_AUTO_TEST_CASE(GrowLocalAutoParallelTopTest2) {
     {
-        using GraphT = ComputationalDagVectorImplDefT;
+        using GraphT = ComputationalDagVectorImplDefUnsignedT;
         GrowLocalAutoCoresParallel_Params<VertexIdxT<GraphT>, VWorkwT<GraphT>> params;
 
         params.numThreads = 2;
@@ -230,7 +230,7 @@ BOOST_AUTO_TEST_CASE(GrowLocalAutoParallelTopTest2) {
 
 BOOST_AUTO_TEST_CASE(GrowLocalAutoParallelTopTest5) {
     {
-        using GraphT = ComputationalDagVectorImplDefT;
+        using GraphT = ComputationalDagVectorImplDefUnsignedT;
         GrowLocalAutoCoresParallel_Params<VertexIdxT<GraphT>, VWorkwT<GraphT>> params;
 
         params.numThreads = 5;

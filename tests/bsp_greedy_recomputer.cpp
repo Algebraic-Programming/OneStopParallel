@@ -29,7 +29,7 @@ limitations under the License.
 using namespace osp;
 
 BOOST_AUTO_TEST_CASE(TestRecomputer) {
-    using Graph = ComputationalDagVectorImplDefT;
+    using Graph = ComputationalDagVectorImplDefUnsignedT;
 
     BspInstance<Graph> instance1;
     instance1.setNumberOfProcessors(2);

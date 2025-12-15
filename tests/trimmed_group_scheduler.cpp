@@ -27,7 +27,7 @@ limitations under the License.
 
 using namespace osp;
 
-using GraphT = ComputationalDagVectorImplDefT;
+using GraphT = ComputationalDagVectorImplDefUnsignedT;
 
 // Mock SubScheduler for TrimmedGroupScheduler tests
 template <typename ConstrGraphT>

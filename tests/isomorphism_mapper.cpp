@@ -30,8 +30,8 @@ using namespace osp;
 
 BOOST_AUTO_TEST_SUITE(isomorphism_mapper_test_suite)
 
-using GraphT = ComputationalDagVectorImplDefT;
-using ConstrGraphT = ComputationalDagVectorImplDefT;
+using GraphT = ComputationalDagVectorImplDefUnsignedT;
+using ConstrGraphT = ComputationalDagVectorImplDefUnsignedT;
 
 BOOST_AUTO_TEST_CASE(MapperSimpleChain) {
     // Rep: 0 -> 1 -> 2

@@ -125,7 +125,7 @@ void RunTest(Scheduler<GraphT> *testScheduler) {
 }
 
 BOOST_AUTO_TEST_CASE(GreedyBspSchedulerTest) {
-    GreedyBspScheduler<ComputationalDagVectorImplDefT> test;
+    GreedyBspScheduler<ComputationalDagVectorImplDefUnsignedT> test;
     RunTest(&test);
 }
 

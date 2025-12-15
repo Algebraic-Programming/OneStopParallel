@@ -26,7 +26,7 @@ limitations under the License.
 using namespace osp;
 
 BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerSimpleChain) {
-    using GraphT = ComputationalDagVectorImplDefT;
+    using GraphT = ComputationalDagVectorImplDefUnsignedT;
 
     // 1. Setup Instance
     BspInstance<GraphT> instance;
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerSimpleChain) {
 }
 
 BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerForkJoin) {
-    using GraphT = ComputationalDagVectorImplDefT;
+    using GraphT = ComputationalDagVectorImplDefUnsignedT;
 
     // 1. Setup Instance
     BspInstance<GraphT> instance;
@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerForkJoin) {
 }
 
 BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerDeadlock) {
-    using GraphT = ComputationalDagVectorImplDefT;
+    using GraphT = ComputationalDagVectorImplDefUnsignedT;
 
     // 1. Setup Instance
     BspInstance<GraphT> instance;
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerDeadlock) {
 }
 
 BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerComplexDag) {
-    using GraphT = ComputationalDagVectorImplDefT;
+    using GraphT = ComputationalDagVectorImplDefUnsignedT;
 
     // 1. Setup Instance
     BspInstance<GraphT> instance;
@@ -222,7 +222,7 @@ BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerComplexDag) {
 }
 
 BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerResourceContention) {
-    using GraphT = ComputationalDagVectorImplDefT;
+    using GraphT = ComputationalDagVectorImplDefUnsignedT;
 
     // 1. Setup Instance
     BspInstance<GraphT> instance;
@@ -282,7 +282,7 @@ BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerResourceContention) {
 }
 
 BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerProportionalAllocation) {
-    using GraphT = ComputationalDagVectorImplDefT;
+    using GraphT = ComputationalDagVectorImplDefUnsignedT;
 
     // 1. Setup Instance
     BspInstance<GraphT> instance;

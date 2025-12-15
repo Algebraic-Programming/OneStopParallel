@@ -127,7 +127,7 @@ void RunTestMaxBsp(MaxBspScheduler<GraphT> *testScheduler) {
 
 // Tests ComputeSchedule(BspSchedule&) → staleness = 1
 BOOST_AUTO_TEST_CASE(GreedyVarianceSspSchedulerTestVectorImpl) {
-    GreedyVarianceSspScheduler<ComputationalDagVectorImplDefT> test;
+    GreedyVarianceSspScheduler<ComputationalDagVectorImplDefUnsignedT> test;
     RunTest(&test);
 }
 

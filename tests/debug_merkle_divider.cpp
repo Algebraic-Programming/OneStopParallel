@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
 
     std::string dotFilePath = argv[1];
 
-    using GraphT = ComputationalDagVectorImplDefT;
+    using GraphT = ComputationalDagVectorImplDefUnsignedT;
     using GraphT2 = GraphT;
 
     BspInstance<GraphT2> instance;

@@ -28,8 +28,8 @@ limitations under the License.
 
 using namespace osp;
 
-using GraphT = ComputationalDagVectorImplDefT;
-using ConstrGraphT = ComputationalDagVectorImplDefT;
+using GraphT = ComputationalDagVectorImplDefUnsignedT;
+using ConstrGraphT = ComputationalDagVectorImplDefUnsignedT;
 
 using GroupT = typename OrbitGraphProcessor<GraphT, ConstrGraphT>::Group;
 

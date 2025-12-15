@@ -33,7 +33,7 @@ limitations under the License.
 #include "test_utils.hpp"
 
 using namespace osp;
-using GraphT = ComputationalDagVectorImplDefT;
+using GraphT = ComputationalDagVectorImplDefUnsignedT;
 
 template <typename GraphT>
 void CheckPartitioning(const GraphT &dag, const OrbitGraphProcessor<GraphT, GraphT> &processor) {

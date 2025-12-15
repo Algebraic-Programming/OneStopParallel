@@ -34,10 +34,10 @@ limitations under the License.
 
 using namespace osp;
 
-ComputationalDagVectorImplDefT ConstrGraph1() {
-    ComputationalDagVectorImplDefT graph;
+ComputationalDagVectorImplDefUnsignedT ConstrGraph1() {
+    ComputationalDagVectorImplDefUnsignedT graph;
 
-    using VertexIdx = ComputationalDagVectorImplDefT::VertexIdx;
+    using VertexIdx = ComputationalDagVectorImplDefUnsignedT::VertexIdx;
 
     VertexIdx v1 = graph.AddVertex(1, 2, 3, 4);
     VertexIdx v2 = graph.AddVertex(5, 6, 7, 8);
@@ -63,9 +63,9 @@ ComputationalDagVectorImplDefT ConstrGraph1() {
 }
 
 BOOST_AUTO_TEST_CASE(TestUtil1) {
-    const ComputationalDagVectorImplDefT graph = ConstrGraph1();
+    const ComputationalDagVectorImplDefUnsignedT graph = ConstrGraph1();
 
-    // using VertexIdx = ComputationalDagVectorImplDefT::VertexIdx;
+    // using VertexIdx = ComputationalDagVectorImplDefUnsignedT::VertexIdx;
 }
 
 BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
