@@ -80,12 +80,12 @@ class GreedyMetaScheduler : public Scheduler<GraphT> {
             const VWorkwT<GraphT> scheduleCost = CostModel()(currentSchedule);
 
             if constexpr (verbose_) {
-                std::cout << "Executed scheduler " << scheduler->GetScheduleName() << ", costs: " << schedule_cost
+                std::cout << "Executed scheduler " << scheduler->GetScheduleName() << ", costs: " << scheduleCost
                           << ", nr. supersteps: " << currentSchedule.NumberOfSupersteps() << std::endl;
             }
 
-            if (schedule_cost < best_schedule_cost) {
-                bestScheduleCost = schedule_cost;
+            if (scheduleCost < bestScheduleCost) {
+                bestScheduleCost = scheduleCost;
                 schedule = currentSchedule;
                 if constexpr (verbose_) {
                     std::cout << "New best schedule!" << std::endl;

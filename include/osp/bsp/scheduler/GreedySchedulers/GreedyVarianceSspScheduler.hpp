@@ -42,7 +42,7 @@ namespace osp {
  *
  * It computes schedules for BspInstance using variance-based priorities.
  */
-template <typename GraphT, typename MemoryConstraintT = no_memory_constraint>
+template <typename GraphT, typename MemoryConstraintT = NoMemoryConstraint>
 class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
     static_assert(IsComputationalDagV<GraphT>, "GreedyVarianceSspScheduler can only be used with computational DAGs.");
 
@@ -63,7 +63,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
         std::vector<double> workVariance(graph.NumVertices(), 0.0);
         const std::vector<VertexType> topOrder = GetTopOrder(graph);
 
-        for (auto rIter = top_order.rbegin(); rIter != top_order.crend(); r_iter++) {
+        for (auto rIter = topOrder.rbegin(); rIter != topOrder.crend(); r_iter++) {
             double temp = 0;
             double maxPriority = 0;
             for (const auto &child : graph.Children(*r_iter)) {

@@ -59,15 +59,15 @@ ReturnStatus GreedyRecomputer<GraphT>::ComputeRecompSchedule(BspScheduleCS<Graph
     outSchedule.SetNumberOfSupersteps(initialSchedule.NumberOfSupersteps());
 
     // Initialize required data structures
-    std::vector<std::vector<cost_type>> workCost(p, std::vector<cost_type>(s, 0)), send_cost(p, std::vector<cost_type>(s, 0)),
-        rec_cost(p, std::vector<cost_type>(s, 0));
+    std::vector<std::vector<cost_type>> workCost(p, std::vector<cost_type>(s, 0)), sendCost(p, std::vector<cost_type>(s, 0)),
+        recCost(p, std::vector<cost_type>(s, 0));
 
     std::vector<std::vector<unsigned>> firstComputable(n, std::vector<unsigned>(p, 0U)),
         firstPresent(n, std::vector<unsigned>(p, std::numeric_limits<unsigned>::max()));
 
     std::vector<std::vector<std::multiset<unsigned>>> neededOnProc(n, std::vector<std::multiset<unsigned>>(p, {s}));
 
-    std::vector<cost_type> maxWork(s, 0), max_comm(s, 0);
+    std::vector<cost_type> maxWork(s, 0), maxComm(s, 0);
 
     std::vector<std::set<KeyTriple>> commSteps(s);
 
@@ -85,23 +85,23 @@ ReturnStatus GreedyRecomputer<GraphT>::ComputeRecompSchedule(BspScheduleCS<Graph
     }
     for (const std::pair<KeyTriple, unsigned> item : initialSchedule.GetCommunicationSchedule()) {
         const vertex_idx &node = std::get<0>(item.first);
-        const unsigned &from_proc = std::get<1>(item.first);
-        const unsigned &to_proc = std::get<2>(item.first);
+        const unsigned &fromProc = std::get<1>(item.first);
+        const unsigned &toProc = std::get<2>(item.first);
         const unsigned &step = item.second;
-        send_cost[from_proc][step]
-            += g.VertexCommWeight(node) * initialSchedule.GetInstance().GetArchitecture().CommunicationCosts(from_proc, to_proc);
-        rec_cost[to_proc][step]
-            += g.VertexCommWeight(node) * initialSchedule.GetInstance().GetArchitecture().CommunicationCosts(from_proc, to_proc);
+        sendCost[fromProc][step]
+            += g.VertexCommWeight(node) * initialSchedule.GetInstance().GetArchitecture().CommunicationCosts(fromProc, toProc);
+        recCost[toProc][step]
+            += g.VertexCommWeight(node) * initialSchedule.GetInstance().GetArchitecture().CommunicationCosts(fromProc, toProc);
 
         commSteps[step].emplace(item.first);
-        neededOnProc[node][from_proc].insert(step);
-        firstPresent[node][to_proc] = std::min(firstPresent[node][to_proc], step + 1);
+        neededOnProc[node][fromProc].insert(step);
+        firstPresent[node][toProc] = std::min(firstPresent[node][toProc], step + 1);
     }
     for (unsigned step = 0; step < s; ++step) {
         for (unsigned proc = 0; proc < p; ++proc) {
             maxWork[step] = std::max(maxWork[step], workCost[proc][step]);
-            max_comm[step] = std::max(max_comm[step], send_cost[proc][step]);
-            max_comm[step] = std::max(max_comm[step], rec_cost[proc][step]);
+            maxComm[step] = std::max(maxComm[step], sendCost[proc][step]);
+            maxComm[step] = std::max(maxComm[step], recCost[proc][step]);
         }
     }
 
@@ -122,81 +122,81 @@ ReturnStatus GreedyRecomputer<GraphT>::ComputeRecompSchedule(BspScheduleCS<Graph
             std::vector<KeyTriple> toErase;
             for (const KeyTriple &entry : commSteps[step]) {
                 const vertex_idx &node = std::get<0>(entry);
-                const unsigned &from_proc = std::get<1>(entry);
-                const unsigned &to_proc = std::get<2>(entry);
+                const unsigned &fromProc = std::get<1>(entry);
+                const unsigned &toProc = std::get<2>(entry);
 
                 // check how much comm cost we save by removing comm schedule entry
-                cost_type comm_induced = g.VertexCommWeight(node)
-                                         * initialSchedule.GetInstance().GetArchitecture().CommunicationCosts(from_proc, to_proc);
+                cost_type commInduced = g.VertexCommWeight(node)
+                                         * initialSchedule.GetInstance().GetArchitecture().CommunicationCosts(fromProc, toProc);
 
-                cost_type new_max_comm = 0;
+                cost_type newMaxComm = 0;
                 for (unsigned proc = 0; proc < p; ++proc) {
-                    if (proc == from_proc) {
-                        new_max_comm = std::max(new_max_comm, send_cost[proc][step] - comm_induced);
+                    if (proc == fromProc) {
+                        newMaxComm = std::max(newMaxComm, sendCost[proc][step] - commInduced);
                     } else {
-                        new_max_comm = std::max(new_max_comm, send_cost[proc][step]);
+                        newMaxComm = std::max(newMaxComm, sendCost[proc][step]);
                     }
-                    if (proc == to_proc) {
-                        new_max_comm = std::max(new_max_comm, rec_cost[proc][step] - comm_induced);
+                    if (proc == toProc) {
+                        newMaxComm = std::max(newMaxComm, recCost[proc][step] - commInduced);
                     } else {
-                        new_max_comm = std::max(new_max_comm, rec_cost[proc][step]);
+                        newMaxComm = std::max(newMaxComm, recCost[proc][step]);
                     }
                 }
-                if (new_max_comm == max_comm[step]) {
+                if (newMaxComm == maxComm[step]) {
                     continue;
                 }
 
-                if (!initialSchedule.GetInstance().isCompatible(node, to_proc)) {
+                if (!initialSchedule.GetInstance().isCompatible(node, toProc)) {
                     continue;
                 }
 
-                cost_type decrease = max_comm[step] - new_max_comm;
-                if (max_comm[step] > 0 && new_max_comm == 0) {
+                cost_type decrease = maxComm[step] - newMaxComm;
+                if (maxComm[step] > 0 && newMaxComm == 0) {
                     decrease += initialSchedule.GetInstance().GetArchitecture().SynchronisationCosts();
                 }
 
                 // check how much it would increase the work cost instead
-                unsigned best_step = s;
-                cost_type smallest_increase = std::numeric_limits<cost_type>::max();
-                for (unsigned comp_step = firstComputable[node][to_proc]; comp_step <= *neededOnProc[node][to_proc].begin();
-                     ++comp_step) {
-                    cost_type increase = workCost[to_proc][comp_step] + g.VertexWorkWeight(node) > maxWork[comp_step]
-                                             ? workCost[to_proc][comp_step] + g.VertexWorkWeight(node) - maxWork[comp_step]
+                unsigned bestStep = s;
+                cost_type smallestIncrease = std::numeric_limits<cost_type>::max();
+                for (unsigned compStep = firstComputable[node][toProc]; compStep <= *neededOnProc[node][toProc].begin();
+                     ++compStep) {
+                    cost_type increase = workCost[toProc][compStep] + g.VertexWorkWeight(node) > maxWork[compStep]
+                                             ? workCost[toProc][compStep] + g.VertexWorkWeight(node) - maxWork[compStep]
                                              : 0;
 
-                    if (increase < smallest_increase) {
-                        best_step = comp_step;
-                        smallest_increase = increase;
+                    if (increase < smallestIncrease) {
+                        bestStep = compStep;
+                        smallestIncrease = increase;
                     }
                 }
 
                 // check if this modification is beneficial
-                if (best_step == s || smallest_increase > decrease) {
+                if (bestStep == s || smallestIncrease > decrease) {
                     continue;
                 }
 
                 // execute the modification
                 toErase.emplace_back(entry);
-                outSchedule.Assignments(node).emplace_back(to_proc, best_step);
+                outSchedule.Assignments(node).emplace_back(toProc, bestStep);
 
-                send_cost[from_proc][step] -= comm_induced;
-                rec_cost[to_proc][step] -= comm_induced;
-                max_comm[step] = new_max_comm;
+                sendCost[fromProc][step] -= commInduced;
+                recCost[toProc][step] -= commInduced;
+                maxComm[step] = newMaxComm;
 
-                workCost[to_proc][best_step] += g.VertexWorkWeight(node);
-                maxWork[best_step] += smallest_increase;
+                workCost[toProc][bestStep] += g.VertexWorkWeight(node);
+                maxWork[bestStep] += smallestIncrease;
 
                 // update movability bounds
                 for (const vertex_idx &pred : g.Parents(node)) {
-                    neededOnProc[pred][to_proc].insert(best_step);
+                    neededOnProc[pred][toProc].insert(bestStep);
                 }
 
-                neededOnProc[node][from_proc].erase(neededOnProc[node][from_proc].lower_bound(step));
+                neededOnProc[node][fromProc].erase(neededOnProc[node][fromProc].lower_bound(step));
 
-                firstPresent[node][to_proc] = best_step;
+                firstPresent[node][toProc] = bestStep;
                 for (const vertex_idx &succ : g.Children(node)) {
                     for (const vertex_idx &pred : g.Parents(node)) {
-                        firstComputable[succ][to_proc] = std::max(firstComputable[succ][to_proc], firstPresent[pred][to_proc]);
+                        firstComputable[succ][toProc] = std::max(firstComputable[succ][toProc], firstPresent[pred][toProc]);
                     }
                 }
 
