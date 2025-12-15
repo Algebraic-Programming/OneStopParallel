@@ -120,7 +120,7 @@ void RunTest2(Scheduler<GraphT> *testScheduler) {
             std::cout << "Graph: " << nameGraph << std::endl;
             std::cout << "Architecture: " << nameMachine << std::endl;
 
-            computational_dag_edge_idx_vector_impl_def_t graph;
+            ComputationalDagEdgeIdxVectorImplDefT graph;
             BspArchitecture<GraphT> arch;
 
             bool statusGraph = file_reader::readGraph((cwd / filenameGraph).string(), graph);
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(GreedyBspSchedulerTest) {
 }
 
 BOOST_AUTO_TEST_CASE(GreedyBspSchedulerTest2) {
-    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_t> test;
+    GreedyBspScheduler<ComputationalDagEdgeIdxVectorImplDefT> test;
     RunTest(&test);
 }
 
@@ -195,12 +195,12 @@ BOOST_AUTO_TEST_CASE(VariancefillupTest) {
 }
 
 BOOST_AUTO_TEST_CASE(EtfTestEdgeDescImpl) {
-    EtfScheduler<computational_dag_edge_idx_vector_impl_def_t> test;
+    EtfScheduler<ComputationalDagEdgeIdxVectorImplDefT> test;
     RunTest(&test);
 }
 
 BOOST_AUTO_TEST_CASE(GrowLocalAutoTestEdgeDescImpl) {
-    GrowLocalAutoCores<computational_dag_edge_idx_vector_impl_def_t> test;
+    GrowLocalAutoCores<ComputationalDagEdgeIdxVectorImplDefT> test;
     RunTest(&test);
 }
 
@@ -277,70 +277,70 @@ BOOST_AUTO_TEST_CASE(GrowLocalAutoParallelTest5) {
 }
 
 BOOST_AUTO_TEST_CASE(VariancePartitionerTest) {
-    VariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, linear_interpolation> testLinear;
+    VariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT, linear_interpolation> testLinear;
     RunTest(&testLinear);
 
-    VariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, flat_spline_interpolation> testFlat;
+    VariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT, flat_spline_interpolation> testFlat;
     RunTest(&testFlat);
 
-    VariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, superstep_only_interpolation> testSuperstep;
+    VariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT, superstep_only_interpolation> testSuperstep;
     RunTest(&testSuperstep);
 
-    VariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, global_only_interpolation> testGlobal;
+    VariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT, global_only_interpolation> testGlobal;
     RunTest(&testGlobal);
 }
 
 BOOST_AUTO_TEST_CASE(LightEdgeVariancePartitionerTest) {
-    LightEdgeVariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, linear_interpolation> testLinear;
+    LightEdgeVariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT, linear_interpolation> testLinear;
     RunTest(&testLinear);
 
-    LightEdgeVariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, flat_spline_interpolation> testFlat;
+    LightEdgeVariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT, flat_spline_interpolation> testFlat;
     RunTest(&testFlat);
 
-    LightEdgeVariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, superstep_only_interpolation> testSuperstep;
+    LightEdgeVariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT, superstep_only_interpolation> testSuperstep;
     RunTest(&testSuperstep);
 
-    LightEdgeVariancePartitioner<computational_dag_edge_idx_vector_impl_def_t, global_only_interpolation> testGlobal;
+    LightEdgeVariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT, global_only_interpolation> testGlobal;
     RunTest(&testGlobal);
 }
 
 BOOST_AUTO_TEST_CASE(SquashAMulTest) {
-    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_t> sched;
+    GreedyBspScheduler<ComputationalDagEdgeIdxVectorImplDefT> sched;
 
-    SquashAMul<computational_dag_edge_idx_vector_impl_def_t, computational_dag_edge_idx_vector_impl_def_t> mlCoarsen;
-    MultilevelCoarseAndSchedule<computational_dag_edge_idx_vector_impl_def_t, computational_dag_edge_idx_vector_impl_def_t> coarsenTest(
+    SquashAMul<ComputationalDagEdgeIdxVectorImplDefT, ComputationalDagEdgeIdxVectorImplDefT> mlCoarsen;
+    MultilevelCoarseAndSchedule<ComputationalDagEdgeIdxVectorImplDefT, ComputationalDagEdgeIdxVectorImplDefT> coarsenTest(
         sched, mlCoarsen);
 
     RunTest(&coarsenTest);
 }
 
 BOOST_AUTO_TEST_CASE(SquashAMulImproverTest) {
-    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_t> sched;
-    HillClimbingScheduler<computational_dag_edge_idx_vector_impl_def_t> improver;
+    GreedyBspScheduler<ComputationalDagEdgeIdxVectorImplDefT> sched;
+    HillClimbingScheduler<ComputationalDagEdgeIdxVectorImplDefT> improver;
 
-    SquashAMul<computational_dag_edge_idx_vector_impl_def_t, computational_dag_edge_idx_vector_impl_def_t> mlCoarsen;
-    MultilevelCoarseAndSchedule<computational_dag_edge_idx_vector_impl_def_t, computational_dag_edge_idx_vector_impl_def_t> coarsenTest(
+    SquashAMul<ComputationalDagEdgeIdxVectorImplDefT, ComputationalDagEdgeIdxVectorImplDefT> mlCoarsen;
+    MultilevelCoarseAndSchedule<ComputationalDagEdgeIdxVectorImplDefT, ComputationalDagEdgeIdxVectorImplDefT> coarsenTest(
         sched, improver, mlCoarsen);
 
     RunTest(&coarsenTest);
 }
 
 BOOST_AUTO_TEST_CASE(SarkarMulTest) {
-    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_t> sched;
+    GreedyBspScheduler<ComputationalDagEdgeIdxVectorImplDefT> sched;
 
-    SarkarMul<computational_dag_edge_idx_vector_impl_def_t, computational_dag_edge_idx_vector_impl_def_t> mlCoarsen;
-    MultilevelCoarseAndSchedule<computational_dag_edge_idx_vector_impl_def_t, computational_dag_edge_idx_vector_impl_def_t> coarsenTest(
+    SarkarMul<ComputationalDagEdgeIdxVectorImplDefT, ComputationalDagEdgeIdxVectorImplDefT> mlCoarsen;
+    MultilevelCoarseAndSchedule<ComputationalDagEdgeIdxVectorImplDefT, ComputationalDagEdgeIdxVectorImplDefT> coarsenTest(
         sched, mlCoarsen);
 
     RunTest(&coarsenTest);
 }
 
 BOOST_AUTO_TEST_CASE(SarkarMulImproverTest) {
-    GreedyBspScheduler<computational_dag_edge_idx_vector_impl_def_t> sched;
-    HillClimbingScheduler<computational_dag_edge_idx_vector_impl_def_t> improver;
+    GreedyBspScheduler<ComputationalDagEdgeIdxVectorImplDefT> sched;
+    HillClimbingScheduler<ComputationalDagEdgeIdxVectorImplDefT> improver;
 
-    SarkarMul<computational_dag_edge_idx_vector_impl_def_t, computational_dag_edge_idx_vector_impl_def_t> mlCoarsen;
-    MultilevelCoarseAndSchedule<computational_dag_edge_idx_vector_impl_def_t, computational_dag_edge_idx_vector_impl_def_t> coarsenTest(
+    SarkarMul<ComputationalDagEdgeIdxVectorImplDefT, ComputationalDagEdgeIdxVectorImplDefT> mlCoarsen;
+    MultilevelCoarseAndSchedule<ComputationalDagEdgeIdxVectorImplDefT, ComputationalDagEdgeIdxVectorImplDefT> coarsenTest(
         sched, improver, mlCoarsen);
 
     RunTest(&coarsenTest);

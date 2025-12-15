@@ -266,7 +266,7 @@ BOOST_AUTO_TEST_CASE(TestKMeans) {
         BOOST_CHECK_EQUAL(graph.VertexCommWeight(v), comm[v]);
     }
 
-    computational_dag_edge_idx_vector_impl_def_t graph2;
+    ComputationalDagEdgeIdxVectorImplDefT graph2;
 
     status = file_reader::readComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_k-means.hdag").string(), graph2);
 

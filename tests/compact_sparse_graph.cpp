@@ -343,7 +343,7 @@ BOOST_AUTO_TEST_CASE(Graph1KeepOrder) {
 
     unsigned count = 0;
     for (const auto &e : osp::Edges(graph)) {
-        std::cout << e.source << " -> " << e.target << std::endl;
+        std::cout << e.source_ << " -> " << e.target_ << std::endl;
         count++;
     }
 
@@ -490,9 +490,9 @@ BOOST_AUTO_TEST_CASE(Graph1Reorder) {
 }
 
 BOOST_AUTO_TEST_CASE(GraphEdgeContruction) {
-    computational_dag_edge_idx_vector_impl_def_t graph;
+    ComputationalDagEdgeIdxVectorImplDefT graph;
 
-    using VertexIdx = computational_dag_edge_idx_vector_impl_def_t::vertex_idx;
+    using VertexIdx = ComputationalDagEdgeIdxVectorImplDefT::vertex_idx;
 
     VertexIdx v1 = graph.add_vertex(1, 2, 3, 4);
     VertexIdx v2 = graph.add_vertex(5, 6, 7, 8);
@@ -931,9 +931,9 @@ BOOST_AUTO_TEST_CASE(GraphVtypeReorder) {
 }
 
 BOOST_AUTO_TEST_CASE(GraphTypeCopyContruction) {
-    computational_dag_edge_idx_vector_impl_def_t graph;
+    ComputationalDagEdgeIdxVectorImplDefT graph;
 
-    using VertexIdx = computational_dag_edge_idx_vector_impl_def_t::vertex_idx;
+    using VertexIdx = ComputationalDagEdgeIdxVectorImplDefT::vertex_idx;
 
     VertexIdx v1 = graph.add_vertex(1, 2, 3, 4);
     VertexIdx v2 = graph.add_vertex(5, 6, 7, 8);
@@ -981,10 +981,10 @@ BOOST_AUTO_TEST_CASE(GraphTypeCopyContruction) {
                          true,
                          VertexIdx,
                          std::size_t,
-                         computational_dag_edge_idx_vector_impl_def_t::vertex_work_weight_type,
-                         computational_dag_edge_idx_vector_impl_def_t::vertex_comm_weight_type,
-                         computational_dag_edge_idx_vector_impl_def_t::vertex_mem_weight_type,
-                         computational_dag_edge_idx_vector_impl_def_t::vertex_type_type>
+                         ComputationalDagEdgeIdxVectorImplDefT::vertex_work_weight_type,
+                         ComputationalDagEdgeIdxVectorImplDefT::vertex_comm_weight_type,
+                         ComputationalDagEdgeIdxVectorImplDefT::vertex_mem_weight_type,
+                         ComputationalDagEdgeIdxVectorImplDefT::vertex_type_type>
         copyGraph(graph);
     BOOST_CHECK_EQUAL(copyGraph.NumVertices(), 8);
     BOOST_CHECK_EQUAL(copyGraph.NumEdges(), 9);
@@ -1043,10 +1043,10 @@ BOOST_AUTO_TEST_CASE(GraphTypeCopyContruction) {
                          true,
                          VertexIdx,
                          std::size_t,
-                         computational_dag_edge_idx_vector_impl_def_t::vertex_work_weight_type,
-                         computational_dag_edge_idx_vector_impl_def_t::vertex_comm_weight_type,
-                         computational_dag_edge_idx_vector_impl_def_t::vertex_mem_weight_type,
-                         computational_dag_edge_idx_vector_impl_def_t::vertex_type_type>
+                         ComputationalDagEdgeIdxVectorImplDefT::vertex_work_weight_type,
+                         ComputationalDagEdgeIdxVectorImplDefT::vertex_comm_weight_type,
+                         ComputationalDagEdgeIdxVectorImplDefT::vertex_mem_weight_type,
+                         ComputationalDagEdgeIdxVectorImplDefT::vertex_type_type>
         reorderGraph(graph);
     BOOST_CHECK_EQUAL(reorderGraph.NumVertices(), 8);
     BOOST_CHECK_EQUAL(reorderGraph.NumEdges(), 9);

@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(GreedyVarianceSspSchedulerTestVectorImpl) {
 
 // Tests ComputeSchedule(BspSchedule&) → staleness = 1 (different graph impl)
 BOOST_AUTO_TEST_CASE(GreedyVarianceSspSchedulerTestEdgeIdxImpl) {
-    GreedyVarianceSspScheduler<computational_dag_edge_idx_vector_impl_def_t> test;
+    GreedyVarianceSspScheduler<ComputationalDagEdgeIdxVectorImplDefT> test;
     RunTest(&test);
 }
 

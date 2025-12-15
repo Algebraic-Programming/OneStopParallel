@@ -44,7 +44,7 @@ limitations under the License.
 
 using namespace osp;
 
-using VertexType = VertexIdxT<computational_dag_edge_idx_vector_impl_def_t>;
+using VertexType = VertexIdxT<ComputationalDagEdgeIdxVectorImplDefT>;
 
 bool CheckVertexMap(std::vector<std::vector<VertexType>> &map, std::size_t size) {
     std::unordered_set<VertexType> vertices;
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(CoarserHdaggTest) {
 
         std::cout << std::endl << "Graph: " << nameGraph << std::endl;
 
-        using GraphT = computational_dag_edge_idx_vector_impl_def_t;
+        using GraphT = ComputationalDagEdgeIdxVectorImplDefT;
 
         BspInstance<GraphT> instance;
 
@@ -187,7 +187,7 @@ BOOST_AUTO_TEST_CASE(CoarserHdaggTestDiffGraphImpl) {
 
         std::cout << std::endl << "Graph: " << nameGraph << std::endl;
 
-        using GraphT1 = computational_dag_edge_idx_vector_impl_def_t;
+        using GraphT1 = ComputationalDagEdgeIdxVectorImplDefT;
         using GraphT2 = computational_dag_vector_impl_def_t;
 
         BspInstance<GraphT1> instance;
@@ -256,7 +256,7 @@ BOOST_AUTO_TEST_CASE(CoarserBspscheduleTest) {
 
         std::cout << std::endl << "Graph: " << nameGraph << std::endl;
 
-        using GraphT = computational_dag_edge_idx_vector_impl_def_t;
+        using GraphT = ComputationalDagEdgeIdxVectorImplDefT;
 
         BspInstance<GraphT> instance;
 
@@ -381,7 +381,7 @@ void TestCoarserSameGraph(Coarser<GraphT, GraphT> &coarser) {
 }
 
 BOOST_AUTO_TEST_CASE(CoarserFunndelBfsTest) {
-    using GraphT = computational_dag_edge_idx_vector_impl_def_t;
+    using GraphT = ComputationalDagEdgeIdxVectorImplDefT;
     FunnelBfs<GraphT, GraphT> coarser;
 
     TestCoarserSameGraph<GraphT>(coarser);
@@ -403,7 +403,7 @@ BOOST_AUTO_TEST_CASE(CoarserFunndelBfsTest) {
 }
 
 BOOST_AUTO_TEST_CASE(CoarserTopSortTest) {
-    using GraphT = computational_dag_edge_idx_vector_impl_def_t;
+    using GraphT = ComputationalDagEdgeIdxVectorImplDefT;
     top_order_coarser<GraphT, GraphT, GetTopOrder> coarser;
 
     TestCoarserSameGraph<GraphT>(coarser);
@@ -418,7 +418,7 @@ BOOST_AUTO_TEST_CASE(CoarserTopSortTest) {
 }
 
 BOOST_AUTO_TEST_CASE(SquashATest) {
-    using GraphT = computational_dag_edge_idx_vector_impl_def_t;
+    using GraphT = ComputationalDagEdgeIdxVectorImplDefT;
     // using graph_t = computational_dag_vector_impl_def_t;
 
     SquashAParams::Parameters params;
@@ -460,7 +460,7 @@ BOOST_AUTO_TEST_CASE(CoarserSquashATestDiffGraphImplCsg) {
 
         std::cout << std::endl << "Graph: " << nameGraph << std::endl;
 
-        using GraphT1 = computational_dag_edge_idx_vector_impl_def_t;
+        using GraphT1 = ComputationalDagEdgeIdxVectorImplDefT;
         using GraphT2 = CSG;
 
         BspInstance<GraphT1> instance;
@@ -533,7 +533,7 @@ BOOST_AUTO_TEST_CASE(CoarserSquashATestDiffGraphImplCsge) {
 
         std::cout << std::endl << "Graph: " << nameGraph << std::endl;
 
-        using GraphT1 = computational_dag_edge_idx_vector_impl_def_t;
+        using GraphT1 = ComputationalDagEdgeIdxVectorImplDefT;
         using GraphT2 = CSGE;
 
         BspInstance<GraphT1> instance;
@@ -589,7 +589,7 @@ BOOST_AUTO_TEST_CASE(CoarserSquashATestDiffGraphImplCsge) {
 }
 
 BOOST_AUTO_TEST_CASE(SarkarTest) {
-    using GraphT = computational_dag_edge_idx_vector_impl_def_t;
+    using GraphT = ComputationalDagEdgeIdxVectorImplDefT;
     // using graph_t = computational_dag_vector_impl_def_t;
 
     SarkarParams::Parameters<VWorkwT<GraphT>> params;
@@ -643,7 +643,7 @@ BOOST_AUTO_TEST_CASE(SarkarTest) {
 }
 
 BOOST_AUTO_TEST_CASE(SarkarMlTest) {
-    using GraphT = computational_dag_edge_idx_vector_impl_def_t;
+    using GraphT = ComputationalDagEdgeIdxVectorImplDefT;
     // using graph_t = computational_dag_vector_impl_def_t;
 
     SarkarParams::MulParameters<VWorkwT<GraphT>> params;
@@ -656,7 +656,7 @@ BOOST_AUTO_TEST_CASE(SarkarMlTest) {
 }
 
 BOOST_AUTO_TEST_CASE(SarkarMlBufferMergeTest) {
-    using GraphT = computational_dag_edge_idx_vector_impl_def_t;
+    using GraphT = ComputationalDagEdgeIdxVectorImplDefT;
     // using graph_t = computational_dag_vector_impl_def_t;
 
     SarkarParams::MulParameters<VWorkwT<GraphT>> params;
@@ -670,7 +670,7 @@ BOOST_AUTO_TEST_CASE(SarkarMlBufferMergeTest) {
 }
 
 BOOST_AUTO_TEST_CASE(SquashAmlTest) {
-    using GraphT = computational_dag_edge_idx_vector_impl_def_t;
+    using GraphT = ComputationalDagEdgeIdxVectorImplDefT;
     // using graph_t = computational_dag_vector_impl_def_t;
 
     SquashAMul<GraphT, GraphT> coarser;

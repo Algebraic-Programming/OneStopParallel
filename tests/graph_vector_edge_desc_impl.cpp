@@ -30,10 +30,10 @@ limitations under the License.
 
 using namespace osp;
 
-computational_dag_edge_idx_vector_impl_def_t ConstrGraph1() {
-    computational_dag_edge_idx_vector_impl_def_t graph;
+ComputationalDagEdgeIdxVectorImplDefT ConstrGraph1() {
+    ComputationalDagEdgeIdxVectorImplDefT graph;
 
-    using VertexIdx = computational_dag_edge_idx_vector_impl_def_t::vertex_idx;
+    using VertexIdx = ComputationalDagEdgeIdxVectorImplDefT::vertex_idx;
 
     VertexIdx v1 = graph.add_vertex(1, 2, 3, 4);
     VertexIdx v2 = graph.add_vertex(5, 6, 7, 8);
@@ -78,15 +78,15 @@ computational_dag_edge_idx_vector_impl_def_t ConstrGraph1() {
 }
 
 BOOST_AUTO_TEST_CASE(TestEmptyDagEdgeIdx) {
-    computational_dag_edge_idx_vector_impl_def_t graph;
+    ComputationalDagEdgeIdxVectorImplDefT graph;
     BOOST_CHECK_EQUAL(graph.NumEdges(), 0);
     BOOST_CHECK_EQUAL(graph.NumVertices(), 0);
 }
 
 BOOST_AUTO_TEST_CASE(TestDagEdgeIdx) {
-    computational_dag_edge_idx_vector_impl_def_t graph = ConstrGraph1();
+    ComputationalDagEdgeIdxVectorImplDefT graph = ConstrGraph1();
 
-    using VertexIdx = computational_dag_edge_idx_vector_impl_def_t::vertex_idx;
+    using VertexIdx = ComputationalDagEdgeIdxVectorImplDefT::vertex_idx;
 
     std::vector<VertexIdx> edgeSources{0, 0, 0, 1, 1, 2, 2, 3, 4};
     std::vector<VertexIdx> edgeTargets{1, 2, 3, 4, 6, 4, 5, 7, 7};
@@ -211,7 +211,7 @@ BOOST_AUTO_TEST_CASE(TestDagEdgeIdx) {
 }
 
 BOOST_AUTO_TEST_CASE(TestUtil1) {
-    const computational_dag_edge_idx_vector_impl_def_t graph = ConstrGraph1();
+    const ComputationalDagEdgeIdxVectorImplDefT graph = ConstrGraph1();
 
     BOOST_CHECK_EQUAL(graph.NumEdges(), 9);
     BOOST_CHECK_EQUAL(graph.NumVertices(), 8);

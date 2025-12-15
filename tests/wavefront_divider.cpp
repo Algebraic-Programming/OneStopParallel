@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(WavefrontComponentDivider) {
 
     const auto projectRoot = GetProjectRoot();
 
-    using GraphT = computational_dag_edge_idx_vector_impl_def_t;
+    using GraphT = ComputationalDagEdgeIdxVectorImplDefT;
 
     for (auto &filenameGraph : filenamesGraph) {
         BspInstance<GraphT> instance;
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(WavefrontComponentParallelismDivider) {
 
     const auto projectRoot = GetProjectRoot();
 
-    using GraphT = computational_dag_edge_idx_vector_impl_def_t;
+    using GraphT = ComputationalDagEdgeIdxVectorImplDefT;
 
     for (auto &filenameGraph : filenamesGraph) {
         BspInstance<GraphT> instance;

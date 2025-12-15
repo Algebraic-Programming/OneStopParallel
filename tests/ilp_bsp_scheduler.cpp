@@ -36,7 +36,7 @@ limitations under the License.
 using namespace osp;
 
 BOOST_AUTO_TEST_CASE(TestTotal) {
-    using graph = computational_dag_edge_idx_vector_impl_def_t;
+    using graph = ComputationalDagEdgeIdxVectorImplDefT;
 
     BspInstance<graph> instance;
     instance.setNumberOfProcessors(4);
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(TestTotal) {
 };
 
 BOOST_AUTO_TEST_CASE(TestFull) {
-    using graph = computational_dag_edge_idx_vector_impl_def_t;
+    using graph = ComputationalDagEdgeIdxVectorImplDefT;
 
     BspInstance<graph> instance;
     instance.setNumberOfProcessors(4);
@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_CASE(TestFull) {
 };
 
 BOOST_AUTO_TEST_CASE(TestCs) {
-    using graph = computational_dag_edge_idx_vector_impl_def_t;
+    using graph = ComputationalDagEdgeIdxVectorImplDefT;
 
     BspInstance<graph> instance;
     instance.setNumberOfProcessors(4);
@@ -237,7 +237,7 @@ BOOST_AUTO_TEST_CASE(TestCs) {
 };
 
 BOOST_AUTO_TEST_CASE(TestPartial) {
-    using graph = computational_dag_edge_idx_vector_impl_def_t;
+    using graph = ComputationalDagEdgeIdxVectorImplDefT;
 
     BspInstance<graph> instance;
     instance.setNumberOfProcessors(3);

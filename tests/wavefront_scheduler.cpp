@@ -24,7 +24,7 @@ limitations under the License.
 #include "osp/dag_divider/WavefrontComponentScheduler.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 
-using GraphT = osp::computational_dag_edge_idx_vector_impl_def_t;
+using GraphT = osp::ComputationalDagEdgeIdxVectorImplDefT;
 
 template <typename GraphT, typename ConstrGraphT>
 class ConcreteWavefrontScheduler : public osp::AbstractWavefrontScheduler<GraphT, ConstrGraphT> {
@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_CASE(DistributeProcessorsTest) {
 BOOST_AUTO_TEST_SUITE_END()
 
 // Mock implementations for dependencies
-using GraphT = osp::computational_dag_edge_idx_vector_impl_def_t;
+using GraphT = osp::ComputationalDagEdgeIdxVectorImplDefT;
 using VertexType = GraphT::vertex_idx;
 
 // A mock divider that returns a predictable set of sections.
