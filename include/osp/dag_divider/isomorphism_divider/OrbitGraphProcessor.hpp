@@ -64,9 +64,9 @@ class OrbitGraphProcessor {
     };
 
     static_assert(IsComputationalDagV<GraphT>, "Graph must be a computational DAG");
-    static_assert(IsComputationalDagV<Constr_Graph_t>, "Constr_Graph_t must be a computational DAG");
-    static_assert(IsConstructableCdagV<Constr_Graph_t>, "Constr_Graph_t must satisfy the constructable_cdag_vertex concept");
-    static_assert(std::is_same_v<VertexIdxT<GraphT>, VertexIdxT<Constr_Graph_t>>,
+    static_assert(IsComputationalDagV<ConstrGraphT>, "Constr_Graph_t must be a computational DAG");
+    static_assert(IsConstructableCdagV<ConstrGraphT>, "Constr_Graph_t must satisfy the constructable_cdag_vertex concept");
+    static_assert(std::is_same_v<VertexIdxT<GraphT>, VertexIdxT<ConstrGraphT>>,
                   "Graph_t and Constr_Graph_t must have the same VertexIdx types");
 
     using VertexType = VertexIdxT<GraphT>;
@@ -546,10 +546,10 @@ class OrbitGraphProcessor {
 
     void SetMergeDifferentNodeTypes(bool flag) { mergeDifferentNodeTypes_ = flag; }
 
-    void SetWorkThreshold(VWorkwT<Constr_Graph_t> workThreshold) { work_threshold_ = work_threshold; }
+    void SetWorkThreshold(VWorkwT<ConstrGraphT> workThreshold) { work_threshold_ = workThreshold; }
 
-    void SetCriticalPathThreshold(VWorkwT<Constr_Graph_t> criticalPathThreshold) {
-        critical_path_threshold_ = critical_path_threshold;
+    void SetCriticalPathThreshold(VWorkwT<ConstrGraphT> criticalPathThreshold) {
+        critical_path_threshold_ = criticalPathThreshold;
     }
 
     void SetLockRatio(double lockRatio) { lockOrbitRatio_ = lockRatio; }

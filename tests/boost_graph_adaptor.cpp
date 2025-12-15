@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(TestBoostGraphAdapter1) {
     std::vector<VertexIdx> edgeTargets{1, 2, 3, 4, 6, 4, 5, 7, 7};
 
     size_t edgeIdx = 0;
-    for (const auto &edge : graph.edges()) {
+    for (const auto &edge : graph.Edges()) {
         BOOST_CHECK_EQUAL(Source(edge, graph), edgeSources[edgeIdx]);
         BOOST_CHECK_EQUAL(Target(edge, graph), edgeTargets[edgeIdx]);
         edgeIdx++;
@@ -139,12 +139,12 @@ BOOST_AUTO_TEST_CASE(TestBoostGraphAdapter1) {
         }
 
         i = 0;
-        for (const auto &e : graph.out_edges(v)) {
+        for (const auto &e : graph.OutEdges(v)) {
             BOOST_CHECK_EQUAL(Target(e, graph), outNeighbors[v][i++]);
         }
 
         i = 0;
-        for (const auto &e : graph.out_edges(v)) {
+        for (const auto &e : graph.OutEdges(v)) {
             BOOST_CHECK_EQUAL(graph.Target(e), outNeighbors[v][i++]);
         }
 
@@ -154,12 +154,12 @@ BOOST_AUTO_TEST_CASE(TestBoostGraphAdapter1) {
         }
 
         i = 0;
-        for (const auto &e : graph.in_edges(v)) {
+        for (const auto &e : graph.InEdges(v)) {
             BOOST_CHECK_EQUAL(Source(e, graph), inNeighbors[v][i++]);
         }
 
         i = 0;
-        for (const auto &e : graph.in_edges(v)) {
+        for (const auto &e : graph.InEdges(v)) {
             BOOST_CHECK_EQUAL(graph.Source(e), inNeighbors[v][i++]);
         }
 
@@ -184,71 +184,71 @@ BOOST_AUTO_TEST_CASE(TestUtil1) {
     BOOST_CHECK_EQUAL(graph.NumEdges(), 9);
     BOOST_CHECK_EQUAL(graph.NumVertices(), 8);
 
-    auto sources = sourceVertices(graph);
+    auto sources = SourceVertices(graph);
     BOOST_CHECK_EQUAL(sources.size(), 1);
     BOOST_CHECK_EQUAL(sources[0], 0);
 
-    auto sinks = sinkVertices(graph);
+    auto sinks = SinkVertices(graph);
     BOOST_CHECK_EQUAL(sinks.size(), 3);
     BOOST_CHECK_EQUAL(sinks[0], 5);
     BOOST_CHECK_EQUAL(sinks[1], 6);
     BOOST_CHECK_EQUAL(sinks[2], 7);
 
-    BOOST_CHECK_EQUAL(has_path(0, 1, graph), true);
-    BOOST_CHECK_EQUAL(has_path(0, 2, graph), true);
-    BOOST_CHECK_EQUAL(has_path(0, 3, graph), true);
-    BOOST_CHECK_EQUAL(has_path(0, 4, graph), true);
-    BOOST_CHECK_EQUAL(has_path(0, 5, graph), true);
-    BOOST_CHECK_EQUAL(has_path(0, 6, graph), true);
-    BOOST_CHECK_EQUAL(has_path(0, 7, graph), true);
-    BOOST_CHECK_EQUAL(has_path(1, 0, graph), false);
-    BOOST_CHECK_EQUAL(has_path(2, 0, graph), false);
-    BOOST_CHECK_EQUAL(has_path(3, 0, graph), false);
-    BOOST_CHECK_EQUAL(has_path(4, 0, graph), false);
-    BOOST_CHECK_EQUAL(has_path(5, 0, graph), false);
-    BOOST_CHECK_EQUAL(has_path(6, 0, graph), false);
-    BOOST_CHECK_EQUAL(has_path(7, 0, graph), false);
-    BOOST_CHECK_EQUAL(has_path(1, 4, graph), true);
-    BOOST_CHECK_EQUAL(has_path(1, 7, graph), true);
-    BOOST_CHECK_EQUAL(has_path(1, 6, graph), true);
-    BOOST_CHECK_EQUAL(has_path(2, 4, graph), true);
-    BOOST_CHECK_EQUAL(has_path(2, 5, graph), true);
-    BOOST_CHECK_EQUAL(has_path(2, 7, graph), true);
-    BOOST_CHECK_EQUAL(has_path(3, 7, graph), true);
-    BOOST_CHECK_EQUAL(has_path(4, 7, graph), true);
-    BOOST_CHECK_EQUAL(has_path(1, 2, graph), false);
-    BOOST_CHECK_EQUAL(has_path(1, 3, graph), false);
-    BOOST_CHECK_EQUAL(has_path(2, 1, graph), false);
-    BOOST_CHECK_EQUAL(has_path(2, 3, graph), false);
-    BOOST_CHECK_EQUAL(has_path(2, 6, graph), false);
-    BOOST_CHECK_EQUAL(has_path(3, 1, graph), false);
-    BOOST_CHECK_EQUAL(has_path(3, 2, graph), false);
-    BOOST_CHECK_EQUAL(has_path(3, 4, graph), false);
-    BOOST_CHECK_EQUAL(has_path(3, 5, graph), false);
-    BOOST_CHECK_EQUAL(has_path(3, 6, graph), false);
-    BOOST_CHECK_EQUAL(has_path(4, 1, graph), false);
-    BOOST_CHECK_EQUAL(has_path(4, 2, graph), false);
-    BOOST_CHECK_EQUAL(has_path(4, 3, graph), false);
-    BOOST_CHECK_EQUAL(has_path(4, 5, graph), false);
-    BOOST_CHECK_EQUAL(has_path(4, 6, graph), false);
-    BOOST_CHECK_EQUAL(has_path(5, 1, graph), false);
-    BOOST_CHECK_EQUAL(has_path(5, 2, graph), false);
-    BOOST_CHECK_EQUAL(has_path(5, 3, graph), false);
-    BOOST_CHECK_EQUAL(has_path(5, 4, graph), false);
-    BOOST_CHECK_EQUAL(has_path(5, 6, graph), false);
-    BOOST_CHECK_EQUAL(has_path(5, 7, graph), false);
-    BOOST_CHECK_EQUAL(has_path(6, 1, graph), false);
-    BOOST_CHECK_EQUAL(has_path(6, 2, graph), false);
-    BOOST_CHECK_EQUAL(has_path(6, 3, graph), false);
-    BOOST_CHECK_EQUAL(has_path(6, 4, graph), false);
-    BOOST_CHECK_EQUAL(has_path(6, 5, graph), false);
-    BOOST_CHECK_EQUAL(has_path(6, 7, graph), false);
-    BOOST_CHECK_EQUAL(has_path(7, 1, graph), false);
-    BOOST_CHECK_EQUAL(has_path(7, 2, graph), false);
-    BOOST_CHECK_EQUAL(has_path(7, 3, graph), false);
-    BOOST_CHECK_EQUAL(has_path(7, 4, graph), false);
-    BOOST_CHECK_EQUAL(has_path(7, 5, graph), false);
-    BOOST_CHECK_EQUAL(has_path(7, 6, graph), false);
+    BOOST_CHECK_EQUAL(HasPath(0, 1, graph), true);
+    BOOST_CHECK_EQUAL(HasPath(0, 2, graph), true);
+    BOOST_CHECK_EQUAL(HasPath(0, 3, graph), true);
+    BOOST_CHECK_EQUAL(HasPath(0, 4, graph), true);
+    BOOST_CHECK_EQUAL(HasPath(0, 5, graph), true);
+    BOOST_CHECK_EQUAL(HasPath(0, 6, graph), true);
+    BOOST_CHECK_EQUAL(HasPath(0, 7, graph), true);
+    BOOST_CHECK_EQUAL(HasPath(1, 0, graph), false);
+    BOOST_CHECK_EQUAL(HasPath(2, 0, graph), false);
+    BOOST_CHECK_EQUAL(HasPath(3, 0, graph), false);
+    BOOST_CHECK_EQUAL(HasPath(4, 0, graph), false);
+    BOOST_CHECK_EQUAL(HasPath(5, 0, graph), false);
+    BOOST_CHECK_EQUAL(HasPath(6, 0, graph), false);
+    BOOST_CHECK_EQUAL(HasPath(7, 0, graph), false);
+    BOOST_CHECK_EQUAL(HasPath(1, 4, graph), true);
+    BOOST_CHECK_EQUAL(HasPath(1, 7, graph), true);
+    BOOST_CHECK_EQUAL(HasPath(1, 6, graph), true);
+    BOOST_CHECK_EQUAL(HasPath(2, 4, graph), true);
+    BOOST_CHECK_EQUAL(HasPath(2, 5, graph), true);
+    BOOST_CHECK_EQUAL(HasPath(2, 7, graph), true);
+    BOOST_CHECK_EQUAL(HasPath(3, 7, graph), true);
+    BOOST_CHECK_EQUAL(HasPath(4, 7, graph), true);
+    BOOST_CHECK_EQUAL(HasPath(1, 2, graph), false);
+    BOOST_CHECK_EQUAL(HasPath(1, 3, graph), false);
+    BOOST_CHECK_EQUAL(HasPath(2, 1, graph), false);
+    BOOST_CHECK_EQUAL(HasPath(2, 3, graph), false);
+    BOOST_CHECK_EQUAL(HasPath(2, 6, graph), false);
+    BOOST_CHECK_EQUAL(HasPath(3, 1, graph), false);
+    BOOST_CHECK_EQUAL(HasPath(3, 2, graph), false);
+    BOOST_CHECK_EQUAL(HasPath(3, 4, graph), false);
+    BOOST_CHECK_EQUAL(HasPath(3, 5, graph), false);
+    BOOST_CHECK_EQUAL(HasPath(3, 6, graph), false);
+    BOOST_CHECK_EQUAL(HasPath(4, 1, graph), false);
+    BOOST_CHECK_EQUAL(HasPath(4, 2, graph), false);
+    BOOST_CHECK_EQUAL(HasPath(4, 3, graph), false);
+    BOOST_CHECK_EQUAL(HasPath(4, 5, graph), false);
+    BOOST_CHECK_EQUAL(HasPath(4, 6, graph), false);
+    BOOST_CHECK_EQUAL(HasPath(5, 1, graph), false);
+    BOOST_CHECK_EQUAL(HasPath(5, 2, graph), false);
+    BOOST_CHECK_EQUAL(HasPath(5, 3, graph), false);
+    BOOST_CHECK_EQUAL(HasPath(5, 4, graph), false);
+    BOOST_CHECK_EQUAL(HasPath(5, 6, graph), false);
+    BOOST_CHECK_EQUAL(HasPath(5, 7, graph), false);
+    BOOST_CHECK_EQUAL(HasPath(6, 1, graph), false);
+    BOOST_CHECK_EQUAL(HasPath(6, 2, graph), false);
+    BOOST_CHECK_EQUAL(HasPath(6, 3, graph), false);
+    BOOST_CHECK_EQUAL(HasPath(6, 4, graph), false);
+    BOOST_CHECK_EQUAL(HasPath(6, 5, graph), false);
+    BOOST_CHECK_EQUAL(HasPath(6, 7, graph), false);
+    BOOST_CHECK_EQUAL(HasPath(7, 1, graph), false);
+    BOOST_CHECK_EQUAL(HasPath(7, 2, graph), false);
+    BOOST_CHECK_EQUAL(HasPath(7, 3, graph), false);
+    BOOST_CHECK_EQUAL(HasPath(7, 4, graph), false);
+    BOOST_CHECK_EQUAL(HasPath(7, 5, graph), false);
+    BOOST_CHECK_EQUAL(HasPath(7, 6, graph), false);
 }
 
 BOOST_AUTO_TEST_CASE(TestConstrDag) {
@@ -310,34 +310,34 @@ BOOST_AUTO_TEST_CASE(TestBoostGraphConst2) {
     BOOST_CHECK_EQUAL(graphCopy.NumEdges(), 9);
     BOOST_CHECK_EQUAL(graphCopy.NumVertices(), 8);
 
-    BOOST_CHECK_EQUAL(has_path(2, 7, graphCopy), true);
-    BOOST_CHECK_EQUAL(has_path(3, 7, graphCopy), true);
-    BOOST_CHECK_EQUAL(has_path(4, 7, graphCopy), true);
-    BOOST_CHECK_EQUAL(has_path(1, 2, graphCopy), false);
-    BOOST_CHECK_EQUAL(has_path(1, 3, graphCopy), false);
-    BOOST_CHECK_EQUAL(has_path(2, 1, graphCopy), false);
+    BOOST_CHECK_EQUAL(HasPath(2, 7, graphCopy), true);
+    BOOST_CHECK_EQUAL(HasPath(3, 7, graphCopy), true);
+    BOOST_CHECK_EQUAL(HasPath(4, 7, graphCopy), true);
+    BOOST_CHECK_EQUAL(HasPath(1, 2, graphCopy), false);
+    BOOST_CHECK_EQUAL(HasPath(1, 3, graphCopy), false);
+    BOOST_CHECK_EQUAL(HasPath(2, 1, graphCopy), false);
 
     BoostGraphIntT graphCopy2 = graph1;
 
     BOOST_CHECK_EQUAL(graph1.NumEdges(), 9);
     BOOST_CHECK_EQUAL(graph1.NumVertices(), 8);
 
-    BOOST_CHECK_EQUAL(has_path(2, 7, graph1), true);
-    BOOST_CHECK_EQUAL(has_path(3, 7, graph1), true);
-    BOOST_CHECK_EQUAL(has_path(4, 7, graph1), true);
-    BOOST_CHECK_EQUAL(has_path(1, 2, graph1), false);
-    BOOST_CHECK_EQUAL(has_path(1, 3, graph1), false);
-    BOOST_CHECK_EQUAL(has_path(2, 1, graph1), false);
+    BOOST_CHECK_EQUAL(HasPath(2, 7, graph1), true);
+    BOOST_CHECK_EQUAL(HasPath(3, 7, graph1), true);
+    BOOST_CHECK_EQUAL(HasPath(4, 7, graph1), true);
+    BOOST_CHECK_EQUAL(HasPath(1, 2, graph1), false);
+    BOOST_CHECK_EQUAL(HasPath(1, 3, graph1), false);
+    BOOST_CHECK_EQUAL(HasPath(2, 1, graph1), false);
 
     BOOST_CHECK_EQUAL(graphCopy2.NumEdges(), 9);
     BOOST_CHECK_EQUAL(graphCopy2.NumVertices(), 8);
 
-    BOOST_CHECK_EQUAL(has_path(2, 7, graphCopy2), true);
-    BOOST_CHECK_EQUAL(has_path(3, 7, graphCopy2), true);
-    BOOST_CHECK_EQUAL(has_path(4, 7, graphCopy2), true);
-    BOOST_CHECK_EQUAL(has_path(1, 2, graphCopy2), false);
-    BOOST_CHECK_EQUAL(has_path(1, 3, graphCopy2), false);
-    BOOST_CHECK_EQUAL(has_path(2, 1, graphCopy2), false);
+    BOOST_CHECK_EQUAL(HasPath(2, 7, graphCopy2), true);
+    BOOST_CHECK_EQUAL(HasPath(3, 7, graphCopy2), true);
+    BOOST_CHECK_EQUAL(HasPath(4, 7, graphCopy2), true);
+    BOOST_CHECK_EQUAL(HasPath(1, 2, graphCopy2), false);
+    BOOST_CHECK_EQUAL(HasPath(1, 3, graphCopy2), false);
+    BOOST_CHECK_EQUAL(HasPath(2, 1, graphCopy2), false);
 
     BoostGraphIntT graphMove1(std::move(graphCopy));
 
@@ -347,12 +347,12 @@ BOOST_AUTO_TEST_CASE(TestBoostGraphConst2) {
     BOOST_CHECK_EQUAL(graphMove1.NumEdges(), 9);
     BOOST_CHECK_EQUAL(graphMove1.NumVertices(), 8);
 
-    BOOST_CHECK_EQUAL(has_path(2, 7, graphMove1), true);
-    BOOST_CHECK_EQUAL(has_path(3, 7, graphMove1), true);
-    BOOST_CHECK_EQUAL(has_path(4, 7, graphMove1), true);
-    BOOST_CHECK_EQUAL(has_path(1, 2, graphMove1), false);
-    BOOST_CHECK_EQUAL(has_path(1, 3, graphMove1), false);
-    BOOST_CHECK_EQUAL(has_path(2, 1, graphMove1), false);
+    BOOST_CHECK_EQUAL(HasPath(2, 7, graphMove1), true);
+    BOOST_CHECK_EQUAL(HasPath(3, 7, graphMove1), true);
+    BOOST_CHECK_EQUAL(HasPath(4, 7, graphMove1), true);
+    BOOST_CHECK_EQUAL(HasPath(1, 2, graphMove1), false);
+    BOOST_CHECK_EQUAL(HasPath(1, 3, graphMove1), false);
+    BOOST_CHECK_EQUAL(HasPath(2, 1, graphMove1), false);
 
     BoostGraphIntT graphMove2 = std::move(graphCopy2);
     BOOST_CHECK_EQUAL(graphCopy2.NumEdges(), 0);
@@ -361,10 +361,10 @@ BOOST_AUTO_TEST_CASE(TestBoostGraphConst2) {
     BOOST_CHECK_EQUAL(graphMove2.NumEdges(), 9);
     BOOST_CHECK_EQUAL(graphMove2.NumVertices(), 8);
 
-    BOOST_CHECK_EQUAL(has_path(2, 7, graphMove2), true);
-    BOOST_CHECK_EQUAL(has_path(3, 7, graphMove2), true);
-    BOOST_CHECK_EQUAL(has_path(4, 7, graphMove2), true);
-    BOOST_CHECK_EQUAL(has_path(1, 2, graphMove2), false);
-    BOOST_CHECK_EQUAL(has_path(1, 3, graphMove2), false);
-    BOOST_CHECK_EQUAL(has_path(2, 1, graphMove2), false);
+    BOOST_CHECK_EQUAL(HasPath(2, 7, graphMove2), true);
+    BOOST_CHECK_EQUAL(HasPath(3, 7, graphMove2), true);
+    BOOST_CHECK_EQUAL(HasPath(4, 7, graphMove2), true);
+    BOOST_CHECK_EQUAL(HasPath(1, 2, graphMove2), false);
+    BOOST_CHECK_EQUAL(HasPath(1, 3, graphMove2), false);
+    BOOST_CHECK_EQUAL(HasPath(2, 1, graphMove2), false);
 }

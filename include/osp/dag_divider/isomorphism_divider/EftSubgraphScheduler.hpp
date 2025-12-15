@@ -226,7 +226,7 @@ class EftSubgraphScheduler {
 
                             const double proportion
                                 = (totalRunnablePriority > 0)
-                                      ? (static_cast<double>(job.upwardRank_) / static_cast<double>(total_runnable_priority))
+                                      ? (static_cast<double>(job.upwardRank_) / static_cast<double>(totalRunnablePriority))
                                       : (1.0 / static_cast<double>(jobsToStart.size()));
                             const unsigned proportionalShare
                                 = static_cast<unsigned>(static_cast<double>(remainingWorkersPool[typeIdx]) * proportion);

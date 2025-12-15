@@ -274,8 +274,8 @@ struct TraversalIterator {
 
         visited_.insert(start);
 
-        for (const auto &v : adjIter_.iterate(currentVertex_)) {
-            vertexContainer_.push(v);
+        for (const auto &v : adjIter_.Iterate(currentVertex_)) {
+            vertexContainer_.Push(v);
             visited_.insert(v);
         }
     }
@@ -289,11 +289,11 @@ struct TraversalIterator {
             return *this;
         }
 
-        currentVertex_ = vertexContainer_.pop_next();
+        currentVertex_ = vertexContainer_.PopNext();
 
-        for (const auto &v : adjIter_.iterate(currentVertex_)) {
+        for (const auto &v : adjIter_.Iterate(currentVertex_)) {
             if (visited_.find(v) == visited_.end()) {
-                vertexContainer_.push(v);
+                vertexContainer_.Push(v);
                 visited_.insert(v);
             }
         }
