@@ -61,7 +61,7 @@ struct ScheduleFixture {
 
         schedule_.setAssignedProcessors(std::move(procs));
         schedule_.setAssignedSupersteps(std::move(steps));
-        schedule_.updateNumberOfSupersteps();
+        schedule_.UpdateNumberOfSupersteps();
 
         activeSchedule_.initialize(schedule_);
     }

@@ -106,7 +106,7 @@ ReturnStatus PebblingPartialILP<GraphT>::ComputePebbling(PebblingSchedule<GraphT
     // STEP 2: develop high-level multischedule on parts
 
     BspInstance<GraphT> contractedInstance(
-        contractedDag, instance.GetArchitecture(), instance.getNodeProcessorCompatibilityMatrix());
+        contractedDag, instance.GetArchitecture(), instance.GetNodeProcessorCompatibilityMatrix());
 
     SubproblemMultiScheduling<GraphT> multiScheduler;
     std::vector<std::set<unsigned>> processorsToPartsAndTypes;
@@ -257,7 +257,7 @@ ReturnStatus PebblingPartialILP<GraphT>::ComputePebbling(PebblingSchedule<GraphT
         }
 
         // set node-processor compatibility matrix
-        std::vector<std::vector<bool>> compMatrix = instance.getNodeProcessorCompatibilityMatrix();
+        std::vector<std::vector<bool>> compMatrix = instance.GetNodeProcessorCompatibilityMatrix();
         compMatrix.emplace_back(instance.GetArchitecture().GetNumberOfProcessorTypes(), true);
         subInstance[part] = BspInstance(subDag, subArch[part], comp_matrix);
 

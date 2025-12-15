@@ -326,14 +326,14 @@ class DotFileWriter {
     }
 
     template <typename GraphT>
-    void WriteScheduleCs(std::ostream &os, const BspScheduleCS<GraphT> &schedule) const {
+    void WriteScheduleCS(std::ostream &os, const BspScheduleCS<GraphT> &schedule) const {
         WriteGraphStructure(os, schedule.GetInstance().GetComputationalDag(), VertexWriterScheduleCsDot<GraphT>(schedule));
     }
 
     template <typename GraphT>
-    void WriteScheduleCs(const std::string &filename, const BspScheduleCS<GraphT> &schedule) const {
+    void WriteScheduleCS(const std::string &filename, const BspScheduleCS<GraphT> &schedule) const {
         std::ofstream os(filename);
-        WriteScheduleCs(os, schedule);
+        WriteScheduleCS(os, schedule);
     }
 
     template <typename GraphT>

@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE(SimpleParentChildTest) {
     BspSchedule schedule(instance);
     schedule.setAssignedProcessors({0, 1});    // v0 on p0, v1 on p1
     schedule.setAssignedSupersteps({0, 1});    // v0 in step 0, v1 in step 1
-    schedule.updateNumberOfSupersteps();
+    schedule.UpdateNumberOfSupersteps();
 
     using CommCostT = kl_bsp_comm_cost_function<Graph, double, no_local_search_memory_constraint>;
     using KlImproverTest = kl_improver_test<Graph, CommCostT>;
@@ -227,7 +227,7 @@ BOOST_AUTO_TEST_CASE(TestUpdateDatastructureAfterMove) {
     schedule.setAssignedProcessors({0, 1, 1, 2, 0, 0});
     // Steps: 0, 1, 0, 1, 0, 0
     schedule.setAssignedSupersteps({0, 1, 0, 1, 0, 0});
-    schedule.updateNumberOfSupersteps();
+    schedule.UpdateNumberOfSupersteps();
 
     using CommCostT = kl_bsp_comm_cost_function<Graph, double, no_local_search_memory_constraint>;
     using KlImproverTest = kl_improver_test<Graph, CommCostT>;
@@ -269,7 +269,7 @@ BOOST_AUTO_TEST_CASE(TestMultipleSequentialMoves) {
 
     schedule.setAssignedProcessors({0, 1, 2, 3});
     schedule.setAssignedSupersteps({0, 0, 0, 0});
-    schedule.updateNumberOfSupersteps();
+    schedule.UpdateNumberOfSupersteps();
 
     using CommCostT = kl_bsp_comm_cost_function<Graph, double, no_local_search_memory_constraint>;
     using KlImproverTest = kl_improver_test<Graph, CommCostT>;
@@ -331,7 +331,7 @@ BOOST_AUTO_TEST_CASE(TestNodeWithMultipleChildren) {
 
     schedule.setAssignedProcessors({0, 1, 2, 3});
     schedule.setAssignedSupersteps({0, 0, 0, 0});
-    schedule.updateNumberOfSupersteps();
+    schedule.UpdateNumberOfSupersteps();
 
     using CommCostT = kl_bsp_comm_cost_function<Graph, double, no_local_search_memory_constraint>;
     using KlImproverTest = kl_improver_test<Graph, CommCostT>;
@@ -392,7 +392,7 @@ BOOST_AUTO_TEST_CASE(TestCrossStepMoves) {
 
     schedule.setAssignedProcessors({0, 1, 0});
     schedule.setAssignedSupersteps({0, 1, 2});
-    schedule.updateNumberOfSupersteps();
+    schedule.UpdateNumberOfSupersteps();
 
     using CommCostT = kl_bsp_comm_cost_function<Graph, double, no_local_search_memory_constraint>;
     using KlImproverTest = kl_improver_test<Graph, CommCostT>;
@@ -442,7 +442,7 @@ BOOST_AUTO_TEST_CASE(TestComplexScenario) {
 
     schedule.setAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
     schedule.setAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
-    schedule.updateNumberOfSupersteps();
+    schedule.UpdateNumberOfSupersteps();
 
     using CommCostT = kl_bsp_comm_cost_function<Graph, double, no_local_search_memory_constraint>;
     using KlImproverTest = kl_improver_test<Graph, CommCostT>;
@@ -519,7 +519,7 @@ BOOST_AUTO_TEST_CASE(TestComplexScenarioOnlyCompute) {
 
     schedule.setAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
     schedule.setAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
-    schedule.updateNumberOfSupersteps();
+    schedule.UpdateNumberOfSupersteps();
 
     using CommCostT = kl_bsp_comm_cost_function<Graph, double, no_local_search_memory_constraint>;
     using KlImproverTest = kl_improver_test<Graph, CommCostT>;
@@ -638,7 +638,7 @@ BOOST_AUTO_TEST_CASE(TestComplexScenarioOnlyCompute2) {
 
     schedule.setAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
     schedule.setAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
-    schedule.updateNumberOfSupersteps();
+    schedule.UpdateNumberOfSupersteps();
 
     using CommCostT = kl_bsp_comm_cost_function<Graph, double, no_local_search_memory_constraint>;
     using KlImproverTest = kl_improver_test<Graph, CommCostT>;
@@ -754,7 +754,7 @@ BOOST_AUTO_TEST_CASE(TestGridGraphComplexMoves) {
 
     schedule.setAssignedProcessors(procs);
     schedule.setAssignedSupersteps(steps);
-    schedule.updateNumberOfSupersteps();
+    schedule.UpdateNumberOfSupersteps();
 
     using CommCostT = kl_bsp_comm_cost_function<Graph, double, no_local_search_memory_constraint>;
     using KlImproverTest = kl_improver_test<Graph, CommCostT>;
@@ -826,7 +826,7 @@ BOOST_AUTO_TEST_CASE(TestButterflyGraphMoves) {
 
     schedule.setAssignedProcessors(procs);
     schedule.setAssignedSupersteps(steps);
-    schedule.updateNumberOfSupersteps();
+    schedule.UpdateNumberOfSupersteps();
 
     using CommCostT = kl_bsp_comm_cost_function<Graph, double, no_local_search_memory_constraint>;
     using KlImproverTest = kl_improver_test<Graph, CommCostT>;
@@ -892,7 +892,7 @@ BOOST_AUTO_TEST_CASE(TestLadderGraphMoves) {
 
     schedule.setAssignedProcessors(procs);
     schedule.setAssignedSupersteps(steps);
-    schedule.updateNumberOfSupersteps();
+    schedule.UpdateNumberOfSupersteps();
 
     using CommCostT = kl_bsp_comm_cost_function<Graph, double, no_local_search_memory_constraint>;
     using KlImproverTest = kl_improver_test<Graph, CommCostT>;

@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(TestCostModelsSimpleDag) {
     schedule.SetAssignedSuperstep(3, 2);
     schedule.SetAssignedProcessor(4, 1);
     schedule.SetAssignedSuperstep(4, 3);
-    schedule.updateNumberOfSupersteps();
+    schedule.UpdateNumberOfSupersteps();
 
     BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
     BOOST_CHECK_EQUAL(schedule.NumberOfSupersteps(), 4);

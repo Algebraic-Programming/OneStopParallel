@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
     schedule.setAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
     schedule.setAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
 
-    schedule.updateNumberOfSupersteps();
+    schedule.UpdateNumberOfSupersteps();
 
     using CommCostT = kl_bsp_comm_cost_function<Graph, double, no_local_search_memory_constraint>;
     using KlImproverTest = kl_improver_test<Graph, CommCostT>;
@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
 //         BspSchedule<graph> schedule(instance);
 //         const auto result = test_scheduler.ComputeSchedule(schedule);
 
-//         schedule.updateNumberOfSupersteps();
+//         schedule.UpdateNumberOfSupersteps();
 
 //         std::cout << "initial scedule with costs: " << schedule.ComputeCosts() << " and "
 //                   << schedule.NumberOfSupersteps() << " number of supersteps" << std::endl;

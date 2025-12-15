@@ -442,7 +442,7 @@ void HillClimbingForCommSteps<GraphT>::CreateSupstepLists() {
     const unsigned p = schedule_->GetInstance().GetArchitecture().NumberOfProcessors();
     const GraphT &g = schedule_->GetInstance().GetComputationalDag();
 
-    schedule_->updateNumberOfSupersteps();
+    schedule_->UpdateNumberOfSupersteps();
     const unsigned m = schedule_->NumberOfSupersteps();
 
     supsteplists.clear();

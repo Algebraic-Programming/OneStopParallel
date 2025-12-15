@@ -189,19 +189,19 @@ BOOST_AUTO_TEST_CASE(TestScheduleWriter) {
 
     BspScheduleRecomp<GraphT2> scheduleRecomp(scheduleT2);
 
-    scheduleRecomp.assignments(0).emplace_back(1, 0);
-    scheduleRecomp.assignments(0).emplace_back(2, 0);
-    scheduleRecomp.assignments(0).emplace_back(3, 0);
+    scheduleRecomp.Assignments(0).emplace_back(1, 0);
+    scheduleRecomp.Assignments(0).emplace_back(2, 0);
+    scheduleRecomp.Assignments(0).emplace_back(3, 0);
 
     std::cout << "Writing schedule_recomp" << std::endl;
-    schedWriter.write_schedule_recomp(std::cout, scheduleRecomp);
+    schedWriter.WriteScheduleRecomp(std::cout, scheduleRecomp);
 
     std::cout << "Writing schedule_recomp_duplicate" << std::endl;
-    schedWriter.write_schedule_recomp_duplicate(std::cout, scheduleRecomp);
+    schedWriter.WriteScheduleRecompDuplicate(std::cout, scheduleRecomp);
 
     std::cout << "Writing schedule_t2 CS" << std::endl;
     BspScheduleCS<GraphT2> scheduleCs(scheduleT2);
-    schedWriter.write_schedule_cs(std::cout, scheduleCs);
+    schedWriter.WriteScheduleCS(std::cout, scheduleCs);
 }
 
 BOOST_AUTO_TEST_CASE(TestBspScheduleCs) {
@@ -336,7 +336,7 @@ BOOST_AUTO_TEST_CASE(TestMaxBspSchedule) {
         schedule.SetAssignedSuperstep(2, 2);    // 0->2 is cross-proc, 2 >= 0+2
         schedule.SetAssignedProcessor(3, 0);
         schedule.SetAssignedSuperstep(3, 4);    // 2->3 is cross-proc, 4 >= 2+2
-        schedule.updateNumberOfSupersteps();
+        schedule.UpdateNumberOfSupersteps();
 
         BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
 
@@ -361,7 +361,7 @@ BOOST_AUTO_TEST_CASE(TestMaxBspSchedule) {
         schedule.SetAssignedSuperstep(2, 2);    // 0->2 is cross-proc, 2 >= 0+2
         schedule.SetAssignedProcessor(3, 0);
         schedule.SetAssignedSuperstep(3, 4);    // 1->3, 2->3 are cross-proc, 4 >= 2+2
-        schedule.updateNumberOfSupersteps();
+        schedule.UpdateNumberOfSupersteps();
 
         BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
 
@@ -382,7 +382,7 @@ BOOST_AUTO_TEST_CASE(TestMaxBspSchedule) {
         schedule.SetAssignedSuperstep(0, 0);
         schedule.SetAssignedProcessor(1, 1);    // 0->1 on different procs
         schedule.SetAssignedSuperstep(1, 1);    // step(0)+2 > step(1) is FALSE (0+2 > 1)
-        schedule.updateNumberOfSupersteps();
+        schedule.UpdateNumberOfSupersteps();
 
         BOOST_CHECK(!schedule.SatisfiesPrecedenceConstraints());
     }
@@ -417,13 +417,13 @@ BOOST_AUTO_TEST_CASE(TestMaxBspScheduleCs) {
         schedule.SetAssignedSuperstep(2, 2);    // 0->2 is cross-proc, 2 >= 0+2
         schedule.SetAssignedProcessor(3, 0);
         schedule.SetAssignedSuperstep(3, 4);    // 2->3 is cross-proc, 4 >= 2+2
-        schedule.updateNumberOfSupersteps();
+        schedule.UpdateNumberOfSupersteps();
 
         BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
 
         // Set communication schedule (eager)
-        schedule.addCommunicationScheduleEntry(0, 0, 1, 0);    // 0->2 (P0->P1) sent in SS0
-        schedule.addCommunicationScheduleEntry(2, 1, 0, 2);    // 2->3 (P1->P0) sent in SS2
+        schedule.AddCommunicationScheduleEntry(0, 0, 1, 0);    // 0->2 (P0->P1) sent in SS0
+        schedule.AddCommunicationScheduleEntry(2, 1, 0, 2);    // 2->3 (P1->P0) sent in SS2
 
         BOOST_CHECK(schedule.HasValidCommSchedule());
 
@@ -444,7 +444,7 @@ BOOST_AUTO_TEST_CASE(TestMaxBspScheduleCs) {
         schedule.SetAssignedSuperstep(0, 0);
         schedule.SetAssignedProcessor(1, 1);    // 0->1 on different procs
         schedule.SetAssignedSuperstep(1, 1);    // step(0)+2 > step(1) is FALSE (0+2 > 1)
-        schedule.updateNumberOfSupersteps();
+        schedule.UpdateNumberOfSupersteps();
 
         BOOST_CHECK(!schedule.SatisfiesPrecedenceConstraints());
     }

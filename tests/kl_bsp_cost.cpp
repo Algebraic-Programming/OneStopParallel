@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(TestArrangeSuperstepCommData) {
     // Initialize schedule with 1 step
     schedule.setAssignedProcessors({0, 1, 2, 3});
     schedule.setAssignedSupersteps({0, 0, 0, 0});
-    schedule.updateNumberOfSupersteps();
+    schedule.UpdateNumberOfSupersteps();
 
     KlActiveScheduleT klSched;
     klSched.initialize(schedule);
@@ -203,7 +203,7 @@ BOOST_AUTO_TEST_CASE(TestComputeCommDatastructures) {
     // Proc 2: Node 3
     schedule.setAssignedProcessors({0, 1, 1, 2, 0, 0});
     schedule.setAssignedSupersteps({0, 1, 0, 1, 0, 0});
-    schedule.updateNumberOfSupersteps();
+    schedule.UpdateNumberOfSupersteps();
 
     KlActiveScheduleT klSched;
     klSched.initialize(schedule);
@@ -355,7 +355,7 @@ BOOST_AUTO_TEST_CASE(TestUpdateDatastructureAfterMove) {
     schedule.setAssignedProcessors({0, 1, 1, 2, 0, 0});
     // Steps: 0, 1, 0, 1, 0, 0
     schedule.setAssignedSupersteps({0, 1, 0, 1, 0, 0});
-    schedule.updateNumberOfSupersteps();
+    schedule.UpdateNumberOfSupersteps();
 
     KlActiveScheduleT klSched;
     klSched.initialize(schedule);
@@ -435,7 +435,7 @@ BOOST_AUTO_TEST_CASE(TestMultipleSequentialMoves) {
     // 0@P0, 1@P1, 2@P2, 3@P3
     schedule.setAssignedProcessors({0, 1, 2, 3});
     schedule.setAssignedSupersteps({0, 0, 0, 0});
-    schedule.updateNumberOfSupersteps();
+    schedule.UpdateNumberOfSupersteps();
 
     KlActiveScheduleT klSched;
     klSched.initialize(schedule);
@@ -510,7 +510,7 @@ BOOST_AUTO_TEST_CASE(TestNodeWithMultipleChildren) {
 
     schedule.setAssignedProcessors({0, 1, 2, 3});
     schedule.setAssignedSupersteps({0, 0, 0, 0});
-    schedule.updateNumberOfSupersteps();
+    schedule.UpdateNumberOfSupersteps();
 
     KlActiveScheduleT klSched;
     klSched.initialize(schedule);
@@ -587,7 +587,7 @@ BOOST_AUTO_TEST_CASE(TestCrossStepMoves) {
 
     schedule.setAssignedProcessors({0, 1, 0});
     schedule.setAssignedSupersteps({0, 1, 2});
-    schedule.updateNumberOfSupersteps();
+    schedule.UpdateNumberOfSupersteps();
 
     KlActiveScheduleT klSched;
     klSched.initialize(schedule);
@@ -662,7 +662,7 @@ BOOST_AUTO_TEST_CASE(TestComplexScenarioUserProvided) {
 
     // Supersteps: {0, 0, 1, 1, 2, 2, 3, 3}
     schedule.setAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
-    schedule.updateNumberOfSupersteps();
+    schedule.UpdateNumberOfSupersteps();
 
     KlActiveScheduleT klSched;
     klSched.initialize(schedule);
@@ -790,7 +790,7 @@ BOOST_AUTO_TEST_CASE(TestGridGraphComplexMoves) {
 
     schedule.setAssignedProcessors(procs);
     schedule.setAssignedSupersteps(steps);
-    schedule.updateNumberOfSupersteps();
+    schedule.UpdateNumberOfSupersteps();
 
     KlActiveScheduleT klSched;
     klSched.initialize(schedule);
@@ -878,7 +878,7 @@ BOOST_AUTO_TEST_CASE(TestButterflyGraphMoves) {
 
     schedule.setAssignedProcessors(procs);
     schedule.setAssignedSupersteps(steps);
-    schedule.updateNumberOfSupersteps();
+    schedule.UpdateNumberOfSupersteps();
 
     KlActiveScheduleT klSched;
     klSched.initialize(schedule);
@@ -999,7 +999,7 @@ BOOST_AUTO_TEST_CASE(TestLadderGraphMoves) {
 
     schedule.setAssignedProcessors(procs);
     schedule.setAssignedSupersteps(steps);
-    schedule.updateNumberOfSupersteps();
+    schedule.UpdateNumberOfSupersteps();
 
     KlActiveScheduleT klSched;
     klSched.initialize(schedule);
@@ -1115,7 +1115,7 @@ BOOST_AUTO_TEST_CASE(TestLazyAndBufferedModes) {
     schedule.SetAssignedSuperstep(1, 2);
     schedule.SetAssignedSuperstep(2, 4);
 
-    schedule.updateNumberOfSupersteps();
+    schedule.UpdateNumberOfSupersteps();
 
     std::cout << "Setup KL Sched" << std::endl;
     KlActiveScheduleT klSched;

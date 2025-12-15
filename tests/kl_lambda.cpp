@@ -241,7 +241,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverOnTestGraphs) {
 //     schedule.setAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
 //     schedule.setAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
 
-//     schedule.updateNumberOfSupersteps();
+//     schedule.UpdateNumberOfSupersteps();
 
 //     using cost_f = kl_hyper_total_comm_cost_function<graph, double, no_local_search_memory_constraint, 1>;
 //     using kl_improver_test = kl_improver_test<graph, cost_f, no_local_search_memory_constraint, 1, double>;
@@ -389,7 +389,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverOnTestGraphs) {
 //     schedule.setAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
 //     schedule.setAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
 
-//     schedule.updateNumberOfSupersteps();
+//     schedule.UpdateNumberOfSupersteps();
 
 //     using cost_f = kl_hyper_total_comm_cost_function<graph, double, no_local_search_memory_constraint, 1>;
 //     using kl_improver_test = kl_improver_test<graph, cost_f, no_local_search_memory_constraint, 1, double>;
@@ -519,7 +519,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverInnerLoopPenaltyTest) {
     schedule.setAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
     schedule.setAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
 
-    schedule.updateNumberOfSupersteps();
+    schedule.UpdateNumberOfSupersteps();
 
     using CostF = kl_hyper_total_comm_cost_function<Graph, double, no_local_search_memory_constraint, 1>;
     using KlImproverTest = kl_improver_test<Graph, CostF, no_local_search_memory_constraint, 1, double>;
@@ -613,7 +613,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverInnerLoopLambdaMapTest) {
     schedule.setAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
     schedule.setAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
 
-    schedule.updateNumberOfSupersteps();
+    schedule.UpdateNumberOfSupersteps();
 
     using CostF = kl_hyper_total_comm_cost_function<Graph, double, no_local_search_memory_constraint, 1>;
     using KlImproverTest = kl_improver_test<Graph, CostF, no_local_search_memory_constraint, 1, double>;
@@ -720,7 +720,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverInnerLoopLambdaMapTest) {
 //         BspSchedule<graph> schedule(instance);
 //         const auto result = test_scheduler.ComputeSchedule(schedule);
 
-//         schedule.updateNumberOfSupersteps();
+//         schedule.UpdateNumberOfSupersteps();
 
 //         std::cout << "initial scedule with costs: " << schedule.computeTotalLambdaCosts() << " and " <<
 //         schedule.NumberOfSupersteps() << " number of supersteps"<< std::endl;
@@ -799,7 +799,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverInnerLoopLambdaMapTest) {
 //         BspSchedule<graph> schedule(instance);
 //         const auto result = test_scheduler.ComputeSchedule(schedule);
 
-//         schedule.updateNumberOfSupersteps();
+//         schedule.UpdateNumberOfSupersteps();
 
 //         std::cout << "initial scedule with costs: " << schedule.computeTotalLambdaCosts() << " and " <<
 //         schedule.NumberOfSupersteps() << " number of supersteps"<< std::endl;

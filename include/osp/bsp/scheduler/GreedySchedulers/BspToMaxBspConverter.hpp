@@ -176,7 +176,7 @@ MaxBspScheduleCS<GraphT> GreedyBspToMaxBspConverter<GraphT>::Convert(const BspSc
                     if (currentStep - 1 >= scheduleMax.NumberOfSupersteps()) {
                         scheduleMax.SetNumberOfSupersteps(currentStep);
                     }
-                    scheduleMax.addCommunicationScheduleEntry(itr->first, currentStep - 1);
+                    scheduleMax.AddCommunicationScheduleEntry(itr->first, currentStep - 1);
                     commInCurrentStep.emplace_back(*itr);
                     freeCommStepsForSuperstep[step].erase(itr++);
                 } else {
@@ -255,7 +255,7 @@ MaxBspScheduleCS<GraphT> GreedyBspToMaxBspConverter<GraphT>::Convert(const BspSc
 
         std::set<std::pair<vertexIdx, unsigned>> lateArrivingNodes;
         for (const std::pair<KeyTriple, unsigned> &entry : freeCommStepsForSuperstep[step]) {
-            scheduleMax.addCommunicationScheduleEntry(entry.first, currentStep - 1);
+            scheduleMax.AddCommunicationScheduleEntry(entry.first, currentStep - 1);
             costType commCost
                 = dag.VertexCommWeight(std::get<0>(entry.first))
                   * schedule.GetInstance().GetArchitecture().SendCosts(std::get<1>(entry.first), std::get<2>(entry.first))
@@ -296,7 +296,7 @@ MaxBspScheduleCS<GraphT> GreedyBspToMaxBspConverter<GraphT>::Convert(const BspSc
                 if (currentStep - 1 >= scheduleMax.NumberOfSupersteps()) {
                     scheduleMax.SetNumberOfSupersteps(currentStep);
                 }
-                scheduleMax.addCommunicationScheduleEntry(entry.first, currentStep - 1);
+                scheduleMax.AddCommunicationScheduleEntry(entry.first, currentStep - 1);
                 lateArrivingNodes.emplace(std::get<0>(entry.first), std::get<2>(entry.first));
             }
         }

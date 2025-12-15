@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(KlImproverSmokeTest) {
     schedule.setAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
     schedule.setAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
 
-    schedule.updateNumberOfSupersteps();
+    schedule.UpdateNumberOfSupersteps();
 
     using KlImproverT = kl_total_comm_improver<Graph, no_local_search_memory_constraint, 1, true>;
     KlImproverT kl;
@@ -187,7 +187,7 @@ BOOST_AUTO_TEST_CASE(KlImproverSuperstepRemovalTest) {
     schedule.setAssignedProcessors({0, 0, 0, 0, 1, 1, 1, 1});
     schedule.setAssignedSupersteps({0, 0, 0, 0, 1, 2, 2, 2});
 
-    schedule.updateNumberOfSupersteps();
+    schedule.UpdateNumberOfSupersteps();
     unsigned originalSteps = schedule.NumberOfSupersteps();
 
     using CostF = kl_total_comm_cost_function<Graph, double, no_local_search_memory_constraint, 1, true>;
@@ -233,7 +233,7 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
     schedule.setAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
     schedule.setAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
 
-    schedule.updateNumberOfSupersteps();
+    schedule.UpdateNumberOfSupersteps();
 
     using CostF = kl_total_comm_cost_function<Graph, double, no_local_search_memory_constraint, 1, true>;
     using KlImproverTest = kl_improver_test<Graph, CostF, no_local_search_memory_constraint, 1, double>;
@@ -343,7 +343,7 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopPenaltyTest) {
     schedule.setAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
     schedule.setAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
 
-    schedule.updateNumberOfSupersteps();
+    schedule.UpdateNumberOfSupersteps();
 
     using CostF = kl_total_comm_cost_function<Graph, double, no_local_search_memory_constraint, 1, true>;
     using KlImproverTest = kl_improver_test<Graph, CostF, no_local_search_memory_constraint, 1, double>;
@@ -427,7 +427,7 @@ BOOST_AUTO_TEST_CASE(KlImproverViolationHandlingTest) {
     schedule.setAssignedProcessors({0, 1, 0, 0, 1, 0, 0, 1});    // v1->v2 is on same step, different procs
     schedule.setAssignedSupersteps({0, 0, 2, 1, 2, 2, 3, 3});
 
-    schedule.updateNumberOfSupersteps();
+    schedule.UpdateNumberOfSupersteps();
 
     using CostF = kl_total_comm_cost_function<Graph, double, no_local_search_memory_constraint, 1, true>;
     kl_improver_test<Graph, CostF, no_local_search_memory_constraint, 1, double> kl;
@@ -477,7 +477,7 @@ BOOST_AUTO_TEST_CASE(KlBase1) {
     schedule.setAssignedProcessors({0, 0, 0, 0, 0, 0, 0, 0});
     schedule.setAssignedSupersteps({0, 0, 0, 0, 0, 0, 0, 0});
 
-    schedule.updateNumberOfSupersteps();
+    schedule.UpdateNumberOfSupersteps();
 
     using CostF = kl_total_comm_cost_function<Graph, double, no_local_search_memory_constraint, 1, true>;
     kl_improver_test<Graph, CostF, no_local_search_memory_constraint, 1, double> kl;
@@ -571,7 +571,7 @@ BOOST_AUTO_TEST_CASE(KlBase2) {
     schedule.setAssignedProcessors({0, 1, 0, 0, 1, 0, 0, 1});
     schedule.setAssignedSupersteps({0, 1, 1, 1, 2, 2, 3, 3});
 
-    schedule.updateNumberOfSupersteps();
+    schedule.UpdateNumberOfSupersteps();
 
     using CostF = kl_total_comm_cost_function<Graph, double, no_local_search_memory_constraint, 1, true>;
     kl_improver_test<Graph, CostF, no_local_search_memory_constraint, 1, double> kl;
@@ -732,7 +732,7 @@ BOOST_AUTO_TEST_CASE(KlBase3) {
     schedule.setAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
     schedule.setAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
 
-    schedule.updateNumberOfSupersteps();
+    schedule.UpdateNumberOfSupersteps();
 
     using CostF = kl_total_comm_cost_function<Graph, double, no_local_search_memory_constraint, 1, true>;
     kl_improver_test<Graph, CostF, no_local_search_memory_constraint, 1, double> kl;
@@ -845,7 +845,7 @@ BOOST_AUTO_TEST_CASE(KlBase3) {
 //     schedule.setAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
 //     schedule.setAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
 
-//     schedule.updateNumberOfSupersteps();
+//     schedule.UpdateNumberOfSupersteps();
 
 //     using cost_f = kl_total_comm_cost_function<graph, double, no_local_search_memory_constraint, 1, true>;
 //     using kl_improver_test = kl_improver_test<graph, cost_f, no_local_search_memory_constraint, 1, double>;
@@ -978,7 +978,7 @@ BOOST_AUTO_TEST_CASE(KlBase3) {
 //         BspSchedule<graph> schedule(instance);
 //         const auto result = test_scheduler.ComputeSchedule(schedule);
 
-//         schedule.updateNumberOfSupersteps();
+//         schedule.UpdateNumberOfSupersteps();
 
 //         std::cout << "initial scedule with costs: " << schedule.computeTotalCosts() << " and " << schedule.NumberOfSupersteps()
 //         << " number of supersteps"<< std::endl;
@@ -1060,7 +1060,7 @@ BOOST_AUTO_TEST_CASE(KlBase3) {
 //         BspSchedule<graph> schedule(instance);
 //         const auto result = test_scheduler.ComputeSchedule(schedule);
 
-//         schedule.updateNumberOfSupersteps();
+//         schedule.UpdateNumberOfSupersteps();
 
 //         std::cout << "initial scedule with costs: " << schedule.computeTotalCosts() << " and " << schedule.NumberOfSupersteps()
 //         << " number of supersteps"<< std::endl;
