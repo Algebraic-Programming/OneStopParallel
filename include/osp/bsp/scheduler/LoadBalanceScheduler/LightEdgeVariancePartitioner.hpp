@@ -235,69 +235,69 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
                 assignedANode = false;
 
                 // Choosing next node
-                VertexType next_node;
-                for (auto vertex_prior_pair_iter = procReady[proc].begin(); vertex_prior_pair_iter != procReady[proc].end();
-                     vertex_prior_pair_iter++) {
+                VertexType nextNode;
+                for (auto vertexPriorPairIter = procReady[proc].begin(); vertexPriorPairIter != procReady[proc].end();
+                     vertexPriorPairIter++) {
                     if (assignedANode) {
                         break;
                     }
 
-                    const VertexType &vert = vertex_prior_pair_iter->first;
+                    const VertexType &vert = vertexPriorPairIter->first;
                     if constexpr (Base::useMemoryConstraint_) {
                         if (hasVertexBeenAssigned[vert]
                             || Base::memoryConstraint_.CanAdd(
                                 proc,
                                 memoryCostOfPreprocessedPartition[whichPreprocessPartition[vert]],
                                 transientCostOfPreprocessedPartition[whichPreprocessPartition[vert]])) {
-                            next_node = vert;
+                            nextNode = vert;
                             assignedANode = true;
                         }
                     } else {
-                        next_node = vert;
+                        nextNode = vert;
                         assignedANode = true;
                     }
                 }
 
-                for (auto vertex_prior_pair_iter = procReadyPrior[proc].begin();
-                     vertex_prior_pair_iter != procReadyPrior[proc].end();
-                     vertex_prior_pair_iter++) {
+                for (auto vertexPriorPairIter = procReadyPrior[proc].begin();
+                     vertexPriorPairIter != procReadyPrior[proc].end();
+                     vertexPriorPairIter++) {
                     if (assignedANode) {
                         break;
                     }
 
-                    const VertexType &vert = vertex_prior_pair_iter->first;
+                    const VertexType &vert = vertexPriorPairIter->first;
                     if constexpr (Base::useMemoryConstraint_) {
                         if (hasVertexBeenAssigned[vert]
                             || Base::memoryConstraint_.CanAdd(
                                 proc,
                                 memoryCostOfPreprocessedPartition[whichPreprocessPartition[vert]],
                                 transientCostOfPreprocessedPartition[whichPreprocessPartition[vert]])) {
-                            next_node = vert;
+                            nextNode = vert;
                             assignedANode = true;
                         }
                     } else {
-                        next_node = vert;
+                        nextNode = vert;
                         assignedANode = true;
                     }
                 }
-                for (auto vertex_prior_pair_iter = allReady.begin(); vertex_prior_pair_iter != allReady.cend();
-                     vertex_prior_pair_iter++) {
+                for (auto vertexPriorPairIter = allReady.begin(); vertexPriorPairIter != allReady.cend();
+                     vertexPriorPairIter++) {
                     if (assignedANode) {
                         break;
                     }
 
-                    const VertexType &vert = vertex_prior_pair_iter->first;
+                    const VertexType &vert = vertexPriorPairIter->first;
                     if constexpr (Base::useMemoryConstraint_) {
                         if (hasVertexBeenAssigned[vert]
                             || Base::memoryConstraint_.CanAdd(
                                 proc,
                                 memoryCostOfPreprocessedPartition[whichPreprocessPartition[vert]],
                                 transientCostOfPreprocessedPartition[whichPreprocessPartition[vert]])) {
-                            next_node = vert;
+                            nextNode = vert;
                             assignedANode = true;
                         }
                     } else {
-                        next_node = vert;
+                        nextNode = vert;
                         assignedANode = true;
                     }
                 }
@@ -306,94 +306,94 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
                     freeProcessors.insert(proc);
                 } else {
                     // Assignments
-                    if (hasVertexBeenAssigned[next_node]) {
-                        unsigned proc_alloc_prior = schedule.AssignedProcessor(next_node);
+                    if (hasVertexBeenAssigned[nextNode]) {
+                        unsigned procAllocPrior = schedule.AssignedProcessor(nextNode);
 
-                        // std::cout << "Allocated node " << next_node << " to processor " << proc_alloc_prior << "
+                        // std::cout << "Allocated node " << nextNode << " to processor " << procAllocPrior << "
                         // previously.\n";
 
-                        schedule.SetAssignedSuperstep(next_node, superstep);
+                        schedule.SetAssignedSuperstep(nextNode, superstep);
 
                         numUnableToPartitionNodeLoop = 0;
 
                         // Updating loads
-                        superstepPartitionWork[proc_alloc_prior] += graph.VertexWorkWeight(next_node);
+                        superstepPartitionWork[procAllocPrior] += graph.VertexWorkWeight(nextNode);
 
                         // Deletion from Queues
-                        std::pair<VertexType, double> pair = std::make_pair(next_node, variancePriorities[next_node]);
+                        std::pair<VertexType, double> pair = std::make_pair(nextNode, variancePriorities[nextNode]);
                         ready.erase(pair);
                         procReady[proc].erase(pair);
                         procReadyPrior[proc].erase(pair);
                         allReady.erase(pair);
-                        if (whichProcReadyPrior[next_node] != nProcessors) {
-                            procReadyPrior[whichProcReadyPrior[next_node]].erase(pair);
+                        if (whichProcReadyPrior[nextNode] != nProcessors) {
+                            procReadyPrior[whichProcReadyPrior[nextNode]].erase(pair);
                         }
 
                         // Checking children
-                        for (const auto &chld : graph.Children(next_node)) {
+                        for (const auto &chld : graph.Children(nextNode)) {
                             numUnallocatedParents[chld] -= 1;
                             if (numUnallocatedParents[chld] == 0) {
                                 // std::cout << "Inserting child " << chld << " into ready.\n";
                                 ready.insert(std::make_pair(chld, variancePriorities[chld]));
-                                bool is_proc_ready = true;
+                                bool isProcReady = true;
                                 for (const auto &parent : graph.Parents(chld)) {
-                                    if ((schedule.AssignedProcessor(parent) != proc_alloc_prior)
+                                    if ((schedule.AssignedProcessor(parent) != procAllocPrior)
                                         && (schedule.AssignedSuperstep(parent) == superstep)) {
-                                        is_proc_ready = false;
+                                        isProcReady = false;
                                         break;
                                     }
                                 }
-                                if (is_proc_ready) {
-                                    procReady[proc_alloc_prior].insert(std::make_pair(chld, variancePriorities[chld]));
+                                if (isProcReady) {
+                                    procReady[procAllocPrior].insert(std::make_pair(chld, variancePriorities[chld]));
                                     // std::cout << "Inserting child " << chld << " into procReady for processor " <<
-                                    // proc_alloc_prior << ".\n";
+                                    // procAllocPrior << ".\n";
                                 }
                             }
                         }
                     } else {
-                        schedule.SetAssignedProcessor(next_node, proc);
-                        hasVertexBeenAssigned[next_node] = true;
-                        // std::cout << "Allocated node " << next_node << " to processor " << proc << ".\n";
+                        schedule.SetAssignedProcessor(nextNode, proc);
+                        hasVertexBeenAssigned[nextNode] = true;
+                        // std::cout << "Allocated node " << nextNode << " to processor " << proc << ".\n";
 
-                        schedule.SetAssignedSuperstep(next_node, superstep);
+                        schedule.SetAssignedSuperstep(nextNode, superstep);
                         numUnableToPartitionNodeLoop = 0;
 
                         // Updating loads
-                        totalPartitionWork[proc] += graph.VertexWorkWeight(next_node);
-                        superstepPartitionWork[proc] += graph.VertexWorkWeight(next_node);
+                        totalPartitionWork[proc] += graph.VertexWorkWeight(nextNode);
+                        superstepPartitionWork[proc] += graph.VertexWorkWeight(nextNode);
 
                         if constexpr (Base::useMemoryConstraint_) {
-                            Base::memoryConstraint_.Add(next_node, proc);
+                            Base::memoryConstraint_.Add(nextNode, proc);
                         }
-                        // total_partition_memory[proc] += graph.VertexMemWeight(next_node);
+                        // total_partition_memory[proc] += graph.VertexMemWeight(nextNode);
                         // transient_partition_memory[proc] =
-                        //     std::max(transient_partition_memory[proc], graph.VertexCommWeight(next_node));
+                        //     std::max(transient_partition_memory[proc], graph.VertexCommWeight(nextNode));
 
                         // Deletion from Queues
-                        std::pair<VertexType, double> pair = std::make_pair(next_node, variancePriorities[next_node]);
+                        std::pair<VertexType, double> pair = std::make_pair(nextNode, variancePriorities[nextNode]);
                         ready.erase(pair);
                         procReady[proc].erase(pair);
                         procReadyPrior[proc].erase(pair);
                         allReady.erase(pair);
-                        if (whichProcReadyPrior[next_node] != nProcessors) {
-                            procReadyPrior[whichProcReadyPrior[next_node]].erase(pair);
+                        if (whichProcReadyPrior[nextNode] != nProcessors) {
+                            procReadyPrior[whichProcReadyPrior[nextNode]].erase(pair);
                         }
 
                         // Checking children
-                        for (const auto &chld : graph.Children(next_node)) {
+                        for (const auto &chld : graph.Children(nextNode)) {
                             numUnallocatedParents[chld] -= 1;
                             if (numUnallocatedParents[chld] == 0) {
                                 // std::cout << "Inserting child " << chld << " into ready.\n";
                                 ready.insert(std::make_pair(chld, variancePriorities[chld]));
-                                bool is_proc_ready = true;
+                                bool isProcReady = true;
                                 for (const auto &parent : graph.Parents(chld)) {
                                     if ((schedule.AssignedProcessor(parent) != proc)
                                         && (schedule.AssignedSuperstep(parent) == superstep)) {
-                                        is_proc_ready = false;
+                                        isProcReady = false;
                                         break;
                                     }
                                 }
-                                if (is_proc_ready) {
+                                if (isProcReady) {
                                     procReady[proc].insert(std::make_pair(chld, variancePriorities[chld]));
                                     // std::cout << "Inserting child " << chld << " into procReady for processor " <<
                                     // proc << ".\n";
@@ -402,26 +402,26 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
                         }
 
                         // Allocating all nodes in the same partition
-                        for (VertexType node_in_same_partition : preprocessedPartition[whichPreprocessPartition[next_node]]) {
-                            if (node_in_same_partition == next_node) {
+                        for (VertexType nodeInSamePartition : preprocessedPartition[whichPreprocessPartition[nextNode]]) {
+                            if (nodeInSamePartition == nextNode) {
                                 continue;
                             }
 
                             // Allocation
-                            schedule.SetAssignedProcessor(node_in_same_partition, proc);
-                            hasVertexBeenAssigned[node_in_same_partition] = true;
-                            // std::cout << "Allocated node " << next_node << " to processor " << proc << ".\n";
+                            schedule.SetAssignedProcessor(nodeInSamePartition, proc);
+                            hasVertexBeenAssigned[nodeInSamePartition] = true;
+                            // std::cout << "Allocated node " << nextNode << " to processor " << proc << ".\n";
 
                             // Update loads
-                            totalPartitionWork[proc] += graph.VertexWorkWeight(node_in_same_partition);
+                            totalPartitionWork[proc] += graph.VertexWorkWeight(nodeInSamePartition);
 
                             if constexpr (Base::useMemoryConstraint_) {
-                                Base::memoryConstraint_.Add(node_in_same_partition, proc);
+                                Base::memoryConstraint_.Add(nodeInSamePartition, proc);
                             }
 
-                            // total_partition_memory[proc] += graph.VertexMemWeight(node_in_same_partition);
+                            // total_partition_memory[proc] += graph.VertexMemWeight(nodeInSamePartition);
                             // transient_partition_memory[proc] = std::max(
-                            //     transient_partition_memory[proc], graph.VertexCommWeight(node_in_same_partition));
+                            //     transient_partition_memory[proc], graph.VertexCommWeight(nodeInSamePartition));
                         }
                     }
 
