@@ -38,7 +38,7 @@ limitations under the License.
 using namespace osp;
 
 using Graph = ComputationalDagVectorImplDefIntT;
-using Hypergraph = HypergraphDefT;
+using HypergraphImpl = HypergraphDefT;
 
 int main(int argc, char *argv[]) {
     if (argc < 4) {
@@ -79,14 +79,14 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    PartitioningProblem<Hypergraph> instance;
+    PartitioningProblem<HypergraphImpl> instance;
 
     bool fileStatus = true;
     if (fileEnding == "hdag") {
         Graph dag;
         fileStatus = file_reader::ReadComputationalDagHyperdagFormatDB(filenameHgraph, dag);
         if (fileStatus) {
-            instance.GetHypergraph() = ConvertFromCdagAsHyperdag<Hypergraph, Graph>(dag);
+            instance.GetHypergraph() = ConvertFromCdagAsHyperdag<HypergraphImpl, Graph>(dag);
         }
     } else if (fileEnding == "mtx") {
         fileStatus = file_reader::ReadHypergraphMartixMarketFormat(filenameHgraph, instance.GetHypergraph());
@@ -102,8 +102,8 @@ int main(int argc, char *argv[]) {
     instance.SetNumberOfPartitions(static_cast<unsigned>(nrParts));
     instance.SetMaxWorkWeightViaImbalanceFactor(imbalance);
 
-    Partitioning<Hypergraph> initialPartition(instance);
-    GenericFM<Hypergraph> fm;
+    Partitioning<HypergraphImpl> initialPartition(instance);
+    GenericFM<HypergraphImpl> fm;
     for (size_t node = 0; node < instance.GetHypergraph().NumVertices(); ++node) {
         initialPartition.SetAssignedPartition(node, static_cast<unsigned>(node % static_cast<size_t>(nrParts)));
     }
@@ -115,8 +115,8 @@ int main(int argc, char *argv[]) {
     }
 
     if (replicate > 0) {
-        PartitioningWithReplication<Hypergraph> partition(instance);
-        HypergraphPartitioningILPWithReplication<Hypergraph> partitioner;
+        PartitioningWithReplication<HypergraphImpl> partition(instance);
+        HypergraphPartitioningILPWithReplication<HypergraphImpl> partitioner;
 
         for (size_t node = 0; node < instance.GetHypergraph().NumVertices(); ++node) {
             partition.SetAssignedPartitions(node, {initialPartition.AssignedPartition(node)});
@@ -127,7 +127,7 @@ int main(int argc, char *argv[]) {
 
         partitioner.setTimeLimitSeconds(600);
         if (replicate == 2) {
-            partitioner.setReplicationModel(HypergraphPartitioningILPWithReplication<Hypergraph>::ReplicationModelInIlp::GENERAL);
+            partitioner.setReplicationModel(HypergraphPartitioningILPWithReplication<HypergraphImpl>::ReplicationModelInIlp::GENERAL);
         }
 
         auto solveStatus = partitioner.computePartitioning(partition);
@@ -144,8 +144,8 @@ int main(int argc, char *argv[]) {
         }
 
     } else {
-        Partitioning<Hypergraph> partition(instance);
-        HypergraphPartitioningILP<Hypergraph> partitioner;
+        Partitioning<HypergraphImpl> partition(instance);
+        HypergraphPartitioningILP<HypergraphImpl> partitioner;
 
         for (size_t node = 0; node < instance.GetHypergraph().NumVertices(); ++node) {
             partition.SetAssignedPartition(node, initialPartition.AssignedPartition(node));

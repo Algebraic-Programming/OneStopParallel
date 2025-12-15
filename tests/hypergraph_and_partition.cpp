@@ -35,7 +35,7 @@ using namespace osp;
 
 BOOST_AUTO_TEST_CASE(HypergraphAndPartitionTest) {
     using Graph = ComputationalDagVectorImplDefIntT;
-    using Hypergraph = HypergraphDefT;
+    using HypergraphImpl = HypergraphDefT;
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(HypergraphAndPartitionTest) {
 
     BOOST_CHECK(status);
 
-    Hypergraph hgraph;
+    HypergraphImpl hgraph;
 
     // Matrix format, one hyperedge for each row/column
     status = file_reader::ReadHypergraphMartixMarketFormat((cwd / "data/mtx_tests/ErdosRenyi_8_19_A.mtx").string(), hgraph);
@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(HypergraphAndPartitionTest) {
     BOOST_CHECK_EQUAL(hgraph.NumHyperedges(), 16);
 
     // DAG format, all hyperedges have size 2
-    hgraph = convert_from_cdag_as_dag<Hypergraph, Graph>(dag);
+    hgraph = convert_from_cdag_as_dag<HypergraphImpl, Graph>(dag);
     BOOST_CHECK_EQUAL(dag.NumVertices(), hgraph.NumVertices());
     BOOST_CHECK_EQUAL(dag.NumEdges(), hgraph.NumHyperedges());
     BOOST_CHECK_EQUAL(dag.NumEdges() * 2, hgraph.NumPins());
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(HypergraphAndPartitionTest) {
         }
     }
 
-    hgraph = convert_from_cdag_as_hyperdag<Hypergraph, Graph>(dag);
+    hgraph = convert_from_cdag_as_hyperdag<HypergraphImpl, Graph>(dag);
     BOOST_CHECK_EQUAL(dag.NumVertices(), hgraph.NumVertices());
     BOOST_CHECK_EQUAL(nrOfNonSinks, hgraph.NumHyperedges());
     BOOST_CHECK_EQUAL(dag.NumEdges() + nrOfNonSinks, hgraph.NumPins());
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(HypergraphAndPartitionTest) {
 
     // Dummy partitioning with replication
 
-    instance.setHypergraph(convert_from_cdag_as_hyperdag<Hypergraph, Graph>(dag));
+    instance.setHypergraph(convert_from_cdag_as_hyperdag<HypergraphImpl, Graph>(dag));
     instance.SetNumberOfPartitions(3);
     instance.SetMaxWorkWeightExplicitly(30);
     PartitioningWithReplication partitionWithRep(instance);
@@ -167,7 +167,7 @@ BOOST_AUTO_TEST_CASE(HypergraphAndPartitionTest) {
 
     int originalCost = partitionToImprove.ComputeConnectivityCost();
 
-    GenericFM<Hypergraph> fm;
+    GenericFM<HypergraphImpl> fm;
     fm.ImprovePartitioning(partitionToImprove);
     int newCost = partitionToImprove.ComputeConnectivityCost();
 
@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(HypergraphAndPartitionTest) {
     Graph largerDag;
     file_reader::ReadComputationalDagHyperdagFormatDB((cwd / "data/spaa/large/instance_CG_N24_K22_nzP0d2.hdag").string(),
                                                       largerDag);
-    instance.setHypergraph(convert_from_cdag_as_hyperdag<Hypergraph, Graph>(largerDag));
+    instance.setHypergraph(convert_from_cdag_as_hyperdag<HypergraphImpl, Graph>(largerDag));
 
     instance.SetMaxWorkWeightExplicitly(4000);
     for (unsigned node = 0; node < instance.GetHypergraph().NumVertices(); ++node) {

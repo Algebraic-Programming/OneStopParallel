@@ -30,7 +30,7 @@ using namespace osp;
 
 BOOST_AUTO_TEST_CASE(TestFull) {
     using graph = ComputationalDagVectorImplDefIntT;
-    using Hypergraph = Hypergraph_def_t;
+    using HypergraphImpl = HypergraphDefT;
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(TestFull) {
 
     BOOST_CHECK(status);
 
-    Hypergraph hgraph = convert_from_cdag_as_hyperdag<Hypergraph, graph>(DAG);
+    HypergraphImpl hgraph = convert_from_cdag_as_hyperdag<HypergraphImpl, graph>(DAG);
     BOOST_CHECK_EQUAL(DAG.NumVertices(), Hgraph.NumVertices());
 
     PartitioningProblem instance(hgraph, 3, 35);
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(TestFull) {
 
     // ILP without replication
 
-    HypergraphPartitioningILP<Hypergraph> partitioner;
+    HypergraphPartitioningILP<HypergraphImpl> partitioner;
     partitioner.setTimeLimitSeconds(60);
     partitioner.computePartitioning(partition);
 
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(TestFull) {
 
     // ILP with replication
 
-    HypergraphPartitioningILPWithReplication<Hypergraph> partitionerRep;
+    HypergraphPartitioningILPWithReplication<HypergraphImpl> partitionerRep;
     PartitioningWithReplication partitionRep(instance);
 
     partitionerRep.setTimeLimitSeconds(60);
@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE(TestFull) {
 
     // same tests with other replication formulation
     instance.setMaxWorkWeightExplicitly(35);
-    partitioner_rep.setReplicationModel(HypergraphPartitioningILPWithReplication<Hypergraph>::REPLICATION_MODEL_IN_ILP::GENERAL);
+    partitioner_rep.setReplicationModel(HypergraphPartitioningILPWithReplication<HypergraphImpl>::REPLICATION_MODEL_IN_ILP::GENERAL);
     partitionerRep.setUseInitialSolution(false);
     partitionerRep.computePartitioning(partition_rep);
 
