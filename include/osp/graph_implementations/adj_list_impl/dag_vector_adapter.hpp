@@ -45,16 +45,16 @@ namespace osp {
  *   - `work_weight_type`: The type used for computational work weights.
  *   - `comm_weight_type`: The type used for communication weights.
  *   - `mem_weight_type`: The type used for memory weights.
- *   - `cdag_vertex_type_type`: The type used for vertex types.
+ *   - `cdag_VertexTypeType`: The type used for vertex types.
  * - It must have the following public data members:
  *   - `id`: Of type `vertex_idx_type`.
  *   - `work_weight`: Of type `work_weight_type`.
  *   - `comm_weight`: Of type `comm_weight_type`.
  *   - `mem_weight`: Of type `mem_weight_type`.
- *   - `vertex_type`: Of type `cdag_vertex_type_type`.
+ *   - `vertex_type`: Of type `cdag_VertexTypeType`.
  * - It must be constructible with the signature:
  *   `v_impl(vertex_idx_type id, work_weight_type work_weight, comm_weight_type comm_weight, mem_weight_type mem_weight,
- * cdag_vertex_type_type vertex_type)`
+ * cdag_VertexTypeType vertex_type)`
  *
  * @tparam index_t The type used for vertex indices in the adjacency lists.
  */

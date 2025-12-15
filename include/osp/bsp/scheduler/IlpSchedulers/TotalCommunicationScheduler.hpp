@@ -223,7 +223,7 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
                     for (unsigned p2 = 0; p2 < instancePtr_->NumberOfProcessors(); p2++) {
                         if (p1 != p2) {
                             int edgeId = 0;
-                            for (const auto &ep : edge_view(instancePtr_->GetComputationalDag())) {
+                            for (const auto &ep : EdgeView(instancePtr_->GetComputationalDag())) {
                                 if (schedule.AssignedProcessor(ep.source) == p1 && schedule.AssignedProcessor(ep.target) == p2) {
                                     SetSolution((*edgeVarsPtr_)[p1][p2][edgeId], 1.0);
                                 } else {
@@ -238,7 +238,7 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
 
             } else {
                 int edgeId = 0;
-                for (const auto &ep : edge_view(instancePtr_->GetComputationalDag())) {
+                for (const auto &ep : EdgeView(instancePtr_->GetComputationalDag())) {
                     if (schedule.AssignedProcessor(ep.source) != schedule.AssignedProcessor(ep.target)) {
                         SetSolution((*edgeVarsPtr_)[0][0][edgeId], 1.0);
                     } else {
@@ -443,7 +443,7 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
                             = model.AddVars(static_cast<int>(instance.GetComputationalDag().NumEdges()), COPT_BINARY, "edge");
 
                         int edgeId = 0;
-                        for (const auto &ep : edge_view(instance.GetComputationalDag())) {
+                        for (const auto &ep : EdgeView(instance.GetComputationalDag())) {
                             Expr expr1, expr2;
                             assert(maxNumberSupersteps_ <= std::numeric_limits<int>::max());
                             for (unsigned step = 0; step < maxNumberSupersteps_; step++) {
@@ -468,7 +468,7 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
             edgeVars_[0][0] = model.AddVars(static_cast<int>(instance.GetComputationalDag().NumEdges()), COPT_BINARY, "edge");
 
             int edgeId = 0;
-            for (const auto &ep : edge_view(instance.GetComputationalDag())) {
+            for (const auto &ep : EdgeView(instance.GetComputationalDag())) {
                 for (unsigned p1 = 0; p1 < instance.NumberOfProcessors(); p1++) {
                     Expr expr1, expr2;
                     for (unsigned step = 0; step < maxNumberSupersteps_; step++) {

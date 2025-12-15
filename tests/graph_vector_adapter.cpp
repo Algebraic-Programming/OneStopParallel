@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(TestDagVectorAdapterEdge) {
     using VImpl = cdag_vertex_impl<unsigned, int, int, int, unsigned>;
     using GraphT = dag_vector_adapter<VImpl, int>;
     using GraphConstrT = computational_dag_edge_idx_vector_impl<VImpl, cdag_edge_impl_int>;
-    using CoarseGraphType = Compact_Sparse_Graph<true,
+    using CoarseGraphType = CompactSparseGraph<true,
                                                  true,
                                                  true,
                                                  true,
@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE(TestDagVectorAdapter) {
     using VImpl = cdag_vertex_impl<unsigned, int, int, int, unsigned>;
     using GraphT = dag_vector_adapter<VImpl, int>;
     using GraphConstrT = computational_dag_vector_impl<VImpl>;
-    using CoarseGraphType = Compact_Sparse_Graph<true,
+    using CoarseGraphType = CompactSparseGraph<true,
                                                  true,
                                                  true,
                                                  true,

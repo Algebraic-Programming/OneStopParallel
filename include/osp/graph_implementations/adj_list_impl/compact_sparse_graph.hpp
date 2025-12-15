@@ -418,16 +418,16 @@ class CompactSparseGraph {
 
                 // update priorities
                 for (VertexIdx chld : childrenTmp[vert]) {
-                    priorities[chld] = log_sum_exp(priorities[chld], pos);
+                    priorities[chld] = LogSumExp(priorities[chld], pos);
                 }
                 for (VertexIdx par : parentsTmp[vert]) {
                     for (VertexIdx sibling : childrenTmp[par]) {
-                        priorities[sibling] = log_sum_exp(priorities[sibling], pos);
+                        priorities[sibling] = LogSumExp(priorities[sibling], pos);
                     }
                 }
                 for (VertexIdx chld : childrenTmp[vert]) {
                     for (VertexIdx couple : parentsTmp[chld]) {
-                        priorities[couple] = log_sum_exp(priorities[couple], pos);
+                        priorities[couple] = LogSumExp(priorities[couple], pos);
                     }
                 }
 

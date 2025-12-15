@@ -400,7 +400,7 @@ BOOST_AUTO_TEST_CASE(TestUtil1) {
     std::vector<VertexIdx> edgeTarget = {1, 2, 3, 4, 6, 4, 5, 7, 7};
 
     size_t i = 0;
-    for (const auto &e : edge_view(graph)) {
+    for (const auto &e : EdgeView(graph)) {
         BOOST_CHECK_EQUAL(e.source, edgeSource[i]);
         BOOST_CHECK_EQUAL(e.target, edgeTarget[i]);
 
@@ -692,7 +692,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 
 BOOST_AUTO_TEST_CASE(TestEdgeViewIndexedAccess) {
     computational_dag_vector_impl_def_t graph = ConstrGraph1();
-    auto allEdges = edge_view(graph);
+    auto allEdges = EdgeView(graph);
 
     // Check initial iterator
     auto it = allEdges.begin();

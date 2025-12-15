@@ -48,7 +48,7 @@ typename HypergraphT::VertexWorkWeightType ComputeTotalVertexWorkWeight(const Hy
 }
 
 template <typename HypergraphT>
-typename HypergraphT::vertex_mem_weight_type ComputeTotalVertexMemoryWeight(const HypergraphT &hgraph) {
+typename HypergraphT::VertexMemWeightType ComputeTotalVertexMemoryWeight(const HypergraphT &hgraph) {
     using IndexType = typename HypergraphT::VertexIdx;
     using MemwType = typename HypergraphT::VertexMemWeightType;
 

@@ -30,7 +30,7 @@ limitations under the License.
 namespace osp {
 
 /**
- * @brief Trait to check if a graph type is a `Compact_Sparse_Graph`.
+ * @brief Trait to check if a graph type is a `CompactSparseGraph`.
  *
  * @tparam T The graph type.
  */
@@ -41,7 +41,7 @@ template <typename T>
 inline constexpr bool IsCompactSparseGraphV = IsCompactSparseGraph<T>::value;
 
 /**
- * @brief Trait to check if a graph type is a `Compact_Sparse_Graph` that supports reordering.
+ * @brief Trait to check if a graph type is a `CompactSparseGraph` that supports reordering.
  *
  * @tparam T The graph type.
  */

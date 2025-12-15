@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(SubGraphCompactSparseGraph) {
         graph.SetVertexType(vert, cntr++);
     }
 
-    const std::vector<VertexIdxT<Compact_Sparse_Graph<true, true, true, true, true>>> selectVert({2, 3, 10, 6, 7});
+    const std::vector<VertexIdxT<CompactSparseGraph<true, true, true, true, true>>> selectVert({2, 3, 10, 6, 7});
     const auto vertCorrespondence = create_induced_subgraph_map(graph, subGraph, selectVert);
     BOOST_CHECK_EQUAL(subGraph.NumVertices(), selectVert.size());
     BOOST_CHECK_EQUAL(subGraph.NumEdges(), 4);

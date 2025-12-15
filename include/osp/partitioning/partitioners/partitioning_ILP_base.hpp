@@ -77,8 +77,8 @@ template <typename HypergraphT>
 void HypergraphPartitioningILPBase<HypergraphT>::SetupFundamentalVariablesConstraintsObjective(
     const PartitioningProblem<HypergraphT> &instance, Model &model) {
     using IndexType = typename HypergraphT::VertexIdx;
-    using WorkwType = typename HypergraphT::vertex_work_weight_type;
-    using MemwType = typename HypergraphT::vertex_mem_weight_type;
+    using WorkwType = typename HypergraphT::VertexWorkWeightType;
+    using MemwType = typename HypergraphT::VertexMemWeightType;
 
     const IndexType numberOfParts = instance.GetNumberOfPartitions();
     const IndexType numberOfVertices = instance.GetHypergraph().NumVertices();

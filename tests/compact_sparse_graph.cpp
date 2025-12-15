@@ -533,7 +533,7 @@ BOOST_AUTO_TEST_CASE(GraphEdgeContruction) {
     BOOST_CHECK_EQUAL(graph.NumEdges(), 9);
     BOOST_CHECK_EQUAL(graph.NumVertices(), 8);
 
-    Compact_Sparse_Graph<true, false, false, false, false, VertexIdx> copyGraph(graph.NumVertices(), edge_view(graph));
+    CompactSparseGraph<true, false, false, false, false, VertexIdx> copyGraph(graph.NumVertices(), EdgeView(graph));
     BOOST_CHECK_EQUAL(copyGraph.NumVertices(), 8);
     BOOST_CHECK_EQUAL(copyGraph.NumEdges(), 9);
 
@@ -577,13 +577,13 @@ BOOST_AUTO_TEST_CASE(GraphEdgeContruction) {
         }
     }
 
-    Compact_Sparse_Graph<false, false, false, false, false, VertexIdx> reorderGraph(graph.NumVertices(), edge_view(graph));
+    CompactSparseGraph<false, false, false, false, false, VertexIdx> reorderGraph(graph.NumVertices(), EdgeView(graph));
     BOOST_CHECK_EQUAL(reorderGraph.NumVertices(), 8);
     BOOST_CHECK_EQUAL(reorderGraph.NumEdges(), 9);
 
     std::vector<std::size_t> perm(8, 0);
     std::iota(perm.begin(), perm.end(), 0);
-    const std::vector<std::size_t> &graphPerm = reorderGraph.get_pullback_permutation();
+    const std::vector<std::size_t> &graphPerm = reorderGraph.GetPullbackPermutation();
     BOOST_CHECK(std::is_permutation(perm.cbegin(), perm.cend(), graphPerm.cbegin(), graphPerm.cend()));
 
     for (const auto &vert : reorderGraph.Vertices()) {
@@ -974,17 +974,17 @@ BOOST_AUTO_TEST_CASE(GraphTypeCopyContruction) {
     BOOST_CHECK_EQUAL(graph.NumEdges(), 9);
     BOOST_CHECK_EQUAL(graph.NumVertices(), 8);
 
-    Compact_Sparse_Graph<true,
+    CompactSparseGraph<true,
                          true,
                          true,
                          true,
                          true,
                          VertexIdx,
                          std::size_t,
-                         ComputationalDagEdgeIdxVectorImplDefT::vertex_work_weight_type,
-                         ComputationalDagEdgeIdxVectorImplDefT::vertex_comm_weight_type,
-                         ComputationalDagEdgeIdxVectorImplDefT::vertex_mem_weight_type,
-                         ComputationalDagEdgeIdxVectorImplDefT::vertex_type_type>
+                         ComputationalDagEdgeIdxVectorImplDefT::VertexWorkWeightType,
+                         ComputationalDagEdgeIdxVectorImplDefT::VertexCommWeightType,
+                         ComputationalDagEdgeIdxVectorImplDefT::VertexMemWeightType,
+                         ComputationalDagEdgeIdxVectorImplDefT::VertexTypeType>
         copyGraph(graph);
     BOOST_CHECK_EQUAL(copyGraph.NumVertices(), 8);
     BOOST_CHECK_EQUAL(copyGraph.NumEdges(), 9);
@@ -1036,24 +1036,24 @@ BOOST_AUTO_TEST_CASE(GraphTypeCopyContruction) {
         }
     }
 
-    Compact_Sparse_Graph<false,
+    CompactSparseGraph<false,
                          true,
                          true,
                          true,
                          true,
                          VertexIdx,
                          std::size_t,
-                         ComputationalDagEdgeIdxVectorImplDefT::vertex_work_weight_type,
-                         ComputationalDagEdgeIdxVectorImplDefT::vertex_comm_weight_type,
-                         ComputationalDagEdgeIdxVectorImplDefT::vertex_mem_weight_type,
-                         ComputationalDagEdgeIdxVectorImplDefT::vertex_type_type>
+                         ComputationalDagEdgeIdxVectorImplDefT::VertexWorkWeightType,
+                         ComputationalDagEdgeIdxVectorImplDefT::VertexCommWeightType,
+                         ComputationalDagEdgeIdxVectorImplDefT::VertexMemWeightType,
+                         ComputationalDagEdgeIdxVectorImplDefT::VertexTypeType>
         reorderGraph(graph);
     BOOST_CHECK_EQUAL(reorderGraph.NumVertices(), 8);
     BOOST_CHECK_EQUAL(reorderGraph.NumEdges(), 9);
 
     std::vector<std::size_t> perm(8, 0);
     std::iota(perm.begin(), perm.end(), 0);
-    const std::vector<std::size_t> &graphPerm = reorderGraph.get_pullback_permutation();
+    const std::vector<std::size_t> &graphPerm = reorderGraph.GetPullbackPermutation();
     BOOST_CHECK(std::is_permutation(perm.cbegin(), perm.cend(), graphPerm.cbegin(), graphPerm.cend()));
 
     for (const auto &vert : reorderGraph.Vertices()) {

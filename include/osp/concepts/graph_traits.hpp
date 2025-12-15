@@ -156,9 +156,9 @@ using EdgeDescT = typename DirectedGraphEdgeDescTraits<T>::DirectedEdgeDescripto
  * @brief Traits for computational Directed Acyclic Graphs (DAGs).
  *
  * Computational DAGs extend basic graphs by adding requirements for weight types:
- * - `vertex_work_weight_type`: Represents computational cost of a task.
- * - `vertex_comm_weight_type`: Represents data size/communication cost.
- * - `vertex_mem_weight_type`: Represents memory usage of a task.
+ * - `VertexWorkWeightType`: Represents computational cost of a task.
+ * - `VertexCommWeightType`: Represents data size/communication cost.
+ * - `VertexMemWeightType`: Represents memory usage of a task.
  *
  * @tparam T The computational DAG type.
  */
@@ -185,7 +185,7 @@ using VMemwT = typename ComputationalDagTraits<T>::VertexMemWeightType;
 /**
  * @brief Traits to extract the vertex type of a computational DAG, if defined.
  *
- * If the DAG defines `vertex_type_type`, it is extracted; otherwise, `void` is used.
+ * If the DAG defines `VertexTypeType`, it is extracted; otherwise, `void` is used.
  */
 template <typename T, typename = void>
 struct ComputationalDagTypedVerticesTraits {

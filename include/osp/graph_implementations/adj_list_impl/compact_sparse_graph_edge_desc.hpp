@@ -407,7 +407,7 @@ template <bool keepVertexOrder,
           typename MemWeightType,
           typename ECommWeightType,
           typename VertexTypeTemplateType>
-inline auto OutEdges(VertexIdxT<Compact_Sparse_Graph_EdgeDesc<keep_vertex_order,
+inline auto OutEdges(VertexIdxT<CompactSparseGraphEdgeDesc<keep_vertex_order,
                                                               use_work_weights,
                                                               use_comm_weights,
                                                               use_mem_weights,
@@ -449,7 +449,7 @@ template <bool keepVertexOrder,
           typename MemWeightType,
           typename ECommWeightType,
           typename VertexTypeTemplateType>
-inline auto InEdges(VertexIdxT<Compact_Sparse_Graph_EdgeDesc<keep_vertex_order,
+inline auto InEdges(VertexIdxT<CompactSparseGraphEdgeDesc<keep_vertex_order,
                                                              use_work_weights,
                                                              use_comm_weights,
                                                              use_mem_weights,
@@ -491,7 +491,7 @@ template <bool keepVertexOrder,
           typename MemWeightType,
           typename ECommWeightType,
           typename VertexTypeTemplateType>
-inline VertexIdxT<Compact_Sparse_Graph_EdgeDesc<keep_vertex_order,
+inline VertexIdxT<CompactSparseGraphEdgeDesc<keep_vertex_order,
                                                 use_work_weights,
                                                 use_comm_weights,
                                                 use_mem_weights,
@@ -504,7 +504,7 @@ inline VertexIdxT<Compact_Sparse_Graph_EdgeDesc<keep_vertex_order,
                                                 mem_weight_type,
                                                 e_comm_weight_type,
                                                 vertex_type_template_type>>
-Source(const EdgeDescT<Compact_Sparse_Graph_EdgeDesc<keep_vertex_order,
+Source(const EdgeDescT<CompactSparseGraphEdgeDesc<keep_vertex_order,
                                                      use_work_weights,
                                                      use_comm_weights,
                                                      use_mem_weights,
@@ -546,7 +546,7 @@ template <bool keepVertexOrder,
           typename MemWeightType,
           typename ECommWeightType,
           typename VertexTypeTemplateType>
-inline VertexIdxT<Compact_Sparse_Graph_EdgeDesc<keep_vertex_order,
+inline VertexIdxT<CompactSparseGraphEdgeDesc<keep_vertex_order,
                                                 use_work_weights,
                                                 use_comm_weights,
                                                 use_mem_weights,
@@ -559,7 +559,7 @@ inline VertexIdxT<Compact_Sparse_Graph_EdgeDesc<keep_vertex_order,
                                                 mem_weight_type,
                                                 e_comm_weight_type,
                                                 vertex_type_template_type>>
-Target(const EdgeDescT<Compact_Sparse_Graph_EdgeDesc<keep_vertex_order,
+Target(const EdgeDescT<CompactSparseGraphEdgeDesc<keep_vertex_order,
                                                      use_work_weights,
                                                      use_comm_weights,
                                                      use_mem_weights,
@@ -601,7 +601,7 @@ template <bool keepVertexOrder,
           typename MemWeightType,
           typename ECommWeightType,
           typename VertexTypeTemplateType>
-struct IsCompactSparseGraph<Compact_Sparse_Graph_EdgeDesc<keep_vertex_order,
+struct IsCompactSparseGraph<CompactSparseGraphEdgeDesc<keep_vertex_order,
                                                           use_work_weights,
                                                           use_comm_weights,
                                                           use_mem_weights,
@@ -628,7 +628,7 @@ template <bool useWorkWeights,
           typename MemWeightType,
           typename ECommWeightType,
           typename VertexTypeTemplateType>
-struct IsCompactSparseGraphReorder<Compact_Sparse_Graph_EdgeDesc<false,
+struct IsCompactSparseGraphReorder<CompactSparseGraphEdgeDesc<false,
                                                                  use_work_weights,
                                                                  use_comm_weights,
                                                                  use_mem_weights,
@@ -643,64 +643,64 @@ struct IsCompactSparseGraphReorder<Compact_Sparse_Graph_EdgeDesc<false,
                                                                  vertex_type_template_type>,
                                    void> : std::true_type {};
 
-static_assert(IsCompactSparseGraphV<Compact_Sparse_Graph_EdgeDesc<true>>);
-static_assert(IsCompactSparseGraphV<Compact_Sparse_Graph_EdgeDesc<false>>);
-static_assert(!IsCompactSparseGraphReorderV<Compact_Sparse_Graph_EdgeDesc<true>>);
-static_assert(IsCompactSparseGraphReorderV<Compact_Sparse_Graph_EdgeDesc<false>>);
+static_assert(IsCompactSparseGraphV<CompactSparseGraphEdgeDesc<true>>);
+static_assert(IsCompactSparseGraphV<CompactSparseGraphEdgeDesc<false>>);
+static_assert(!IsCompactSparseGraphReorderV<CompactSparseGraphEdgeDesc<true>>);
+static_assert(IsCompactSparseGraphReorderV<CompactSparseGraphEdgeDesc<false>>);
 
-static_assert(HasVertexWeightsV<Compact_Sparse_Graph_EdgeDesc<true, true>>,
-              "Compact_Sparse_Graph_EdgeDesc must satisfy the has_vertex_weights concept");
+static_assert(HasVertexWeightsV<CompactSparseGraphEdgeDesc<true, true>>,
+              "CompactSparseGraphEdgeDesc must satisfy the has_vertex_weights concept");
 
-static_assert(HasVertexWeightsV<Compact_Sparse_Graph_EdgeDesc<false, true>>,
-              "Compact_Sparse_Graph_EdgeDesc must satisfy the has_vertex_weights concept");
+static_assert(HasVertexWeightsV<CompactSparseGraphEdgeDesc<false, true>>,
+              "CompactSparseGraphEdgeDesc must satisfy the has_vertex_weights concept");
 
-static_assert(IsDirectedGraphV<Compact_Sparse_Graph_EdgeDesc<false, false, false, false, false>>,
-              "Compact_Sparse_Graph_EdgeDesc must satisfy the directed_graph concept");
+static_assert(IsDirectedGraphV<CompactSparseGraphEdgeDesc<false, false, false, false, false>>,
+              "CompactSparseGraphEdgeDesc must satisfy the directed_graph concept");
 
-static_assert(IsDirectedGraphV<Compact_Sparse_Graph_EdgeDesc<false, true, true, true, true>>,
-              "Compact_Sparse_Graph_EdgeDesc must satisfy the directed_graph concept");
+static_assert(IsDirectedGraphV<CompactSparseGraphEdgeDesc<false, true, true, true, true>>,
+              "CompactSparseGraphEdgeDesc must satisfy the directed_graph concept");
 
-static_assert(IsDirectedGraphV<Compact_Sparse_Graph_EdgeDesc<true, false, false, false, false>>,
-              "Compact_Sparse_Graph_EdgeDesc must satisfy the directed_graph concept");
+static_assert(IsDirectedGraphV<CompactSparseGraphEdgeDesc<true, false, false, false, false>>,
+              "CompactSparseGraphEdgeDesc must satisfy the directed_graph concept");
 
-static_assert(IsDirectedGraphV<Compact_Sparse_Graph_EdgeDesc<true, true, true, true, true>>,
-              "Compact_Sparse_Graph_EdgeDesc must satisfy the directed_graph concept");
+static_assert(IsDirectedGraphV<CompactSparseGraphEdgeDesc<true, true, true, true, true>>,
+              "CompactSparseGraphEdgeDesc must satisfy the directed_graph concept");
 
-static_assert(IsComputationalDagV<Compact_Sparse_Graph_EdgeDesc<false, true, true, true, false>>,
-              "Compact_Sparse_Graph_EdgeDesc must satisfy the is_computation_dag concept");
+static_assert(IsComputationalDagV<CompactSparseGraphEdgeDesc<false, true, true, true, false>>,
+              "CompactSparseGraphEdgeDesc must satisfy the is_computation_dag concept");
 
-static_assert(IsComputationalDagV<Compact_Sparse_Graph_EdgeDesc<true, true, true, true, false>>,
-              "Compact_Sparse_Graph_EdgeDesc must satisfy the is_computation_dag concept");
+static_assert(IsComputationalDagV<CompactSparseGraphEdgeDesc<true, true, true, true, false>>,
+              "CompactSparseGraphEdgeDesc must satisfy the is_computation_dag concept");
 
-static_assert(IsComputationalDagTypedVerticesV<Compact_Sparse_Graph_EdgeDesc<false, true, true, true, true, true>>,
-              "Compact_Sparse_Graph_EdgeDesc must satisfy the is_computation_dag with types concept");
+static_assert(IsComputationalDagTypedVerticesV<CompactSparseGraphEdgeDesc<false, true, true, true, true, true>>,
+              "CompactSparseGraphEdgeDesc must satisfy the is_computation_dag with types concept");
 
-static_assert(IsComputationalDagTypedVerticesV<Compact_Sparse_Graph_EdgeDesc<true, true, true, true, true, true>>,
-              "Compact_Sparse_Graph_EdgeDesc must satisfy the is_computation_dag with types concept");
+static_assert(IsComputationalDagTypedVerticesV<CompactSparseGraphEdgeDesc<true, true, true, true, true, true>>,
+              "CompactSparseGraphEdgeDesc must satisfy the is_computation_dag with types concept");
 
-static_assert(IsDirectedGraphEdgeDescV<Compact_Sparse_Graph_EdgeDesc<true>>,
-              "Compact_Sparse_Graph_EdgeDesc must satisfy the directed graph edge descriptor concept.");
+static_assert(IsDirectedGraphEdgeDescV<CompactSparseGraphEdgeDesc<true>>,
+              "CompactSparseGraphEdgeDesc must satisfy the directed graph edge descriptor concept.");
 
-static_assert(IsDirectedGraphEdgeDescV<Compact_Sparse_Graph_EdgeDesc<false>>,
-              "Compact_Sparse_Graph_EdgeDesc must satisfy the directed graph edge descriptor concept.");
+static_assert(IsDirectedGraphEdgeDescV<CompactSparseGraphEdgeDesc<false>>,
+              "CompactSparseGraphEdgeDesc must satisfy the directed graph edge descriptor concept.");
 
-static_assert(IsComputationalDagTypedVerticesEdgeDescV<Compact_Sparse_Graph_EdgeDesc<false, true, true, true, true, true>>,
-              "Compact_Sparse_Graph_EdgeDesc must satisfy the IsComputationalDagTypedVerticesEdgeDescV with types concept");
+static_assert(IsComputationalDagTypedVerticesEdgeDescV<CompactSparseGraphEdgeDesc<false, true, true, true, true, true>>,
+              "CompactSparseGraphEdgeDesc must satisfy the IsComputationalDagTypedVerticesEdgeDescV with types concept");
 
-static_assert(IsComputationalDagTypedVerticesEdgeDescV<Compact_Sparse_Graph_EdgeDesc<true, true, true, true, true, true>>,
-              "Compact_Sparse_Graph_EdgeDesc must satisfy the IsComputationalDagTypedVerticesEdgeDescV with types concept");
+static_assert(IsComputationalDagTypedVerticesEdgeDescV<CompactSparseGraphEdgeDesc<true, true, true, true, true, true>>,
+              "CompactSparseGraphEdgeDesc must satisfy the IsComputationalDagTypedVerticesEdgeDescV with types concept");
 
-static_assert(HasEdgeWeightsV<Compact_Sparse_Graph_EdgeDesc<false, true, true, true, true, true>>,
-              "Compact_Sparse_Graph_EdgeDesc must satisfy the has_edge_weights concept");
+static_assert(HasEdgeWeightsV<CompactSparseGraphEdgeDesc<false, true, true, true, true, true>>,
+              "CompactSparseGraphEdgeDesc must satisfy the has_edge_weights concept");
 
-static_assert(HasEdgeWeightsV<Compact_Sparse_Graph_EdgeDesc<true, true, true, true, true, true>>,
-              "Compact_Sparse_Graph_EdgeDesc must satisfy the has_edge_weights concept");
+static_assert(HasEdgeWeightsV<CompactSparseGraphEdgeDesc<true, true, true, true, true, true>>,
+              "CompactSparseGraphEdgeDesc must satisfy the has_edge_weights concept");
 
-static_assert(has_hashable_edge_desc_v<Compact_Sparse_Graph_EdgeDesc<true, true>>,
-              "Compact_Sparse_Graph_EdgeDesc must satisfy the has_hashable_edge_desc concept");
+static_assert(has_hashable_edge_desc_v<CompactSparseGraphEdgeDesc<true, true>>,
+              "CompactSparseGraphEdgeDesc must satisfy the has_hashable_edge_desc concept");
 
-static_assert(has_hashable_edge_desc_v<Compact_Sparse_Graph_EdgeDesc<false, true>>,
-              "Compact_Sparse_Graph_EdgeDesc must satisfy the has_hashable_edge_desc concept");
+static_assert(has_hashable_edge_desc_v<CompactSparseGraphEdgeDesc<false, true>>,
+              "CompactSparseGraphEdgeDesc must satisfy the has_hashable_edge_desc concept");
 
 using CSGE
     = CompactSparseGraphEdgeDesc<false, true, true, true, true, true, std::size_t, std::size_t, unsigned, unsigned, unsigned, unsigned, unsigned>;
