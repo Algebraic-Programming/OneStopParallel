@@ -74,22 +74,22 @@ class IsomorphismMapper {
 
         // 1. Compute hashes and orbits for the current graph.
         MerkleHashComputer<Constr_Graph_t> currentHasher(currentGraph);
-        const auto &repOrbits = rep_hasher.get_orbits();
-        const auto &currentOrbits = current_hasher.get_orbits();
+        const auto &repOrbits = rep_hasher.GetOrbits();
+        const auto &currentOrbits = current_hasher.GetOrbits();
 
         // 2. Verify that the orbit structures are identical.
-        if (repOrbits.size() != current_orbits.size()) {
+        if (repOrbits.size() != currentOrbits.size()) {
             throw std::runtime_error("IsomorphismMapper: Graphs have a different number of orbits.");
         }
-        for (const auto &[hash, rep_orbit_nodes] : rep_orbits) {
-            auto it = current_orbits.find(hash);
-            if (it == current_orbits.end() || it->second.size() != rep_orbit_nodes.size()) {
+        for (const auto &[hash, repOrbitNodes] : repOrbits) {
+            auto it = currentOrbits.find(hash);
+            if (it == currentOrbits.end() || it->second.size() != repOrbitNodes.size()) {
                 throw std::runtime_error("IsomorphismMapper: Mismatched orbit structure between graphs.");
             }
         }
 
         // 3. Iteratively map all components of the graph.
-        std::vector<VertexC> MapCurrentToRep(NumVertices, std::numeric_limits<VertexC>::max());
+        std::vector<VertexC> mapCurrentToRep(numVertices_, std::numeric_limits<VertexC>::max());
         std::vector<bool> repIsMapped(numVertices_, false);
         std::vector<bool> currentIsMapped(numVertices_, false);
         size_t mappedCount = 0;
@@ -106,28 +106,28 @@ class IsomorphismMapper {
                 }
             }
 
-            if (rep_seed == std::numeric_limits<VertexC>::max()) {
+            if (repSeed == std::numeric_limits<VertexC>::max()) {
                 break;    // Should be unreachable if mapped_count < NumVertices
             }
 
             // Find a corresponding unmapped vertex in the current graph's orbit.
-            const auto &candidates = current_orbits.at(rep_hasher.get_vertex_hash(rep_seed));
+            const auto &candidates = currentOrbits.at(repHasher.GetVertexHash(repSeed));
             VertexC currentSeed = std::numeric_limits<VertexC>::max();    // Should always be found
             for (const auto &candidate : candidates) {
-                if (!current_is_mapped[candidate]) {
-                    current_seed = candidate;
+                if (!currentIsMapped[candidate]) {
+                    currentSeed = candidate;
                     break;
                 }
             }
-            if (current_seed == std::numeric_limits<VertexC>::max()) {
+            if (currentSeed == std::numeric_limits<VertexC>::max()) {
                 throw std::runtime_error("IsomorphismMapper: Could not find an unmapped candidate to seed component mapping.");
             }
 
             // Seed the queue and start the traversal for this component.
-            q.push({rep_seed, current_seed});
-            mapCurrentToRep[rep_seed] = current_seed;
-            repIsMapped[rep_seed] = true;
-            currentIsMapped[current_seed] = true;
+            q.push({repSeed, currentSeed});
+            mapCurrentToRep[repSeed] = currentSeed;
+            repIsMapped[repSeed] = true;
+            currentIsMapped[currentSeed] = true;
             mappedCount++;
 
             while (!q.empty()) {
@@ -135,26 +135,10 @@ class IsomorphismMapper {
                 q.pop();
 
                 // Match neighbors (both parents and children)
-                match_neighbors(current_graph,
-                                current_hasher,
-                                u_rep,
-                                u_curr,
-                                map_current_to_rep,
-                                rep_is_mapped,
-                                current_is_mapped,
-                                mapped_count,
-                                q,
-                                true);
-                match_neighbors(current_graph,
-                                current_hasher,
-                                u_rep,
-                                u_curr,
-                                map_current_to_rep,
-                                rep_is_mapped,
-                                current_is_mapped,
-                                mapped_count,
-                                q,
-                                false);
+                MatchNeighbors(
+                    currentGraph, currentHasher, u_rep, u_curr, mapCurrentToRep, repIsMapped, currentIsMapped, mappedCount, q, true);
+                MatchNeighbors(
+                    currentGraph, currentHasher, u_rep, u_curr, mapCurrentToRep, repIsMapped, currentIsMapped, mappedCount, q, false);
             }
         }
 
@@ -166,9 +150,9 @@ class IsomorphismMapper {
         std::unordered_map<VertexC, VertexC> currentLocalToRepLocal;
         currentLocalToRepLocal.reserve(numVertices_);
         for (VertexC i = 0; i < numVertices_; ++i) {
-            currentLocalToRepLocal[map_current_to_rep[i]] = i;
+            currentLocalToRepLocal[mapCurrentToRep[i]] = i;
         }
-        return current_local_to_rep_local;
+        return currentLocalToRepLocal;
     }
 
   private:
@@ -184,26 +168,26 @@ class IsomorphismMapper {
                         size_t &mappedCount,
                         std::queue<std::pair<VertexC, VertexC>> &q,
                         bool matchChildren) const {
-        const auto &repNeighborsRange = matchChildren ? repGraph_.Children(u_rep) : repGraph_.Parents(u_rep);
-        const auto &currNeighborsRange = matchChildren ? currentGraph.Children(u_curr) : currentGraph.Parents(u_curr);
+        const auto &repNeighborsRange = matchChildren ? repGraph_.Children(uRep) : repGraph_.Parents(uRep);
+        const auto &currNeighborsRange = matchChildren ? currentGraph.Children(uCurr) : currentGraph.Parents(uCurr);
 
-        for (const auto &v_rep : rep_neighbors_range) {
-            if (rep_is_mapped[v_rep]) {
+        for (const auto &vRep : repNeighborsRange) {
+            if (repIsMapped[vRep]) {
                 continue;
             }
 
-            for (const auto &v_curr : curr_neighbors_range) {
-                if (current_is_mapped[v_curr]) {
+            for (const auto &vCurr : currNeighborsRange) {
+                if (currentIsMapped[vCurr]) {
                     continue;
                 }
 
-                if (rep_hasher.get_vertex_hash(v_rep) == current_hasher.get_vertex_hash(v_curr)) {
-                    map_current_to_rep[v_rep] = v_curr;
-                    rep_is_mapped[v_rep] = true;
-                    current_is_mapped[v_curr] = true;
-                    mapped_count++;
-                    q.push({v_rep, v_curr});
-                    break;    // Found a match for v_rep, move to the next rep neighbor.
+                if (repHasher.GetVertexHash(vRep) == currentHasher.GetVertexHash(vCurr)) {
+                    mapCurrentToRep[vRep] = vCurr;
+                    repIsMapped[vRep] = true;
+                    currentIsMapped[vCurr] = true;
+                    mappedCount++;
+                    q.push({vRep, vCurr});
+                    break;    // Found a match for vRep, move to the next rep neighbor.
                 }
             }
         }

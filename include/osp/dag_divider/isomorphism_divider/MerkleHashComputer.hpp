@@ -39,16 +39,16 @@ namespace osp {
  * This allows for the identification of structurally isomorphic subgraphs.
  *
  * @tparam Graph_t The type of the graph, must satisfy the `directed_graph` concept.
- * @tparam node_hash_func_t A functor that computes a hash for a single node.
- *                          Defaults to `uniform_node_hash_func`.
+ * @tparam NodeHashFuncT A functor that computes a hash for a single node.
+ *                       Defaults to `UniformNodeHashFunc`.
  * @tparam forward If true, hashes are computed based on parents (top-down).
  *                 If false, hashes are computed based on children (bottom-up).
  */
-template <typename GraphT, typename NodeHashFuncT = uniform_node_hash_func<VertexIdxT<GraphT>>, bool forward = true>
+template <typename GraphT, typename NodeHashFuncT = UniformNodeHashFunc<VertexIdxT<GraphT>>, bool forward = true>
 class MerkleHashComputer : public HashComputer<VertexIdxT<GraphT>> {
     static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
-    static_assert(std::is_invocable_r<std::size_t, node_hash_func_t, VertexIdxT<GraphT>>::value,
-                  "node_hash_func_t must be invocable with one VertexIdxT<GraphT> argument and return std::size_t.");
+    static_assert(std::is_invocable_r<std::size_t, NodeHashFuncT, VertexIdxT<GraphT>>::value,
+                  "NodeHashFuncT must be invocable with one VertexIdxT<GraphT> argument and return std::size_t.");
 
     using VertexType = VertexIdxT<GraphT>;
 
@@ -78,12 +78,12 @@ class MerkleHashComputer : public HashComputer<VertexIdxT<GraphT>> {
     std::enable_if_t<forward, RetT> ComputeHashes(const GraphT &graph) {
         vertexHashes_.resize(graph.NumVertices());
 
-        for (const VertexType &v : top_sort_view(graph)) {
-            std::vector<std::size_t> parent_hashes;
+        for (const VertexType &v : TopSortView(graph)) {
+            std::vector<std::size_t> parentHashes;
             for (const VertexType &parent : graph.Parents(v)) {
-                parent_hashes.push_back(vertex_hashes[parent]);
+                parentHashes.push_back(vertexHashes[parent]);
             }
-            compute_hashes_helper(v, parent_hashes);
+            computeHashesHelper(v, parentHashes);
         }
     }
 
@@ -96,9 +96,9 @@ class MerkleHashComputer : public HashComputer<VertexIdxT<GraphT>> {
             const VertexType &v = *it;
             std::vector<std::size_t> childHashes;
             for (const VertexType &child : graph.Children(v)) {
-                child_hashes.push_back(vertex_hashes[child]);
+                childHashes.push_back(vertexHashes[child]);
             }
-            compute_hashes_helper(v, child_hashes);
+            ComputeHashesHelper(v, childHashes);
         }
     }
 
@@ -106,27 +106,27 @@ class MerkleHashComputer : public HashComputer<VertexIdxT<GraphT>> {
     template <typename... Args>
     MerkleHashComputer(const GraphT &graph, Args &&...args)
         : HashComputer<VertexType>(), nodeHashFunc_(std::forward<Args>(args)...) {
-        compute_hashes(graph);
+        ComputeHashes(graph);
     }
 
     virtual ~MerkleHashComputer() override = default;
 
-    inline std::size_t get_vertex_hash(const VertexType &v) const override { return vertexHashes_[v]; }
+    inline std::size_t GetVertexHash(const VertexType &v) const override { return vertexHashes_[v]; }
 
     inline const std::vector<std::size_t> &GetVertexHashes() const override { return vertexHashes_; }
 
     inline std::size_t NumOrbits() const override { return orbits.size(); }
 
-    inline const std::vector<VertexType> &get_orbit(const VertexType &v) const override {
-        return this->get_orbit_from_hash(this->get_vertex_hash(v));
+    inline const std::vector<VertexType> &GetOrbit(const VertexType &v) const override {
+        return this->GetOrbitFromHash(this->GetVertexHash(v));
     }
 
-    inline const std::unordered_map<std::size_t, std::vector<VertexType>> &get_orbits() const override { return orbits; }
+    inline const std::unordered_map<std::size_t, std::vector<VertexType>> &GetOrbits() const override { return orbits; }
 
-    inline const std::vector<VertexType> &get_orbit_from_hash(const std::size_t &hash) const override { return orbits.at(hash); }
+    inline const std::vector<VertexType> &GetOrbitFromHash(const std::size_t &hash) const override { return orbits.at(hash); }
 };
 
-template <typename GraphT, typename NodeHashFuncT = uniform_node_hash_func<VertexIdxT<GraphT>>, bool forward = true>
+template <typename GraphT, typename NodeHashFuncT = UniformNodeHashFunc<VertexIdxT<GraphT>>, bool forward = true>
 bool AreIsomorphicByMerkleHash(const GraphT &g1, const GraphT &g2) {
     // Basic check: Different numbers of vertices or edges mean they can't be isomorphic.
     if (g1.NumVertices() != g2.NumVertices() || g1.NumEdges() != g2.NumEdges()) {
@@ -137,8 +137,8 @@ bool AreIsomorphicByMerkleHash(const GraphT &g1, const GraphT &g2) {
     MerkleHashComputer<GraphT, NodeHashFuncT, forward> hash1(g1);
     MerkleHashComputer<GraphT, NodeHashFuncT, forward> hash2(g2);
 
-    const auto &orbits1 = hash1.get_orbits();
-    const auto &orbits2 = hash2.get_orbits();
+    const auto &orbits1 = hash1.GetOrbits();
+    const auto &orbits2 = hash2.GetOrbits();
 
     if (orbits1.size() != orbits2.size()) {
         return false;
@@ -159,21 +159,21 @@ bool AreIsomorphicByMerkleHash(const GraphT &g1, const GraphT &g2) {
 
 template <typename GraphT>
 struct BwdMerkleNodeHashFunc {
-    MerkleHashComputer<Graph_t, uniform_node_hash_func<VertexIdxT<GraphT>>, false> bwMerkleHash_;
+    MerkleHashComputer<GraphT, UniformNodeHashFunc<VertexIdxT<GraphT>>, false> bwMerkleHash_;
 
-    BwdMerkleNodeHashFunc(const GraphT &graph) : bw_merkle_hash(graph) {}
+    BwdMerkleNodeHashFunc(const GraphT &graph) : bwMerkleHash_(graph) {}
 
-    std::size_t operator()(const VertexIdxT<GraphT> &v) const { return bw_merkle_hash.get_vertex_hash(v); }
+    std::size_t operator()(const VertexIdxT<GraphT> &v) const { return bwMerkleHash_.GetVertexHash(v); }
 };
 
 template <typename GraphT>
 struct PrecomBwdMerkleNodeHashFunc {
-    MerkleHashComputer<Graph_t, vector_node_hash_func<VertexIdxT<GraphT>>, false> bwMerkleHash_;
+    MerkleHashComputer<GraphT, VectorNodeHashFunc<VertexIdxT<GraphT>>, false> bwMerkleHash_;
 
     PrecomBwdMerkleNodeHashFunc(const GraphT &graph, const std::vector<std::size_t> &nodeHashes)
-        : bw_merkle_hash(graph, node_hashes) {}
+        : bwMerkleHash_(graph, nodeHashes) {}
 
-    std::size_t operator()(const VertexIdxT<GraphT> &v) const { return bw_merkle_hash.get_vertex_hash(v); }
+    std::size_t operator()(const VertexIdxT<GraphT> &v) const { return bwMerkleHash_.GetVertexHash(v); }
 };
 
 }    // namespace osp

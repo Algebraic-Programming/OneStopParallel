@@ -47,11 +47,11 @@ class EftSubgraphScheduler {
                          const std::vector<unsigned> &multiplicities,
                          const std::vector<std::vector<VWorkwT<GraphT>>> &requiredProcTypes,
                          const std::vector<unsigned> &maxNumProcs) {
-        prepare_for_scheduling(instance, multiplicities, required_proc_types, max_num_procs);
+        PrepareForScheduling(instance, multiplicities, requiredProcTypes, maxNumProcs);
         return ExecuteSchedule(instance);
     }
 
-    void SetMinWorkPerProcessor(const VWorkwT<GraphT> minWorkPerProcessor) { min_work_per_processor_ = min_work_per_processor; }
+    void SetMinWorkPerProcessor(const VWorkwT<GraphT> minWorkPerProcessor) { minWorkPerProcessor_ = minWorkPerProcessor; }
 
   private:
     static constexpr bool verbose_ = false;
@@ -103,7 +103,7 @@ class EftSubgraphScheduler {
             std::cout << "--- Preparing for Subgraph Scheduling ---" << std::endl;
         }
         const auto &graph = instance.GetComputationalDag();
-        const size_t numWorkerTypes = instance.GetArchitecture().getProcessorTypeCount().size();
+        const size_t numWorkerTypes = instance.GetArchitecture().GetProcessorTypeCount().size();
 
         CalculateUpwardRanks(graph);
 
@@ -112,28 +112,27 @@ class EftSubgraphScheduler {
         }
         job_id_t idx = 0;
         for (auto &job : jobs_) {
-            job.id = idx;
-            job.in_degree_current = graph.InDegree(idx);
-            if (job.in_degree_current == 0) {
-                job.status = JobStatus::READY;
+            job.id_ = idx;
+            job.inDegreeCurrent_ = graph.InDegree(idx);
+            if (job.inDegreeCurrent_ == 0) {
+                job.status_ = JobStatus::READY;
                 readyJobs_.insert(&job);
             } else {
-                job.status = JobStatus::WAITING;
+                job.status_ = JobStatus::WAITING;
             }
-            job.total_work = graph.VertexWorkWeight(idx);
-            job.max_num_procs
-                = std::min(max_num_procs[idx],
-                           static_cast<unsigned>((job.total_work + min_work_per_processor_ - 1) / min_work_per_processor_));
-            job.multiplicity = std::min(multiplicities[idx], job.max_num_procs);
-            job.required_proc_types = required_proc_types[idx];
-            job.assigned_workers.resize(numWorkerTypes, 0);
-            job.start_time = -1.0;
-            job.finish_time = -1.0;
+            job.totalWork_ = graph.VertexWorkWeight(idx);
+            job.maxNumProcs_ = std::min(
+                maxNumProcs[idx], static_cast<unsigned>((job.totalWork_ + minWorkPerProcessor_ - 1) / minWorkPerProcessor_));
+            job.multiplicity_ = std::min(multiplicities[idx], job.maxNumProcs_);
+            job.requiredProcTypes_ = requiredProcTypes[idx];
+            job.assignedWorkers_.resize(numWorkerTypes, 0);
+            job.startTime_ = -1.0;
+            job.finishTime_ = -1.0;
 
             if constexpr (verbose_) {
-                std::cout << "  - Job " << idx << ": rank=" << job.upward_rank << ", mult=" << job.multiplicity
-                          << ", max_procs=" << job.max_num_procs << ", work=" << job.total_work
-                          << ", status=" << (job.status == JobStatus::READY ? "READY" : "WAITING") << std::endl;
+                std::cout << "  - Job " << idx << ": rank=" << job.upwardRank_ << ", mult=" << job.multiplicity_
+                          << ", max_procs=" << job.maxNumProcs_ << ", work=" << job.totalWork_
+                          << ", status=" << (job.status_ == JobStatus::READY ? "READY" : "WAITING") << std::endl;
             }
             idx++;
         }
@@ -145,17 +144,17 @@ class EftSubgraphScheduler {
         for (const auto &vertex : reverseTopOrder) {
             VWorkwT<GraphT> maxSuccessorRank = 0.0;
             for (const auto &child : graph.Children(vertex)) {
-                maxSuccessorRank = std::max(max_successor_rank, jobs_.at(child).upward_rank);
+                maxSuccessorRank = std::max(maxSuccessorRank, jobs_.at(child).upwardRank_);
             }
 
             Job &job = jobs_.at(vertex);
-            job.upwardRank_ = graph.VertexWorkWeight(vertex) + max_successor_rank;
+            job.upwardRank_ = graph.VertexWorkWeight(vertex) + maxSuccessorRank;
         }
     }
 
     SubgraphSchedule ExecuteSchedule(const BspInstance<GraphT> &instance) {
         double currentTime = 0.0;
-        std::vector<unsigned> availableWorkers = instance.GetArchitecture().getProcessorTypeCount();
+        std::vector<unsigned> availableWorkers = instance.GetArchitecture().GetProcessorTypeCount();
         const size_t numWorkerTypes = availableWorkers.size();
         std::vector<job_id_t> runningJobs;
         unsigned completedCount = 0;
@@ -180,7 +179,7 @@ class EftSubgraphScheduler {
                     std::cout << "T" << i << ":" << availableWorkers[i] << " ";
                 }
                 std::cout << std::endl;
-                std::cout << "Ready queue size: " << readyJobs_.size() << ". Running jobs: " << running_jobs.size() << std::endl;
+                std::cout << "Ready queue size: " << readyJobs_.size() << ". Running jobs: " << runningJobs.size() << std::endl;
             }
 
             std::vector<Job *> jobsToStart;
@@ -313,8 +312,8 @@ class EftSubgraphScheduler {
             }
 
             double nextEventTime = std::numeric_limits<double>::max();
-            for (job_id_t id : running_jobs) {
-                next_event_time = std::min(next_event_time, jobs_.at(id).finish_time);
+            for (job_id_t id : runningJobs) {
+                nextEventTime = std::min(nextEventTime, jobs_.at(id).finishTime_);
             }
             if constexpr (verbose_) {
                 std::cout << "Advancing time from " << currentTime << " to " << nextEventTime << std::endl;
@@ -322,8 +321,8 @@ class EftSubgraphScheduler {
             currentTime = nextEventTime;
 
             // 3. PROCESS COMPLETED JOBS
-            auto it = running_jobs.begin();
-            while (it != running_jobs.end()) {
+            auto it = runningJobs.begin();
+            while (it != runningJobs.end()) {
                 Job &job = jobs_.at(*it);
                 if (job.finishTime_ <= currentTime) {
                     job.status_ = JobStatus::COMPLETED;
@@ -340,18 +339,18 @@ class EftSubgraphScheduler {
                     if constexpr (verbose_) {
                         std::cout << "  - Updating successors..." << std::endl;
                     }
-                    for (const auto &successor_id : graph.Children(job.id)) {
-                        Job &successor_job = jobs_.at(successor_id);
-                        successor_job.in_degree_current--;
-                        if (successor_job.in_degree_current == 0) {
-                            successor_job.status = JobStatus::READY;
-                            ready_jobs_.insert(&successor_job);
-                            if constexpr (verbose) {
-                                std::cout << "    - Successor " << successor_job.id << " is now READY." << std::endl;
+                    for (const auto &successor_id : graph.Children(job.id_)) {
+                        Job &successorJob = jobs_.at(successor_id);
+                        successorJob.inDegreeCurrent_--;
+                        if (successorJob.inDegreeCurrent_ == 0) {
+                            successorJob.status_ = JobStatus::READY;
+                            readyJobs_.insert(&successorJob);
+                            if constexpr (verbose_) {
+                                std::cout << "    - Successor " << successorJob.id_ << " is now READY." << std::endl;
                             }
                         }
                     }
-                    it = running_jobs.erase(it);    // Remove from running list
+                    it = runningJobs.erase(it);    // Remove from running list
                 } else {
                     ++it;
                 }
@@ -363,11 +362,11 @@ class EftSubgraphScheduler {
             std::cout << "Final Makespan: " << currentTime << std::endl;
             std::cout << "Job Summary:" << std::endl;
             for (const auto &job : jobs_) {
-                std::cout << "  - Job " << job.id << ": Multiplicity=" << job.multiplicity << ", Max Procs=" << job.max_num_procs
-                          << ", Work=" << job.total_work << ", Start=" << job.start_time << ", Finish=" << job.finish_time
+                std::cout << "  - Job " << job.id_ << ": Multiplicity=" << job.multiplicity_ << ", Max Procs=" << job.maxNumProcs_
+                          << ", Work=" << job.totalWork_ << ", Start=" << job.startTime_ << ", Finish=" << job.finishTime_
                           << ", Workers=[";
-                for (size_t i = 0; i < job.assigned_workers.size(); ++i) {
-                    std::cout << "T" << i << ":" << job.assigned_workers[i] << (i == job.assigned_workers.size() - 1 ? "" : ", ");
+                for (size_t i = 0; i < job.assignedWorkers_.size(); ++i) {
+                    std::cout << "T" << i << ":" << job.assignedWorkers_[i] << (i == job.assignedWorkers_.size() - 1 ? "" : ", ");
                 }
                 std::cout << "]" << std::endl;
             }
@@ -377,9 +376,10 @@ class EftSubgraphScheduler {
         result.makespan_ = currentTime;
         result.nodeAssignedWorkerPerType_.resize(jobs_.size());
         for (const auto &job : jobs_) {
-            result.nodeAssignedWorkerPerType_[job.id].resize(numWorkerTypes);
+            result.nodeAssignedWorkerPerType_[job.id_].resize(numWorkerTypes);
             for (size_t i = 0; i < numWorkerTypes; ++i) {
-                result.nodeAssignedWorkerPerType_[job.id][i] = (job.assigned_workers[i] + job.multiplicity - 1) / job.multiplicity;
+                result.nodeAssignedWorkerPerType_[job.id_][i]
+                    = (job.assignedWorkers_[i] + job.multiplicity_ - 1) / job.multiplicity_;
             }
         }
         return result;
