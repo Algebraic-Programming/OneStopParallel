@@ -179,7 +179,7 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
     BspSchedule(const BspInstance<GraphT> &instance, const BspSchedule<GraphTOther> &schedule)
         : instance_(&instance),
           numberOfSupersteps_(schedule.NumberOfSupersteps()),
-          nodeToProcessorAssignment_(schedule.assignedProcessors()),
+          nodeToProcessorAssignment_(schedule.AssignedProcessors()),
           nodeToSuperstepAssignment_(schedule.AssignedSupersteps()) {}
 
     /**
@@ -447,7 +447,7 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
      * @return True if memory constraints are satisfied, false otherwise.
      */
     [[nodiscard]] bool SatisfiesMemoryConstraints() const {
-        switch (instance_->GetArchitecture().getMemoryConstraintType()) {
+        switch (instance_->GetArchitecture().GetMemoryConstraintType()) {
             case MemoryConstraintType::LOCAL:
                 return SatisfiesLocalMemoryConstraints();
 
