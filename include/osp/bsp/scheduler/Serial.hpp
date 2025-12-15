@@ -79,7 +79,7 @@ class Serial : public Scheduler<GraphT> {
 
         for (VTypeT<GraphT> type = 0; type < numNodeTypes; ++type) {
             for (const auto &p : chosenProcs) {
-                if (instance.isCompatibleType(type, instance.ProcessorType(p))) {
+                if (instance.IsCompatibleType(type, instance.ProcessorType(p))) {
                     nodeTypeCompatibleProcessors[type].push_back(p);
                 }
             }

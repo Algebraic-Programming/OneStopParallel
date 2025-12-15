@@ -102,8 +102,8 @@ class ComboScheduler : public Scheduler<GraphT> {
 
     virtual ~ComboScheduler() = default;
 
-    virtual std::string getScheduleName() const override {
-        return baseScheduler_.getScheduleName() + "+" + improvementScheduler_.getScheduleName();
+    virtual std::string GetScheduleName() const override {
+        return baseScheduler_.GetScheduleName() + "+" + improvementScheduler_.GetScheduleName();
     }
 
     virtual ReturnStatus ComputeSchedule(BspSchedule<GraphT> &schedule) override {
@@ -112,7 +112,7 @@ class ComboScheduler : public Scheduler<GraphT> {
             return status;
         }
 
-        return improvementScheduler_.improveSchedule(schedule);
+        return improvementScheduler_.ImproveSchedule(schedule);
     }
 };
 

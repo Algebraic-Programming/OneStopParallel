@@ -198,7 +198,7 @@ class CilkScheduler : public Scheduler<GraphT> {
 
                 ready.erase(nextNode);
                 schedule.proc_[nextNode] = nextProc;
-                schedule.time[nextNode] = time;
+                schedule.time_[nextNode] = time;
 
                 finishTimes.insert({time + instance.GetComputationalDag().VertexWorkWeight(nextNode), nextNode});
                 procFree[nextProc] = false;
@@ -211,7 +211,7 @@ class CilkScheduler : public Scheduler<GraphT> {
             }
         }
 
-        schedule.convertToBspSchedule(instance, greedyProcLists, bspSchedule);
+        schedule.ConvertToBspSchedule(instance, greedyProcLists, bspSchedule);
 
         return ReturnStatus::OSP_SUCCESS;
     }

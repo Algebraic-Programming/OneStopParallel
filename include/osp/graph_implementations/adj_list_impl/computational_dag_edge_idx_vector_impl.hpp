@@ -283,8 +283,8 @@ struct std::hash<osp::DirectedEdgeDescriptorImpl<VImpl>> {
     using VertexIdx = typename VImpl::VertexIdxType;
 
     std::size_t operator()(const osp::DirectedEdgeDescriptorImpl<VImpl> &p) const noexcept {
-        auto h1 = std::hash<VertexIdx>{}(p.source);
-        osp::HashCombine(h1, p.target);
+        auto h1 = std::hash<VertexIdx>{}(p.source_);
+        osp::HashCombine(h1, p.target_);
 
         return h1;
     }

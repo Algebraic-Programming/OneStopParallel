@@ -212,7 +212,7 @@ class FunnelBfs : public CoarserGenExpansionMap<GraphTIn, GraphTOut> {
 
         std::vector<bool> visited(graph.NumVertices(), false);
 
-        for (const auto &topNode : top_sort_view(graph)) {
+        for (const auto &topNode : TopSortView(graph)) {
             if (visited[topNode]) {
                 continue;
             }

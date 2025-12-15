@@ -96,8 +96,8 @@ ReturnStatus PebblingPartialILP<GraphT>::ComputePebbling(PebblingSchedule<GraphT
     // STEP 1: divide DAG acyclicly with partitioning ILP
 
     AcyclicDagDivider<GraphT> dagDivider;
-    dagDivider.setMinAndMaxSize({minPartitionSize_, maxPartitionSize_});
-    std::vector<unsigned> assignmentToParts = dagDivider.computePartitioning(instance);
+    dagDivider.SetMinAndMaxSize({minPartitionSize_, maxPartitionSize_});
+    std::vector<unsigned> assignmentToParts = dagDivider.ComputePartitioning(instance);
     unsigned nrParts = *std::max_element(assignment_to_parts.begin(), assignment_to_parts.end()) + 1;
 
     // TODO remove source nodes before this?
@@ -110,7 +110,7 @@ ReturnStatus PebblingPartialILP<GraphT>::ComputePebbling(PebblingSchedule<GraphT
 
     SubproblemMultiScheduling<GraphT> multiScheduler;
     std::vector<std::set<unsigned>> processorsToPartsAndTypes;
-    multiScheduler.computeMultiSchedule(contractedInstance, processors_to_parts_and_types);
+    multiScheduler.ComputeMultiSchedule(contractedInstance, processorsToPartsAndTypes);
 
     std::vector<std::set<unsigned>> processorsToParts(nrParts);
     for (unsigned part = 0; part < nrParts; ++part) {
@@ -289,31 +289,31 @@ ReturnStatus PebblingPartialILP<GraphT>::ComputePebbling(PebblingSchedule<GraphT
             extraSourceIds.insert(idx);
         }
 
-        heuristicPebbling.setNeedToLoadInputs(true);
-        heuristicPebbling.SetExternalSources(extra_source_ids);
-        heuristicPebbling.SetNeedsBlueAtEnd(needs_blue_at_end);
-        heuristicPebbling.SetHasRedInBeginning(has_reds_in_beginning[part]);
+        heuristicPebbling.SetNeedToLoadInputs(true);
+        heuristicPebbling.SetExternalSources(extraSourceIds);
+        heuristicPebbling.SetNeedsBlueAtEnd(needsBlueAtEnd);
+        heuristicPebbling.SetHasRedInBeginning(hasRedsInBeginning[part]);
         heuristicPebbling.ConvertFromBsp(bspHeuristic, PebblingSchedule<GraphT>::CACHE_EVICTION_STRATEGY::FORESIGHT);
 
-        heuristicPebbling.removeEvictStepsFromEnd();
+        heuristicPebbling.RemoveEvictStepsFromEnd();
         pebbling[part] = heuristicPebbling;
-        cost_type heuristicCost = asynchronous_ ? heuristicPebbling.computeAsynchronousCost() : heuristicPebbling.computeCost();
+        cost_type heuristic Cost = asynchronous_ ? heuristicPebbling.ComputeAsynchronousCost() : heuristicPebbling.ComputeCost();
 
-        if (!heuristicPebbling.isValid()) {
+        if (!heuristicPebbling.IsValid()) {
             std::cout << "ERROR: Pebbling heuristic INVALID!" << std::endl;
         }
 
         // solution with subILP
         MultiProcessorPebbling<GraphT> mpp;
-        mpp.setVerbose(verbose_);
-        mpp.setTimeLimitSeconds(timeSecondsForSubIlPs_);
-        mpp.setMaxTime(2 * maxPartitionSize_);    // just a heuristic choice, does not guarantee feasibility!
-        mpp.setNeedsBlueAtEnd(needs_blue_at_end);
-        mpp.setNeedToLoadInputs(needToLoadInputs);
-        mpp.setHasRedInBeginning(has_reds_in_beginning[part]);
+        mpp.SetVerbose(verbose_);
+        mpp.SetTimeLimitSeconds(timeSecondsForSubIlPs_);
+        mpp.SetMaxTime(2 * maxPartitionSize_);    // just a heuristic choice, does not guarantee feasibility!
+        mpp.SetNeedsBlueAtEnd(needsBlueAtEnd);
+        mpp.SetNeedToLoadInputs(needToLoadInputs);
+        mpp.SetHasRedInBeginning(hasRedsInBeginning[part]);
 
         PebblingSchedule<GraphT> pebblingILP(subInstance[part]);
-        ReturnStatus status = mpp.computePebblingWithInitialSolution(heuristicPebbling, pebblingILP, asynchronous_);
+        ReturnStatus status = mpp.ComputePebblingWithInitialSolution(heuristicPebbling, pebblingILP, asynchronous_);
         if (status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND) {
             if (!pebblingILP.isValid()) {
                 std::cout << "ERROR: Pebbling ILP INVALID!" << std::endl;

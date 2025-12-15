@@ -46,7 +46,7 @@ class GraphStatsModule : public IStatisticModule<TargetObjectType> {
         stats["num_vertices"] = std::to_string(graph.NumVertices());
         stats["num_edges"] = std::to_string(graph.NumEdges());
         stats["avg_wavefront_size"]
-            = std::to_string(static_cast<double>(graph.NumVertices()) / static_cast<double>(longestPath(graph)));
+            = std::to_string(static_cast<double>(graph.NumVertices()) / static_cast<double>(LongestPath(graph)));
         return stats;
     }
 };

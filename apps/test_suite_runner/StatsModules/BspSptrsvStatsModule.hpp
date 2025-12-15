@@ -100,22 +100,22 @@ class BspSptrsvStatsModule : public IStatisticModule<TargetObjectType> {
             std::vector<size_t> perm;
 
             if (mode_ == NO_PERMUTE) {
-                sim.setup_csr_no_permutation(schedule);
+                sim.SetupCsrNoPermutation(schedule);
             } else if (mode_ == LOOP_PROCESSORS) {
                 perm = schedule_node_permuter_basic(schedule, LOOP_PROCESSORS);
-                sim.setup_csr_with_permutation(schedule, perm);
+                sim.SetupCsrWithPermutation(schedule, perm);
             } else if (mode_ == SNAKE_PROCESSORS) {
                 perm = schedule_node_permuter_basic(schedule, SNAKE_PROCESSORS);
-                sim.setup_csr_with_permutation(schedule, perm);
+                sim.SetupCsrWithPermutation(schedule, perm);
             } else {
                 std::cout << "Wrong type of permutation provided" << std::endl;
             }
 
             Eigen::VectorXd lBRef, lXRef;
-            auto n = instance.GetComputationalDag().getCSC()->cols();
+            auto n = instance.GetComputationalDag().GetCSC()->cols();
             lXRef.resize(n);
             lBRef.resize(n);
-            auto lView = (*instance.GetComputationalDag().getCSR()).template triangularView<Eigen::Lower>();
+            auto lView = (*instance.GetComputationalDag().GetCSR()).template triangularView<Eigen::Lower>();
             lBRef.setOnes();
             lXRef.setZero();
             lXRef = lView.solve(lBRef);
@@ -126,17 +126,17 @@ class BspSptrsvStatsModule : public IStatisticModule<TargetObjectType> {
             for (int i = 0; i < runs_; ++i) {
                 lBOsp.setOnes();
                 lXOsp.setZero();
-                sim.x = &lXOsp[0];
-                sim.b = &lBOsp[0];
+                sim.x_ = &lXOsp[0];
+                sim.b_ = &lBOsp[0];
                 std::chrono::_V2::system_clock::time_point start, end;
 
                 if (mode_ == NO_PERMUTE) {
                     start = std::chrono::high_resolution_clock::now();
-                    sim.lsolve_no_permutation();
+                    sim.LsolveNoPermutation();
                     end = std::chrono::high_resolution_clock::now();
                 } else {
                     start = std::chrono::high_resolution_clock::now();
-                    sim.lsolve_with_permutation();
+                    sim.LsolveWithPermutation();
                     end = std::chrono::high_resolution_clock::now();
                 }
 
@@ -169,7 +169,7 @@ class BspSptrsvStatsModule : public IStatisticModule<TargetObjectType> {
 
             // Permute back if needed
             if (mode_ != NO_PERMUTE) {
-                sim.permute_x_vector(perm);
+                sim.PermuteXVector(perm);
             }
 
             if (!CompareVectors(lXRef, lXOsp)) {

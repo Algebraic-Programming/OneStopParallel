@@ -260,7 +260,7 @@ class VarianceFillup : public Scheduler<GraphT> {
         std::vector<unsigned> procsPerType = nrProcsPerType;
         for (unsigned procType = 0; procType < instance.GetArchitecture().GetNumberOfProcessorTypes(); ++procType) {
             for (unsigned nodeType = 0; nodeType < instance.GetComputationalDag().NumVertexTypes(); ++nodeType) {
-                if (instance.isCompatibleType(nodeType, procType)) {
+                if (instance.IsCompatibleType(nodeType, procType)) {
                     unsigned matched = std::min(readyNodesPerType[nodeType], procsPerType[procType]);
                     nrNodes += matched;
                     readyNodesPerType[nodeType] -= matched;

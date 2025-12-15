@@ -712,7 +712,7 @@ std::vector<std::pair<VertexIdxT<GraphT>, VertexIdxT<GraphT>>> StepByStepCoarser
 template <typename GraphT>
 std::vector<unsigned> StepByStepCoarser<GraphT>::ComputeFilteredTopLevel() const {
     std::vector<unsigned> topLevel(gFull_.NumVertices());
-    for (const VertexIdx node : top_sort_view(gCoarse_)) {
+    for (const VertexIdx node : TopSortView(gCoarse_)) {
         if (!nodeValid_[node]) {
             continue;
         }

@@ -39,7 +39,7 @@ namespace osp {
 
 template <typename EigenIdxType>
 class Sptrsv {
-    using UVertType = typename SparseMatrixImp<EigenIdxType>::vertex_idx;
+    using UVertType = typename SparseMatrixImp<EigenIdxType>::VertexIdx;
 
   private:
     const BspInstance<SparseMatrixImp<EigenIdxType>> *instance_;

@@ -94,8 +94,8 @@ std::vector<unsigned> AcyclicDagDivider<GraphT>::ComputePartitioning(const BspIn
                 }
             } else {
                 for (vertex_idx localId = 0; local_ID < dag.NumVertices(); ++local_ID) {
-                    if (instance.GetComputationalDag().InDegree(original_id[idx][local_ID]) > 0) {
-                        ++dag_real_size[idx];
+                    if (instance.GetComputationalDag().InDegree(originalId[idx][localId]) > 0) {
+                        ++dagRealSize[idx];
                     }
                 }
             }
@@ -114,43 +114,43 @@ std::vector<unsigned> AcyclicDagDivider<GraphT>::ComputePartitioning(const BspIn
 
         for (unsigned idx = 0; idx < subDags.size(); ++idx) {
             const GraphT &dag = subDags[idx];
-            if (!dag_is_too_large[idx]) {
+            if (!dagIsTooLarge[idx]) {
                 for (vertex_idx localId = 0; local_ID < dag.NumVertices(); ++local_ID) {
-                    nodeToSubdagAndIndex[original_id[idx][local_ID]].first = static_cast<unsigned>(newDagList.size());
+                    nodeToSubdagAndIndex[originalId[idx][localId]].first = static_cast<unsigned>(newDagList.size());
                 }
 
-                originalIdUpdated.push_back(original_id[idx]);
+                originalIdUpdated.push_back(originalId[idx]);
                 newDagList.push_back(dag);
             } else {
                 std::vector<unsigned> ilpAssignment;
                 // unsigned newMin = dag_real_size[idx]/3, minPartitionSize); minimum condition removed - it can cause very strict bisections
-                unsigned newMin = dag_real_size[idx] / 3;
-                unsigned newMax = dag_real_size[idx] - newMin;
+                unsigned newMin = dagRealSize[idx] / 3;
+                unsigned newMax = dagRealSize[idx] - newMin;
 
                 // mark the source nodes of the original DAG
                 std::vector<bool> isOriginalSource(dag.NumVertices());
                 for (vertex_idx localId = 0; local_ID < dag.NumVertices(); ++local_ID) {
-                    isOriginalSource[local_ID] = (instance.GetComputationalDag().InDegree(original_id[idx][local_ID]) == 0);
+                    isOriginalSource[localId] = (instance.GetComputationalDag().InDegree(originalId[idx][localId]) == 0);
                 }
 
                 // heuristic splitting
-                std::vector<unsigned> heuristicAssignment = getTopologicalSplit(dag, {newMin, newMax}, is_original_source);
-                unsigned heuristicCost = getSplitCost(dag, heuristic_assignment);
+                std::vector<unsigned> heuristicAssignment = GetTopologicalSplit(dag, {newMin, newMax}, isOriginalSource);
+                unsigned heuristicCost = GetSplitCost(dag, heuristicAssignment);
                 unsigned ilpCost = UINT_MAX;
 
                 // ILP-based splitting
                 AcyclicPartitioningILP<GraphT> partitioner;
-                partitioner.setTimeLimitSeconds(120);
-                partitioner.setMinAndMaxSize({newMin, newMax});
-                partitioner.setIsOriginalSource(is_original_source);
-                partitioner.setNumberOfParts(2);    // note - if set to more than 2, ILP is MUCH more inefficient
+                partitioner.SetTimeLimitSeconds(120);
+                partitioner.SetMinAndMaxSize({newMin, newMax});
+                partitioner.SetIsOriginalSource(isOriginalSource);
+                partitioner.SetNumberOfParts(2);    // note - if set to more than 2, ILP is MUCH more inefficient
                 BspInstance partialInstance(dag, instance.GetArchitecture(), instance.getNodeProcessorCompatibilityMatrix());
-                ReturnStatus status = partitioner.computePartitioning(partial_instance, ILP_assignment);
+                ReturnStatus status = partitioner.ComputePartitioning(partialInstance, ilpAssignment);
                 if (status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND) {
-                    ilpCost = getSplitCost(dag, ILP_assignment);
+                    ilpCost = GetSplitCost(dag, ilpAssignment);
                 }
 
-                std::vector<unsigned> assignment = ilpCost < heuristicCost ? ILP_assignment : heuristic_assignment;
+                std::vector<unsigned> assignment = ilpCost < heuristicCost ? ilpAssignment : heuristicAssignment;
 
                 // split DAG according to labels
                 std::vector<GraphT> splitDags = create_induced_subgraphs<GraphT, GraphT>(dag, assignment);
@@ -162,23 +162,23 @@ std::vector<unsigned> AcyclicDagDivider<GraphT>::ComputePartitioning(const BspIn
                 // update labels
                 std::vector<vertex_idx> nodeIdxInNewSubDag(dag.NumVertices());
                 std::vector<unsigned> nrNodesInNewSubDag(splitDags.size(), 0);
-                for (vertex_idx localId = 0; local_ID < dag.NumVertices(); ++local_ID) {
-                    nodeIdxInNewSubDag[local_ID] = nr_nodes_in_new_subDag[assignment[local_ID]];
-                    ++nr_nodes_in_new_subDag[assignment[local_ID]];
+                for (vertex_idx localId = 0; localId < dag.NumVertices(); ++localId) {
+                    nodeIdxInNewSubDag[localId] = nrNodesInNewSubDag[assignment[localId]];
+                    ++nrNodesInNewSubDag[assignment[localId]];
                 }
 
-                for (auto next_dag : splitDags) {
-                    original_id_updated.emplace_back(next_dag.NumVertices());
+                for (auto nextDag : splitDags) {
+                    originalIdUpdated.emplace_back(nextDag.NumVertices());
                 }
 
-                for (vertex_idx localId = 0; local_ID < dag.NumVertices(); ++local_ID) {
-                    nodeToSubdagAndIndex[original_id[idx][local_ID]]
-                        = {newDagList.size() + assignment[local_ID], node_idx_in_new_subDag[local_ID]};
-                    originalIdUpdated[newDagList.size() + assignment[local_ID]][node_idx_in_new_subDag[local_ID]]
-                        = original_id[idx][local_ID];
+                for (vertex_idx localId = 0; localId < dag.NumVertices(); ++localId) {
+                    nodeToSubdagAndIndex[originalId[idx][localId]]
+                        = {newDagList.size() + assignment[localId], nodeIdxInNewSubDag[localId]};
+                    originalIdUpdated[newDagList.size() + assignment[localId]][nodeIdxInNewSubDag[localId]]
+                        = originalId[idx][localId];
                 }
-                for (auto next_dag : splitDags) {
-                    newDagList.push_back(next_dag);
+                for (auto nextDag : splitDags) {
+                    newDagList.push_back(nextDag);
                 }
             }
         }

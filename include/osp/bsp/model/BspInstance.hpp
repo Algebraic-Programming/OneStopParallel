@@ -184,7 +184,7 @@ class BspInstance {
      * @param p_receive The index of the receiving processor.
      */
     [[nodiscard]] VCommwT<GraphT> CommunicationCosts(const unsigned pSend, const unsigned pReceive) const {
-        return architecture_.communicationCosts(pSend, pReceive);
+        return architecture_.CommunicationCosts(pSend, pReceive);
     }
 
     /**

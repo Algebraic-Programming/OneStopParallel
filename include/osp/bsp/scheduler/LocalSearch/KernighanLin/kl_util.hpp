@@ -345,14 +345,14 @@ struct VertexSelectionStrategy {
         for (const auto parent : graph_->Parents(node)) {
             const unsigned parentStep = activeSchedule_->AssignedSuperstep(parent);
             if (parentStep >= startStep && parentStep <= endStep) {
-                nodes.insert(parent);
+                nodes.Insert(parent);
             }
         }
 
         for (const auto child : graph_->Children(node)) {
             const unsigned childStep = activeSchedule_->AssignedSuperstep(child);
             if (childStep >= startStep && childStep <= endStep) {
-                nodes.insert(child);
+                nodes.Insert(child);
             }
         }
     }
@@ -378,12 +378,12 @@ struct VertexSelectionStrategy {
 
             const unsigned sourceStep = activeSchedule_->AssignedSuperstep(sourceV);
             if (sourceStep >= startStep && sourceStep <= endStep) {
-                nodeSelection.insert(sourceV);
+                nodeSelection.Insert(sourceV);
             }
 
             const unsigned targetStep = activeSchedule_->AssignedSuperstep(targetV);
             if (targetStep >= startStep && targetStep <= endStep) {
-                nodeSelection.insert(targetV);
+                nodeSelection.Insert(targetV);
             }
         }
     }
@@ -391,7 +391,7 @@ struct VertexSelectionStrategy {
     void SelectNodesPermutationThreshold(const std::size_t &threshold, ContainerT &nodeSelection) {
         const size_t bound = std::min(threshold + permutationIdx_, permutation_.size());
         for (std::size_t i = permutationIdx_; i < bound; i++) {
-            nodeSelection.insert(permutation_[i]);
+            nodeSelection.Insert(permutation_[i]);
         }
 
         permutationIdx_ = bound;
@@ -425,7 +425,7 @@ struct VertexSelectionStrategy {
             const size_t numInsert = std::min(threshold - nodeSelection.size(), stepProcVert.size());
             auto endIt = stepProcVert.begin();
             std::advance(endIt, numInsert);
-            std::for_each(stepProcVert.begin(), endIt, [&](const auto &val) { nodeSelection.insert(val); });
+            std::for_each(stepProcVert.begin(), endIt, [&](const auto &val) { nodeSelection.Insert(val); });
         }
     }
 };

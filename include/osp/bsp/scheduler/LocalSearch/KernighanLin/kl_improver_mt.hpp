@@ -36,12 +36,12 @@ class KlImproverMt : public KlImprover<GraphT, CommCostFunctionT, MemoryConstrai
     void SetThreadBoundaries(const unsigned numThreads, const unsigned numSteps, bool lastThreadLargeRange) {
         if (numThreads == 1) {
             this->SetStartStep(0, this->threadDataVec_[0]);
-            this->threadDataVec_[0].end_step = (numSteps > 0) ? numSteps - 1 : 0;
-            this->threadDataVec_[0].original_end_step = this->threadDataVec_[0].end_step;
+            this->threadDataVec_[0].endStep_ = (numSteps > 0) ? numSteps - 1 : 0;
+            this->threadDataVec_[0].originalEndStep_ = this->threadDataVec_[0].endStep_;
             return;
         } else {
-            const unsigned totalGapSize = (numThreads - 1) * this->parameters_.thread_range_gap;
-            const unsigned bonus = this->parameters_.thread_min_range;
+            const unsigned totalGapSize = (numThreads - 1) * this->parameters_.threadRangeGap_;
+            const unsigned bonus = this->parameters_.threadMinRange_;
             const unsigned stepsToDistribute = numSteps - totalGapSize - bonus;
             const unsigned baseRange = stepsToDistribute / numThreads;
             const unsigned remainder = stepsToDistribute % numThreads;
@@ -57,12 +57,12 @@ class KlImproverMt : public KlImprover<GraphT, CommCostFunctionT, MemoryConstrai
                 }
 
                 const unsigned endStep = currentStartStep + currentRange - 1;
-                this->threadDataVec_[i].end_step = endStep;
-                this->threadDataVec_[i].original_end_step = this->threadDataVec_[i].end_step;
-                currentStartStep = endStep + 1 + this->parameters_.thread_range_gap;
+                this->threadDataVec_[i].endStep_ = endStep;
+                this->threadDataVec_[i].originalEndStep_ = this->threadDataVec_[i].endStep_;
+                currentStartStep = endStep + 1 + this->parameters_.threadRangeGap_;
 #ifdef KL_DEBUG_1
-                std::cout << "thread " << i << ": start_step=" << this->thread_data_vec[i].start_step
-                          << ", end_step=" << this->thread_data_vec[i].end_step << std::endl;
+                std::cout << "thread " << i << ": start_step=" << this->threadDataVec_[i].startStep_
+                          << ", end_step=" << this->threadDataVec_[i].endStep_ << std::endl;
 #endif
             }
         }
@@ -70,16 +70,16 @@ class KlImproverMt : public KlImprover<GraphT, CommCostFunctionT, MemoryConstrai
 
     void SetNumThreads(unsigned &numThreads, const unsigned numSteps) {
         unsigned maxAllowedThreads = 0;
-        if (numSteps >= this->parameters_.thread_min_range + this->parameters_.thread_range_gap) {
-            const unsigned divisor = this->parameters_.thread_min_range + this->parameters_.thread_range_gap;
+        if (numSteps >= this->parameters_.threadMinRange_ + this->parameters_.threadRangeGap_) {
+            const unsigned divisor = this->parameters_.threadMinRange_ + this->parameters_.threadRangeGap_;
             if (divisor > 0) {
                 // This calculation is based on the constraint that one thread's range is
                 // 'min_range' larger than the others, and all ranges are at least 'min_range'.
-                maxAllowedThreads = (numSteps + this->parameters_.thread_range_gap - this->parameters_.thread_min_range) / divisor;
+                maxAllowedThreads = (numSteps + this->parameters_.threadRangeGap_ - this->parameters_.threadMinRange_) / divisor;
             } else {
                 maxAllowedThreads = numSteps;
             }
-        } else if (numSteps >= this->parameters_.thread_min_range) {
+        } else if (numSteps >= this->parameters_.threadMinRange_) {
             maxAllowedThreads = 1;
         }
 
@@ -91,8 +91,8 @@ class KlImproverMt : public KlImprover<GraphT, CommCostFunctionT, MemoryConstrai
             numThreads = 1;
         }
 #ifdef KL_DEBUG_1
-        std::cout << "num threads: " << num_threads << " number of supersteps: " << num_steps
-                  << ", max allowed threads: " << max_allowed_threads << std::endl;
+        std::cout << "num threads: " << numThreads << " number of supersteps: " << numSteps
+                  << ", max allowed threads: " << maxAllowedThreads << std::endl;
 #endif
     }
 
@@ -117,36 +117,36 @@ class KlImproverMt : public KlImprover<GraphT, CommCostFunctionT, MemoryConstrai
         this->threadFinishedVec_.assign(numThreads, true);
 
         if (numThreads == 1) {
-            this->parameters_.num_parallel_loops
+            this->parameters_.numParallelLoops_
                 = 1;    // no parallelization with one thread. Affects parameters.max_out_iteration calculation in set_parameters()
         }
 
         this->SetParameters(schedule.GetInstance().NumberOfVertices());
         this->InitializeDatastructures(schedule);
-        const CostT initialCost = this->activeSchedule_.get_cost();
+        const CostT initialCost = this->activeSchedule_.GetCost();
 
-        for (size_t i = 0; i < this->parameters_.num_parallel_loops; ++i) {
+        for (size_t i = 0; i < this->parameters_.numParallelLoops_; ++i) {
             SetThreadBoundaries(numThreads, schedule.NumberOfSupersteps(), i % 2 == 0);
 
 #pragma omp parallel num_threads(numThreads)
             {
                 const size_t threadId = static_cast<size_t>(omp_get_thread_num());
                 auto &threadData = this->threadDataVec_[threadId];
-                threadData.active_schedule_data.initialize_cost(this->activeSchedule_.get_cost());
-                threadData.selection_strategy.setup(threadData.start_step, threadData.end_step);
+                threadData.activeScheduleData_.InitializeCost(this->activeSchedule_.GetCost());
+                threadData.selectionStrategy_.Setup(threadData.startStep_, threadData.endStep_);
                 this->RunLocalSearch(threadData);
             }
 
             this->SynchronizeActiveSchedule(numThreads);
             if (numThreads > 1) {
-                this->activeSchedule_.set_cost(this->commCostF_.compute_schedule_cost());
+                this->activeSchedule_.SetCost(this->commCostF_.ComputeScheduleCost());
                 SetNumThreads(numThreads, schedule.NumberOfSupersteps());
                 this->threadFinishedVec_.resize(numThreads);
             }
         }
 
-        if (initialCost > this->activeSchedule_.get_cost()) {
-            this->activeSchedule_.write_schedule(schedule);
+        if (initialCost > this->activeSchedule_.GetCost()) {
+            this->activeSchedule_.WriteSchedule(schedule);
             this->CleanupDatastructures();
             return ReturnStatus::OSP_SUCCESS;
         } else {
