@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(EmptyGraphKeepOrder) {
         BOOST_CHECK(false);
         BOOST_CHECK_EQUAL(edge, 100);
 
-        BOOST_CHECK_EQUAL(edge, graph.edge(graph.Source(edge), graph.Target(edge)));
+        BOOST_CHECK_EQUAL(edge, graph.Edge(graph.Source(edge), graph.Target(edge)));
     }
 
     for (const auto &vert : graph.Vertices()) {
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(EmptyGraphReorder) {
         BOOST_CHECK(false);
         BOOST_CHECK_EQUAL(edge, 100);
 
-        BOOST_CHECK_EQUAL(edge, graph.edge(graph.Source(edge), graph.Target(edge)));
+        BOOST_CHECK_EQUAL(edge, graph.Edge(graph.Source(edge), graph.Target(edge)));
     }
 
     for (const auto &vert : graph.Vertices()) {
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(NoEdgesGraphKeepOrder) {
         BOOST_CHECK(false);
         BOOST_CHECK_EQUAL(edge, 100);
 
-        BOOST_CHECK_EQUAL(edge, graph.edge(graph.Source(edge), graph.Target(edge)));
+        BOOST_CHECK_EQUAL(edge, graph.Edge(graph.Source(edge), graph.Target(edge)));
     }
 
     std::size_t vertCounter = 0;
@@ -233,7 +233,7 @@ BOOST_AUTO_TEST_CASE(LineGraphKeepOrder) {
         BOOST_CHECK_EQUAL(graph.Source(edge), edgeCounter);
         BOOST_CHECK_EQUAL(graph.Target(edge), edgeCounter + 1);
 
-        BOOST_CHECK_EQUAL(edge, graph.edge(graph.Source(edge), graph.Target(edge)));
+        BOOST_CHECK_EQUAL(edge, graph.Edge(graph.Source(edge), graph.Target(edge)));
 
         ++edgeCounter;
     }
@@ -244,7 +244,7 @@ BOOST_AUTO_TEST_CASE(LineGraphKeepOrder) {
         BOOST_CHECK_EQUAL(Source(edge, graph), edgeCounter);
         BOOST_CHECK_EQUAL(Target(edge, graph), edgeCounter + 1);
 
-        BOOST_CHECK_EQUAL(edge, graph.edge(graph.Source(edge), graph.Target(edge)));
+        BOOST_CHECK_EQUAL(edge, graph.Edge(graph.Source(edge), graph.Target(edge)));
 
         ++edgeCounter;
     }
@@ -377,7 +377,7 @@ BOOST_AUTO_TEST_CASE(LineGraphReorder) {
         BOOST_CHECK_EQUAL(graph.Source(edge), edgeCounter);
         BOOST_CHECK_EQUAL(graph.Target(edge), edgeCounter + 1);
 
-        BOOST_CHECK_EQUAL(edge, graph.edge(graph.Source(edge), graph.Target(edge)));
+        BOOST_CHECK_EQUAL(edge, graph.Edge(graph.Source(edge), graph.Target(edge)));
 
         ++edgeCounter;
     }
@@ -508,7 +508,7 @@ BOOST_AUTO_TEST_CASE(Graph1KeepOrder) {
     for (const auto &edge : graph.Edges()) {
         BOOST_CHECK_EQUAL(edge, edgeCntr);
 
-        BOOST_CHECK_EQUAL(edge, graph.edge(graph.Source(edge), graph.Target(edge)));
+        BOOST_CHECK_EQUAL(edge, graph.Edge(graph.Source(edge), graph.Target(edge)));
 
         ++edgeCntr;
     }
@@ -684,7 +684,7 @@ BOOST_AUTO_TEST_CASE(Graph1Reorder) {
     for (const auto &edge : graph.Edges()) {
         BOOST_CHECK_EQUAL(edge, edgeCntr);
 
-        BOOST_CHECK_EQUAL(edge, graph.edge(graph.Source(edge), graph.Target(edge)));
+        BOOST_CHECK_EQUAL(edge, graph.Edge(graph.Source(edge), graph.Target(edge)));
 
         ++edgeCntr;
     }

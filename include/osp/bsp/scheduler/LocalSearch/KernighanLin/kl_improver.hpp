@@ -88,7 +88,7 @@ template <typename GraphT,
           typename CostT = double>
 class KlImprover : public ImprovementScheduler<GraphT> {
     static_assert(IsDirectedGraphEdgeDescV<GraphT>, "Graph_t must satisfy the directed_graph concept");
-    static_assert(HasHashableEdgeDescV<GraphT>, "Graph_t must satisfy the has_hashable_edge_desc concept");
+    static_assert(HasHashableEdgeDescV<GraphT>, "Graph_t must satisfy the HasHashableEdgeDesc concept");
     static_assert(IsComputationalDagV<GraphT>, "Graph_t must satisfy the computational_dag concept");
 
   protected:

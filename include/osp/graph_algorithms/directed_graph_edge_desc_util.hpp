@@ -41,7 +41,7 @@ std::pair<EdgeDescT<GraphT>, bool> EdgeDesc(const VertexIdxT<GraphT> &src, const
 template <typename GraphT>
 std::unordered_set<EdgeDescT<GraphT>> LongEdgesInTriangles(const GraphT &graph) {
     static_assert(IsDirectedGraphEdgeDescV<GraphT>, "Graph_t must satisfy the directed_graph edge desc concept");
-    static_assert(HasHashableEdgeDescV<GraphT>, "Graph_t must satisfy the has_hashable_edge_desc concept");
+    static_assert(HasHashableEdgeDescV<GraphT>, "Graph_t must satisfy the HasHashableEdgeDesc concept");
 
     std::unordered_set<EdgeDescT<GraphT>> longEdges;
 
