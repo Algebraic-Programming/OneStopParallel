@@ -291,7 +291,7 @@ void CoptPartialScheduler<GraphT>::UpdateSchedule(BspScheduleCS<GraphT> &schedul
     }
 
     schedule.cleanCommSchedule();
-    schedule.shrinkByMergingSupersteps();
+    schedule.ShrinkByMergingSupersteps();
 };
 
 template <typename GraphT>
