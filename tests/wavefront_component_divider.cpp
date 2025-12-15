@@ -157,52 +157,52 @@ BOOST_AUTO_TEST_CASE(ForwardAndBackwardPassTest) {
     osp::WavefrontStatisticsCollector<Graph> collector(dag, levelSets);
 
     // --- Test Forward Pass ---
-    auto forwardStats = collector.compute_forward();
+    auto forwardStats = collector.ComputeForward();
     BOOST_REQUIRE_EQUAL(forwardStats.size(), 5);
 
     // Level 0
-    BOOST_CHECK_EQUAL(forwardStats[0].connected_components_vertices.size(), 1);
-    BOOST_CHECK_EQUAL(forwardStats[0].connected_components_weights[0], 2);
-    BOOST_CHECK_EQUAL(forwardStats[0].connected_components_memories[0], 9);
+    BOOST_CHECK_EQUAL(forwardStats[0].connectedComponentsVertices_.size(), 1);
+    BOOST_CHECK_EQUAL(forwardStats[0].connectedComponentsWeights_[0], 2);
+    BOOST_CHECK_EQUAL(forwardStats[0].connectedComponentsMemories_[0], 9);
 
     // Level 1
-    BOOST_CHECK_EQUAL(forwardStats[1].connected_components_vertices.size(), 1);
-    BOOST_CHECK_EQUAL(forwardStats[1].connected_components_weights[0], 2 + 3 + 4 + 5);    // v1,v2,v3,v4
-    BOOST_CHECK_EQUAL(forwardStats[1].connected_components_memories[0], 9 + 8 + 7 + 6);
+    BOOST_CHECK_EQUAL(forwardStats[1].connectedComponentsVertices_.size(), 1);
+    BOOST_CHECK_EQUAL(forwardStats[1].connectedComponentsWeights_[0], 2 + 3 + 4 + 5);    // v1,v2,v3,v4
+    BOOST_CHECK_EQUAL(forwardStats[1].connectedComponentsMemories_[0], 9 + 8 + 7 + 6);
 
     // Level 2
-    BOOST_CHECK_EQUAL(forwardStats[2].connected_components_vertices.size(), 1);
-    BOOST_CHECK_EQUAL(forwardStats[2].connected_components_weights[0], 14 + 6 + 7);    // v1-v6
-    BOOST_CHECK_EQUAL(forwardStats[2].connected_components_memories[0], 30 + 5 + 4);
+    BOOST_CHECK_EQUAL(forwardStats[2].connectedComponentsVertices_.size(), 1);
+    BOOST_CHECK_EQUAL(forwardStats[2].connectedComponentsWeights_[0], 14 + 6 + 7);    // v1-v6
+    BOOST_CHECK_EQUAL(forwardStats[2].connectedComponentsMemories_[0], 30 + 5 + 4);
 
     // Level 3
-    BOOST_CHECK_EQUAL(forwardStats[3].connected_components_vertices.size(), 1);
-    BOOST_CHECK_EQUAL(forwardStats[3].connected_components_weights[0], 27 + 9);    // v1-v6, v8
-    BOOST_CHECK_EQUAL(forwardStats[3].connected_components_memories[0], 39 + 2);
+    BOOST_CHECK_EQUAL(forwardStats[3].connectedComponentsVertices_.size(), 1);
+    BOOST_CHECK_EQUAL(forwardStats[3].connectedComponentsWeights_[0], 27 + 9);    // v1-v6, v8
+    BOOST_CHECK_EQUAL(forwardStats[3].connectedComponentsMemories_[0], 39 + 2);
 
     // Level 4 (isolated vertex shows up as a new component)
-    BOOST_CHECK_EQUAL(forwardStats[4].connected_components_vertices.size(), 2);
+    BOOST_CHECK_EQUAL(forwardStats[4].connectedComponentsVertices_.size(), 2);
 
     // --- Test Backward Pass ---
-    auto backwardStats = collector.compute_backward();
+    auto backwardStats = collector.ComputeBackward();
     BOOST_REQUIRE_EQUAL(backwardStats.size(), 5);
 
     // Level 4
-    BOOST_CHECK_EQUAL(backwardStats[4].connected_components_vertices.size(), 1);
-    BOOST_CHECK_EQUAL(backwardStats[4].connected_components_weights[0], 8);    // v7
-    BOOST_CHECK_EQUAL(backwardStats[4].connected_components_memories[0], 3);
+    BOOST_CHECK_EQUAL(backwardStats[4].connectedComponentsVertices_.size(), 1);
+    BOOST_CHECK_EQUAL(backwardStats[4].connectedComponentsWeights_[0], 8);    // v7
+    BOOST_CHECK_EQUAL(backwardStats[4].connectedComponentsMemories_[0], 3);
 
     // Level 3
-    BOOST_CHECK_EQUAL(backwardStats[3].connected_components_vertices.size(), 2);    // {v8}, {v7}
+    BOOST_CHECK_EQUAL(backwardStats[3].connectedComponentsVertices_.size(), 2);    // {v8}, {v7}
 
     // Level 2
-    BOOST_CHECK_EQUAL(backwardStats[2].connected_components_vertices.size(), 3);    // {v5,v8}, {v6}, {v7}
+    BOOST_CHECK_EQUAL(backwardStats[2].connectedComponentsVertices_.size(), 3);    // {v5,v8}, {v6}, {v7}
 
     // Level 1
-    BOOST_CHECK_EQUAL(backwardStats[1].connected_components_vertices.size(), 2);    // {v2,v3,v4,v5,v6,v8}, {v7}
+    BOOST_CHECK_EQUAL(backwardStats[1].connectedComponentsVertices_.size(), 2);    // {v2,v3,v4,v5,v6,v8}, {v7}
 
     // Level 0
-    BOOST_CHECK_EQUAL(backwardStats[0].connected_components_vertices.size(), 2);    // {v1-v6,v8}, {v7}
+    BOOST_CHECK_EQUAL(backwardStats[0].connectedComponentsVertices_.size(), 2);    // {v1-v6,v8}, {v7}
 }
 
 BOOST_AUTO_TEST_CASE(SequenceGenerationTest) {
@@ -238,12 +238,12 @@ BOOST_AUTO_TEST_CASE(SequenceGenerationTest) {
     osp::SequenceGenerator<Graph> generator(dag, levelSets);
 
     // --- Test Component Count ---
-    auto componentSeq = generator.generate(osp::SequenceMetric::COMPONENT_COUNT);
+    auto componentSeq = generator.Generate(osp::SequenceMetric::COMPONENT_COUNT);
     std::vector<double> expectedComponents = {1.0, 1.0, 1.0, 1.0, 2.0};
     BOOST_CHECK_EQUAL_COLLECTIONS(componentSeq.begin(), componentSeq.end(), expectedComponents.begin(), expectedComponents.end());
 
     // --- Test Available Parallelism ---
-    auto parallelismSeq = generator.generate(osp::SequenceMetric::AVAILABLE_PARALLELISM);
+    auto parallelismSeq = generator.Generate(osp::SequenceMetric::AVAILABLE_PARALLELISM);
 
     // Manual calculation for expected values:
     // L0: 2 / 1 = 2
@@ -299,9 +299,9 @@ BOOST_FIXTURE_TEST_SUITE(scan_wavefront_divider_test_suite, TestFixture)
 BOOST_AUTO_TEST_CASE(LargestStepDivisionTest) {
     osp::ScanWavefrontDivider<Graph> divider;
     divider.SetMetric(osp::SequenceMetric::AVAILABLE_PARALLELISM);
-    divider.use_largest_step_splitter(0.9, 1);
+    divider.UseLargestStepSplitter(0.9, 1);
 
-    auto sections = divider.divide(dag_);
+    auto sections = divider.Divide(dag_);
 
     // Expecting a cut after level 0. This results in 2 sections.
     BOOST_REQUIRE_EQUAL(sections.size(), 2);
@@ -317,9 +317,9 @@ BOOST_AUTO_TEST_CASE(LargestStepDivisionTest) {
 BOOST_AUTO_TEST_CASE(ThresholdScanDivisionTest) {
     osp::ScanWavefrontDivider<Graph> divider;
     divider.SetMetric(osp::SequenceMetric::AVAILABLE_PARALLELISM);
-    divider.use_threshold_scan_splitter(2.0, 11.5);
+    divider.UseThresholdScanSplitter(2.0, 11.5);
 
-    auto sections = divider.divide(dag_);
+    auto sections = divider.Divide(dag_);
 
     // A cut is expected when the sequence crosses 11.5 (at level 2) and crosses back (at level 3)
     // The splitter should return cuts at levels 2 and 3.
@@ -337,9 +337,9 @@ BOOST_AUTO_TEST_CASE(ThresholdScanDivisionTest) {
 BOOST_AUTO_TEST_CASE(NoCutDivisionTest) {
     osp::ScanWavefrontDivider<Graph> divider;
     divider.SetMetric(osp::SequenceMetric::COMPONENT_COUNT);
-    divider.use_largest_step_splitter(2.0, 2);
+    divider.UseLargestStepSplitter(2.0, 2);
 
-    auto sections = divider.divide(dag_);
+    auto sections = divider.Divide(dag_);
 
     // Expecting a single section containing all components
     BOOST_REQUIRE_EQUAL(sections.size(), 1);
@@ -349,7 +349,7 @@ BOOST_AUTO_TEST_CASE(NoCutDivisionTest) {
 BOOST_AUTO_TEST_CASE(EmptyGraphTest) {
     osp::ScanWavefrontDivider<Graph> divider;
     Graph emptyDag;
-    auto sections = divider.divide(emptyDag);
+    auto sections = divider.Divide(emptyDag);
     BOOST_CHECK(sections.empty());
 }
 
@@ -367,7 +367,7 @@ struct TestFixture2 {
         const auto v1 = dag_.AddVertex(1, 1, 1);
         const auto v2 = dag_.AddVertex(1, 1, 1);
         const auto v3 = dag_.AddVertex(1, 1, 1);
-        const auto v4 = dag_.AddVertex(, 1, 1);
+        const auto v4 = dag_.AddVertex(1, 1, 1);
         const auto v5 = dag_.AddVertex(1, 1, 1);
         const auto v6 = dag_.AddVertex(1, 1, 1);
         const auto v7 = dag_.AddVertex(1, 1, 1);
@@ -413,8 +413,8 @@ BOOST_FIXTURE_TEST_SUITE(simple_merge_tests, TestFixtureSimpleMerge)
 
 BOOST_AUTO_TEST_CASE(BasicRecursionTest) {
     osp::RecursiveWavefrontDivider<Graph> divider;
-    divider.use_largest_step_splitter(0.5, 1);
-    auto sections = divider.divide(dag_);
+    divider.UseLargestStepSplitter(0.5, 1);
+    auto sections = divider.Divide(dag_);
 
     // Expecting a cut after level 2, where component count drops from 2 to 1.
     // This results in 2 sections: {levels 0,1,2} and {level 3}.
@@ -431,8 +431,8 @@ BOOST_AUTO_TEST_CASE(BasicRecursionTest) {
 BOOST_AUTO_TEST_CASE(NoCutHighThresholdTest) {
     // A high threshold should prevent any cuts.
     osp::RecursiveWavefrontDivider<Graph> divider;
-    divider.use_largest_step_splitter(2.0, 2);
-    auto sections = divider.divide(dag_);
+    divider.UseLargestStepSplitter(2.0, 2);
+    auto sections = divider.Divide(dag_);
 
     // Expecting a single section containing all components, which merge into one.
     BOOST_REQUIRE_EQUAL(sections.size(), 1);
@@ -442,8 +442,8 @@ BOOST_AUTO_TEST_CASE(NoCutHighThresholdTest) {
 BOOST_AUTO_TEST_CASE(MinSubsequenceLengthTest) {
     // The graph has 4 wavefronts. A min_subseq_len of 5 should prevent division.
     osp::RecursiveWavefrontDivider<Graph> divider;
-    divider.use_largest_step_splitter(0.5, 5);
-    auto sections = divider.divide(dag_);
+    divider.UseLargestStepSplitter(0.5, 5);
+    auto sections = divider.Divide(dag_);
 
     BOOST_REQUIRE_EQUAL(sections.size(), 1);
     BOOST_REQUIRE_EQUAL(sections[0].size(), 1);
@@ -452,8 +452,8 @@ BOOST_AUTO_TEST_CASE(MinSubsequenceLengthTest) {
 BOOST_AUTO_TEST_CASE(MaxDepthTest) {
     // Setting max_depth to 0 should prevent any recursion.
     osp::RecursiveWavefrontDivider<Graph> divider;
-    divider.use_largest_step_splitter(0.5, 2).set_max_depth(0);
-    auto sections = divider.divide(dag_);
+    divider.UseLargestStepSplitter(0.5, 2).SetMaxDepth(0);
+    auto sections = divider.Divide(dag_);
 
     BOOST_REQUIRE_EQUAL(sections.size(), 1);
     BOOST_REQUIRE_EQUAL(sections[0].size(), 1);
@@ -462,7 +462,7 @@ BOOST_AUTO_TEST_CASE(MaxDepthTest) {
 BOOST_AUTO_TEST_CASE(EmptyGraphTest) {
     osp::RecursiveWavefrontDivider<Graph> divider;
     Graph emptyDag;
-    auto sections = divider.divide(emptyDag);
+    auto sections = divider.Divide(emptyDag);
     BOOST_CHECK(sections.empty());
 }
 
@@ -506,8 +506,8 @@ BOOST_FIXTURE_TEST_SUITE(multi_merge_tests, TestFixtureMultiMerge)
 BOOST_AUTO_TEST_CASE(MultipleRecursionTest) {
     osp::RecursiveWavefrontDivider<Graph> divider;
     // Threshold is 0.5. First cut is for drop of 2.0 (4->2). Second is for drop of 1.0 (2->1).
-    divider.use_largest_step_splitter(0.5, 2);
-    auto sections = divider.divide(dag_);
+    divider.UseLargestStepSplitter(0.5, 2);
+    auto sections = divider.Divide(dag_);
 
     // Expect 3 sections:
     // 1. Levels 0-1 (before first major cut)
@@ -530,7 +530,7 @@ BOOST_AUTO_TEST_CASE(VarianceSplitterTest) {
     // var_mult of 0.99 ensures any reduction is accepted.
     // var_threshold of 0.1 ensures we start splitting.
     divider.UseVarianceSplitter(0.99, 0.1, 2);
-    auto sections = divider.divide(dag_);
+    auto sections = divider.Divide(dag_);
 
     // The variance splitter should also identify the two main merge points.
     BOOST_REQUIRE_EQUAL(sections.size(), 3);

@@ -60,7 +60,7 @@ class ConnectedComponentDivider : public IDagDivider<GraphT> {
 
     inline const std::vector<VertexIdx> &GetVertexMap() const { return vertex_map; }
 
-    virtual std::vector<std::vector<std::vector<VertexIdxT<GraphT>>>> divide(const GraphT &dag) override {
+    virtual std::vector<std::vector<std::vector<VertexIdxT<GraphT>>>> Divide(const GraphT &dag) override {
         if (dag.NumVertices() == 0) {
             return {};
         }

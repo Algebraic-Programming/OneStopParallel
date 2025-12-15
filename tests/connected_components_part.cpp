@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(ConnectedComponentPartTest) {
 
     ConnectedComponentDivider<ComputationalDagVectorImplDefIntT, ComputationalDagVectorImplDefIntT> partitioner;
 
-    partitioner.divide(dag);
+    partitioner.Divide(dag);
 
     GreedyBspScheduler<BoostGraphIntT> bspScheduler;
     ConnectedComponentScheduler<ComputationalDagVectorImplDefIntT, BoostGraphIntT> scheduler(bspScheduler);

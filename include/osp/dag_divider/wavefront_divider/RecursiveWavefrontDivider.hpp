@@ -48,7 +48,7 @@ class RecursiveWavefrontDivider : public AbstractWavefrontDivider<GraphT> {
         UseLargestStepSplitter(3.0, 4);
     }
 
-    std::vector<std::vector<std::vector<VertexIdxT<GraphT>>>> divide(const GraphT &dag) override {
+    std::vector<std::vector<std::vector<VertexIdxT<GraphT>>>> Divide(const GraphT &dag) override {
         this->dagPtr_ = &dag;
         if constexpr (enableDebugPrint_) {
             std::cout << "[DEBUG] Starting recursive-scan division." << std::endl;
@@ -166,13 +166,13 @@ class RecursiveWavefrontDivider : public AbstractWavefrontDivider<GraphT> {
         for (const auto &localCutIdx : localCuts) {
             auto cutIterator = levelBegin + static_cast<DifferenceType>(localCutIdx);
             if (cutIterator > currentSubBegin) {
-                divideRecursive(currentSubBegin, cutIterator, globalLevelSets, allSections, currentDepth + 1);
+                DivideRecursive(currentSubBegin, cutIterator, globalLevelSets, allSections, currentDepth + 1);
             }
             currentSubBegin = cutIterator;
         }
         // Recurse on the final segment from the last cut to the end.
         if (currentSubBegin < levelEnd) {
-            divideRecursive(currentSubBegin, levelEnd, globalLevelSets, allSections, currentDepth + 1);
+            DivideRecursive(currentSubBegin, levelEnd, globalLevelSets, allSections, currentDepth + 1);
         }
     }
 };
