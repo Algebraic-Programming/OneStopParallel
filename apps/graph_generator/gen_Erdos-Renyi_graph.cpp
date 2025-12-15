@@ -99,7 +99,7 @@ int main(int argc, char *argv[]) {
         graphWrite << std::to_string(graph.NumVertices()) + " " + std::to_string(graph.NumVertices()) + " "
                           + std::to_string(graph.NumEdges() + graph.NumVertices()) + "\n";
         for (VertexType i = 0; i < numVert; i++) {
-            double val = (1 - 2 * randInt(2)) * std::exp(unifLog(re));
+            double val = (1 - 2 * RandInt(2)) * std::exp(unifLog(re));
             graphWrite << std::to_string(i + 1) + " " + std::to_string(i + 1) + " " + std::to_string(val) + "\n";
             for (const auto &chld : graph.Children(i)) {
                 val = unif(re);

@@ -59,7 +59,7 @@ int main(int argc, char *argv[]) {
     for (size_t i = 0; i < numGraphs; i++) {
         // Generating the graph
         ComputationalDag graph;
-        near_diag_random_graph(graph, numVert, bandwidth, prob);
+        NearDiagRandomGraph(graph, numVert, bandwidth, prob);
 
         //  Generating graph name
         std::string graphName = "RandomBand_";
@@ -105,7 +105,7 @@ int main(int argc, char *argv[]) {
         graphWrite << std::to_string(graph.NumVertices()) + " " + std::to_string(graph.NumVertices()) + " "
                           + std::to_string(graph.NumEdges() + graph.NumVertices()) + "\n";
         for (VertexType j = 0; j < numVert; j++) {
-            double val = (1 - 2 * randInt(2)) * std::exp(unifLog(re));
+            double val = (1 - 2 * RandInt(2)) * std::exp(unifLog(re));
             graphWrite << std::to_string(j + 1) + " " + std::to_string(j + 1) + " " + std::to_string(val) + "\n";
             for (const auto &chld : graph.Children(j)) {
                 val = unif(re);
