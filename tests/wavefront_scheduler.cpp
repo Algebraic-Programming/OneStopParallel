@@ -181,8 +181,8 @@ struct TestFixture {
         dag_.AddVertex(20, 1, 1);    // v1
         dag_.AddVertex(0, 1, 1);    // v2
         dag_.AddVertex(40, 1, 1);    // v3
-        dag_.add_edge(0, 1);
-        dag_.add_edge(2, 3);
+        dag_.AddEdge(0, 1);
+        dag_.AddEdge(2, 3);
 
         // An architecture with 10 processors of one type
         arch_.setNumberOfProcessors(10);
@@ -275,7 +275,7 @@ BOOST_AUTO_TEST_SUITE_END()
 //         dag.AddVertex(10, 1, 1); dag.AddVertex(20, 1, 1); // v0, v1
 //         dag.AddVertex(10, 1, 1); dag.AddVertex(20, 1, 1); // v2, v3
 //         dag.AddVertex(50, 1, 1); dag.AddVertex(50, 1, 1); // v4, v5
-//         dag.add_edge(0, 1); dag.add_edge(2, 3); dag.add_edge(4, 5);
+//         dag.AddEdge(0, 1); dag.AddEdge(2, 3); dag.AddEdge(4, 5);
 //     }
 // };
 

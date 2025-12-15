@@ -44,15 +44,15 @@ BOOST_AUTO_TEST_CASE(CuthillMckee1) {
     dag.AddVertex(8, 3);
     dag.AddVertex(9, 2);
 
-    dag.add_edge(0, 1, 2);
-    dag.add_edge(0, 2, 3);
-    dag.add_edge(0, 3, 4);
-    dag.add_edge(1, 4, 5);
-    dag.add_edge(2, 4, 6);
-    dag.add_edge(2, 5, 7);
-    dag.add_edge(1, 6, 8);
-    dag.add_edge(4, 7, 9);
-    dag.add_edge(3, 7, 9);
+    dag.AddEdge(0, 1, 2);
+    dag.AddEdge(0, 2, 3);
+    dag.AddEdge(0, 3, 4);
+    dag.AddEdge(1, 4, 5);
+    dag.AddEdge(2, 4, 6);
+    dag.AddEdge(2, 5, 7);
+    dag.AddEdge(1, 6, 8);
+    dag.AddEdge(4, 7, 9);
+    dag.AddEdge(3, 7, 9);
 
     std::vector<VertexType> cmWavefront = cuthill_mckee_wavefront(dag);
     std::vector<unsigned> expectedCmWavefront = {0, 3, 1, 2, 6, 4, 5, 7};
@@ -94,8 +94,8 @@ BOOST_AUTO_TEST_CASE(CuthillMckee1) {
     BOOST_CHECK_EQUAL_COLLECTIONS(
         cmUndirected.begin(), cmUndirected.end(), expectedCmUndirected.begin(), expectedCmUndirected.end());
 
-    dag.add_edge(8, 9);
-    dag.add_edge(9, 10);
+    dag.AddEdge(8, 9);
+    dag.AddEdge(9, 10);
 
     cmUndirected = cuthill_mckee_undirected(dag, true);
     expectedCmUndirected = {7, 3, 4, 0, 1, 2, 6, 5, 10, 9, 8};

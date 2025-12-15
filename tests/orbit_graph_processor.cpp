@@ -114,8 +114,8 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessorSimpleMerge) {
     dag.AddVertex(10, 1, 1);    // 1
     dag.AddVertex(10, 1, 1);    // 2
     dag.AddVertex(10, 1, 1);    // 3
-    dag.add_edge(0, 1);
-    dag.add_edge(2, 3);
+    dag.AddEdge(0, 1);
+    dag.AddEdge(2, 3);
 
     // Initial orbits: {0, 2} and {1, 3}. Coarse graph: 0 -> 1
     // With threshold 2, these should be merged.
@@ -149,10 +149,10 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessorForkJoinNoMerge) {
     dag.AddVertex(20, 1, 1);    // 1
     dag.AddVertex(20, 1, 1);    // 2
     dag.AddVertex(30, 1, 1);    // 3
-    dag.add_edge(0, 1);
-    dag.add_edge(0, 2);
-    dag.add_edge(1, 3);
-    dag.add_edge(2, 3);
+    dag.AddEdge(0, 1);
+    dag.AddEdge(0, 2);
+    dag.AddEdge(1, 3);
+    dag.AddEdge(2, 3);
 
     // Initial orbits: {0}, {1,2}, {3}. Coarse graph: 0 -> 1 -> 2
     // Merging 0 and 1 would result in a group of size 1 ({0,1,2}), which is not viable (threshold 2).

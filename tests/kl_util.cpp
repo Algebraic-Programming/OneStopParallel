@@ -44,7 +44,7 @@ struct ScheduleFixture {
             dag.AddVertex(i + 1, i + 1, i + 1);
         }
         for (unsigned i = 0; i < 19; ++i) {
-            dag.add_edge(i, i + 1, 1);
+            dag.AddEdge(i, i + 1, 1);
         }
 
         instance_.GetArchitecture().setNumberOfProcessors(4);

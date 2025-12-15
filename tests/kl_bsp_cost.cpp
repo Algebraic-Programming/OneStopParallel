@@ -183,11 +183,11 @@ BOOST_AUTO_TEST_CASE(TestComputeCommDatastructures) {
 
     // Add edges
     // 0 -> 1
-    dag.add_edge(0, 1, 1);    // Edge weight ignored by max_comm_datastructure
+    dag.AddEdge(0, 1, 1);    // Edge weight ignored by max_comm_datastructure
     // 2 -> 3
-    dag.add_edge(2, 3, 1);
+    dag.AddEdge(2, 3, 1);
     // 4 -> 5
-    dag.add_edge(4, 5, 1);
+    dag.AddEdge(4, 5, 1);
 
     BspArchitecture<Graph> arch;
     arch.setNumberOfProcessors(3);
@@ -336,9 +336,9 @@ BOOST_AUTO_TEST_CASE(TestUpdateDatastructureAfterMove) {
     dag.AddVertex(1, 1, 1);     // 5
 
     // Add edges
-    dag.add_edge(0, 1, 1);
-    dag.add_edge(2, 3, 1);
-    dag.add_edge(4, 5, 1);
+    dag.AddEdge(0, 1, 1);
+    dag.AddEdge(2, 3, 1);
+    dag.AddEdge(4, 5, 1);
 
     BspArchitecture<Graph> arch;
     arch.setNumberOfProcessors(3);
@@ -419,9 +419,9 @@ BOOST_AUTO_TEST_CASE(TestMultipleSequentialMoves) {
     dag.AddVertex(1, 6, 1);     // 2
     dag.AddVertex(1, 4, 1);     // 3
 
-    dag.add_edge(0, 1, 1);
-    dag.add_edge(1, 2, 1);
-    dag.add_edge(2, 3, 1);
+    dag.AddEdge(0, 1, 1);
+    dag.AddEdge(1, 2, 1);
+    dag.AddEdge(2, 3, 1);
 
     BspArchitecture<Graph> arch;
     arch.setNumberOfProcessors(4);
@@ -496,9 +496,9 @@ BOOST_AUTO_TEST_CASE(TestNodeWithMultipleChildren) {
     dag.AddVertex(1, 1, 1);     // 2
     dag.AddVertex(1, 1, 1);     // 3
 
-    dag.add_edge(0, 1, 1);
-    dag.add_edge(0, 2, 1);
-    dag.add_edge(0, 3, 1);
+    dag.AddEdge(0, 1, 1);
+    dag.AddEdge(0, 2, 1);
+    dag.AddEdge(0, 3, 1);
 
     BspArchitecture<Graph> arch;
     arch.setNumberOfProcessors(4);
@@ -574,8 +574,8 @@ BOOST_AUTO_TEST_CASE(TestCrossStepMoves) {
     dag.AddVertex(1, 8, 1);     // 1
     dag.AddVertex(1, 6, 1);     // 2
 
-    dag.add_edge(0, 1, 1);
-    dag.add_edge(1, 2, 1);
+    dag.AddEdge(0, 1, 1);
+    dag.AddEdge(1, 2, 1);
 
     BspArchitecture<Graph> arch;
     arch.setNumberOfProcessors(2);
@@ -639,14 +639,14 @@ BOOST_AUTO_TEST_CASE(TestComplexScenarioUserProvided) {
     const auto v8 = dag.AddVertex(9, 2, 1);    // v8 (index 7)
 
     // Edges
-    dag.add_edge(v1, v2, 2);
-    dag.add_edge(v1, v3, 2);
-    dag.add_edge(v1, v4, 2);
-    dag.add_edge(v2, v5, 12);
-    dag.add_edge(v3, v5, 6);
-    dag.add_edge(v3, v6, 7);
-    dag.add_edge(v5, v8, 9);
-    dag.add_edge(v4, v8, 9);
+    dag.AddEdge(v1, v2, 2);
+    dag.AddEdge(v1, v3, 2);
+    dag.AddEdge(v1, v4, 2);
+    dag.AddEdge(v2, v5, 12);
+    dag.AddEdge(v3, v5, 6);
+    dag.AddEdge(v3, v6, 7);
+    dag.AddEdge(v5, v8, 9);
+    dag.AddEdge(v4, v8, 9);
 
     BspArchitecture<Graph> arch;
     arch.setNumberOfProcessors(2);    // P0, P1
@@ -1093,8 +1093,8 @@ BOOST_AUTO_TEST_CASE(TestLazyAndBufferedModes) {
     instance.AddVertex(1, 10, 1);
     instance.AddVertex(1, 10, 1);
 
-    instance.add_edge(0, 1, 1);
-    instance.add_edge(0, 2, 1);
+    instance.AddEdge(0, 1, 1);
+    instance.AddEdge(0, 2, 1);
 
     std::cout << "Setup Arch" << std::endl;
     osp::BspArchitecture<Graph> arch;

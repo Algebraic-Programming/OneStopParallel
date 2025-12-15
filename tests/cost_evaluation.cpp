@@ -43,11 +43,11 @@ BOOST_AUTO_TEST_CASE(TestCostModelsSimpleDag) {
     dag.AddVertex(30, 3, 0);
     dag.AddVertex(40, 4, 0);
     dag.AddVertex(50, 5, 0);
-    dag.add_edge(0, 1);
-    dag.add_edge(0, 2);
-    dag.add_edge(1, 4);
-    dag.add_edge(2, 3);
-    dag.add_edge(3, 4);
+    dag.AddEdge(0, 1);
+    dag.AddEdge(0, 2);
+    dag.AddEdge(1, 4);
+    dag.AddEdge(2, 3);
+    dag.AddEdge(3, 4);
 
     BspSchedule<Graph> schedule(instance);
 

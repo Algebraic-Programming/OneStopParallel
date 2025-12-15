@@ -39,8 +39,8 @@ BOOST_AUTO_TEST_CASE(MapperSimpleChain) {
     repGraph.AddVertex(10, 1, 1);
     repGraph.AddVertex(20, 1, 1);
     repGraph.AddVertex(30, 1, 1);
-    repGraph.add_edge(0, 1);
-    repGraph.add_edge(1, 2);
+    repGraph.AddEdge(0, 1);
+    repGraph.AddEdge(1, 2);
     std::vector<VertexIdxT<GraphT>> repMap = {100, 101, 102};
 
     // Current: 2 -> 0 -> 1 (isomorphic, but different local IDs)
@@ -48,8 +48,8 @@ BOOST_AUTO_TEST_CASE(MapperSimpleChain) {
     currentGraph.AddVertex(20, 1, 1);    // local 0 (work 20)
     currentGraph.AddVertex(30, 1, 1);    // local 1 (work 30)
     currentGraph.AddVertex(10, 1, 1);    // local 2 (work 10)
-    currentGraph.add_edge(2, 0);
-    currentGraph.add_edge(0, 1);
+    currentGraph.AddEdge(2, 0);
+    currentGraph.AddEdge(0, 1);
     std::vector<VertexIdxT<GraphT>> currentMap = {201, 202, 200};
 
     IsomorphismMapper<GraphT, ConstrGraphT> mapper(repGraph);
@@ -78,10 +78,10 @@ BOOST_AUTO_TEST_CASE(MapperForkJoin) {
     repGraph.AddVertex(20, 1, 1);
     repGraph.AddVertex(20, 1, 1);
     repGraph.AddVertex(30, 1, 1);
-    repGraph.add_edge(0, 1);
-    repGraph.add_edge(0, 2);
-    repGraph.add_edge(1, 3);
-    repGraph.add_edge(2, 3);
+    repGraph.AddEdge(0, 1);
+    repGraph.AddEdge(0, 2);
+    repGraph.AddEdge(1, 3);
+    repGraph.AddEdge(2, 3);
     std::vector<VertexIdxT<GraphT>> repMap = {10, 11, 12, 13};
 
     // Current: 3 -> {0,2} -> 1
@@ -90,10 +90,10 @@ BOOST_AUTO_TEST_CASE(MapperForkJoin) {
     currentGraph.AddVertex(30, 1, 1);    // local 1
     currentGraph.AddVertex(20, 1, 1);    // local 2
     currentGraph.AddVertex(10, 1, 1);    // local 3
-    currentGraph.add_edge(3, 0);
-    currentGraph.add_edge(3, 2);
-    currentGraph.add_edge(0, 1);
-    currentGraph.add_edge(2, 1);
+    currentGraph.AddEdge(3, 0);
+    currentGraph.AddEdge(3, 2);
+    currentGraph.AddEdge(0, 1);
+    currentGraph.AddEdge(2, 1);
     std::vector<VertexIdxT<GraphT>> currentMap = {21, 23, 22, 20};
 
     IsomorphismMapper<GraphT, ConstrGraphT> mapper(repGraph);
@@ -125,8 +125,8 @@ BOOST_AUTO_TEST_CASE(MapperDisconnectedComponents) {
     repGraph.AddVertex(20, 1, 1);    // 0, 1
     repGraph.AddVertex(10, 1, 1);
     repGraph.AddVertex(20, 1, 1);    // 2, 3
-    repGraph.add_edge(0, 1);
-    repGraph.add_edge(2, 3);
+    repGraph.AddEdge(0, 1);
+    repGraph.AddEdge(2, 3);
     std::vector<VertexIdxT<GraphT>> repMap = {10, 11, 12, 13};
 
     // Current: {2->3}, {0->1}. Same components, but different local IDs.
@@ -135,8 +135,8 @@ BOOST_AUTO_TEST_CASE(MapperDisconnectedComponents) {
     currentGraph.AddVertex(20, 1, 1);    // 0, 1
     currentGraph.AddVertex(10, 1, 1);
     currentGraph.AddVertex(20, 1, 1);    // 2, 3
-    currentGraph.add_edge(2, 3);
-    currentGraph.add_edge(0, 1);
+    currentGraph.AddEdge(2, 3);
+    currentGraph.AddEdge(0, 1);
     std::vector<VertexIdxT<GraphT>> currentMap = {22, 23, 20, 21};
 
     IsomorphismMapper<GraphT, ConstrGraphT> mapper(repGraph);
@@ -184,10 +184,10 @@ BOOST_AUTO_TEST_CASE(MapperMultiPipeline) {
     currentGraph.AddVertex(10, 1, 1);    // local 3, stage 0
     currentGraph.AddVertex(20, 1, 1);    // local 4, stage 1
     currentGraph.AddVertex(30, 1, 1);    // local 5, stage 2
-    currentGraph.add_edge(0, 1);
-    currentGraph.add_edge(1, 2);    // First pipeline
-    currentGraph.add_edge(3, 4);
-    currentGraph.add_edge(4, 5);    // Second pipeline
+    currentGraph.AddEdge(0, 1);
+    currentGraph.AddEdge(1, 2);    // First pipeline
+    currentGraph.AddEdge(3, 4);
+    currentGraph.AddEdge(4, 5);    // Second pipeline
     std::vector<VertexIdxT<GraphT>> currentMap = {120, 121, 122, 110, 111, 112};
 
     IsomorphismMapper<GraphT, ConstrGraphT> mapper(repGraph);
@@ -236,15 +236,15 @@ BOOST_AUTO_TEST_CASE(MapperShuffledSymmetric) {
     currentGraph.AddVertex(20, 1, 1);    // local 4 (work 20, right)
     currentGraph.AddVertex(10, 1, 1);    // local 5 (work 10, left)
     // Edges for {5,0} -> {3,2} -> {1,4}
-    currentGraph.add_edge(5, 3);
-    currentGraph.add_edge(5, 2);    // Rung 1
-    currentGraph.add_edge(0, 3);
-    currentGraph.add_edge(0, 2);
+    currentGraph.AddEdge(5, 3);
+    currentGraph.AddEdge(5, 2);    // Rung 1
+    currentGraph.AddEdge(0, 3);
+    currentGraph.AddEdge(0, 2);
 
-    currentGraph.add_edge(3, 1);
-    currentGraph.add_edge(3, 4);    // Rung 2
-    currentGraph.add_edge(2, 1);
-    currentGraph.add_edge(2, 4);
+    currentGraph.AddEdge(3, 1);
+    currentGraph.AddEdge(3, 4);    // Rung 2
+    currentGraph.AddEdge(2, 1);
+    currentGraph.AddEdge(2, 4);
 
     std::vector<VertexIdxT<GraphT>> currentMap = {111, 114, 113, 112, 115, 110};
 

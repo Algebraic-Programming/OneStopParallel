@@ -320,10 +320,10 @@ BOOST_AUTO_TEST_CASE(TestMaxBspSchedule) {
     dag.AddVertex(5, 2, 0);     // Node 1
     dag.AddVertex(5, 3, 0);     // Node 2
     dag.AddVertex(10, 4, 0);    // Node 3
-    dag.add_edge(0, 1);
-    dag.add_edge(0, 2);
-    dag.add_edge(1, 3);
-    dag.add_edge(2, 3);
+    dag.AddEdge(0, 1);
+    dag.AddEdge(0, 2);
+    dag.AddEdge(1, 3);
+    dag.AddEdge(2, 3);
 
     // Test a valid schedule with staleness = 2
     {
@@ -401,10 +401,10 @@ BOOST_AUTO_TEST_CASE(TestMaxBspScheduleCs) {
     dag.AddVertex(5, 2, 0);     // Node 1
     dag.AddVertex(5, 3, 0);     // Node 2
     dag.AddVertex(10, 4, 0);    // Node 3
-    dag.add_edge(0, 1);
-    dag.add_edge(0, 2);
-    dag.add_edge(1, 3);
-    dag.add_edge(2, 3);
+    dag.AddEdge(0, 1);
+    dag.AddEdge(0, 2);
+    dag.AddEdge(1, 3);
+    dag.AddEdge(2, 3);
 
     // Test a valid schedule with staleness = 2
     {

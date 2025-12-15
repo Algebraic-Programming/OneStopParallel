@@ -43,31 +43,31 @@ boost_graph_int_t ConstrGraph1() {
     VertexIdx v7 = graph.AddVertex(25, 26, 27, 28);
     VertexIdx v8 = graph.AddVertex(29, 30, 31, 32);
 
-    auto pair = graph.add_edge(v1, v2);
+    auto pair = graph.AddEdge(v1, v2);
     BOOST_CHECK_EQUAL(pair.second, true);
 
-    pair = graph.add_edge(v1, v3);
+    pair = graph.AddEdge(v1, v3);
     BOOST_CHECK_EQUAL(pair.second, true);
 
-    pair = graph.add_edge(v1, v4);
+    pair = graph.AddEdge(v1, v4);
     BOOST_CHECK_EQUAL(pair.second, true);
 
-    pair = graph.add_edge(v2, v5);
+    pair = graph.AddEdge(v2, v5);
     BOOST_CHECK_EQUAL(pair.second, true);
 
-    pair = graph.add_edge(v2, v7);
+    pair = graph.AddEdge(v2, v7);
     BOOST_CHECK_EQUAL(pair.second, true);
 
-    pair = graph.add_edge(v3, v5);
+    pair = graph.AddEdge(v3, v5);
     BOOST_CHECK_EQUAL(pair.second, true);
 
-    pair = graph.add_edge(v3, v6);
+    pair = graph.AddEdge(v3, v6);
     BOOST_CHECK_EQUAL(pair.second, true);
 
-    pair = graph.add_edge(v4, v8);
+    pair = graph.AddEdge(v4, v8);
     BOOST_CHECK_EQUAL(pair.second, true);
 
-    pair = graph.add_edge(v5, v8);
+    pair = graph.AddEdge(v5, v8);
     BOOST_CHECK_EQUAL(pair.second, true);
 
     BOOST_CHECK_EQUAL(graph.NumEdges(), 9);
@@ -259,9 +259,9 @@ BOOST_AUTO_TEST_CASE(TestConstrDag) {
     graph.AddVertex(9, 10, 11);
     graph.AddVertex(13, 14, 15);
 
-    graph.add_edge(0, 1);
-    graph.add_edge(0, 2);
-    graph.add_edge(0, 3);
+    graph.AddEdge(0, 1);
+    graph.AddEdge(0, 2);
+    graph.AddEdge(0, 3);
 
     boost_graph_int_t graph2(graph);
 
@@ -283,7 +283,7 @@ BOOST_AUTO_TEST_CASE(TestConstrDag) {
 
     graphOther.AddVertex(1, 2, 3, 4);
     graphOther.AddVertex(5, 6, 7, 8);
-    graphOther.add_edge(0, 1, 9);
+    graphOther.AddEdge(0, 1, 9);
 
     boost_graph_int_t graph3(graphOther);
 

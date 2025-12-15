@@ -503,31 +503,31 @@ BOOST_AUTO_TEST_CASE(GraphEdgeContruction) {
     VertexIdx v7 = graph.AddVertex(25, 26, 27, 28);
     VertexIdx v8 = graph.AddVertex(29, 30, 31, 32);
 
-    auto pair = graph.add_edge(v1, v2);
+    auto pair = graph.AddEdge(v1, v2);
     BOOST_CHECK_EQUAL(pair.second, true);
 
-    pair = graph.add_edge(v1, v3);
+    pair = graph.AddEdge(v1, v3);
     BOOST_CHECK_EQUAL(pair.second, true);
 
-    pair = graph.add_edge(v1, v4);
+    pair = graph.AddEdge(v1, v4);
     BOOST_CHECK_EQUAL(pair.second, true);
 
-    pair = graph.add_edge(v2, v5);
+    pair = graph.AddEdge(v2, v5);
     BOOST_CHECK_EQUAL(pair.second, true);
 
-    pair = graph.add_edge(v2, v7);
+    pair = graph.AddEdge(v2, v7);
     BOOST_CHECK_EQUAL(pair.second, true);
 
-    pair = graph.add_edge(v3, v5);
+    pair = graph.AddEdge(v3, v5);
     BOOST_CHECK_EQUAL(pair.second, true);
 
-    pair = graph.add_edge(v3, v6);
+    pair = graph.AddEdge(v3, v6);
     BOOST_CHECK_EQUAL(pair.second, true);
 
-    pair = graph.add_edge(v4, v8);
+    pair = graph.AddEdge(v4, v8);
     BOOST_CHECK_EQUAL(pair.second, true);
 
-    pair = graph.add_edge(v5, v8);
+    pair = graph.AddEdge(v5, v8);
     BOOST_CHECK_EQUAL(pair.second, true);
 
     BOOST_CHECK_EQUAL(graph.NumEdges(), 9);
@@ -944,31 +944,31 @@ BOOST_AUTO_TEST_CASE(GraphTypeCopyContruction) {
     VertexIdx v7 = graph.AddVertex(25, 26, 27, 28);
     VertexIdx v8 = graph.AddVertex(29, 30, 31, 32);
 
-    auto pair = graph.add_edge(v1, v2);
+    auto pair = graph.AddEdge(v1, v2);
     BOOST_CHECK_EQUAL(pair.second, true);
 
-    pair = graph.add_edge(v1, v3);
+    pair = graph.AddEdge(v1, v3);
     BOOST_CHECK_EQUAL(pair.second, true);
 
-    pair = graph.add_edge(v1, v4);
+    pair = graph.AddEdge(v1, v4);
     BOOST_CHECK_EQUAL(pair.second, true);
 
-    pair = graph.add_edge(v2, v5);
+    pair = graph.AddEdge(v2, v5);
     BOOST_CHECK_EQUAL(pair.second, true);
 
-    pair = graph.add_edge(v2, v7);
+    pair = graph.AddEdge(v2, v7);
     BOOST_CHECK_EQUAL(pair.second, true);
 
-    pair = graph.add_edge(v3, v5);
+    pair = graph.AddEdge(v3, v5);
     BOOST_CHECK_EQUAL(pair.second, true);
 
-    pair = graph.add_edge(v3, v6);
+    pair = graph.AddEdge(v3, v6);
     BOOST_CHECK_EQUAL(pair.second, true);
 
-    pair = graph.add_edge(v4, v8);
+    pair = graph.AddEdge(v4, v8);
     BOOST_CHECK_EQUAL(pair.second, true);
 
-    pair = graph.add_edge(v5, v8);
+    pair = graph.AddEdge(v5, v8);
     BOOST_CHECK_EQUAL(pair.second, true);
 
     BOOST_CHECK_EQUAL(graph.NumEdges(), 9);

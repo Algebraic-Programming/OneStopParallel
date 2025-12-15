@@ -39,8 +39,8 @@ BOOST_AUTO_TEST_CASE(TestRecomputer) {
     instance1.GetComputationalDag().AddVertex(10, 1, 0);
     instance1.GetComputationalDag().AddVertex(10, 1, 0);
     instance1.GetComputationalDag().AddVertex(10, 1, 0);
-    instance1.GetComputationalDag().add_edge(0, 1);
-    instance1.GetComputationalDag().add_edge(0, 2);
+    instance1.GetComputationalDag().AddEdge(0, 1);
+    instance1.GetComputationalDag().AddEdge(0, 2);
 
     BspSchedule<Graph> scheduleInit1(instance1);
     scheduleInit1.SetAssignedProcessor(0, 0);

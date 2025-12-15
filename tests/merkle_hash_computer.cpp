@@ -96,15 +96,15 @@ BOOST_AUTO_TEST_CASE(MerkleIsomorphismTestIdenticalGraphsAreIsomorphic) {
     const auto v1 = dag1.AddVertex(0, 10, 1);
     const auto v2 = dag1.AddVertex(1, 20, 1);
     const auto v3 = dag1.AddVertex(0, 30, 1);
-    dag1.add_edge(v1, v2);
-    dag1.add_edge(v2, v3);
+    dag1.AddEdge(v1, v2);
+    dag1.AddEdge(v2, v3);
 
     GraphType dag2;
     const auto vA = dag2.AddVertex(0, 10, 1);
     const auto vB = dag2.AddVertex(1, 20, 1);
     const auto vC = dag2.AddVertex(0, 30, 1);
-    dag2.add_edge(vA, vB);
-    dag2.add_edge(vB, vC);
+    dag2.AddEdge(vA, vB);
+    dag2.AddEdge(vB, vC);
 
     bool test = are_isomorphic_by_merkle_hash<GraphType, uniform_node_hash_func<VertexType>, true>(dag1, dag2);
     BOOST_CHECK(test);
@@ -130,15 +130,15 @@ BOOST_AUTO_TEST_CASE(MerkleIsomorphismTestSameSizeDifferentStructure) {
     const auto v11 = dag1.AddVertex(0, 1, 1);
     const auto v12 = dag1.AddVertex(0, 1, 1);
     const auto v13 = dag1.AddVertex(0, 1, 1);
-    dag1.add_edge(v11, v12);
-    dag1.add_edge(v12, v13);
+    dag1.AddEdge(v11, v12);
+    dag1.AddEdge(v12, v13);
 
     GraphType dag2;    // A -> B, A -> C
     const auto v21 = dag2.AddVertex(0, 1, 1);
     const auto v22 = dag2.AddVertex(0, 1, 1);
     const auto v23 = dag2.AddVertex(0, 1, 1);
-    dag2.add_edge(v21, v22);
-    dag2.add_edge(v21, v23);
+    dag2.AddEdge(v21, v22);
+    dag2.AddEdge(v21, v23);
 
     BOOST_CHECK_EQUAL(are_isomorphic_by_merkle_hash(dag1, dag2), false);
 }
@@ -149,16 +149,16 @@ BOOST_AUTO_TEST_CASE(MerkleIsomorphismTestIsomorphicWithDifferentLabels) {
     const auto v11 = dag1.AddVertex(0, 1, 1);    // Source
     const auto v12 = dag1.AddVertex(0, 1, 1);
     const auto v13 = dag1.AddVertex(0, 1, 1);    // Sink
-    dag1.add_edge(v11, v12);
-    dag1.add_edge(v12, v13);
+    dag1.AddEdge(v11, v12);
+    dag1.AddEdge(v12, v13);
 
     GraphType dag2;
     // Same structure as dag1, but vertices are added in a different order.
     const auto v23 = dag2.AddVertex(0, 1, 1);    // Sink
     const auto v21 = dag2.AddVertex(0, 1, 1);    // Source
     const auto v22 = dag2.AddVertex(0, 1, 1);
-    dag2.add_edge(v21, v22);
-    dag2.add_edge(v22, v23);
+    dag2.AddEdge(v21, v22);
+    dag2.AddEdge(v22, v23);
 
     BOOST_CHECK(are_isomorphic_by_merkle_hash(dag1, dag2));
 }
@@ -175,18 +175,18 @@ BOOST_AUTO_TEST_CASE(MerkleIsomorphismTestComplexIsomorphicGraphs) {
         const auto v6 = dag1.AddVertex(7, 4, 2);
         dag1.AddVertex(8, 3, 4);
         const auto v8 = dag1.AddVertex(9, 2, 1);
-        dag1.add_edge(v1, v2);
-        dag1.add_edge(v1, v3);
-        dag1.add_edge(v1, v4);
-        dag1.add_edge(v1, v5);
-        dag1.add_edge(v1, v8);
-        dag1.add_edge(v2, v5);
-        dag1.add_edge(v2, v6);
-        dag1.add_edge(v2, v8);
-        dag1.add_edge(v3, v5);
-        dag1.add_edge(v3, v6);
-        dag1.add_edge(v5, v8);
-        dag1.add_edge(v4, v8);
+        dag1.AddEdge(v1, v2);
+        dag1.AddEdge(v1, v3);
+        dag1.AddEdge(v1, v4);
+        dag1.AddEdge(v1, v5);
+        dag1.AddEdge(v1, v8);
+        dag1.AddEdge(v2, v5);
+        dag1.AddEdge(v2, v6);
+        dag1.AddEdge(v2, v8);
+        dag1.AddEdge(v3, v5);
+        dag1.AddEdge(v3, v6);
+        dag1.AddEdge(v5, v8);
+        dag1.AddEdge(v4, v8);
     }
 
     GraphType dag2;
@@ -200,18 +200,18 @@ BOOST_AUTO_TEST_CASE(MerkleIsomorphismTestComplexIsomorphicGraphs) {
         const auto n3 = dag2.AddVertex(4, 7, 3);
         const auto n2 = dag2.AddVertex(3, 8, 4);
         const auto n1 = dag2.AddVertex(2, 9, 2);
-        dag2.add_edge(n1, n2);
-        dag2.add_edge(n1, n3);
-        dag2.add_edge(n1, n4);
-        dag2.add_edge(n1, n5);
-        dag2.add_edge(n1, n8);
-        dag2.add_edge(n2, n5);
-        dag2.add_edge(n2, n6);
-        dag2.add_edge(n2, n8);
-        dag2.add_edge(n3, n5);
-        dag2.add_edge(n3, n6);
-        dag2.add_edge(n5, n8);
-        dag2.add_edge(n4, n8);
+        dag2.AddEdge(n1, n2);
+        dag2.AddEdge(n1, n3);
+        dag2.AddEdge(n1, n4);
+        dag2.AddEdge(n1, n5);
+        dag2.AddEdge(n1, n8);
+        dag2.AddEdge(n2, n5);
+        dag2.AddEdge(n2, n6);
+        dag2.AddEdge(n2, n8);
+        dag2.AddEdge(n3, n5);
+        dag2.AddEdge(n3, n6);
+        dag2.AddEdge(n5, n8);
+        dag2.AddEdge(n4, n8);
     }
 
     BOOST_CHECK(are_isomorphic_by_merkle_hash(dag1, dag2));

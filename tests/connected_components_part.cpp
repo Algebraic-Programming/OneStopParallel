@@ -47,15 +47,15 @@ BOOST_AUTO_TEST_CASE(ConnectedComponentPartTest) {
     BOOST_CHECK_EQUAL(dag.NumVertices(), 8);
     BOOST_CHECK_EQUAL(dag.NumEdges(), 0);
 
-    dag.add_edge(v1, v2);
-    dag.add_edge(v1, v3);
-    dag.add_edge(v1, v4);
-    dag.add_edge(v2, v5);
-    dag.add_edge(v3, v6);
-    dag.add_edge(v3, v5);
-    dag.add_edge(v2, v7);
-    dag.add_edge(v5, v8);
-    dag.add_edge(v4, v8);
+    dag.AddEdge(v1, v2);
+    dag.AddEdge(v1, v3);
+    dag.AddEdge(v1, v4);
+    dag.AddEdge(v2, v5);
+    dag.AddEdge(v3, v6);
+    dag.AddEdge(v3, v5);
+    dag.AddEdge(v2, v7);
+    dag.AddEdge(v5, v8);
+    dag.AddEdge(v4, v8);
 
     ConnectedComponentDivider<computational_dag_vector_impl_def_int_t, computational_dag_vector_impl_def_int_t> partitioner;
 
@@ -88,10 +88,10 @@ BOOST_AUTO_TEST_CASE(ConnectedComponentPartTest) {
     VertexType v11 = dag.AddVertex(4, 1, 6);
     VertexType v12 = dag.AddVertex(5, 1, 6);
 
-    dag.add_edge(v9, v10);
-    dag.add_edge(v9, v11);
-    dag.add_edge(v9, v12);
-    dag.add_edge(v10, v11);
+    dag.AddEdge(v9, v10);
+    dag.AddEdge(v9, v11);
+    dag.AddEdge(v9, v12);
+    dag.AddEdge(v10, v11);
 
     partitioner.compute_connected_components(dag);
 

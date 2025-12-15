@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(SubGraphDagVectorImpl) {
         cntr += 4U;
     }
     for (const auto &[src, tgt] : edges) {
-        graph.add_edge(src, tgt);
+        graph.AddEdge(src, tgt);
     }
 
     const std::vector<VertexIdxT<computational_dag_vector_impl<VImpl>>> selectVert({2, 3, 10, 6, 7});

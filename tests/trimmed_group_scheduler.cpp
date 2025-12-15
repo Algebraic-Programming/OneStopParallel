@@ -81,8 +81,8 @@ BOOST_AUTO_TEST_CASE(SingleComponentSingleProcessorTypeTest) {
     dag_.AddVertex(1, 1, 1, 0);    // 0
     dag_.AddVertex(1, 1, 1, 0);    // 1
     dag_.AddVertex(1, 1, 1, 0);    // 2
-    dag_.add_edge(0, 1);
-    dag_.add_edge(1, 2);
+    dag_.AddEdge(0, 1);
+    dag_.AddEdge(1, 2);
     instance_.GetComputationalDag() = dag_;
 
     // Architecture: 4 processors of type 0
@@ -113,8 +113,8 @@ BOOST_AUTO_TEST_CASE(MultipleComponentsSingleProcessorTypeEvenDistributionTest) 
     dag_.AddVertex(1, 1, 1, 0);    // 1
     dag_.AddVertex(1, 1, 1, 0);    // 2
     dag_.AddVertex(1, 1, 1, 0);    // 3
-    dag_.add_edge(0, 1);
-    dag_.add_edge(2, 3);
+    dag_.AddEdge(0, 1);
+    dag_.AddEdge(2, 3);
     instance_.GetComputationalDag() = dag_;
 
     // Architecture: 4 processors of type 0

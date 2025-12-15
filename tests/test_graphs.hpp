@@ -88,7 +88,7 @@ inline GraphT ConstructMultiPipelineDag(unsigned numPipelines, unsigned pipeline
 
     for (unsigned i = 0; i < numPipelines; ++i) {
         for (unsigned j = 0; j < pipelineLen - 1; ++j) {
-            dag.add_edge(i * pipelineLen + j, i * pipelineLen + j + 1);
+            dag.AddEdge(i * pipelineLen + j, i * pipelineLen + j + 1);
         }
     }
     return dag;
@@ -122,10 +122,10 @@ inline GraphT ConstructLadderDag(unsigned numRungs) {
         auto v1 = 2 * i + 1;
         auto u2 = 2 * (i + 1);
         auto v2 = 2 * (i + 1) + 1;
-        dag.add_edge(u1, u2);
-        dag.add_edge(u1, v2);
-        dag.add_edge(v1, u2);
-        dag.add_edge(v1, v2);
+        dag.AddEdge(u1, u2);
+        dag.AddEdge(u1, v2);
+        dag.AddEdge(v1, u2);
+        dag.AddEdge(v1, v2);
     }
     return dag;
 }
@@ -147,7 +147,7 @@ inline GraphT ConstructAsymmetricDag(unsigned numNodes) {
     for (unsigned i = 0; i < numNodes; ++i) {
         dag.AddVertex(10 * (i + 1), 1, 1);
         if (i > 0) {
-            dag.add_edge(i - 1, i);
+            dag.AddEdge(i - 1, i);
         }
     }
     return dag;
@@ -173,8 +173,8 @@ inline GraphT ConstructBinaryOutTree(unsigned height) {
     }
 
     for (unsigned i = 0; i < numNodes / 2; ++i) {
-        dag.add_edge(i, 2 * i + 1);
-        dag.add_edge(i, 2 * i + 2);
+        dag.AddEdge(i, 2 * i + 1);
+        dag.AddEdge(i, 2 * i + 2);
     }
     return dag;
 }
@@ -199,8 +199,8 @@ inline GraphT ConstructBinaryInTree(unsigned height) {
     }
 
     for (unsigned i = 0; i < numNodes / 2; ++i) {
-        dag.add_edge(2 * i + 1, i);
-        dag.add_edge(2 * i + 2, i);
+        dag.AddEdge(2 * i + 1, i);
+        dag.AddEdge(2 * i + 2, i);
     }
     return dag;
 }
@@ -227,10 +227,10 @@ inline GraphT ConstructGridDag(unsigned rows, unsigned cols) {
     for (unsigned r = 0; r < rows; ++r) {
         for (unsigned c = 0; c < cols; ++c) {
             if (r + 1 < rows) {
-                dag.add_edge(r * cols + c, (r + 1) * cols + c);
+                dag.AddEdge(r * cols + c, (r + 1) * cols + c);
             }
             if (c + 1 < cols) {
-                dag.add_edge(r * cols + c, r * cols + (c + 1));
+                dag.AddEdge(r * cols + c, r * cols + (c + 1));
             }
         }
     }
@@ -261,8 +261,8 @@ inline GraphT ConstructButterflyDag(unsigned stages) {
             unsigned currentNode = s * n + i;
             unsigned nextNodeStraight = (s + 1) * n + i;
             unsigned nextNodeCross = (s + 1) * n + (i ^ (1U << (stages - 1 - s)));
-            dag.add_edge(currentNode, nextNodeStraight);
-            dag.add_edge(currentNode, nextNodeCross);
+            dag.AddEdge(currentNode, nextNodeStraight);
+            dag.AddEdge(currentNode, nextNodeCross);
         }
     }
     return dag;

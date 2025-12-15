@@ -133,7 +133,7 @@ inline constexpr bool IsConstructableCdagTypedVertexV = IsConstructableCdagTyped
  * @brief Concept to check if edges can be added (unweighted).
  *
  * Requires:
- * - `add_edge(source, target)`
+ * - `AddEdge(source, target)`
  *
  * @tparam T The graph type.
  */
@@ -173,7 +173,7 @@ inline constexpr bool IsModifiableCdagCommEdgeV = IsModifiableCdagCommEdge<T>::v
  * @brief Concept to check if weighted edges can be added.
  *
  * Requires:
- * - `add_edge(source, target, weight)`
+ * - `AddEdge(source, target, weight)`
  *
  * @tparam T The graph type.
  */

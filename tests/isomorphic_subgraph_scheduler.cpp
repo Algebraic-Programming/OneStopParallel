@@ -213,10 +213,10 @@ BOOST_AUTO_TEST_CASE(ScheduleIsomorphicGroupHeterogeneousArch) {
     dag.AddVertex(10, 1, 1, 0);    // 2, 3
     dag.AddVertex(20, 1, 1, 1);    // 4
     dag.AddVertex(20, 1, 1, 1);    // 5
-    dag.add_edge(0, 1);
-    dag.add_edge(2, 3);
-    dag.add_edge(1, 4);
-    dag.add_edge(3, 5);
+    dag.AddEdge(0, 1);
+    dag.AddEdge(2, 3);
+    dag.AddEdge(1, 4);
+    dag.AddEdge(3, 5);
 
     // 2 procs of type 0, 2 procs of type 1
     instance.GetArchitecture().setProcessorsWithTypes({0, 0, 1, 1});
@@ -277,12 +277,12 @@ BOOST_AUTO_TEST_CASE(ScheduleIsomorphicGroupShuffledIDs) {
     // Group 0, Subgraph 1: 0 -> 1
     dag.AddVertex(10, 1, 1, 0);    // 0
     dag.AddVertex(20, 1, 1, 0);    // 1
-    dag.add_edge(0, 1);
+    dag.AddEdge(0, 1);
 
     // Group 0, Subgraph 2 (isomorphic to 1, but with shuffled IDs): 3 -> 2
     dag.AddVertex(20, 1, 1, 0);    // 2 (work 20, corresponds to node 1)
     dag.AddVertex(10, 1, 1, 0);    // 3 (work 10, corresponds to node 0)
-    dag.add_edge(3, 2);
+    dag.AddEdge(3, 2);
 
     // Architecture: 2 processors, so each subgraph gets its own partition space.
     instance.GetArchitecture().setProcessorsWithTypes({0, 0});
@@ -339,10 +339,10 @@ BOOST_AUTO_TEST_CASE(ScheduleIsomorphicGroupShuffledIDs) {
 //     dag.AddVertex(20, 1, 1, 0); // 1 (middle)
 //     dag.AddVertex(20, 1, 1, 0); // 2 (middle)
 //     dag.AddVertex(30, 1, 1, 0); // 3 (sink)
-//     dag.add_edge(0, 1);
-//     dag.add_edge(0, 2);
-//     dag.add_edge(1, 3);
-//     dag.add_edge(2, 3);
+//     dag.AddEdge(0, 1);
+//     dag.AddEdge(0, 2);
+//     dag.AddEdge(1, 3);
+//     dag.AddEdge(2, 3);
 
 //     // Group 0, Subgraph 2 (isomorphic, but with shuffled IDs and different topology)
 //     // Structure: 7 -> {5,4} -> 6
@@ -350,10 +350,10 @@ BOOST_AUTO_TEST_CASE(ScheduleIsomorphicGroupShuffledIDs) {
 //     dag.AddVertex(20, 1, 1, 0); // 5 (middle, corresponds to node 1)
 //     dag.AddVertex(30, 1, 1, 0); // 6 (sink, corresponds to node 3)
 //     dag.AddVertex(10, 1, 1, 0); // 7 (source, corresponds to node 0)
-//     dag.add_edge(7, 4);
-//     dag.add_edge(7, 5);
-//     dag.add_edge(4, 6);
-//     dag.add_edge(5, 6);
+//     dag.AddEdge(7, 4);
+//     dag.AddEdge(7, 5);
+//     dag.AddEdge(4, 6);
+//     dag.AddEdge(5, 6);
 
 //     // Architecture: 4 processors, so each subgraph gets its own partition space.
 //     instance.GetArchitecture().setProcessorsWithTypes({0, 0, 0, 0});

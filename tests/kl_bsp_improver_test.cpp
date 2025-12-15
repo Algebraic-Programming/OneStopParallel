@@ -44,14 +44,14 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
     dag.AddVertex(8, 3, 4);
     const VertexType v8 = dag.AddVertex(9, 2, 1);
 
-    dag.add_edge(v1, v2, 2);
-    dag.add_edge(v1, v3, 2);
-    dag.add_edge(v1, v4, 2);
-    dag.add_edge(v2, v5, 12);
-    dag.add_edge(v3, v5, 6);
-    dag.add_edge(v3, v6, 7);
-    dag.add_edge(v5, v8, 9);
-    dag.add_edge(v4, v8, 9);
+    dag.AddEdge(v1, v2, 2);
+    dag.AddEdge(v1, v3, 2);
+    dag.AddEdge(v1, v4, 2);
+    dag.AddEdge(v2, v5, 12);
+    dag.AddEdge(v3, v5, 6);
+    dag.AddEdge(v3, v6, 7);
+    dag.AddEdge(v5, v8, 9);
+    dag.AddEdge(v4, v8, 9);
 
     BspArchitecture<Graph> arch;
 

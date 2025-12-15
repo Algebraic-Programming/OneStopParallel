@@ -385,9 +385,9 @@ GraphT PebblingPartialILP<GraphT>::ContractByPartition(const BspInstance<GraphT>
 
     for (auto edge : edges) {
         if constexpr (HasEdgeWeightsV<GraphT>) {
-            contracted.add_edge(edge.first, edge.second, 1);
+            contracted.AddEdge(edge.first, edge.second, 1);
         } else {
-            contracted.add_edge(edge.first, edge.second);
+            contracted.AddEdge(edge.first, edge.second);
         }
     }
 

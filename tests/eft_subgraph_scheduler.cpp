@@ -36,8 +36,8 @@ BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerSimpleChain) {
     dag.AddVertex(100, 1, 0);    // node 0
     dag.AddVertex(200, 1, 0);    // node 1
     dag.AddVertex(300, 1, 0);    // node 2
-    dag.add_edge(0, 1);
-    dag.add_edge(1, 2);
+    dag.AddEdge(0, 1);
+    dag.AddEdge(1, 2);
 
     // Setup Architecture: 2 processors of type 0, 2 of type 1
     instance.GetArchitecture().setProcessorsWithTypes({0, 0, 1, 1});
@@ -86,10 +86,10 @@ BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerForkJoin) {
     dag.AddVertex(200, 1, 0);    // node 1
     dag.AddVertex(300, 1, 0);    // node 2
     dag.AddVertex(100, 1, 0);    // node 3
-    dag.add_edge(0, 1);
-    dag.add_edge(0, 2);
-    dag.add_edge(1, 3);
-    dag.add_edge(2, 3);
+    dag.AddEdge(0, 1);
+    dag.AddEdge(0, 2);
+    dag.AddEdge(1, 3);
+    dag.AddEdge(2, 3);
 
     // Setup Architecture: 4 processors of type 0
     instance.GetArchitecture().setProcessorsWithTypes({0, 0, 0, 0});
@@ -181,13 +181,13 @@ BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerComplexDag) {
     dag.AddVertex(80, 1, 0);     // 3
     dag.AddVertex(120, 1, 0);    // 4
     dag.AddVertex(60, 1, 0);     // 5
-    dag.add_edge(0, 1);
-    dag.add_edge(0, 2);
-    dag.add_edge(1, 3);
-    dag.add_edge(2, 3);
-    dag.add_edge(2, 4);
-    dag.add_edge(3, 5);
-    dag.add_edge(4, 5);
+    dag.AddEdge(0, 1);
+    dag.AddEdge(0, 2);
+    dag.AddEdge(1, 3);
+    dag.AddEdge(2, 3);
+    dag.AddEdge(2, 4);
+    dag.AddEdge(3, 5);
+    dag.AddEdge(4, 5);
 
     // Setup Architecture: 4 processors of type 0, 4 of type 1
     instance.GetArchitecture().setProcessorsWithTypes({0, 0, 0, 0, 1, 1, 1, 1});
@@ -234,12 +234,12 @@ BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerResourceContention) {
     dag.AddVertex(50, 1, 0);     // 2 (mid rank)
     dag.AddVertex(20, 1, 0);     // 3 (low rank)
     dag.AddVertex(10, 1, 0);     // 4
-    dag.add_edge(0, 1);
-    dag.add_edge(0, 2);
-    dag.add_edge(0, 3);
-    dag.add_edge(1, 4);
-    dag.add_edge(2, 4);
-    dag.add_edge(3, 4);
+    dag.AddEdge(0, 1);
+    dag.AddEdge(0, 2);
+    dag.AddEdge(0, 3);
+    dag.AddEdge(1, 4);
+    dag.AddEdge(2, 4);
+    dag.AddEdge(3, 4);
 
     // Setup Architecture: 4 processors of type 0
     instance.GetArchitecture().setProcessorsWithTypes({0, 0, 0, 0});
@@ -292,8 +292,8 @@ BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerProportionalAllocation) {
     dag.AddVertex(10, 1, 0);     // 0
     dag.AddVertex(300, 1, 0);    // 1 (high rank)
     dag.AddVertex(100, 1, 0);    // 2 (low rank)
-    dag.add_edge(0, 1);
-    dag.add_edge(0, 2);
+    dag.AddEdge(0, 1);
+    dag.AddEdge(0, 2);
 
     // Setup Architecture: 10 processors of type 0
     instance.GetArchitecture().setProcessorsWithTypes({0, 0, 0, 0, 0, 0, 0, 0, 0, 0});

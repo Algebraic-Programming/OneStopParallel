@@ -135,15 +135,15 @@ BOOST_AUTO_TEST_CASE(ForwardAndBackwardPassTest) {
     const auto v7 = dag.AddVertex(8, 1, 3);    // Note: v7 is not connected in the example
     const auto v8 = dag.AddVertex(9, 1, 2);
 
-    dag.add_edge(v1, v2);
-    dag.add_edge(v1, v3);
-    dag.add_edge(v1, v4);
-    dag.add_edge(v2, v5);
-    dag.add_edge(v2, v6);
-    dag.add_edge(v3, v5);
-    dag.add_edge(v3, v6);
-    dag.add_edge(v5, v8);
-    dag.add_edge(v4, v8);
+    dag.AddEdge(v1, v2);
+    dag.AddEdge(v1, v3);
+    dag.AddEdge(v1, v4);
+    dag.AddEdge(v2, v5);
+    dag.AddEdge(v2, v6);
+    dag.AddEdge(v3, v5);
+    dag.AddEdge(v3, v6);
+    dag.AddEdge(v5, v8);
+    dag.AddEdge(v4, v8);
 
     // Manually defined level sets for this DAG
     const std::vector<std::vector<VertexType>> levelSets = {
@@ -217,15 +217,15 @@ BOOST_AUTO_TEST_CASE(SequenceGenerationTest) {
     const auto v7 = dag.AddVertex(8, 1, 3);    // Isolated vertex
     const auto v8 = dag.AddVertex(9, 1, 2);
 
-    dag.add_edge(v1, v2);
-    dag.add_edge(v1, v3);
-    dag.add_edge(v1, v4);
-    dag.add_edge(v2, v5);
-    dag.add_edge(v2, v6);
-    dag.add_edge(v3, v5);
-    dag.add_edge(v3, v6);
-    dag.add_edge(v5, v8);
-    dag.add_edge(v4, v8);
+    dag.AddEdge(v1, v2);
+    dag.AddEdge(v1, v3);
+    dag.AddEdge(v1, v4);
+    dag.AddEdge(v2, v5);
+    dag.AddEdge(v2, v6);
+    dag.AddEdge(v3, v5);
+    dag.AddEdge(v3, v6);
+    dag.AddEdge(v5, v8);
+    dag.AddEdge(v4, v8);
 
     const std::vector<std::vector<VertexType>> levelSets = {
         {v1},
@@ -282,15 +282,15 @@ struct TestFixture {
 
         vertices_ = {v1, v2, v3, v4, v5, v6, v7, v8};
 
-        dag_.add_edge(v1, v2);
-        dag_.add_edge(v1, v3);
-        dag_.add_edge(v1, v4);
-        dag_.add_edge(v2, v5);
-        dag_.add_edge(v2, v6);
-        dag_.add_edge(v3, v5);
-        dag_.add_edge(v3, v6);
-        dag_.add_edge(v5, v8);
-        dag_.add_edge(v4, v8);
+        dag_.AddEdge(v1, v2);
+        dag_.AddEdge(v1, v3);
+        dag_.AddEdge(v1, v4);
+        dag_.AddEdge(v2, v5);
+        dag_.AddEdge(v2, v6);
+        dag_.AddEdge(v3, v5);
+        dag_.AddEdge(v3, v6);
+        dag_.AddEdge(v5, v8);
+        dag_.AddEdge(v4, v8);
     }
 };
 
@@ -374,12 +374,12 @@ struct TestFixture2 {
 
         vertices_ = {v1, v2, v3, v4, v5, v6, v7};
 
-        dag_.add_edge(v1, v3);
-        dag_.add_edge(v2, v4);
-        dag_.add_edge(v3, v5);
-        dag_.add_edge(v4, v6);
-        dag_.add_edge(v5, v7);
-        dag_.add_edge(v6, v7);
+        dag_.AddEdge(v1, v3);
+        dag_.AddEdge(v2, v4);
+        dag_.AddEdge(v3, v5);
+        dag_.AddEdge(v4, v6);
+        dag_.AddEdge(v5, v7);
+        dag_.AddEdge(v6, v7);
     }
 };
 
@@ -400,12 +400,12 @@ struct TestFixtureSimpleMerge {
         const auto v5 = dag_.AddVertex(1, 1, 1);
         const auto v6 = dag_.AddVertex(1, 1, 1);
 
-        dag_.add_edge(v0, v2);
-        dag_.add_edge(v1, v3);
-        dag_.add_edge(v2, v4);
-        dag_.add_edge(v3, v5);
-        dag_.add_edge(v4, v6);
-        dag_.add_edge(v5, v6);
+        dag_.AddEdge(v0, v2);
+        dag_.AddEdge(v1, v3);
+        dag_.AddEdge(v2, v4);
+        dag_.AddEdge(v3, v5);
+        dag_.AddEdge(v4, v6);
+        dag_.AddEdge(v5, v6);
     }
 };
 
@@ -485,19 +485,19 @@ struct TestFixtureMultiMerge {
         const auto vL41 = dag_.AddVertex(1, 1, 1);
         const auto vL51 = dag_.AddVertex(1, 1, 1);
 
-        dag_.add_edge(vL01, vL11);
-        dag_.add_edge(vL02, vL12);
-        dag_.add_edge(vL03, vL13);
-        dag_.add_edge(vL04, vL14);
-        dag_.add_edge(vL11, vL21);
-        dag_.add_edge(vL12, vL21);
-        dag_.add_edge(vL13, vL22);
-        dag_.add_edge(vL14, vL22);
-        dag_.add_edge(vL21, vL31);
-        dag_.add_edge(vL22, vL32);
-        dag_.add_edge(vL31, vL41);
-        dag_.add_edge(vL32, vL41);
-        dag_.add_edge(vL41, vL51);
+        dag_.AddEdge(vL01, vL11);
+        dag_.AddEdge(vL02, vL12);
+        dag_.AddEdge(vL03, vL13);
+        dag_.AddEdge(vL04, vL14);
+        dag_.AddEdge(vL11, vL21);
+        dag_.AddEdge(vL12, vL21);
+        dag_.AddEdge(vL13, vL22);
+        dag_.AddEdge(vL14, vL22);
+        dag_.AddEdge(vL21, vL31);
+        dag_.AddEdge(vL22, vL32);
+        dag_.AddEdge(vL31, vL41);
+        dag_.AddEdge(vL32, vL41);
+        dag_.AddEdge(vL41, vL51);
     }
 };
 

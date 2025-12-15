@@ -48,16 +48,16 @@ computational_dag_vector_impl_def_t ConstrGraph1() {
     VertexIdx v7 = graph.AddVertex(25, 26, 27, 28);
     VertexIdx v8 = graph.AddVertex(29, 30, 31, 32);
 
-    graph.add_edge(v1, v2);
-    graph.add_edge(v1, v3);
-    graph.add_edge(v1, v4);
-    graph.add_edge(v2, v5);
+    graph.AddEdge(v1, v2);
+    graph.AddEdge(v1, v3);
+    graph.AddEdge(v1, v4);
+    graph.AddEdge(v2, v5);
 
-    graph.add_edge(v3, v5);
-    graph.add_edge(v3, v6);
-    graph.add_edge(v2, v7);
-    graph.add_edge(v5, v8);
-    graph.add_edge(v4, v8);
+    graph.AddEdge(v3, v5);
+    graph.AddEdge(v3, v6);
+    graph.AddEdge(v2, v7);
+    graph.AddEdge(v5, v8);
+    graph.AddEdge(v4, v8);
 
     return graph;
 }
@@ -410,9 +410,9 @@ BOOST_AUTO_TEST_CASE(TestUtil1) {
     BOOST_CHECK_EQUAL(is_acyclic(graph), true);
     BOOST_CHECK_EQUAL(is_connected(graph), true);
 
-    graph.add_edge(7, 5);
+    graph.AddEdge(7, 5);
     BOOST_CHECK_EQUAL(is_acyclic(graph), true);
-    graph.add_edge(7, 0);
+    graph.AddEdge(7, 0);
     BOOST_CHECK_EQUAL(is_acyclic(graph), false);
 
     graph.AddVertex(1, 2, 3, 4);
