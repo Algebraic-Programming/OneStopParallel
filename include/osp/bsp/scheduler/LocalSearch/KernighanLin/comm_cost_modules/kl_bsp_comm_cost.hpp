@@ -314,7 +314,7 @@ struct KlBspCommCostFunction {
 
         for (const auto [proc, count] : nodeLambdaEntries) {
             if (proc != nodeProc) {
-                const comm_weight_t cost = commWNode * instance_->sendCosts(nodeProc, proc);
+                const comm_weight_t cost = commWNode * instance_->SendCosts(nodeProc, proc);
                 if (cost > 0) {
                     add_delta(true, nodeStep, proc, -cost);
                     totalSendCostRemoved += cost;
@@ -333,7 +333,7 @@ struct KlBspCommCostFunction {
 
             if (uProc != nodeProc) {
                 if (commDs_.nodeLambdaMap_.get_proc_entry(u, nodeProc) == 1) {
-                    const comm_weight_t cost = commWU * instance_->sendCosts(uProc, nodeProc);
+                    const comm_weight_t cost = commWU * instance_->SendCosts(uProc, nodeProc);
                     if (cost > 0) {
                         add_delta(true, uStep, nodeProc, -cost);
                         add_delta(false, uStep, uProc, -cost);
@@ -369,7 +369,7 @@ struct KlBspCommCostFunction {
                     }
 
                     if (!already_sending_to_p_to) {
-                        const comm_weight_t cost = commWU * instance_->sendCosts(uProc, p_to);
+                        const comm_weight_t cost = commWU * instance_->SendCosts(uProc, p_to);
                         if (cost > 0) {
                             add_delta(true, uStep, p_to, cost);
                             add_delta(false, uStep, uProc, cost);
@@ -385,7 +385,7 @@ struct KlBspCommCostFunction {
 
             for (const auto [v_proc, count] : commDs_.nodeLambdaMap_.iterate_proc_entries(node)) {
                 if (v_proc != p_to) {
-                    const comm_weight_t cost = commWNode * instance_->sendCosts(p_to, v_proc);
+                    const comm_weight_t cost = commWNode * instance_->SendCosts(p_to, v_proc);
                     if (cost > 0) {
                         scratch.childCostBuffer_.push_back({v_proc, cost});
                         totalSendCostAdded += cost;
@@ -447,7 +447,7 @@ struct KlBspCommCostFunction {
                     }
 
                     if (!already_sending_to_p_to) {
-                        const comm_weight_t cost = commWU * instance_->sendCosts(uProc, p_to);
+                        const comm_weight_t cost = commWU * instance_->SendCosts(uProc, p_to);
                         if (cost > 0) {
                             add_delta(true, uStep, p_to, -cost);
                             add_delta(false, uStep, uProc, -cost);

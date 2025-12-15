@@ -454,7 +454,7 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
 
                             total_edges_cut += edge_vars[p1][p2][edge_id]
                                                * instance.GetComputationalDag().VertexCommWeight(ep.source)
-                                               * instance.sendCosts(p1, p2);
+                                               * instance.SendCosts(p1, p2);
 
                             edgeId++;
                         }
