@@ -237,7 +237,7 @@ struct MaxCommDatastructure {
             for (const auto [proc, val] : nodeLambdaMap_.iterate_proc_entries(node)) {
                 // A. Remove Old (Sender: fromProc, Receiver: proc)
                 if (proc != fromProc) {
-                    const comm_weight_t cost = commWNode * instance_->sendCosts(fromProc, proc);
+                    const comm_weight_t cost = commWNode * instance_->SendCosts(fromProc, proc);
                     if (cost > 0) {
                         CommPolicy::unattribute_communication(*this, cost, fromStep, fromProc, proc, 0, val);
                     }
@@ -245,7 +245,7 @@ struct MaxCommDatastructure {
 
                 // B. Add New (Sender: toProc, Receiver: proc)
                 if (proc != toProc) {
-                    const comm_weight_t cost = commWNode * instance_->sendCosts(toProc, proc);
+                    const comm_weight_t cost = commWNode * instance_->SendCosts(toProc, proc);
                     if (cost > 0) {
                         CommPolicy::attribute_communication(*this, cost, toStep, toProc, proc, 0, val);
                     }
@@ -260,7 +260,7 @@ struct MaxCommDatastructure {
             for (const auto [proc, val] : nodeLambdaMap_.iterate_proc_entries(node)) {
                 // Remove Old (Sender: fromProc, Receiver: proc)
                 if (proc != fromProc) {
-                    const comm_weight_t cost = commWNode * instance_->sendCosts(fromProc, proc);
+                    const comm_weight_t cost = commWNode * instance_->SendCosts(fromProc, proc);
                     if (cost > 0) {
                         CommPolicy::unattribute_communication(*this, cost, fromStep, fromProc, proc, 0, val);
                     }
@@ -268,7 +268,7 @@ struct MaxCommDatastructure {
 
                 // Add New (Sender: toProc, Receiver: proc)
                 if (proc != toProc) {
-                    const comm_weight_t cost = commWNode * instance_->sendCosts(toProc, proc);
+                    const comm_weight_t cost = commWNode * instance_->SendCosts(toProc, proc);
                     if (cost > 0) {
                         CommPolicy::attribute_communication(*this, cost, fromStep, toProc, proc, 0, val);
                     }
@@ -295,7 +295,7 @@ struct MaxCommDatastructure {
             // 1. Handle Removal from fromProc
             if (removed_from_proc) {
                 if (fromProc != parentProc) {
-                    const comm_weight_t cost = commWParent * instance_->sendCosts(parentProc, fromProc);
+                    const comm_weight_t cost = commWParent * instance_->SendCosts(parentProc, fromProc);
                     if (cost > 0) {
                         CommPolicy::unattribute_communication(*this, cost, parentStep, parentProc, fromProc, fromStep, val);
                     }
@@ -308,7 +308,7 @@ struct MaxCommDatastructure {
             // 2. Handle Addition to toProc
             if (added_to_proc) {
                 if (toProc != parentProc) {
-                    const comm_weight_t cost = commWParent * instance_->sendCosts(parentProc, toProc);
+                    const comm_weight_t cost = commWParent * instance_->SendCosts(parentProc, toProc);
                     if (cost > 0) {
                         CommPolicy::attribute_communication(*this, cost, parentStep, parentProc, toProc, toStep, val_to);
                     }
@@ -358,7 +358,7 @@ struct MaxCommDatastructure {
                 const unsigned vProc = vecSched.AssignedProcessor(v);
                 const unsigned vStep = vecSched.AssignedSuperstep(v);
 
-                const comm_weight_t commWSendCost = (uProc != vProc) ? commW * instance_->sendCosts(uProc, vProc) : 0;
+                const comm_weight_t commWSendCost = (uProc != vProc) ? commW * instance_->SendCosts(uProc, vProc) : 0;
 
                 auto &val = nodeLambdaMap_.get_proc_entry(u, vProc);
                 if (CommPolicy::add_child(val, vStep)) {
