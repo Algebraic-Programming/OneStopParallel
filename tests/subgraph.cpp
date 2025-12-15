@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(SubGraphCompactSparseGraph) {
     }
 
     const std::vector<VertexIdxT<CompactSparseGraph<true, true, true, true, true>>> selectVert({2, 3, 10, 6, 7});
-    const auto vertCorrespondence = create_induced_subgraph_map(graph, subGraph, selectVert);
+    const auto vertCorrespondence = CreateInducedSubgraphMap(graph, subGraph, selectVert);
     BOOST_CHECK_EQUAL(subGraph.NumVertices(), selectVert.size());
     BOOST_CHECK_EQUAL(subGraph.NumEdges(), 4);
 
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(SubGraphDagVectorImpl) {
     }
 
     const std::vector<VertexIdxT<computational_dag_vector_impl<VImpl>>> selectVert({2, 3, 10, 6, 7});
-    const auto vertCorrespondence = create_induced_subgraph_map(graph, subGraph, selectVert);
+    const auto vertCorrespondence = CreateInducedSubgraphMap(graph, subGraph, selectVert);
     BOOST_CHECK_EQUAL(subGraph.NumVertices(), selectVert.size());
     BOOST_CHECK_EQUAL(subGraph.NumEdges(), 4);
 

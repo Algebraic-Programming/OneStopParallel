@@ -1005,7 +1005,7 @@ class OrbitGraphProcessor {
 
         ConstrGraphT inducedSubgraph;
 
-        auto map = create_induced_subgraph_map(originalDag, inducedSubgraph, allNodes);
+        auto map = CreateInducedSubgraphMap(originalDag, inducedSubgraph, allNodes);
         std::vector<VertexType> components;    // local -> component_id
         size_t numComponents = compute_weakly_connected_components(inducedSubgraph, components);
         outNewSubgraphs.assign(numComponents, std::vector<VertexType>());
@@ -1021,7 +1021,7 @@ class OrbitGraphProcessor {
         if (numComponents > 1) {
             const size_t firstSgSize = outNewSubgraphs[0].size();
             ConstrGraphT repSg;
-            create_induced_subgraph(originalDag, repSg, outNewSubgraphs[0]);
+            CreateInducedSubgraph(originalDag, repSg, outNewSubgraphs[0]);
 
             for (size_t i = 1; i < numComponents; ++i) {
                 if (outNewSubgraphs[i].size() != firstSgSize) {
@@ -1029,7 +1029,7 @@ class OrbitGraphProcessor {
                 }
 
                 ConstrGraphT currentSg;
-                create_induced_subgraph(originalDag, currentSg, outNewSubgraphs[i]);
+                CreateInducedSubgraph(originalDag, currentSg, outNewSubgraphs[i]);
                 if (!are_isomorphic_by_merkle_hash(repSg, currentSg)) {
                     return false;
                 }

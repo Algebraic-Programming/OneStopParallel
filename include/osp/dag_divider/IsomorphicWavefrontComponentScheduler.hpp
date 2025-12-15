@@ -315,6 +315,6 @@ class IsomorphicWavefrontComponentScheduler : public AbstractWavefrontScheduler<
 };
 
 template <typename GraphT>
-using IsomorphicWavefrontComponentScheduler_def_int_t = IsomorphicWavefrontComponentScheduler<GraphT, BoostGraphIntT>;
+using IsomorphicWavefrontComponentSchedulerDefIntT = IsomorphicWavefrontComponentScheduler<GraphT, BoostGraphIntT>;
 
 }    // namespace osp

@@ -47,7 +47,7 @@ class ConcreteWavefrontScheduler : public osp::AbstractWavefrontScheduler<GraphT
 
 // Mock dependencies for the test
 struct MockDivider : public osp::IDagDivider<GraphT> {
-    std::vector<std::vector<std::vector<GraphT::VertexIdx>>> divide(const GraphT &) override { return {}; }
+    std::vector<std::vector<std::vector<GraphT::VertexIdx>>> Divide(const GraphT &) override { return {}; }
 };
 
 struct MockScheduler : public osp::Scheduler<GraphT> {
@@ -150,7 +150,7 @@ using VertexType = GraphT::VertexIdx;
 struct MockDivider2 : public osp::IDagDivider<GraphT> {
     std::vector<std::vector<std::vector<VertexType>>> sectionsToReturn_;
 
-    std::vector<std::vector<std::vector<VertexType>>> divide(const GraphT &) override { return sectionsToReturn_; }
+    std::vector<std::vector<std::vector<VertexType>>> Divide(const GraphT &) override { return sectionsToReturn_; }
 };
 
 // A mock sub-scheduler that returns a simple, predictable schedule.

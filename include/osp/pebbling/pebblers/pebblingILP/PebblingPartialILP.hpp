@@ -146,7 +146,7 @@ ReturnStatus PebblingPartialILP<GraphT>::ComputePebbling(PebblingSchedule<GraphT
     std::vector<GraphT> subDags;
     for (unsigned part = 0; part < nrParts; ++part) {
         GraphT dag;
-        create_induced_subgraph(instance.GetComputationalDag(), dag, nodesInPart[part], extraSources[part]);
+        CreateInducedSubgraph(instance.GetComputationalDag(), dag, nodesInPart[part], extraSources[part]);
         subDags.push_back(dag);
 
         // set source nodes to a new type, so that they are compatible with any processor
