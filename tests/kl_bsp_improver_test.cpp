@@ -31,7 +31,7 @@ void AddMemWeights(GraphT &dag) {
 
 BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
     using Graph = computational_dag_edge_idx_vector_impl_def_int_t;
-    using VertexType = Graph::vertex_idx;
+    using VertexType = Graph::VertexIdx;
 
     Graph dag;
 

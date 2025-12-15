@@ -31,7 +31,7 @@ class GreedyRecomputer {
     static_assert(IsComputationalDagV<GraphT>, "GreedyRecomputer can only be used with computational DAGs.");
 
   private:
-    using vertex_idx = VertexIdxT<GraphT>;
+    using VertexIdx = VertexIdxT<GraphT>;
     using cost_type = VWorkwT<GraphT>;
     using KeyTriple = std::tuple<VertexIdxT<GraphT>, unsigned int, unsigned int>;
 
@@ -50,7 +50,7 @@ class GreedyRecomputer {
 template <typename GraphT>
 ReturnStatus GreedyRecomputer<GraphT>::ComputeRecompSchedule(BspScheduleCS<GraphT> &initialSchedule,
                                                              BspScheduleRecomp<GraphT> &outSchedule) const {
-    const vertex_idx &n = initialSchedule.GetInstance().NumberOfVertices();
+    const VertexIdx &n = initialSchedule.GetInstance().NumberOfVertices();
     const unsigned &p = initialSchedule.GetInstance().NumberOfProcessors();
     const unsigned &s = initialSchedule.NumberOfSupersteps();
     const GraphT &g = initialSchedule.GetInstance().GetComputationalDag();
@@ -71,20 +71,20 @@ ReturnStatus GreedyRecomputer<GraphT>::ComputeRecompSchedule(BspScheduleCS<Graph
 
     std::vector<std::set<KeyTriple>> commSteps(s);
 
-    for (vertex_idx node = 0; node < n; ++node) {
+    for (VertexIdx node = 0; node < n; ++node) {
         const unsigned &proc = initialSchedule.AssignedProcessor(node);
         const unsigned &step = initialSchedule.AssignedSuperstep(node);
 
         workCost[proc][step] += g.VertexWorkWeight(node);
         firstPresent[node][proc] = std::min(firstPresent[node][proc], step);
-        for (vertex_idx pred : g.Parents(node)) {
+        for (VertexIdx pred : g.Parents(node)) {
             neededOnProc[pred][proc].insert(step);
         }
 
         outSchedule.Assignments(node).emplace_back(proc, step);
     }
     for (const std::pair<KeyTriple, unsigned> item : initialSchedule.GetCommunicationSchedule()) {
-        const vertex_idx &node = std::get<0>(item.first);
+        const VertexIdx &node = std::get<0>(item.first);
         const unsigned &fromProc = std::get<1>(item.first);
         const unsigned &toProc = std::get<2>(item.first);
         const unsigned &step = item.second;
@@ -105,8 +105,8 @@ ReturnStatus GreedyRecomputer<GraphT>::ComputeRecompSchedule(BspScheduleCS<Graph
         }
     }
 
-    for (vertex_idx node = 0; node < n; ++node) {
-        for (const vertex_idx &pred : g.Parents(node)) {
+    for (VertexIdx node = 0; node < n; ++node) {
+        for (const VertexIdx &pred : g.Parents(node)) {
             for (unsigned proc = 0; proc < p; ++proc) {
                 firstComputable[node][proc] = std::max(firstComputable[node][proc], firstPresent[pred][proc]);
             }
@@ -121,7 +121,7 @@ ReturnStatus GreedyRecomputer<GraphT>::ComputeRecompSchedule(BspScheduleCS<Graph
         for (unsigned step = 0; step < s; ++step) {
             std::vector<KeyTriple> toErase;
             for (const KeyTriple &entry : commSteps[step]) {
-                const vertex_idx &node = std::get<0>(entry);
+                const VertexIdx &node = std::get<0>(entry);
                 const unsigned &fromProc = std::get<1>(entry);
                 const unsigned &toProc = std::get<2>(entry);
 
@@ -187,15 +187,15 @@ ReturnStatus GreedyRecomputer<GraphT>::ComputeRecompSchedule(BspScheduleCS<Graph
                 maxWork[bestStep] += smallestIncrease;
 
                 // update movability bounds
-                for (const vertex_idx &pred : g.Parents(node)) {
+                for (const VertexIdx &pred : g.Parents(node)) {
                     neededOnProc[pred][toProc].insert(bestStep);
                 }
 
                 neededOnProc[node][fromProc].erase(neededOnProc[node][fromProc].lower_bound(step));
 
                 firstPresent[node][toProc] = bestStep;
-                for (const vertex_idx &succ : g.Children(node)) {
-                    for (const vertex_idx &pred : g.Parents(node)) {
+                for (const VertexIdx &succ : g.Children(node)) {
+                    for (const VertexIdx &pred : g.Parents(node)) {
                         firstComputable[succ][toProc] = std::max(firstComputable[succ][toProc], firstPresent[pred][toProc]);
                     }
                 }

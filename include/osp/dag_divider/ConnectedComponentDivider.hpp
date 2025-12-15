@@ -33,18 +33,18 @@ class ConnectedComponentDivider : public IDagDivider<GraphT> {
     static_assert(IsComputationalDagV<Constr_Graph_t>, "Constr_Graph_t must be a computational DAG");
     static_assert(IsConstructableCdagV<Constr_Graph_t>, "Constr_Graph_t must satisfy the constructable_cdag_vertex concept");
     static_assert(std::is_same_v<VertexIdxT<GraphT>, VertexIdxT<Constr_Graph_t>>,
-                  "Graph_t and Constr_Graph_t must have the same vertex_idx types");
+                  "Graph_t and Constr_Graph_t must have the same VertexIdx types");
 
   private:
-    using vertex_idx = VertexIdxT<GraphT>;
+    using VertexIdx = VertexIdxT<GraphT>;
 
     std::vector<ConstrGraphT> subDags_;
 
     // For each component: local_idx -> global vertex
-    std::vector<std::vector<vertex_idx>> vertexMapping_;
+    std::vector<std::vector<VertexIdx>> vertexMapping_;
 
     // Global vertex -> local index
-    std::vector<vertex_idx> vertexMap_;
+    std::vector<VertexIdx> vertexMap_;
 
     // Global vertex -> component id
     std::vector<unsigned> component_;
@@ -54,11 +54,11 @@ class ConnectedComponentDivider : public IDagDivider<GraphT> {
 
     inline const std::vector<ConstrGraphT> &GetSubDags() const { return subDags_; }
 
-    inline const std::vector<std::vector<vertex_idx>> &GetVertexMapping() const { return vertex_mapping; }
+    inline const std::vector<std::vector<VertexIdx>> &GetVertexMapping() const { return vertex_mapping; }
 
     inline const std::vector<unsigned> &GetComponent() const { return component_; }
 
-    inline const std::vector<vertex_idx> &GetVertexMap() const { return vertex_map; }
+    inline const std::vector<VertexIdx> &GetVertexMap() const { return vertex_map; }
 
     virtual std::vector<std::vector<std::vector<VertexIdxT<GraphT>>>> divide(const GraphT &dag) override {
         if (dag.NumVertices() == 0) {
@@ -129,11 +129,11 @@ class ConnectedComponentDivider : public IDagDivider<GraphT> {
                 component_[v] = componentId;
 
                 // BFS for weakly connected component
-                std::queue<vertex_idx> q;
+                std::queue<VertexIdx> q;
                 q.push(v);
 
                 while (!q.empty()) {
-                    vertex_idx current = q.front();
+                    VertexIdx current = q.front();
                     q.pop();
 
                     for (const auto &child : dag.Children(current)) {
@@ -166,10 +166,10 @@ class ConnectedComponentDivider : public IDagDivider<GraphT> {
         vertex_mapping.resize(sub_dags.size());
         vertex_map.resize(dag.NumVertices());
 
-        std::vector<vertex_idx> currentIndexInSubdag(subDags_.size(), 0);
+        std::vector<VertexIdx> currentIndexInSubdag(subDags_.size(), 0);
         for (const auto &v : dag.Vertices()) {
             unsigned compId = component_[v];
-            vertex_idx localIdx = current_index_in_subdag[compId]++;
+            VertexIdx localIdx = current_index_in_subdag[compId]++;
             vertex_map[v] = local_idx;
 
             if (vertex_mapping[comp_id].empty()) {

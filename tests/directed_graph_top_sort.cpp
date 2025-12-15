@@ -37,7 +37,7 @@ using namespace osp;
 computational_dag_vector_impl_def_t ConstrGraph1() {
     computational_dag_vector_impl_def_t graph;
 
-    using VertexIdx = computational_dag_vector_impl_def_t::vertex_idx;
+    using VertexIdx = computational_dag_vector_impl_def_t::VertexIdx;
 
     VertexIdx v1 = graph.add_vertex(1, 2, 3, 4);
     VertexIdx v2 = graph.add_vertex(5, 6, 7, 8);
@@ -65,7 +65,7 @@ computational_dag_vector_impl_def_t ConstrGraph1() {
 BOOST_AUTO_TEST_CASE(TestUtil1) {
     const computational_dag_vector_impl_def_t graph = ConstrGraph1();
 
-    // using vertex_idx = computational_dag_vector_impl_def_t::vertex_idx;
+    // using VertexIdx = computational_dag_vector_impl_def_t::VertexIdx;
 }
 
 BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {

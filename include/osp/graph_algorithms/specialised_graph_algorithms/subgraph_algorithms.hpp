@@ -35,7 +35,7 @@ std::unordered_map<VertexIdxT<GraphTIn>, VertexIdxT<GraphTIn>> CreateInducedSubg
         = CompactSparseGraph<true, true, true, true, true, VertT, EdgeT, WorkWeightType, CommWeightType, MemWeightType, VertexTypeTemplateType>;
 
     static_assert(std::is_same_v<vertexIdxT<GraphTIn>, vertexIdxT<GraphTOut>>,
-                  "GraphTIn and out must have the same vertex_idx types");
+                  "GraphTIn and out must have the same VertexIdx types");
 
     const std::vector<vertexIdxT<GraphTIn>> topOrder = GetTopOrder(dag);
     std::vector<vertexIdxT<GraphTIn>> topOrderPosition(topOrder.size());

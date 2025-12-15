@@ -32,7 +32,7 @@ using namespace osp;
 boost_graph_int_t ConstrGraph1() {
     boost_graph_int_t graph;
 
-    using VertexIdx = boost_graph_int_t::vertex_idx;
+    using VertexIdx = boost_graph_int_t::VertexIdx;
 
     VertexIdx v1 = graph.add_vertex(1, 2, 3, 4);
     VertexIdx v2 = graph.add_vertex(5, 6, 7, 8);
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(TestEmptyDagBoostGraphAdapter) {
 BOOST_AUTO_TEST_CASE(TestBoostGraphAdapter1) {
     boost_graph_int_t graph = ConstrGraph1();
 
-    using VertexIdx = boost_graph_int_t::vertex_idx;
+    using VertexIdx = boost_graph_int_t::VertexIdx;
 
     std::vector<VertexIdx> edgeSources{0, 0, 0, 1, 1, 2, 2, 3, 4};
     std::vector<VertexIdx> edgeTargets{1, 2, 3, 4, 6, 4, 5, 7, 7};

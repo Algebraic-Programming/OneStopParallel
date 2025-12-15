@@ -63,7 +63,7 @@ void CheckEqualAffinityTable(TableT &table1, TableT &table2, const std::set<size
 
 BOOST_AUTO_TEST_CASE(KlImproverSmokeTest) {
     using Graph = computational_dag_edge_idx_vector_impl_def_int_t;
-    using VertexType = Graph::vertex_idx;
+    using VertexType = Graph::VertexIdx;
 
     Graph dag;
 
@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(KlImproverOnTestGraphs) {
 
 BOOST_AUTO_TEST_CASE(KlImproverSuperstepRemovalTest) {
     using Graph = computational_dag_edge_idx_vector_impl_def_int_t;
-    using VertexType = Graph::vertex_idx;
+    using VertexType = Graph::VertexIdx;
 
     Graph dag;
 
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(KlImproverSuperstepRemovalTest) {
 
 BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
     using Graph = computational_dag_edge_idx_vector_impl_def_int_t;
-    using VertexType = Graph::vertex_idx;
+    using VertexType = Graph::VertexIdx;
 
     Graph dag;
 
@@ -312,7 +312,7 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
 
 BOOST_AUTO_TEST_CASE(KlImproverInnerLoopPenaltyTest) {
     using Graph = computational_dag_edge_idx_vector_impl_def_int_t;
-    using VertexType = Graph::vertex_idx;
+    using VertexType = Graph::VertexIdx;
 
     Graph dag;
 
@@ -396,7 +396,7 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopPenaltyTest) {
 
 BOOST_AUTO_TEST_CASE(KlImproverViolationHandlingTest) {
     using Graph = computational_dag_edge_idx_vector_impl_def_int_t;
-    using VertexType = Graph::vertex_idx;
+    using VertexType = Graph::VertexIdx;
 
     Graph dag;
 
@@ -446,7 +446,7 @@ BOOST_AUTO_TEST_CASE(KlImproverViolationHandlingTest) {
 
 BOOST_AUTO_TEST_CASE(KlBase1) {
     using Graph = computational_dag_edge_idx_vector_impl_def_int_t;
-    using VertexType = Graph::vertex_idx;
+    using VertexType = Graph::VertexIdx;
 
     Graph dag;
 
@@ -540,7 +540,7 @@ BOOST_AUTO_TEST_CASE(KlBase1) {
 
 BOOST_AUTO_TEST_CASE(KlBase2) {
     using Graph = computational_dag_edge_idx_vector_impl_def_int_t;
-    using VertexType = Graph::vertex_idx;
+    using VertexType = Graph::VertexIdx;
 
     Graph dag;
 
@@ -701,7 +701,7 @@ BOOST_AUTO_TEST_CASE(KlBase2) {
 
 BOOST_AUTO_TEST_CASE(KlBase3) {
     using Graph = computational_dag_edge_idx_vector_impl_def_int_t;
-    using VertexType = Graph::vertex_idx;
+    using VertexType = Graph::VertexIdx;
 
     Graph dag;
 
@@ -813,7 +813,7 @@ BOOST_AUTO_TEST_CASE(KlBase3) {
 // BOOST_AUTO_TEST_CASE(kl_improver_incremental_update_test) {
 
 //     using graph = computational_dag_edge_idx_vector_impl_def_int_t;
-//     using VertexType = graph::vertex_idx;
+//     using VertexType = graph::VertexIdx;
 //     using kl_move = kl_move_struct<double, VertexType>;
 
 //     graph dag;

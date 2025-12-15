@@ -29,7 +29,7 @@ class AcyclicPartitioningILP {
     static_assert(IsComputationalDagV<GraphT>, "PebblingSchedule can only be used with computational DAGs.");
 
   private:
-    using vertex_idx = VertexIdxT<GraphT>;
+    using VertexIdx = VertexIdxT<GraphT>;
     using commweight_type = VCommwT<GraphT>;
 
     Model model_;
@@ -215,13 +215,13 @@ void AcyclicPartitioningILP<GraphT>::SetupVariablesConstraintsObjective(const Bs
 
     nodeInPartition = std::vector<VarArray>(instance.NumberOfVertices());
 
-    for (vertex_idx node = 0; node < instance.NumberOfVertices(); node++) {
+    for (VertexIdx node = 0; node < instance.NumberOfVertices(); node++) {
         nodeInPartition[node] = model.AddVars(static_cast<int>(numberOfParts_), COPT_BINARY, "node_in_partition");
     }
 
-    std::map<vertex_idx, unsigned> nodeToHyperedgeIndex;
+    std::map<VertexIdx, unsigned> nodeToHyperedgeIndex;
     unsigned numberOfHyperedges = 0;
-    for (vertex_idx node = 0; node < instance.NumberOfVertices(); node++) {
+    for (VertexIdx node = 0; node < instance.NumberOfVertices(); node++) {
         if (instance.GetComputationalDag().OutDegree(node) > 0) {
             nodeToHyperedgeIndex[node] = numberOfHyperedges;
             ++numberOfHyperedges;
@@ -238,7 +238,7 @@ void AcyclicPartitioningILP<GraphT>::SetupVariablesConstraintsObjective(const Bs
     // Constraints
 
     // each node assigned to exactly one partition
-    for (vertex_idx node = 0; node < instance.NumberOfVertices(); node++) {
+    for (VertexIdx node = 0; node < instance.NumberOfVertices(); node++) {
         Expr expr;
         for (unsigned part = 0; part < numberOfParts_; part++) {
             expr += nodeInPartition[node][static_cast<int>(part)];
@@ -248,7 +248,7 @@ void AcyclicPartitioningILP<GraphT>::SetupVariablesConstraintsObjective(const Bs
 
     // hyperedge indicators match node variables
     for (unsigned part = 0; part < numberOfParts_; part++) {
-        for (vertex_idx node = 0; node < instance.NumberOfVertices(); node++) {
+        for (VertexIdx node = 0; node < instance.NumberOfVertices(); node++) {
             if (instance.GetComputationalDag().OutDegree(node) == 0) {
                 continue;
             }
@@ -265,7 +265,7 @@ void AcyclicPartitioningILP<GraphT>::SetupVariablesConstraintsObjective(const Bs
     // partition size constraints
     for (unsigned part = 0; part < numberOfParts_; part++) {
         Expr expr;
-        for (vertex_idx node = 0; node < instance.NumberOfVertices(); node++) {
+        for (VertexIdx node = 0; node < instance.NumberOfVertices(); node++) {
             if (!ignoreSourcesForConstraint_ || isOriginalSource_.empty() || !isOriginalSource_[node]) {
                 expr += nodeInPartition[node][static_cast<int>(part)];
             }
@@ -278,7 +278,7 @@ void AcyclicPartitioningILP<GraphT>::SetupVariablesConstraintsObjective(const Bs
     // acyclicity constraints
     for (unsigned fromPart = 0; fromPart < numberOfParts_; fromPart++) {
         for (unsigned toPart = 0; toPart < fromPart; toPart++) {
-            for (vertex_idx node = 0; node < instance.NumberOfVertices(); node++) {
+            for (VertexIdx node = 0; node < instance.NumberOfVertices(); node++) {
                 for (const auto &succ : instance.GetComputationalDag().Children(node)) {
                     model.AddConstr(
                         nodeInPartition[node][static_cast<int>(fromPart)] + nodeInPartition[succ][static_cast<int>(toPart)] <= 1);
@@ -289,7 +289,7 @@ void AcyclicPartitioningILP<GraphT>::SetupVariablesConstraintsObjective(const Bs
 
     // set objective
     Expr expr;
-    for (vertex_idx node = 0; node < instance.NumberOfVertices(); node++) {
+    for (VertexIdx node = 0; node < instance.NumberOfVertices(); node++) {
         if (instance.GetComputationalDag().OutDegree(node) > 0) {
             expr -= instance.GetComputationalDag().VertexCommWeight(node);
             for (unsigned part = 0; part < numberOfParts_; part++) {
@@ -342,7 +342,7 @@ std::vector<unsigned> AcyclicPartitioningILP<GraphT>::ReturnAssignment(const Bsp
         ++currentIndex;
     }
 
-    for (vertex_idx node = 0; node < instance.NumberOfVertices(); node++) {
+    for (VertexIdx node = 0; node < instance.NumberOfVertices(); node++) {
         nodeToPartition[node] = newIndex[nodeToPartition[node]];
     }
 

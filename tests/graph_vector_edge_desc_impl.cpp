@@ -33,7 +33,7 @@ using namespace osp;
 ComputationalDagEdgeIdxVectorImplDefT ConstrGraph1() {
     ComputationalDagEdgeIdxVectorImplDefT graph;
 
-    using VertexIdx = ComputationalDagEdgeIdxVectorImplDefT::vertex_idx;
+    using VertexIdx = ComputationalDagEdgeIdxVectorImplDefT::VertexIdx;
 
     VertexIdx v1 = graph.add_vertex(1, 2, 3, 4);
     VertexIdx v2 = graph.add_vertex(5, 6, 7, 8);
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(TestEmptyDagEdgeIdx) {
 BOOST_AUTO_TEST_CASE(TestDagEdgeIdx) {
     ComputationalDagEdgeIdxVectorImplDefT graph = ConstrGraph1();
 
-    using VertexIdx = ComputationalDagEdgeIdxVectorImplDefT::vertex_idx;
+    using VertexIdx = ComputationalDagEdgeIdxVectorImplDefT::VertexIdx;
 
     std::vector<VertexIdx> edgeSources{0, 0, 0, 1, 1, 2, 2, 3, 4};
     std::vector<VertexIdx> edgeTargets{1, 2, 3, 4, 6, 4, 5, 7, 7};

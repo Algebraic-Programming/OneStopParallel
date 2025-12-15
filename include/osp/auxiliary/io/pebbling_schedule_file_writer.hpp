@@ -28,7 +28,7 @@ namespace file_writer {
 
 template <typename GraphT>
 void WriteTxt(std::ostream &os, const PebblingSchedule<GraphT> &schedule) {
-    using vertex_idx = VertexIdxT<GraphT>;
+    using VertexIdx = VertexIdxT<GraphT>;
 
     os << "%% PebblingSchedule for " << schedule.GetInstance().NumberOfProcessors() << " processors and "
        << schedule.NumberOfSupersteps() << " supersteps." << std::endl;
@@ -38,26 +38,26 @@ void WriteTxt(std::ostream &os, const PebblingSchedule<GraphT> &schedule) {
             const auto &computeSteps = schedule.GetComputeStepsForProcSuperstep(proc, step);
             for (const auto &computeStep : computeSteps) {
                 os << "Compute " << computeStep.node << " on proc " << proc << " in superstep " << step << std::endl;
-                for (vertex_idx toEvict : computeStep.nodesEvictedAfter_) {
+                for (VertexIdx toEvict : computeStep.nodesEvictedAfter_) {
                     os << "Evict " << toEvict << " from proc " << proc << " in superstep " << step << std::endl;
                 }
             }
         }
         for (unsigned proc = 0; proc < schedule.GetInstance().NumberOfProcessors(); ++proc) {
-            const std::vector<vertex_idx> &nodesSentUp = schedule.GetNodesSentUp(proc, step);
-            for (vertex_idx node : nodesSentUp) {
+            const std::vector<VertexIdx> &nodesSentUp = schedule.GetNodesSentUp(proc, step);
+            for (VertexIdx node : nodesSentUp) {
                 os << "Send up " << node << " from proc " << proc << " in superstep " << step << std::endl;
             }
         }
         for (unsigned proc = 0; proc < schedule.GetInstance().NumberOfProcessors(); ++proc) {
-            const std::vector<vertex_idx> &nodesEvictedInComm = schedule.GetNodesEvictedInComm(proc, step);
-            for (vertex_idx node : nodesEvictedInComm) {
+            const std::vector<VertexIdx> &nodesEvictedInComm = schedule.GetNodesEvictedInComm(proc, step);
+            for (VertexIdx node : nodesEvictedInComm) {
                 os << "Evict " << node << " from proc " << proc << " in superstep " << step << std::endl;
             }
         }
         for (unsigned proc = 0; proc < schedule.GetInstance().NumberOfProcessors(); ++proc) {
-            const std::vector<vertex_idx> &nodesSentDown = schedule.GetNodesSentDown(proc, step);
-            for (vertex_idx node : nodesSentDown) {
+            const std::vector<VertexIdx> &nodesSentDown = schedule.GetNodesSentDown(proc, step);
+            for (VertexIdx node : nodesSentDown) {
                 os << "Send down " << node << " to proc " << proc << " in superstep " << step << std::endl;
             }
         }

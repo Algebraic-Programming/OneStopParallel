@@ -120,13 +120,13 @@ class PebblingSchedule {
     }
 
     PebblingSchedule(const BspInstance<GraphT> &inst,
-                     const std::vector<std::vector<std::vector<vertex_idx>>> &computeSteps,
-                     const std::vector<std::vector<std::vector<std::vector<vertex_idx>>>> &nodesEvictedAfterCompute,
-                     const std::vector<std::vector<std::vector<vertex_idx>>> &nodesSentUp,
-                     const std::vector<std::vector<std::vector<vertex_idx>>> &nodesSentDown,
-                     const std::vector<std::vector<std::vector<vertex_idx>>> &nodesEvictedInComm,
-                     const std::set<vertex_idx> &needsBlueAtEnd = std::set<vertex_idx>(),
-                     const std::vector<std::set<vertex_idx>> &hasRedInBeginning = std::vector<std::set<vertex_idx>>(),
+                     const std::vector<std::vector<std::vector<VertexIdx>>> &computeSteps,
+                     const std::vector<std::vector<std::vector<std::vector<VertexIdx>>>> &nodesEvictedAfterCompute,
+                     const std::vector<std::vector<std::vector<VertexIdx>>> &nodesSentUp,
+                     const std::vector<std::vector<std::vector<VertexIdx>>> &nodesSentDown,
+                     const std::vector<std::vector<std::vector<VertexIdx>>> &nodesEvictedInComm,
+                     const std::set<VertexIdx> &needsBlueAtEnd = std::set<VertexIdx>(),
+                     const std::vector<std::set<VertexIdx>> &hasRedInBeginning = std::vector<std::set<VertexIdx>>(),
                      const bool needToLoadInputs = false)
         : instance_(&inst),
           numberOfSupersteps_(0),
@@ -1031,7 +1031,7 @@ void PebblingSchedule<GraphT>::SetMemoryMovement(CacheEvictionStrategy evictRule
                             std::cout << "ERROR: Cannot create valid memory movement for these superstep lists." << std::endl;
                             return;
                         }
-                        vertex_idx evicted = (--evictable[proc].end())->second;
+                        VertexIdx evicted = (--evictable[proc].end())->second;
                         evictable[proc].erase(--evictable[proc].end());
                         placeInEvictable[evicted][proc] = evictable[proc].end();
 
@@ -1378,15 +1378,15 @@ void PebblingSchedule<GraphT>::GetDataForMultiprocessorPebbling(
         }
 
         for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); ++proc) {
-            std::vector<vertex_idx> evictList;
+            std::vector<VertexIdx> evictList;
             for (unsigned stepIndex = 0; stepIndex < computeStepsForProcSuperstep_[proc][superstep].size(); ++stepIndex) {
-                vertex_idx node = computeStepsForProcSuperstep_[proc][superstep][stepIndex].node;
+                VertexIdx node = computeStepsForProcSuperstep_[proc][superstep][stepIndex].node;
                 if (memUsed[proc] + instance_->GetComputationalDag().VertexMemWeight(node)
                     > instance_->GetArchitecture().memoryBound(proc)) {
                     // open new step
                     nodesEvictedAfterStep[proc][stepOnProc[proc]] = evictList;
                     ++stepOnProc[proc];
-                    for (vertex_idx toEvict : evictList) {
+                    for (VertexIdx toEvict : evictList) {
                         memUsed[proc] -= instance_->GetComputationalDag().VertexMemWeight(toEvict);
                     }
 
@@ -1485,7 +1485,7 @@ std::vector<std::set<VertexIdxT<GraphT>>> PebblingSchedule<GraphT>::GetMemConten
             // computation phase
             for (const auto &computeStep : computeStepsForProcSuperstep_[proc][step]) {
                 memContent[proc].insert(computeStep.node);
-                for (vertex_idx to_remove : computeStep.nodes_evicted_after) {
+                for (VertexIdx to_remove : computeStep.nodes_evicted_after) {
                     memContent[proc].erase(toRemove);
                 }
             }

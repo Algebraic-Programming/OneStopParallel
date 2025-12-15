@@ -84,7 +84,7 @@ ReturnStatus HypergraphPartitioningILPWithReplication<HypergraphT>::ComputeParti
 template <typename HypergraphT>
 void HypergraphPartitioningILPWithReplication<HypergraphT>::SetupExtraVariablesConstraints(
     const PartitioningProblem<HypergraphT> &instance, Model &model) {
-    using IndexType = typename HypergraphT::vertex_idx;
+    using IndexType = typename HypergraphT::VertexIdx;
 
     const IndexType numberOfParts = instance.GetNumberOfPartitions();
     const IndexType numberOfVertices = instance.GetHypergraph().NumVertices();
@@ -178,7 +178,7 @@ void HypergraphPartitioningILPWithReplication<HypergraphT>::SetupExtraVariablesC
 template <typename HypergraphT>
 void HypergraphPartitioningILPWithReplication<HypergraphT>::SetInitialSolution(
     const PartitioningWithReplication<HypergraphT> &partition, Model &model) {
-    using IndexType = typename HypergraphT::vertex_idx;
+    using IndexType = typename HypergraphT::VertexIdx;
 
     const std::vector<std::vector<unsigned> > &assignments = partition.GetAssignedPartitions();
     const unsigned &numPartitions = partition.GetInstance().GetNumberOfPartitions();

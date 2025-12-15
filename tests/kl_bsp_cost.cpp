@@ -366,7 +366,7 @@ BOOST_AUTO_TEST_CASE(TestUpdateDatastructureAfterMove) {
 
     // Move Node 0 from Proc 0 (Step 0) to Proc 2 (Step 0)
     // kl_move_struct(node, gain, from_proc, from_step, to_proc, to_step)
-    using KlMove = kl_move_struct<double, Graph::vertex_idx>;
+    using KlMove = kl_move_struct<double, Graph::VertexIdx>;
     KlMove move(0, 0.0, 0, 0, 2, 0);
 
     // Apply the move to the schedule first
@@ -451,7 +451,7 @@ BOOST_AUTO_TEST_CASE(TestMultipleSequentialMoves) {
     BOOST_CHECK_EQUAL(commDs.step_proc_send(0, 2), 6);
     BOOST_CHECK_EQUAL(commDs.step_proc_send(0, 3), 0);
 
-    using KlMove = kl_move_struct<double, Graph::vertex_idx>;
+    using KlMove = kl_move_struct<double, Graph::VertexIdx>;
     thread_local_active_schedule_data<Graph, double> activeScheduleData;
     activeScheduleData.initialize_cost(0.0);
 
@@ -526,7 +526,7 @@ BOOST_AUTO_TEST_CASE(TestNodeWithMultipleChildren) {
     BOOST_CHECK_EQUAL(commDs.step_proc_receive(0, 2), 10);
     BOOST_CHECK_EQUAL(commDs.step_proc_receive(0, 3), 10);
 
-    using KlMove = kl_move_struct<double, Graph::vertex_idx>;
+    using KlMove = kl_move_struct<double, Graph::VertexIdx>;
     thread_local_active_schedule_data<Graph, double> activeScheduleData;
     activeScheduleData.initialize_cost(0.0);
 
@@ -601,7 +601,7 @@ BOOST_AUTO_TEST_CASE(TestCrossStepMoves) {
     BOOST_CHECK_EQUAL(commDs.step_proc_receive(0, 1), 10);
     BOOST_CHECK_EQUAL(commDs.step_proc_receive(1, 0), 8);
 
-    using KlMove = kl_move_struct<double, Graph::vertex_idx>;
+    using KlMove = kl_move_struct<double, Graph::VertexIdx>;
     thread_local_active_schedule_data<Graph, double> activeScheduleData;
     activeScheduleData.initialize_cost(0.0);
 
@@ -681,7 +681,7 @@ BOOST_AUTO_TEST_CASE(TestComplexScenarioUserProvided) {
     BOOST_CHECK_EQUAL(commDs.step_max_comm(1), 13);
     BOOST_CHECK_EQUAL(commDs.step_max_comm(2), 0);
 
-    using KlMove = kl_move_struct<double, Graph::vertex_idx>;
+    using KlMove = kl_move_struct<double, Graph::VertexIdx>;
     thread_local_active_schedule_data<Graph, double> activeScheduleData;
     activeScheduleData.initialize_cost(0.0);
 
@@ -802,7 +802,7 @@ BOOST_AUTO_TEST_CASE(TestGridGraphComplexMoves) {
     // Initial check
     BOOST_CHECK_EQUAL(commDs.step_proc_send(1, 3), 2);
 
-    using KlMove = kl_move_struct<double, Graph::vertex_idx>;
+    using KlMove = kl_move_struct<double, Graph::VertexIdx>;
     thread_local_active_schedule_data<Graph, double> activeScheduleData;
     activeScheduleData.initialize_cost(0.0);
 
@@ -899,7 +899,7 @@ BOOST_AUTO_TEST_CASE(TestButterflyGraphMoves) {
     // All 4 nodes send to P0. Total P1 Send = 40.
     BOOST_CHECK_EQUAL(commDs.step_proc_send(1, 1), 4);
 
-    using KlMove = kl_move_struct<double, Graph::vertex_idx>;
+    using KlMove = kl_move_struct<double, Graph::VertexIdx>;
     thread_local_active_schedule_data<Graph, double> activeScheduleData;
     activeScheduleData.initialize_cost(0.0);
 
@@ -1019,7 +1019,7 @@ BOOST_AUTO_TEST_CASE(TestLadderGraphMoves) {
         BOOST_CHECK_EQUAL(commDs.step_proc_send(s, 1), 1);
     }
 
-    using KlMove = kl_move_struct<double, Graph::vertex_idx>;
+    using KlMove = kl_move_struct<double, Graph::VertexIdx>;
     thread_local_active_schedule_data<Graph, double> activeScheduleData;
     activeScheduleData.initialize_cost(0.0);
 
@@ -1187,7 +1187,7 @@ BOOST_AUTO_TEST_CASE(TestLazyAndBufferedModes) {
         BOOST_CHECK_EQUAL(commDs.step_proc_receive(3, 1), 0);
         BOOST_CHECK_EQUAL(commDs.step_proc_receive(4, 1), 0);
 
-        using KlMove = osp::kl_move_struct<double, Graph::vertex_idx>;
+        using KlMove = osp::kl_move_struct<double, Graph::VertexIdx>;
         KlMove move(1, 0.0, 1, 2, 1, 3);    // Node 1, Step 2->3, Proc 1->1
         klSched.apply_move(move, activeScheduleData);
         commDs.update_datastructure_after_move(move, 0, 4);
@@ -1254,7 +1254,7 @@ BOOST_AUTO_TEST_CASE(TestLazyAndBufferedModes) {
         BOOST_CHECK_EQUAL(commDs.step_proc_receive(3, 1), 0);
         BOOST_CHECK_EQUAL(commDs.step_proc_receive(4, 1), 0);
 
-        using KlMove = osp::kl_move_struct<double, Graph::vertex_idx>;
+        using KlMove = osp::kl_move_struct<double, Graph::VertexIdx>;
         KlMove move(1, 0.0, 1, 2, 1, 3);    // Node 1, Step 2->3, Proc 1->1
         klSched.apply_move(move, activeScheduleData);
         commDs.update_datastructure_after_move(move, 0, 4);

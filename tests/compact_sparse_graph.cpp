@@ -492,7 +492,7 @@ BOOST_AUTO_TEST_CASE(Graph1Reorder) {
 BOOST_AUTO_TEST_CASE(GraphEdgeContruction) {
     ComputationalDagEdgeIdxVectorImplDefT graph;
 
-    using VertexIdx = ComputationalDagEdgeIdxVectorImplDefT::vertex_idx;
+    using VertexIdx = ComputationalDagEdgeIdxVectorImplDefT::VertexIdx;
 
     VertexIdx v1 = graph.add_vertex(1, 2, 3, 4);
     VertexIdx v2 = graph.add_vertex(5, 6, 7, 8);
@@ -933,7 +933,7 @@ BOOST_AUTO_TEST_CASE(GraphVtypeReorder) {
 BOOST_AUTO_TEST_CASE(GraphTypeCopyContruction) {
     ComputationalDagEdgeIdxVectorImplDefT graph;
 
-    using VertexIdx = ComputationalDagEdgeIdxVectorImplDefT::vertex_idx;
+    using VertexIdx = ComputationalDagEdgeIdxVectorImplDefT::VertexIdx;
 
     VertexIdx v1 = graph.add_vertex(1, 2, 3, 4);
     VertexIdx v2 = graph.add_vertex(5, 6, 7, 8);

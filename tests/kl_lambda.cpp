@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverOnTestGraphs) {
 // BOOST_AUTO_TEST_CASE(kl_lambda_improver_incremental_update_test) {
 
 //     using graph = computational_dag_edge_idx_vector_impl_def_int_t;
-//     using VertexType = graph::vertex_idx;
+//     using VertexType = graph::VertexIdx;
 //     using kl_move = kl_move_struct<double, VertexType>;
 
 //     graph dag;
@@ -357,7 +357,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverOnTestGraphs) {
 
 // BOOST_AUTO_TEST_CASE(kl_lambda_improver_inner_loop_test) {
 //     using graph = computational_dag_edge_idx_vector_impl_def_int_t;
-//     using VertexType = graph::vertex_idx;
+//     using VertexType = graph::VertexIdx;
 //     using kl_move = kl_move_struct<double, VertexType>;
 
 //     graph dag;
@@ -488,7 +488,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverOnTestGraphs) {
 
 BOOST_AUTO_TEST_CASE(KlLambdaImproverInnerLoopPenaltyTest) {
     using Graph = computational_dag_edge_idx_vector_impl_def_int_t;
-    using VertexType = Graph::vertex_idx;
+    using VertexType = Graph::VertexIdx;
 
     Graph dag;
 
@@ -582,7 +582,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverInnerLoopPenaltyTest) {
 
 BOOST_AUTO_TEST_CASE(KlLambdaImproverInnerLoopLambdaMapTest) {
     using Graph = computational_dag_edge_idx_vector_impl_def_int_t;
-    using VertexType = Graph::vertex_idx;
+    using VertexType = Graph::VertexIdx;
 
     Graph dag;
 

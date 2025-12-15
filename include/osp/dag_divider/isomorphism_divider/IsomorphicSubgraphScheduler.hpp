@@ -56,7 +56,7 @@ class IsomorphicSubgraphScheduler {
     static_assert(IsComputationalDagV<Constr_Graph_t>, "Constr_Graph_t must be a computational DAG");
     static_assert(IsConstructableCdagV<Constr_Graph_t>, "Constr_Graph_t must satisfy the constructable_cdag_vertex concept");
     static_assert(std::is_same_v<VertexIdxT<GraphT>, VertexIdxT<Constr_Graph_t>>,
-                  "Graph_t and Constr_Graph_t must have the same vertex_idx types");
+                  "Graph_t and Constr_Graph_t must have the same VertexIdx types");
 
   private:
     static constexpr bool verbose_ = false;

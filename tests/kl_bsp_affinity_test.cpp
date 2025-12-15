@@ -13,7 +13,7 @@ using Graph = computational_dag_edge_idx_vector_impl_def_int_t;
 using KlActiveScheduleT = kl_active_schedule<Graph, double, no_local_search_memory_constraint>;
 
 BOOST_AUTO_TEST_CASE(SimpleParentChildTest) {
-    using VertexType = Graph::vertex_idx;
+    using VertexType = Graph::VertexIdx;
 
     Graph dag;
     const VertexType v0 = dag.add_vertex(10, 5, 2);    // work=10, mem=5, comm=2

@@ -34,7 +34,7 @@ void CreateInducedSubgraph(const GraphTIn &dag,
                            const std::set<VertexIdxT<GraphTIn>> &selectedNodes,
                            const std::set<VertexIdxT<GraphTIn>> &extraSources = {}) {
     static_assert(std::is_same_v<VertexIdxT<GraphTIn>, VertexIdxT<GraphTOut>>,
-                  "GraphTIn and out must have the same vertex_idx types");
+                  "GraphTIn and out must have the same VertexIdx types");
 
     static_assert(IsConstructableCdagVertexV<GraphTOut>, "GraphTOut must satisfy the constructable_cdag_vertex concept");
 
@@ -166,7 +166,7 @@ std::vector<GraphTOut> CreateInducedSubgraphs(const GraphTIn &dagIn, const std::
     // assumes that input partition IDs are consecutive and starting from 0
 
     static_assert(std::is_same_v<VertexIdxT<GraphTIn>, VertexIdxT<GraphTOut>>,
-                  "GraphTIn and out must have the same vertex_idx types");
+                  "GraphTIn and out must have the same VertexIdx types");
 
     static_assert(IsConstructableCdagVertexV<GraphTOut>, "GraphTOut must satisfy the constructable_cdag_vertex concept");
 
@@ -220,7 +220,7 @@ template <typename GraphTIn, typename GraphTOut>
 std::unordered_map<VertexIdxT<GraphTIn>, VertexIdxT<GraphTOut>> CreateInducedSubgraphMap(
     const GraphTIn &dag, GraphTOut &dagOut, const std::vector<VertexIdxT<GraphTIn>> &selectedNodes) {
     static_assert(std::is_same_v<VertexIdxT<GraphTIn>, VertexIdxT<GraphTOut>>,
-                  "GraphTIn and out must have the same vertex_idx types");
+                  "GraphTIn and out must have the same VertexIdx types");
 
     static_assert(IsConstructableCdagVertexV<GraphTOut>, "GraphTOut must satisfy the constructable_cdag_vertex concept");
 

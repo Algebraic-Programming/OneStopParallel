@@ -84,13 +84,13 @@ struct HasEdgeCommWeightTmember<T, std::void_t<typename T::EdgeCommWeightType>> 
 /**
  * @brief Core traits for any directed graph type.
  *
- * Requires that the graph type `T` defines a `vertex_idx` type member.
+ * Requires that the graph type `T` defines a `VertexIdx` type member.
  *
  * @tparam T The graph type.
  */
 template <typename T>
 struct DirectedGraphTraits {
-    static_assert(HasVertexIdxTmember<T>::value, "graph must have vertex_idx");
+    static_assert(HasVertexIdxTmember<T>::value, "graph must have VertexIdx");
     using VertexIdx = typename T::VertexIdx;
 };
 

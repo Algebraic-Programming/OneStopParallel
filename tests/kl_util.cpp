@@ -258,7 +258,7 @@ BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_FIXTURE_TEST_SUITE(kl_active_schedule_tests, ScheduleFixture)
 
-using VertexType = Graph::vertex_idx;
+using VertexType = Graph::VertexIdx;
 
 BOOST_AUTO_TEST_CASE(KlMoveStructTest) {
     using KlMove = kl_move_struct<double, VertexType>;

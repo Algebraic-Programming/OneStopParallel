@@ -76,7 +76,7 @@ void HypergraphPartitioningILPBase<HypergraphT>::SolveIlp(Model &model) {
 template <typename HypergraphT>
 void HypergraphPartitioningILPBase<HypergraphT>::SetupFundamentalVariablesConstraintsObjective(
     const PartitioningProblem<HypergraphT> &instance, Model &model) {
-    using IndexType = typename HypergraphT::vertex_idx;
+    using IndexType = typename HypergraphT::VertexIdx;
     using WorkwType = typename HypergraphT::vertex_work_weight_type;
     using MemwType = typename HypergraphT::vertex_mem_weight_type;
 
@@ -137,7 +137,7 @@ void HypergraphPartitioningILPBase<HypergraphT>::SetupFundamentalVariablesConstr
 template <typename HypergraphT>
 std::vector<std::vector<unsigned> > HypergraphPartitioningILPBase<HypergraphT>::ReadAllCoptAssignments(
     const PartitioningProblem<HypergraphT> &instance, Model &model) {
-    using IndexType = typename HypergraphT::vertex_idx;
+    using IndexType = typename HypergraphT::VertexIdx;
 
     std::vector<std::vector<unsigned> > nodeToPartitions(instance.GetHypergraph().NumVertices());
 
