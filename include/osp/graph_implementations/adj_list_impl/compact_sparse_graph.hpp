@@ -290,8 +290,8 @@ class CompactSparseGraph {
             assert(std::all_of(edges.begin(),
                                edges.end(),
                                [numVertices](const auto &edge) {
-                                   return (0 <= edge.source) && (edge.source < numVertices) && (0 <= edge.target)
-                                          && (edge.target < numVertices);
+                                   return (0 <= edge.source_) && (edge.source_ < numVertices) && (0 <= edge.target_)
+                                          && (edge.target_ < numVertices);
                                })
                    && "Source and target of edges must be non-negative and less than the number of vertices.");
         }
@@ -302,7 +302,7 @@ class CompactSparseGraph {
                        && "Vertex order must be a topological order.");
             }
             if constexpr (IsEdgeListTypeV<EdgeListType, VertexIdx, EdgeT>) {
-                assert(std::all_of(edges.begin(), edges.end(), [](const auto &edge) { return edge.source < edge.target; })
+                assert(std::all_of(edges.begin(), edges.end(), [](const auto &edge) { return edge.source_ < edge.target_; })
                        && "Vertex order must be a topological order.");
             }
         }
@@ -337,8 +337,8 @@ class CompactSparseGraph {
         }
         if constexpr (IsEdgeListTypeV<EdgeListType, VertexIdx, EdgeT>) {
             for (const auto &edge : edges) {
-                childrenTmp[edge.source].push_back(edge.target);
-                numParentsTmp[edge.target]++;
+                childrenTmp[edge.source_].push_back(edge.target_);
+                numParentsTmp[edge.target_]++;
             }
         }
 
@@ -382,7 +382,7 @@ class CompactSparseGraph {
             }
             if constexpr (IsEdgeListTypeV<EdgeListType, VertexIdx, EdgeT>) {
                 for (const auto &edge : edges) {
-                    parentsTmp[edge.target].push_back(edge.source);
+                    parentsTmp[edge.target_].push_back(edge.source_);
                 }
             }
 
@@ -772,7 +772,7 @@ class CompactSparseGraph {
     }
 
     template <typename GraphType>
-    CompactSparseGraph(const GraphType &graph) : CompactSparseGraph(graph.NumVertices(), edgeView(graph)) {
+    CompactSparseGraph(const GraphType &graph) : CompactSparseGraph(graph.NumVertices(), EdgeView(graph)) {
         static_assert(IsDirectedGraphV<GraphType>);
 
         if constexpr (IsComputationalDagV<GraphType> && useWorkWeights) {

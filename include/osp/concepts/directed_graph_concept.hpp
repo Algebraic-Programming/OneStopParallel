@@ -98,12 +98,12 @@ struct IsEdgeListType<
                 decltype(std::declval<T>().end()),
                 decltype(std::declval<T>().size()),
                 typename std::iterator_traits<decltype(std::begin(std::declval<T>()))>::value_type,
-                decltype(std::declval<typename std::iterator_traits<decltype(std::begin(std::declval<T>()))>::value_type>().source),
-                decltype(std::declval<typename std::iterator_traits<decltype(std::begin(std::declval<T>()))>::value_type>().target)>>
+                decltype(std::declval<typename std::iterator_traits<decltype(std::begin(std::declval<T>()))>::value_type>().source_),
+                decltype(std::declval<typename std::iterator_traits<decltype(std::begin(std::declval<T>()))>::value_type>().target_)>>
     : std::conjunction<
-          std::is_same<decltype(std::declval<typename std::iterator_traits<decltype(std::begin(std::declval<T>()))>::value_type>().source),
+          std::is_same<decltype(std::declval<typename std::iterator_traits<decltype(std::begin(std::declval<T>()))>::value_type>().source_),
                        VType>,
-          std::is_same<decltype(std::declval<typename std::iterator_traits<decltype(std::begin(std::declval<T>()))>::value_type>().target),
+          std::is_same<decltype(std::declval<typename std::iterator_traits<decltype(std::begin(std::declval<T>()))>::value_type>().target_),
                        VType>,
           std::is_same<decltype(std::declval<T>().size()), EType>> {};
 
