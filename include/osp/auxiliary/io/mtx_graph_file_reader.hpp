@@ -203,9 +203,9 @@ bool ReadComputationalDagMartixMarketFormat(const std::string &filename, GraphT 
 
 // std::pair<bool, csr_graph> readComputationalDagMartixMarketFormat_csr(std::ifstream &infile);
 
-// std::pair<bool, BspArchitecture> readBspArchitecture(const std::string &filename);
+// std::pair<bool, BspArchitecture> ReadBspArchitecture(const std::string &filename);
 
-// std::pair<bool, BspArchitecture> readBspArchitecture(std::ifstream &infile);
+// std::pair<bool, BspArchitecture> ReadBspArchitecture(std::ifstream &infile);
 
 // std::pair<bool, BspSchedule> readBspSchdeuleTxtFormat(const BspInstance &instance, const std::string &filename);
 

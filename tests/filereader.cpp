@@ -214,7 +214,7 @@ BOOST_AUTO_TEST_CASE(TestArchSmpl) {
 
     BspArchitecture<computational_dag_vector_impl_def_t> arch;
 
-    bool status = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), arch);
+    bool status = file_reader::ReadBspArchitecture((cwd / "data/machine_params/p3.arch").string(), arch);
 
     BOOST_CHECK(status);
     BOOST_CHECK_EQUAL(arch.NumberOfProcessors(), 3);
@@ -232,7 +232,7 @@ BOOST_AUTO_TEST_CASE(TestArchSmplSigned) {
 
     BspArchitecture<computational_dag_vector_impl_def_int_t> arch;
 
-    bool status = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), arch);
+    bool status = file_reader::ReadBspArchitecture((cwd / "data/machine_params/p3.arch").string(), arch);
 
     BOOST_CHECK(status);
     BOOST_CHECK_EQUAL(arch.NumberOfProcessors(), 3);

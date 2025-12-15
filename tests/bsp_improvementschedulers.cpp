@@ -82,7 +82,7 @@ limitations under the License.
 //             auto [status_graph, graph] =
 //                 FileReader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string());
 //             auto [status_architecture, architecture] =
-//                 FileReader::readBspArchitecture((cwd / filename_machine).string());
+//                 FileReader::ReadBspArchitecture((cwd / filename_machine).string());
 
 //             if (!status_graph || !status_architecture) {
 

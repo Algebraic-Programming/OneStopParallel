@@ -77,9 +77,9 @@ void RunTest(Scheduler<GraphT> *testScheduler) {
 
             BspInstance<GraphT> instance;
 
-            bool statusGraph = file_reader::readGraph((cwd / filenameGraph).string(), instance.GetComputationalDag());
+            bool statusGraph = file_reader::ReadGraph((cwd / filenameGraph).string(), instance.GetComputationalDag());
             bool statusArchitecture
-                = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
+                = file_reader::ReadBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
 
             if (!statusGraph || !statusArchitecture) {
                 std::cout << "Reading files failed." << std::endl;
@@ -123,8 +123,8 @@ void RunTest2(Scheduler<GraphT> *testScheduler) {
             ComputationalDagEdgeIdxVectorImplDefT graph;
             BspArchitecture<GraphT> arch;
 
-            bool statusGraph = file_reader::readGraph((cwd / filenameGraph).string(), graph);
-            bool statusArchitecture = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), arch);
+            bool statusGraph = file_reader::ReadGraph((cwd / filenameGraph).string(), graph);
+            bool statusArchitecture = file_reader::ReadBspArchitecture((cwd / "data/machine_params/p3.arch").string(), arch);
 
             if (!statusGraph || !statusArchitecture) {
                 std::cout << "Reading files failed." << std::endl;

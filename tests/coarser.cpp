@@ -122,10 +122,10 @@ BOOST_AUTO_TEST_CASE(CoarserHdaggTest) {
 
         BspInstance<GraphT> instance;
 
-        bool statusGraph = file_reader::readGraph((cwd / filenameGraph).string(), instance.GetComputationalDag());
+        bool statusGraph = file_reader::ReadGraph((cwd / filenameGraph).string(), instance.GetComputationalDag());
 
         bool statusArchitecture
-            = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
+            = file_reader::ReadBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
 
         if (!statusGraph || !statusArchitecture) {
             std::cout << "Reading files failed." << std::endl;
@@ -192,10 +192,10 @@ BOOST_AUTO_TEST_CASE(CoarserHdaggTestDiffGraphImpl) {
 
         BspInstance<GraphT1> instance;
 
-        bool statusGraph = file_reader::readGraph((cwd / filenameGraph).string(), instance.GetComputationalDag());
+        bool statusGraph = file_reader::ReadGraph((cwd / filenameGraph).string(), instance.GetComputationalDag());
 
         bool statusArchitecture
-            = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
+            = file_reader::ReadBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
 
         if (!statusGraph || !statusArchitecture) {
             std::cout << "Reading files failed." << std::endl;
@@ -260,10 +260,10 @@ BOOST_AUTO_TEST_CASE(CoarserBspscheduleTest) {
 
         BspInstance<GraphT> instance;
 
-        bool statusGraph = file_reader::readGraph((cwd / filenameGraph).string(), instance.GetComputationalDag());
+        bool statusGraph = file_reader::ReadGraph((cwd / filenameGraph).string(), instance.GetComputationalDag());
 
         bool statusArchitecture
-            = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
+            = file_reader::ReadBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
 
         if (!statusGraph || !statusArchitecture) {
             std::cout << "Reading files failed." << std::endl;
@@ -334,10 +334,10 @@ void TestCoarserSameGraph(Coarser<GraphT, GraphT> &coarser) {
 
         BspInstance<GraphT> instance;
 
-        bool statusGraph = file_reader::readGraph((cwd / filenameGraph).string(), instance.GetComputationalDag());
+        bool statusGraph = file_reader::ReadGraph((cwd / filenameGraph).string(), instance.GetComputationalDag());
 
         bool statusArchitecture
-            = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
+            = file_reader::ReadBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
 
         if (!statusGraph || !statusArchitecture) {
             std::cout << "Reading files failed." << std::endl;
@@ -465,10 +465,10 @@ BOOST_AUTO_TEST_CASE(CoarserSquashATestDiffGraphImplCsg) {
 
         BspInstance<GraphT1> instance;
 
-        bool statusGraph = file_reader::readGraph((cwd / filenameGraph).string(), instance.GetComputationalDag());
+        bool statusGraph = file_reader::ReadGraph((cwd / filenameGraph).string(), instance.GetComputationalDag());
 
         bool statusArchitecture
-            = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
+            = file_reader::ReadBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
 
         if (!statusGraph || !statusArchitecture) {
             std::cout << "Reading files failed." << std::endl;
@@ -538,10 +538,10 @@ BOOST_AUTO_TEST_CASE(CoarserSquashATestDiffGraphImplCsge) {
 
         BspInstance<GraphT1> instance;
 
-        bool statusGraph = file_reader::readGraph((cwd / filenameGraph).string(), instance.GetComputationalDag());
+        bool statusGraph = file_reader::ReadGraph((cwd / filenameGraph).string(), instance.GetComputationalDag());
 
         bool statusArchitecture
-            = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
+            = file_reader::ReadBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
 
         if (!statusGraph || !statusArchitecture) {
             std::cout << "Reading files failed." << std::endl;

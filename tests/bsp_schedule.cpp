@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(TestInstanceBicgstab) {
         std::cout << cwd << std::endl;
     }
 
-    bool status = file_reader::readGraph((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(), instance.GetComputationalDag());
+    bool status = file_reader::ReadGraph((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(), instance.GetComputationalDag());
 
     BOOST_CHECK(status);
     BOOST_CHECK_EQUAL(instance.GetComputationalDag().NumVertices(), 54);
@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(TestScheduleWriter) {
         std::cout << cwd << std::endl;
     }
 
-    bool status = file_reader::readGraph((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(), instance.GetComputationalDag());
+    bool status = file_reader::ReadGraph((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(), instance.GetComputationalDag());
 
     BOOST_CHECK(status);
     BOOST_CHECK_EQUAL(instance.GetComputationalDag().NumVertices(), 54);
@@ -220,7 +220,7 @@ BOOST_AUTO_TEST_CASE(TestBspScheduleCs) {
         std::cout << cwd << std::endl;
     }
 
-    file_reader::readGraph((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(), instance.GetComputationalDag());
+    file_reader::ReadGraph((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(), instance.GetComputationalDag());
 
     BspSchedule<Graph> schedule(instance);
     BspLocking<Graph> scheduler;
