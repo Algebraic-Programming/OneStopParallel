@@ -67,7 +67,7 @@ class Partitioning {
     inline void SetAssignedPartition(IndexType node, unsigned part) { nodeToPartitionAssignment_.at(node) = part; }
 
     void SetAssignedPartitions(const std::vector<unsigned> &vec) {
-        if (vec.size() == static_cast<std::size_t>(instance_->getHypergraph().NumVertices())) {
+        if (vec.size() == static_cast<std::size_t>(instance_->GetHypergraph().NumVertices())) {
             nodeToPartitionAssignment_ = vec;
         } else {
             throw std::invalid_argument("Invalid Argument while assigning processors: size does not match number of nodes.");
@@ -75,7 +75,7 @@ class Partitioning {
     }
 
     void SetAssignedPartitions(std::vector<unsigned> &&vec) {
-        if (vec.size() == static_cast<std::size_t>(instance_->getHypergraph().NumVertices())) {
+        if (vec.size() == static_cast<std::size_t>(instance_->GetHypergraph().NumVertices())) {
             nodeToPartitionAssignment_ = vec;
         } else {
             throw std::invalid_argument("Invalid Argument while assigning processors: size does not match number of nodes.");

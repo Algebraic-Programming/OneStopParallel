@@ -80,9 +80,9 @@ void HypergraphPartitioningILPBase<HypergraphT>::SetupFundamentalVariablesConstr
     using WorkwType = typename HypergraphT::vertex_work_weight_type;
     using MemwType = typename HypergraphT::vertex_mem_weight_type;
 
-    const IndexType numberOfParts = instance.getNumberOfPartitions();
-    const IndexType numberOfVertices = instance.getHypergraph().NumVertices();
-    const IndexType numberOfHyperedges = instance.getHypergraph().num_hyperedges();
+    const IndexType numberOfParts = instance.GetNumberOfPartitions();
+    const IndexType numberOfVertices = instance.GetHypergraph().NumVertices();
+    const IndexType numberOfHyperedges = instance.GetHypergraph().NumHyperedges();
 
     // Variables
 
@@ -100,33 +100,33 @@ void HypergraphPartitioningILPBase<HypergraphT>::SetupFundamentalVariablesConstr
     }
 
     // partition size constraints
-    if (instance.getMaxWorkWeightPerPartition() < std::numeric_limits<WorkwType>::max()) {
+    if (instance.GetMaxWorkWeightPerPartition() < std::numeric_limits<WorkwType>::max()) {
         for (unsigned part = 0; part < numberOfParts; part++) {
             Expr expr;
             for (IndexType node = 0; node < numberOfVertices; node++) {
-                expr += instance.getHypergraph().get_VertexWorkWeight(node) * nodeInPartition_[node][static_cast<int>(part)];
+                expr += instance.GetHypergraph().GetVertexWorkWeight(node) * nodeInPartition_[node][static_cast<int>(part)];
             }
 
-            model.AddConstr(expr <= instance.getMaxWorkWeightPerPartition());
+            model.AddConstr(expr <= instance.GetMaxWorkWeightPerPartition());
         }
     }
-    if (instance.getMaxMemoryWeightPerPartition() < std::numeric_limits<MemwType>::max()) {
+    if (instance.GetMaxMemoryWeightPerPartition() < std::numeric_limits<MemwType>::max()) {
         for (unsigned part = 0; part < numberOfParts; part++) {
             Expr expr;
             for (IndexType node = 0; node < numberOfVertices; node++) {
-                expr += instance.getHypergraph().get_vertex_memory_weight(node) * nodeInPartition_[node][static_cast<int>(part)];
+                expr += instance.GetHypergraph().GetVertexMemoryWeight(node) * nodeInPartition_[node][static_cast<int>(part)];
             }
 
-            model.AddConstr(expr <= instance.getMaxMemoryWeightPerPartition());
+            model.AddConstr(expr <= instance.GetMaxMemoryWeightPerPartition());
         }
     }
 
     // set objective
     Expr expr;
     for (IndexType hyperedge = 0; hyperedge < numberOfHyperedges; hyperedge++) {
-        expr -= instance.getHypergraph().get_hyperedge_weight(hyperedge);
+        expr -= instance.GetHypergraph().GetHyperedgeWeight(hyperedge);
         for (unsigned part = 0; part < numberOfParts; part++) {
-            expr += instance.getHypergraph().get_hyperedge_weight(hyperedge)
+            expr += instance.GetHypergraph().GetHyperedgeWeight(hyperedge)
                     * hyperedgeUsesPartition_[hyperedge][static_cast<int>(part)];
         }
     }
@@ -139,11 +139,11 @@ std::vector<std::vector<unsigned> > HypergraphPartitioningILPBase<HypergraphT>::
     const PartitioningProblem<HypergraphT> &instance, Model &model) {
     using IndexType = typename HypergraphT::vertex_idx;
 
-    std::vector<std::vector<unsigned> > nodeToPartitions(instance.getHypergraph().NumVertices());
+    std::vector<std::vector<unsigned> > nodeToPartitions(instance.GetHypergraph().NumVertices());
 
     std::set<unsigned> nonemptyPartitionIds;
-    for (IndexType node = 0; node < instance.getHypergraph().NumVertices(); node++) {
-        for (unsigned part = 0; part < instance.getNumberOfPartitions(); part++) {
+    for (IndexType node = 0; node < instance.GetHypergraph().NumVertices(); node++) {
+        for (unsigned part = 0; part < instance.GetNumberOfPartitions(); part++) {
             if (nodeInPartition_[node][static_cast<int>(part)].Get(COPT_DBLINFO_VALUE) >= .99) {
                 nodeToPartitions[node].push_back(part);
                 nonemptyPartitionIds.insert(part);
@@ -165,7 +165,7 @@ std::vector<std::vector<unsigned> > HypergraphPartitioningILPBase<HypergraphT>::
         ++currentIndex;
     }
 
-    for (IndexType node = 0; node < instance.getHypergraph().NumVertices(); node++) {
+    for (IndexType node = 0; node < instance.GetHypergraph().NumVertices(); node++) {
         for (unsigned entryIdx = 0; entryIdx < nodeToPartitions[node].size(); ++entryIdx) {
             nodeToPartitions[node][entryIdx] = newPartIndex[nodeToPartitions[node][entryIdx]];
         }

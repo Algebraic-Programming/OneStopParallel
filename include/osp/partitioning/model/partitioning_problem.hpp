@@ -109,7 +109,7 @@ class PartitioningProblem {
             throw std::invalid_argument("Invalid Argument while setting imbalance parameter: parameter is negative.");
         } else {
             maxMemoryWeightPerPartition_ = static_cast<MemwType>(
-                ceil(compute_total_vertex_memory_weight(hgraph_) / static_cast<double>(nrOfPartitions_) * (1.0 + imbalance)));
+                ceil(ComputeTotalVertexMemoryWeight(hgraph_) / static_cast<double>(nrOfPartitions_) * (1.0 + imbalance)));
         }
     }
 };

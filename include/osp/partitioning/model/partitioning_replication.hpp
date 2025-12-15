@@ -87,7 +87,7 @@ class PartitioningWithReplication {
     }
 
     std::vector<std::vector<IndexType>> GetPartitionContents() const {
-        std::vector<std::vector<IndexType>> content(instance_->getNumberOfPartitions());
+        std::vector<std::vector<IndexType>> content(instance_->GetNumberOfPartitions());
         for (IndexType node = 0; node < nodeToPartitionsAssignment_.size(); ++node) {
             for (unsigned part : nodeToPartitionsAssignment_[node]) {
                 content[part].push_back(node);
@@ -99,7 +99,7 @@ class PartitioningWithReplication {
 
     void ResetPartition() {
         nodeToPartitionsAssignment_.clear();
-        nodeToPartitionsAssignment_.resize(instance_->getHypergraph().NumVertices(), {0});
+        nodeToPartitionsAssignment_.resize(instance_->GetHypergraph().NumVertices(), {0});
     }
 
     // costs and validity

@@ -25,7 +25,7 @@ limitations under the License.
 
 namespace osp {
 
-template <typename IndexType = size_t, typename WorkwType = int, typename MemwType = int, typename CommwType = int>
+template <typename IndexType = std::size_t, typename WorkwType = int, typename MemwType = int, typename CommwType = int>
 class Hypergraph {
     using ThisT = Hypergraph<IndexType, WorkwType, MemwType, CommwType>;
 

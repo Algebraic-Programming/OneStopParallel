@@ -81,8 +81,8 @@ void HypergraphPartitioningILP<HypergraphT>::SetupExtraVariablesConstraints(cons
                                                                             Model &model) {
     using IndexType = typename HypergraphT::vertex_idx;
 
-    const IndexType numberOfParts = instance.getNumberOfPartitions();
-    const IndexType numberOfVertices = instance.getHypergraph().NumVertices();
+    const IndexType numberOfParts = instance.GetNumberOfPartitions();
+    const IndexType numberOfVertices = instance.GetHypergraph().NumVertices();
 
     // Constraints
 
@@ -99,7 +99,7 @@ void HypergraphPartitioningILP<HypergraphT>::SetupExtraVariablesConstraints(cons
     // hyperedge indicators match node variables
     for (unsigned part = 0; part < numberOfParts; part++) {
         for (IndexType node = 0; node < numberOfVertices; node++) {
-            for (const IndexType &hyperedge : instance.getHypergraph().get_incident_hyperedges(node)) {
+            for (const IndexType &hyperedge : instance.GetHypergraph().GetIncidentHyperedges(node)) {
                 model.AddConstr(this->hyperedgeUsesPartition_[hyperedge][static_cast<int>(part)]
                                 >= this->nodeInPartition_[node][static_cast<int>(part)]);
             }
@@ -113,10 +113,10 @@ std::vector<unsigned> HypergraphPartitioningILP<HypergraphT>::ReadCoptAssignment
                                                                                  Model &model) {
     using IndexType = typename HypergraphT::vertex_idx;
 
-    std::vector<unsigned> nodeToPartition(instance.getHypergraph().NumVertices(), std::numeric_limits<unsigned>::max());
+    std::vector<unsigned> nodeToPartition(instance.GetHypergraph().NumVertices(), std::numeric_limits<unsigned>::max());
     std::vector<std::vector<unsigned>> assignmentsGenericForm = this->ReadAllCoptAssignments(instance, model);
 
-    for (IndexType node = 0; node < instance.getHypergraph().NumVertices(); node++) {
+    for (IndexType node = 0; node < instance.GetHypergraph().NumVertices(); node++) {
         nodeToPartition[node] = assignmentsGenericForm[node].front();
     }
 
@@ -127,9 +127,9 @@ template <typename HypergraphT>
 void HypergraphPartitioningILP<HypergraphT>::SetInitialSolution(const Partitioning<HypergraphT> &partition, Model &model) {
     using IndexType = typename HypergraphT::vertex_idx;
 
-    const std::vector<unsigned> &assignment = partition.assignedPartitions();
-    const unsigned &numPartitions = partition.GetInstance().getNumberOfPartitions();
-    if (assignment.size() != partition.GetInstance().getHypergraph().NumVertices()) {
+    const std::vector<unsigned> &assignment = partition.GetAssignedPartitions();
+    const unsigned &numPartitions = partition.GetInstance().GetNumberOfPartitions();
+    if (assignment.size() != partition.GetInstance().GetHypergraph().NumVertices()) {
         return;
     }
 
