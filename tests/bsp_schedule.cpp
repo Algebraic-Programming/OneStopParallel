@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(TestInstanceBicgstab) {
 
         BspScheduleCS<Graph> scheduleCs(instance);
 
-        const auto resultCs = scheduler->computeScheduleCS(scheduleCs);
+        const auto resultCs = scheduler->ComputeScheduleCS(scheduleCs);
 
         BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, resultCs);
 

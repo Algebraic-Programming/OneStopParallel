@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(TestEigenSptrsv) {
     BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
 
     BspScheduleCS<SparseMatrixImp<int32_t>> scheduleCs(instance);
-    auto resultCs = scheduler.computeScheduleCS(scheduleCs);
+    auto resultCs = scheduler.ComputeScheduleCS(scheduleCs);
 
     /*
     for (const auto &node : instance.Vertices()) {

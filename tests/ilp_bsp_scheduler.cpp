@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(TestFull) {
     CoptFullScheduler<graph> schedulerTo;
     schedulerTo.setTimeLimitSeconds(10);
 
-    const auto resultTo = scheduler_to.computeScheduleCS(schedule_to);
+    const auto resultTo = scheduler_to.ComputeScheduleCS(schedule_to);
     BOOST_CHECK_EQUAL(ReturnStatus::BEST_FOUND, result_to);
     BOOST_CHECK(scheduleTo.SatisfiesPrecedenceConstraints());
 
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(TestFull) {
     BspScheduleCS<graph> scheduleImproved(instance);
     schedulerInit.setTimeLimitSeconds(10);
     schedulerInit.setInitialSolutionFromBspSchedule(schedule_init_cs);
-    const auto resultInit = scheduler_init.computeScheduleCS(schedule_improved);
+    const auto resultInit = scheduler_init.ComputeScheduleCS(schedule_improved);
     BOOST_CHECK_EQUAL(ReturnStatus::BEST_FOUND, result_init);
     BOOST_CHECK(scheduleImproved.SatisfiesPrecedenceConstraints());
     BOOST_CHECK(scheduleImproved.hasValidCommSchedule());
@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE(TestFull) {
 
     CoptFullScheduler<graph> scheduler;
     scheduler.setTimeLimitSeconds(3600);
-    const auto result = scheduler.computeScheduleCS(schedule);
+    const auto result = scheduler.ComputeScheduleCS(schedule);
 
     BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
     BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());

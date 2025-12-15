@@ -54,9 +54,9 @@ class MaxBspScheduler : public Scheduler<GraphT> {
         return status;
     }
 
-    virtual ReturnStatus computeScheduleCS(BspScheduleCS<GraphT> &schedule) override {
+    virtual ReturnStatus ComputeScheduleCS(BspScheduleCS<GraphT> &schedule) override {
         MaxBspScheduleCS<GraphT> tmpSchedule(schedule.GetInstance());
-        auto result = computeScheduleCS(tmpSchedule);
+        auto result = ComputeScheduleCS(tmpSchedule);
         if (result == ReturnStatus::OSP_SUCCESS || result == ReturnStatus::BEST_FOUND) {
             schedule = tmpSchedule;
             schedule.setAutoCommunicationSchedule();
