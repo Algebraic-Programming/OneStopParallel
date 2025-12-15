@@ -342,7 +342,7 @@ BOOST_AUTO_TEST_CASE(Graph1KeepOrder) {
     }
 
     unsigned count = 0;
-    for (const auto &e : osp::edges(graph)) {
+    for (const auto &e : osp::Edges(graph)) {
         std::cout << e.source << " -> " << e.target << std::endl;
         count++;
     }

@@ -391,7 +391,7 @@ inline auto Edges(const CompactSparseGraphEdgeDesc<keepVertexOrder,
                                                    MemWeightType,
                                                    ECommWeightType,
                                                    VertexTypeTemplateType> &graph) {
-    return graph.edges();
+    return graph.Edges();
 }
 
 template <bool keepVertexOrder,

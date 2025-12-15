@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(TestDagEdgeIdx) {
     std::vector<VertexIdx> edgeTargets{1, 2, 3, 4, 6, 4, 5, 7, 7};
 
     size_t edgeIdx = 0;
-    for (const auto &edge : graph.edges()) {
+    for (const auto &edge : graph.Edges()) {
         BOOST_CHECK_EQUAL(edge.source, edgeSources[edgeIdx]);
         BOOST_CHECK_EQUAL(edge.target, edgeTargets[edgeIdx]);
         edgeIdx++;
