@@ -792,7 +792,7 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
      *
      * @return The name of the schedule.
      */
-    virtual std::string getScheduleName() const override { return "TotalCommIlp"; }
+    virtual std::string GetScheduleName() const override { return "TotalCommIlp"; }
 };
 
 }    // namespace osp

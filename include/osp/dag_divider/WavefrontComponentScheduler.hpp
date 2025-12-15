@@ -30,7 +30,7 @@ class WavefrontComponentScheduler : public AbstractWavefrontScheduler<GraphT, Co
     WavefrontComponentScheduler(IDagDivider<GraphT> &div, Scheduler<ConstrGraphT> &scheduler)
         : AbstractWavefrontScheduler<GraphT, ConstrGraphT>(div, scheduler) {}
 
-    std::string getScheduleName() const override { return "WavefrontComponentScheduler"; }
+    std::string GetScheduleName() const override { return "WavefrontComponentScheduler"; }
 
     ReturnStatus ComputeSchedule(BspSchedule<GraphT> &schedule) override {
         const auto &instance = schedule.GetInstance();

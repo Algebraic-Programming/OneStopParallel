@@ -34,8 +34,8 @@ class CoarseAndSchedule : public Scheduler<GraphT> {
     CoarseAndSchedule(Coarser<GraphT, GraphTCoarse> &coarser, Scheduler<GraphTCoarse> &scheduler)
         : coarser_(coarser), scheduler_(scheduler) {}
 
-    std::string getScheduleName() const override {
-        return "Coarse(" + coarser_.getCoarserName() + ")AndSchedule(" + scheduler_.getScheduleName() + ")";
+    std::string GetScheduleName() const override {
+        return "Coarse(" + coarser_.getCoarserName() + ")AndSchedule(" + scheduler_.GetScheduleName() + ")";
     }
 
     ReturnStatus ComputeSchedule(BspSchedule<GraphT> &schedule) override {

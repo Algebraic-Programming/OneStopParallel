@@ -44,7 +44,7 @@ class MockSubScheduler : public Scheduler<ConstrGraphT> {
         return ReturnStatus::OSP_SUCCESS;
     }
 
-    std::string getScheduleName() const override { return "MockSubScheduler"; }
+    std::string GetScheduleName() const override { return "MockSubScheduler"; }
 };
 
 struct TrimmedGroupSchedulerFixture {

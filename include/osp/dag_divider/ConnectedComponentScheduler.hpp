@@ -31,7 +31,7 @@ class ConnectedComponentScheduler : public Scheduler<GraphT> {
   public:
     ConnectedComponentScheduler(Scheduler<ConstrGraphT> &scheduler) : scheduler_(&scheduler) {}
 
-    std::string getScheduleName() const override { return "SubDagScheduler"; }
+    std::string GetScheduleName() const override { return "SubDagScheduler"; }
 
     ReturnStatus ComputeSchedule(BspSchedule<GraphT> &schedule) override {
         const auto &instance = schedule.GetInstance();

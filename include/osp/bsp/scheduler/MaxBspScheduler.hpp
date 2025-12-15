@@ -40,7 +40,7 @@ class MaxBspScheduler : public Scheduler<GraphT> {
      * @brief Get the name of the scheduling algorithm.
      * @return The name of the scheduling algorithm.
      */
-    virtual std::string getScheduleName() const override = 0;
+    virtual std::string GetScheduleName() const override = 0;
 
     /**
      * @brief Compute a BSP schedule for the given BSP instance.

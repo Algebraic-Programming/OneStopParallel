@@ -71,7 +71,7 @@ void RunTest(Scheduler<GraphT> *testScheduler) {
             std::string nameMachine = filenameMachine.substr(filenameMachine.find_last_of("/\\") + 1);
             nameMachine = nameMachine.substr(0, nameMachine.rfind("."));
 
-            std::cout << std::endl << "Scheduler: " << testScheduler->getScheduleName() << std::endl;
+            std::cout << std::endl << "Scheduler: " << testScheduler->GetScheduleName() << std::endl;
             std::cout << "Graph: " << nameGraph << std::endl;
             std::cout << "Architecture: " << nameMachine << std::endl;
 
@@ -116,7 +116,7 @@ void RunTest2(Scheduler<GraphT> *testScheduler) {
             std::string nameMachine = filenameMachine.substr(filenameMachine.find_last_of("/\\") + 1);
             nameMachine = nameMachine.substr(0, nameMachine.rfind("."));
 
-            std::cout << std::endl << "Scheduler: " << testScheduler->getScheduleName() << std::endl;
+            std::cout << std::endl << "Scheduler: " << testScheduler->GetScheduleName() << std::endl;
             std::cout << "Graph: " << nameGraph << std::endl;
             std::cout << "Architecture: " << nameMachine << std::endl;
 

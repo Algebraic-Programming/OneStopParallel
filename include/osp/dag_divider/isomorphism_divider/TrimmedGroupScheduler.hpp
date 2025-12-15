@@ -47,7 +47,7 @@ class TrimmedGroupScheduler : public Scheduler<ConstrGraphT> {
     TrimmedGroupScheduler(Scheduler<ConstrGraphT> &scheduler, unsigned minNonZeroProcs)
         : subScheduler_(&scheduler), minNonZeroProcs_(minNonZeroProcs) {}
 
-    std::string getScheduleName() const override { return "TrimmedGroupScheduler"; }
+    std::string GetScheduleName() const override { return "TrimmedGroupScheduler"; }
 
     ReturnStatus ComputeSchedule(BspSchedule<ConstrGraphT> &schedule) override {
         const auto &instance = schedule.GetInstance();

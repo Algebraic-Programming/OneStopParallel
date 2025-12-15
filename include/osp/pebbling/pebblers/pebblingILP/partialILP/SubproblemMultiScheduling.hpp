@@ -58,7 +58,7 @@ class SubproblemMultiScheduling : public Scheduler<GraphT> {
      *
      * @return The name of the schedule.
      */
-    virtual std::string getScheduleName() const override { return "SubproblemMultiScheduling"; }
+    virtual std::string GetScheduleName() const override { return "SubproblemMultiScheduling"; }
 
     inline const std::vector<std::vector<unsigned>> &GetProcTaskLists() const { return proc_task_lists; }
 };

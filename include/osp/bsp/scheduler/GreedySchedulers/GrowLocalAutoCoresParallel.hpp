@@ -55,9 +55,9 @@ struct GrowLocalAutoCoresParallelParams {
  * @brief The GrowLocalAutoCoresParallel class represents a scheduler that uses a greedy algorithm to compute
  * schedules for BspInstance.
  *
- * This class inherits from the Scheduler class and implements the ComputeSchedule() and getScheduleName() methods.
+ * This class inherits from the Scheduler class and implements the ComputeSchedule() and GetScheduleName() methods.
  * The ComputeSchedule() method computes a schedule for a given BspInstance using a greedy algorithm.
- * The getScheduleName() method returns the name of the schedule, which is "GrowLocalAutoCoresParallel" in this
+ * The GetScheduleName() method returns the name of the schedule, which is "GrowLocalAutoCoresParallel" in this
  * case.
  */
 template <typename GraphT>
@@ -606,7 +606,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
      *
      * @return The name of the schedule.
      */
-    virtual std::string getScheduleName() const override { return "GrowLocalAutoCoresParallel"; }
+    virtual std::string GetScheduleName() const override { return "GrowLocalAutoCoresParallel"; }
 };
 
 }    // namespace osp

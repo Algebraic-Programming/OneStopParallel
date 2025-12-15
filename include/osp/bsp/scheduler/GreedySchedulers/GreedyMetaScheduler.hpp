@@ -32,7 +32,7 @@ namespace osp {
  * @brief The GreedyMetaScheduler class represents a meta-scheduler that selects the best schedule produced from a list of
  * added schedulers.
  *
- * This class inherits from the Scheduler class and implements the ComputeSchedule() and getScheduleName() methods.
+ * This class inherits from the Scheduler class and implements the ComputeSchedule() and GetScheduleName() methods.
  * The ComputeSchedule() method iterates through a list of schedulers, computes a schedule using each one,
  * and returns the schedule with the minimum cost.
  *
@@ -80,7 +80,7 @@ class GreedyMetaScheduler : public Scheduler<GraphT> {
             const VWorkwT<GraphT> scheduleCost = CostModel()(currentSchedule);
 
             if constexpr (verbose_) {
-                std::cout << "Executed scheduler " << scheduler->getScheduleName() << ", costs: " << schedule_cost
+                std::cout << "Executed scheduler " << scheduler->GetScheduleName() << ", costs: " << schedule_cost
                           << ", nr. supersteps: " << currentSchedule.NumberOfSupersteps() << std::endl;
             }
 
@@ -96,7 +96,7 @@ class GreedyMetaScheduler : public Scheduler<GraphT> {
         return ReturnStatus::OSP_SUCCESS;
     }
 
-    std::string getScheduleName() const override { return "GreedyMetaScheduler"; }
+    std::string GetScheduleName() const override { return "GreedyMetaScheduler"; }
 };
 
 }    // namespace osp

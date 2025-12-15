@@ -42,7 +42,7 @@ class ConcreteWavefrontScheduler : public osp::AbstractWavefrontScheduler<GraphT
     // Dummy implementation for the pure virtual method
     osp::ReturnStatus ComputeSchedule(osp::BspSchedule<GraphT> &) override { return osp::ReturnStatus::OSP_SUCCESS; }
 
-    std::string getScheduleName() const override { return "ConcreteScheduler"; }
+    std::string GetScheduleName() const override { return "ConcreteScheduler"; }
 };
 
 // Mock dependencies for the test

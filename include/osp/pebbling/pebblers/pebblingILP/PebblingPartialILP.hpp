@@ -63,7 +63,7 @@ class PebblingPartialILP : public Scheduler<GraphT> {
      *
      * @return The name of the schedule.
      */
-    virtual std::string getScheduleName() const override { return "PebblingPartialILP"; }
+    virtual std::string GetScheduleName() const override { return "PebblingPartialILP"; }
 
     // getters and setters for problem parameters
     inline std::pair<unsigned, unsigned> GetMinAndMaxSize() const { return std::make_pair(minPartitionSize_, maxPartitionSize_); }

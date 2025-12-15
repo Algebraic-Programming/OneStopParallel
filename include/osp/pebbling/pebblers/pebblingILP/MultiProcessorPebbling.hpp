@@ -187,7 +187,7 @@ class MultiProcessorPebbling : public Scheduler<GraphT> {
      *
      * @return The name of the schedule.
      */
-    virtual std::string getScheduleName() const override { return "MultiProcessorPebbling"; }
+    virtual std::string GetScheduleName() const override { return "MultiProcessorPebbling"; }
 
     // getters and setters for problem parameters
     inline bool AllowsSlidingPebbles() const { return slidingPebbles_; }
