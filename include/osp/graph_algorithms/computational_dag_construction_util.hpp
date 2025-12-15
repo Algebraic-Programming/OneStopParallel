@@ -37,7 +37,7 @@ namespace osp {
  * @param to The target graph.
  */
 template <typename GraphFrom, typename GraphTo>
-void constructComputationalDag(const GraphFrom &from, GraphTo &to) {
+void ConstructComputationalDag(const GraphFrom &from, GraphTo &to) {
     static_assert(IsComputationalDagV<GraphFrom>, "GraphFrom must satisfy the computational_dag concept");
     static_assert(IsConstructableCdagVertexV<GraphTo>, "GraphTo must satisfy the constructable_cdag_vertex concept");
 

@@ -47,7 +47,7 @@ namespace osp {
  */
 template <typename GraphT>
 inline VertexIdxT<GraphT> Source(const DirectedEdge<GraphT> &edge, const GraphT &) {
-    return edge.source;
+    return edge.source_;
 }
 
 /**
@@ -59,7 +59,7 @@ inline VertexIdxT<GraphT> Source(const DirectedEdge<GraphT> &edge, const GraphT 
  */
 template <typename GraphT>
 inline VertexIdxT<GraphT> Target(const DirectedEdge<GraphT> &edge, const GraphT &) {
-    return edge.target;
+    return edge.target_;
 }
 
 /**

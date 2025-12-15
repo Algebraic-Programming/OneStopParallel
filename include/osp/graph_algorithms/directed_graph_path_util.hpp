@@ -49,7 +49,7 @@ template <typename GraphT>
 bool HasPath(const VertexIdxT<GraphT> src, const VertexIdxT<GraphT> dest, const GraphT &graph) {
     static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
-    for (const auto &child : bfs_view(graph, src)) {
+    for (const auto &child : BfsView(graph, src)) {
         if (child == dest) {
             return true;
         }
@@ -118,7 +118,7 @@ std::size_t LongestPath(const GraphT &graph) {
     std::vector<VertexType> distances(graph.NumVertices(), 0), visitCounter(graph.NumVertices(), 0);
 
     // Find source nodes
-    for (const auto &node : source_vertices_view(graph)) {
+    for (const auto &node : SourceVerticesView(graph)) {
         bfsQueue.push(node);
     }
 
@@ -158,7 +158,7 @@ std::vector<VertexIdxT<GraphT>> LongestChain(const GraphT &graph) {
     VertexType endLongestChain = 0;
 
     // calculating lenght of longest path
-    for (const VertexType &node : top_sort_view(graph)) {
+    for (const VertexType &node : TopSortView(graph)) {
         unsigned maxTemp = 0;
         for (const auto &parent : graph.Parents(node)) {
             maxTemp = std::max(maxTemp, topLength[parent]);

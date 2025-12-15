@@ -74,7 +74,7 @@ VWorkwT<GraphT> SumOfVerticesWorkWeights(const GraphT &graph) {
 
 template <typename GraphT>
 VWorkwT<GraphT> SumOfVerticesWorkWeights(const std::initializer_list<VertexIdxT<GraphT>> vertices, const GraphT &graph) {
-    return sumOfVerticesWorkWeights(vertices.begin(), vertices.end(), graph);
+    return SumOfVerticesWorkWeights(vertices.begin(), vertices.end(), graph);
 }
 
 template <typename VertexIterator, typename GraphT>
@@ -108,7 +108,7 @@ VWorkwT<SubGraphT> SumOfCompatibleWorkWeights(
  */
 template <typename SubGraphT, typename InstanceT>
 VWorkwT<SubGraphT> SumOfCompatibleWorkWeights(const SubGraphT &graph, const InstanceT &mainInstance, unsigned processorType) {
-    return sumOfCompatibleWorkWeights(graph.Vertices().begin(), graph.Vertices().end(), graph, mainInstance, processorType);
+    return SumOfCompatibleWorkWeights(graph.Vertices().begin(), graph.Vertices().end(), graph, mainInstance, processorType);
 }
 
 template <typename GraphT>
@@ -123,7 +123,7 @@ VCommwT<GraphT> SumOfVerticesCommunicationWeights(const GraphT &graph) {
 
 template <typename GraphT>
 VCommwT<GraphT> SumOfVerticesCommunicationWeights(const std::initializer_list<VertexIdxT<GraphT>> &vertices, const GraphT &graph) {
-    return sumOfVerticesCommunicationWeights(vertices.begin(), vertices.end(), graph);
+    return SumOfVerticesCommunicationWeights(vertices.begin(), vertices.end(), graph);
 }
 
 template <typename EdgeIterator, typename GraphT>
@@ -135,7 +135,7 @@ ECommwT<GraphT> SumOfEdgesCommunicationWeights(EdgeIterator begin, EdgeIterator 
 
 template <typename GraphT>
 ECommwT<GraphT> SumOfEdgesCommunicationWeights(const std::initializer_list<EdgeDescT<GraphT>> &edges, const GraphT &graph) {
-    return sumOfEdgesCommunicationWeights(edges.begin(), edges.end(), graph);
+    return SumOfEdgesCommunicationWeights(edges.begin(), edges.end(), graph);
 }
 
 template <typename GraphT>
