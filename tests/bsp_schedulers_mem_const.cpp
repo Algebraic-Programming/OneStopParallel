@@ -422,49 +422,49 @@ BOOST_AUTO_TEST_CASE(EtfSchedulerPersistentTransientTest) {
 
 BOOST_AUTO_TEST_CASE(VariancePartitionerTest) {
     VariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT,
-                        linear_interpolation,
+                        LinearInterpolation,
                         local_memory_constraint<ComputationalDagEdgeIdxVectorImplDefT>>
         testLinear;
     RunTestLocalMemory(&testLinear);
 
     VariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT,
-                        flat_spline_interpolation,
+                        FlatSplineInterpolation,
                         local_memory_constraint<ComputationalDagEdgeIdxVectorImplDefT>>
         testFlat;
     RunTestLocalMemory(&testFlat);
 
     VariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT,
-                        superstep_only_interpolation,
+                        SuperstepOnlyInterpolation,
                         local_memory_constraint<ComputationalDagEdgeIdxVectorImplDefT>>
         testSuperstep;
     RunTestLocalMemory(&testSuperstep);
 
     VariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT,
-                        global_only_interpolation,
+                        GlobalOnlyInterpolation,
                         local_memory_constraint<ComputationalDagEdgeIdxVectorImplDefT>>
         testGlobal;
     RunTestLocalMemory(&testGlobal);
 
     VariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT,
-                        linear_interpolation,
+                        LinearInterpolation,
                         persistent_transient_memory_constraint<ComputationalDagEdgeIdxVectorImplDefT>>
         testLinearTp;
     RunTestPersistentTransientMemory(&testLinearTp);
 
     VariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT,
-                        flat_spline_interpolation,
+                        FlatSplineInterpolation,
                         persistent_transient_memory_constraint<ComputationalDagEdgeIdxVectorImplDefT>>
         testFlatTp;
     RunTestPersistentTransientMemory(&testFlatTp);
 
     VariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT,
-                        superstep_only_interpolation,
+                        SuperstepOnlyInterpolation,
                         persistent_transient_memory_constraint<ComputationalDagEdgeIdxVectorImplDefT>>
         testSuperstepTp;
     RunTestPersistentTransientMemory(&testSuperstepTp);
 
     VariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT,
-                        global_only_interpolation,
+                        GlobalOnlyInterpolation,
                         persistent_transient_memory_constraint<ComputationalDagEdgeIdxVectorImplDefT>>
         testGlobalTp;
     RunTestPersistentTransientMemory(&testGlobalTp);
@@ -472,49 +472,49 @@ BOOST_AUTO_TEST_CASE(VariancePartitionerTest) {
 
 BOOST_AUTO_TEST_CASE(LightEdgeVariancePartitionerTest) {
     LightEdgeVariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT,
-                                 linear_interpolation,
+                                 LinearInterpolation,
                                  local_memory_constraint<ComputationalDagEdgeIdxVectorImplDefT>>
         testLinear;
     RunTestLocalMemory(&testLinear);
 
     LightEdgeVariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT,
-                                 flat_spline_interpolation,
+                                 FlatSplineInterpolation,
                                  local_memory_constraint<ComputationalDagEdgeIdxVectorImplDefT>>
         testFlat;
     RunTestLocalMemory(&testFlat);
 
     LightEdgeVariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT,
-                                 superstep_only_interpolation,
+                                 SuperstepOnlyInterpolation,
                                  local_memory_constraint<ComputationalDagEdgeIdxVectorImplDefT>>
         testSuperstep;
     RunTestLocalMemory(&testSuperstep);
 
     LightEdgeVariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT,
-                                 global_only_interpolation,
+                                 GlobalOnlyInterpolation,
                                  local_memory_constraint<ComputationalDagEdgeIdxVectorImplDefT>>
         testGlobal;
     RunTestLocalMemory(&testGlobal);
 
     LightEdgeVariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT,
-                                 linear_interpolation,
+                                 LinearInterpolation,
                                  persistent_transient_memory_constraint<ComputationalDagEdgeIdxVectorImplDefT>>
         testLinearTp;
     RunTestPersistentTransientMemory(&testLinearTp);
 
     LightEdgeVariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT,
-                                 flat_spline_interpolation,
+                                 FlatSplineInterpolation,
                                  persistent_transient_memory_constraint<ComputationalDagEdgeIdxVectorImplDefT>>
         testFlatTp;
     RunTestPersistentTransientMemory(&testFlatTp);
 
     LightEdgeVariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT,
-                                 superstep_only_interpolation,
+                                 SuperstepOnlyInterpolation,
                                  persistent_transient_memory_constraint<ComputationalDagEdgeIdxVectorImplDefT>>
         testSuperstepTp;
     RunTestPersistentTransientMemory(&testSuperstepTp);
 
     LightEdgeVariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT,
-                                 global_only_interpolation,
+                                 GlobalOnlyInterpolation,
                                  persistent_transient_memory_constraint<ComputationalDagEdgeIdxVectorImplDefT>>
         testGlobalTp;
     RunTestPersistentTransientMemory(&testGlobalTp);

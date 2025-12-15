@@ -159,13 +159,13 @@ BOOST_AUTO_TEST_CASE(SerialTest) {
 
 BOOST_AUTO_TEST_CASE(CilkTest1) {
     CilkScheduler<ComputationalDagVectorImplDefUnsignedT> test;
-    test.setMode(CILK);
+    test.SetMode(CILK);
     RunTest(&test);
 }
 
 BOOST_AUTO_TEST_CASE(CilkTest2) {
     CilkScheduler<ComputationalDagVectorImplDefUnsignedT> test;
-    test.setMode(SJF);
+    test.SetMode(SJF);
     RunTest(&test);
 }
 
@@ -207,11 +207,11 @@ BOOST_AUTO_TEST_CASE(GrowLocalAutoTestEdgeDescImpl) {
 BOOST_AUTO_TEST_CASE(GrowLocalAutoParallelTopTest1) {
     {
         using GraphT = ComputationalDagVectorImplDefUnsignedT;
-        GrowLocalAutoCoresParallel_Params<VertexIdxT<GraphT>, VWorkwT<GraphT>> params;
+        GrowLocalAutoCoresParallelParams<VertexIdxT<GraphT>, VWorkwT<GraphT>> params;
 
-        params.numThreads = 1;
+        params.numThreads_ = 1;
 
-        GrowLocalAutoCoresParallel<GraphT> Test(params);
+        GrowLocalAutoCoresParallel<GraphT> test(params);
         RunTest(&test);
     }
 }
@@ -219,11 +219,11 @@ BOOST_AUTO_TEST_CASE(GrowLocalAutoParallelTopTest1) {
 BOOST_AUTO_TEST_CASE(GrowLocalAutoParallelTopTest2) {
     {
         using GraphT = ComputationalDagVectorImplDefUnsignedT;
-        GrowLocalAutoCoresParallel_Params<VertexIdxT<GraphT>, VWorkwT<GraphT>> params;
+        GrowLocalAutoCoresParallelParams<VertexIdxT<GraphT>, VWorkwT<GraphT>> params;
 
-        params.numThreads = 2;
+        params.numThreads_ = 2;
 
-        GrowLocalAutoCoresParallel<GraphT> Test(params);
+        GrowLocalAutoCoresParallel<GraphT> test(params);
         RunTest(&test);
     }
 }
@@ -231,11 +231,11 @@ BOOST_AUTO_TEST_CASE(GrowLocalAutoParallelTopTest2) {
 BOOST_AUTO_TEST_CASE(GrowLocalAutoParallelTopTest5) {
     {
         using GraphT = ComputationalDagVectorImplDefUnsignedT;
-        GrowLocalAutoCoresParallel_Params<VertexIdxT<GraphT>, VWorkwT<GraphT>> params;
+        GrowLocalAutoCoresParallelParams<VertexIdxT<GraphT>, VWorkwT<GraphT>> params;
 
-        params.numThreads = 5;
+        params.numThreads_ = 5;
 
-        GrowLocalAutoCoresParallel<GraphT> Test(params);
+        GrowLocalAutoCoresParallel<GraphT> test(params);
         RunTest(&test);
     }
 }
@@ -243,11 +243,11 @@ BOOST_AUTO_TEST_CASE(GrowLocalAutoParallelTopTest5) {
 BOOST_AUTO_TEST_CASE(GrowLocalAutoParallelTest1) {
     {
         using GraphT = CompactSparseGraph<true, true>;
-        GrowLocalAutoCoresParallel_Params<VertexIdxT<GraphT>, VWorkwT<GraphT>> params;
+        GrowLocalAutoCoresParallelParams<VertexIdxT<GraphT>, VWorkwT<GraphT>> params;
 
-        params.numThreads = 1;
+        params.numThreads_ = 1;
 
-        GrowLocalAutoCoresParallel<GraphT> Test(params);
+        GrowLocalAutoCoresParallel<GraphT> test(params);
         RunTest2(&test);
     }
 }
@@ -255,11 +255,11 @@ BOOST_AUTO_TEST_CASE(GrowLocalAutoParallelTest1) {
 BOOST_AUTO_TEST_CASE(GrowLocalAutoParallelTest2) {
     {
         using GraphT = CompactSparseGraph<true, true>;
-        GrowLocalAutoCoresParallel_Params<VertexIdxT<GraphT>, VWorkwT<GraphT>> params;
+        GrowLocalAutoCoresParallelParams<VertexIdxT<GraphT>, VWorkwT<GraphT>> params;
 
-        params.numThreads = 2;
+        params.numThreads_ = 2;
 
-        GrowLocalAutoCoresParallel<GraphT> Test(params);
+        GrowLocalAutoCoresParallel<GraphT> test(params);
         RunTest2(&test);
     }
 }
@@ -267,40 +267,40 @@ BOOST_AUTO_TEST_CASE(GrowLocalAutoParallelTest2) {
 BOOST_AUTO_TEST_CASE(GrowLocalAutoParallelTest5) {
     {
         using GraphT = CompactSparseGraph<true, true>;
-        GrowLocalAutoCoresParallel_Params<VertexIdxT<GraphT>, VWorkwT<GraphT>> params;
+        GrowLocalAutoCoresParallelParams<VertexIdxT<GraphT>, VWorkwT<GraphT>> params;
 
-        params.numThreads = 5;
+        params.numThreads_ = 5;
 
-        GrowLocalAutoCoresParallel<GraphT> Test(params);
+        GrowLocalAutoCoresParallel<GraphT> test(params);
         RunTest2(&test);
     }
 }
 
 BOOST_AUTO_TEST_CASE(VariancePartitionerTest) {
-    VariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT, linear_interpolation> testLinear;
+    VariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT, LinearInterpolation> testLinear;
     RunTest(&testLinear);
 
-    VariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT, flat_spline_interpolation> testFlat;
+    VariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT, FlatSplineInterpolation> testFlat;
     RunTest(&testFlat);
 
-    VariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT, superstep_only_interpolation> testSuperstep;
+    VariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT, SuperstepOnlyInterpolation> testSuperstep;
     RunTest(&testSuperstep);
 
-    VariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT, global_only_interpolation> testGlobal;
+    VariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT, GlobalOnlyInterpolation> testGlobal;
     RunTest(&testGlobal);
 }
 
 BOOST_AUTO_TEST_CASE(LightEdgeVariancePartitionerTest) {
-    LightEdgeVariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT, linear_interpolation> testLinear;
+    LightEdgeVariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT, LinearInterpolation> testLinear;
     RunTest(&testLinear);
 
-    LightEdgeVariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT, flat_spline_interpolation> testFlat;
+    LightEdgeVariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT, FlatSplineInterpolation> testFlat;
     RunTest(&testFlat);
 
-    LightEdgeVariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT, superstep_only_interpolation> testSuperstep;
+    LightEdgeVariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT, SuperstepOnlyInterpolation> testSuperstep;
     RunTest(&testSuperstep);
 
-    LightEdgeVariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT, global_only_interpolation> testGlobal;
+    LightEdgeVariancePartitioner<ComputationalDagEdgeIdxVectorImplDefT, GlobalOnlyInterpolation> testGlobal;
     RunTest(&testGlobal);
 }
 

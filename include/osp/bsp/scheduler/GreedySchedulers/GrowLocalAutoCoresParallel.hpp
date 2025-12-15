@@ -68,14 +68,14 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
   private:
     using VertexType = VertexIdxT<GraphT>;
 
-    GrowLocalAutoCoresParallel_Params<VertexIdxT<GraphT>, VWorkwT<GraphT>> params_;
+    GrowLocalAutoCoresParallelParams<VertexIdxT<GraphT>, VWorkwT<GraphT>> params_;
 
   public:
     /**
      * @brief Default constructor for GrowLocalAutoCoresParallel.
      */
-    GrowLocalAutoCoresParallel(GrowLocalAutoCoresParallel_Params<VertexIdxT<GraphT>, VWorkwT<GraphT>> params
-                               = GrowLocalAutoCoresParallel_Params<VertexIdxT<GraphT>, VWorkwT<GraphT>>())
+    GrowLocalAutoCoresParallel(GrowLocalAutoCoresParallelParams<VertexIdxT<GraphT>, VWorkwT<GraphT>> params
+                               = GrowLocalAutoCoresParallelParams<VertexIdxT<GraphT>, VWorkwT<GraphT>>())
         : params_(params) {}
 
     /**
@@ -153,16 +153,16 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
         std::vector<std::vector<VertexType>> newAssignments(p);
         std::vector<std::vector<VertexType>> bestNewAssignments(p);
 
-        const VWorkwT<GraphT> minWeightParallelCheck = params_.syncCostMultiplierParallelCheck * instance.SynchronisationCosts();
-        const VWorkwT<GraphT> minSuperstepWeight = params_.syncCostMultiplierMinSuperstepWeight * instance.SynchronisationCosts();
+        const VWorkwT<GraphT> minWeightParallelCheck = params_.syncCostMultiplierParallelCheck_ * instance.SynchronisationCosts();
+        const VWorkwT<GraphT> minSuperstepWeight = params_.syncCostMultiplierMinSuperstepWeight_ * instance.SynchronisationCosts();
 
         double desiredParallelism = static_cast<double>(p);
 
         VertexType totalAssigned = 0;
         supstep = 0;
 
-        while (totalAssigned < N) {
-            VertexType limit = params_.minSuperstepSize;
+        while (totalAssigned < n) {
+            VertexType limit = params_.minSuperstepSize_;
             double bestScore = 0;
             double bestParallelism = 0;
 
@@ -172,13 +172,13 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
             bool continueSuperstepAttempts = true;
 
             while (continueSuperstepAttempts) {
-                for (unsigned p = 0; p < p; p++) {
-                    newAssignments[p].clear();
+                for (unsigned proc = 0; proc < p; proc++) {
+                    newAssignments[proc].clear();
                 }
                 futureReady.clear();
 
-                for (unsigned p = 0; p < p; p++) {
-                    procReady[p].clear();
+                for (unsigned proc = 0; proc < p; proc++) {
+                    procReady[proc].clear();
                 }
 
                 readyIter = ready.begin();
@@ -225,7 +225,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                         if (schedule.AssignedProcessor(succ) == UINT_MAX) {
                             schedule.SetAssignedProcessor(succ, 0);
                         } else if (schedule.AssignedProcessor(succ) != 0) {
-                            schedule.SetAssignedProcessor(succ, P);
+                            schedule.SetAssignedProcessor(succ, p);
                         }
 
                         VertexType succIndex;
@@ -288,7 +288,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                             if (schedule.AssignedProcessor(succ) == UINT_MAX) {
                                 schedule.SetAssignedProcessor(succ, proc);
                             } else if (schedule.AssignedProcessor(succ) != proc) {
-                                schedule.SetAssignedProcessor(succ, P);
+                                schedule.SetAssignedProcessor(succ, p);
                             }
 
                             VertexType succIndex;
@@ -339,13 +339,13 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
 
                 if (weightLimit <= minSuperstepWeight) {
                     continueSuperstepAttempts = true;
-                    if (totalAssigned + newTotalAssigned == N) {
+                    if (totalAssigned + newTotalAssigned == n) {
                         acceptStep = true;
                         continueSuperstepAttempts = false;
                     }
                 }
 
-                if (totalAssigned + newTotalAssigned == N) {
+                if (totalAssigned + newTotalAssigned == n) {
                     continueSuperstepAttempts = false;
                 }
 
@@ -432,7 +432,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
             for (unsigned proc = 0; proc < p; ++proc) {
                 for (const VertexType &node : bestNewAssignments[proc]) {
                     schedule.SetAssignedProcessor(node, proc);
-                    schedule.setAssignedSuperstepNoUpdateNumSuperstep(node, supstep);
+                    schedule.SetAssignedSuperstepNoUpdateNumSuperstep(node, supstep);
                     ++totalAssigned;
 
                     for (const VertexType &succ : graph.Children(node)) {
@@ -487,7 +487,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                                      const VertexType endNode,
                                      const unsigned incr) const {
         for (VertexType node = startNode; node < endNode; node++) {
-            schedule.setAssignedSuperstepNoUpdateNumSuperstep(node, schedule.AssignedSuperstep(node) + incr);
+            schedule.SetAssignedSuperstepNoUpdateNumSuperstep(node, schedule.AssignedSuperstep(node) + incr);
         }
     }
 
@@ -498,7 +498,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                                              const unsigned incr) const {
         for (VertexType index = startIndex; index < endIndex; index++) {
             const VertexType node = topOrder[index];
-            schedule.setAssignedSuperstepNoUpdateNumSuperstep(node, schedule.AssignedSuperstep(node) + incr);
+            schedule.SetAssignedSuperstepNoUpdateNumSuperstep(node, schedule.AssignedSuperstep(node) + incr);
         }
     }
 
@@ -508,11 +508,11 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
 
         const VertexType n = instance.NumberOfVertices();
 
-        for (VertexType vert = 0; vert < N; ++vert) {
+        for (VertexType vert = 0; vert < n; ++vert) {
             schedule.SetAssignedProcessor(vert, UINT_MAX);
         }
 
-        VertexType numNodesPerThread = N / numThreads;
+        VertexType numNodesPerThread = n / numThreads;
         std::vector<VertexType> startNodes;
         startNodes.reserve(numThreads + 1);
         VertexType startNode = 0;
@@ -520,7 +520,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
             startNodes.push_back(startNode);
             startNode += numNodesPerThread;
         }
-        startNodes.push_back(N);
+        startNodes.push_back(n);
 
         static constexpr unsigned unsignedPadding = (CACHE_LINE_SIZE + sizeof(unsigned) - 1) / sizeof(unsigned);
         std::vector<unsigned> superstepsThread(numThreads * unsignedPadding, 0);
@@ -545,8 +545,8 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
         {
 #pragma omp for schedule(static, 1)
             for (unsigned thr = 0; thr < numThreads; thr++) {
-                computePartialSchedule(
-                    schedule, topOrder, posInTopOrder, startNodes[thr], startNodes[thr + 1], superstepsThread[thr * UnsignedPadding]);
+                ComputePartialSchedule(
+                    schedule, topOrder, posInTopOrder, startNodes[thr], startNodes[thr + 1], superstepsThread[thr * unsignedPadding]);
             }
 
 #pragma omp master
@@ -563,9 +563,9 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
 #pragma omp for schedule(static, 1)
             for (unsigned thr = 0; thr < numThreads; thr++) {
                 if constexpr (HasVerticesInTopOrderV<GraphT>) {
-                    incrementScheduleSupersteps(schedule, startNodes[thr], startNodes[thr + 1], supstepIncr[thr]);
+                    IncrementScheduleSupersteps(schedule, startNodes[thr], startNodes[thr + 1], supstepIncr[thr]);
                 } else {
-                    incrementScheduleSupersteps_TopOrder(
+                    IncrementScheduleSuperstepsTopOrder(
                         schedule, topOrder, startNodes[thr], startNodes[thr + 1], supstepIncr[thr]);
                 }
             }
@@ -585,18 +585,18 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
      * @return A pair containing the return status and the computed BspSchedule.
      */
     virtual ReturnStatus ComputeSchedule(BspSchedule<GraphT> &schedule) override {
-        unsigned numThreads = params_.numThreads;
+        unsigned numThreads = params_.numThreads_;
         if (numThreads == 0) {
             // numThreads = static_cast<unsigned>(std::sqrt( static_cast<double>((schedule.GetInstance().NumberOfVertices() / 1000000)))) + 1;
             numThreads
                 = static_cast<unsigned>(std::log2(static_cast<double>((schedule.GetInstance().NumberOfVertices() / 1000)))) + 1;
         }
-        numThreads = std::min(numThreads, params_.maxNumThreads);
+        numThreads = std::min(numThreads, params_.maxNumThreads_);
         if (numThreads == 0) {
             numThreads = 1;
         }
 
-        return computeScheduleParallel(schedule, numThreads);
+        return ComputeScheduleParallel(schedule, numThreads);
     }
 
     /**
