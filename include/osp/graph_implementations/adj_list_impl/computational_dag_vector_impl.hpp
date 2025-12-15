@@ -202,7 +202,7 @@ class ComputationalDagVectorImpl {
 
         numVertexTypes_ = std::max(numVertexTypes_, vertexType + 1);
 
-        return vertices_.back().id;
+        return vertices_.back().id_;
     }
 
     void SetVertexWorkWeight(const VertexIdx v, const VertexWorkWeightType workWeight) {
