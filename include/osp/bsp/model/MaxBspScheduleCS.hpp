@@ -68,11 +68,11 @@ class MaxBspScheduleCS : public BspScheduleCS<GraphT> {
     MaxBspScheduleCS(BspScheduleCS<GraphT> &&schedule) : BspScheduleCS<GraphT>(std::move(schedule)) {}
 
     MaxBspScheduleCS(const MaxBspSchedule<GraphT> &schedule) : BspScheduleCS<GraphT>(schedule) {
-        this->setAutoCommunicationSchedule();
+        this->SetAutoCommunicationSchedule();
     }
 
     MaxBspScheduleCS(MaxBspSchedule<GraphT> &&schedule) : BspScheduleCS<GraphT>(std::move(schedule)) {
-        this->setAutoCommunicationSchedule();
+        this->SetAutoCommunicationSchedule();
     }
 
     MaxBspScheduleCS(const MaxBspScheduleCS<GraphT> &schedule) = default;

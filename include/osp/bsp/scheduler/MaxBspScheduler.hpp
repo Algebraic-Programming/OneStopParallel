@@ -59,7 +59,7 @@ class MaxBspScheduler : public Scheduler<GraphT> {
         auto result = ComputeScheduleCS(tmpSchedule);
         if (result == ReturnStatus::OSP_SUCCESS || result == ReturnStatus::BEST_FOUND) {
             schedule = tmpSchedule;
-            schedule.setAutoCommunicationSchedule();
+            schedule.SetAutoCommunicationSchedule();
             return result;
         } else {
             return ReturnStatus::ERROR;
@@ -76,7 +76,7 @@ class MaxBspScheduler : public Scheduler<GraphT> {
     virtual ReturnStatus ComputeScheduleCs(MaxBspScheduleCS<GraphT> &schedule) {
         auto result = ComputeSchedule(schedule);
         if (result == ReturnStatus::OSP_SUCCESS || result == ReturnStatus::BEST_FOUND) {
-            // schedule.setAutoCommunicationSchedule();
+            // schedule.SetAutoCommunicationSchedule();
             return result;
         } else {
             return ReturnStatus::ERROR;

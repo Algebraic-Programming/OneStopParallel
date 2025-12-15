@@ -73,7 +73,7 @@ class Scheduler {
      * @brief Computes a BSP schedule with communication schedule (CS).
      *
      * This method provides a default implementation that first computes the basic BSP schedule using ComputeSchedule().
-     * If successful, it then calls setAutoCommunicationSchedule() on the schedule to set a communication schedule.
+     * If successful, it then calls SetAutoCommunicationSchedule() on the schedule to set a communication schedule.
      *
      * @param schedule The BspScheduleCS object to be computed. It contains the BspInstance.
      * @return ReturnStatus::OSP_SUCCESS or ReturnStatus::BEST_FOUND if a schedule was successfully computed,

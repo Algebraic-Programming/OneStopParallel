@@ -2007,7 +2007,7 @@ BspSchedule<GraphT> PebblingSchedule<GraphT>::ConvertToBsp() const {
 
     BspSchedule<GraphT> schedule(*instance_, nodeToProc, nodeToSupstep);
     if (schedule.SatisfiesPrecedenceConstraints() && schedule.satisfiesNodeTypeConstraints()) {
-        schedule.setAutoCommunicationSchedule();
+        schedule.SetAutoCommunicationSchedule();
         return schedule;
     } else {
         std::cout << "ERROR: no direct conversion to Bsp schedule exists, using dummy schedule instead." << std::endl;

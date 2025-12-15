@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(HillClimbingForCommSchedule) {
 
     BspSchedule<Graph> schedule = initial;
     BspScheduleCS<Graph> initialCs(std::move(initial));
-    // initial_cs.setAutoCommunicationSchedule();
+    // initial_cs.SetAutoCommunicationSchedule();
     initialCs.setEagerCommunicationSchedule();
     BOOST_CHECK_EQUAL(initialCs.hasValidCommSchedule(), true);
 
