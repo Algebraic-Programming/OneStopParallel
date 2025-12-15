@@ -39,7 +39,7 @@ limitations under the License.
 
 namespace osp {
 
-static constexpr unsigned cacheLineSize = 64;
+static constexpr std::size_t CACHE_LINE_SIZE = 64;
 
 template <typename VertT, typename WeightT>
 struct GrowLocalAutoCoresParallelParams {
@@ -68,15 +68,15 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
   private:
     using VertexType = VertexIdxT<GraphT>;
 
-    GrowLocalAutoCoresParallel_Params<VertexIdxT<GraphT>, VWorkwT<GraphT>> params;
+    GrowLocalAutoCoresParallel_Params<VertexIdxT<GraphT>, VWorkwT<GraphT>> params_;
 
   public:
     /**
      * @brief Default constructor for GrowLocalAutoCoresParallel.
      */
-    GrowLocalAutoCoresParallel(GrowLocalAutoCoresParallel_Params<VertexIdxT<GraphT>, VWorkwT<GraphT>> params_
+    GrowLocalAutoCoresParallel(GrowLocalAutoCoresParallel_Params<VertexIdxT<GraphT>, VWorkwT<GraphT>> params
                                = GrowLocalAutoCoresParallel_Params<VertexIdxT<GraphT>, VWorkwT<GraphT>>())
-        : params(params_) {}
+        : params_(params) {}
 
     /**
      * @brief Default destructor for GrowLocalAutoCoresParallel.
@@ -153,16 +153,16 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
         std::vector<std::vector<VertexType>> newAssignments(p);
         std::vector<std::vector<VertexType>> bestNewAssignments(p);
 
-        const VWorkwT<GraphT> minWeightParallelCheck = params.syncCostMultiplierParallelCheck * instance.SynchronisationCosts();
-        const VWorkwT<GraphT> minSuperstepWeight = params.syncCostMultiplierMinSuperstepWeight * instance.SynchronisationCosts();
+        const VWorkwT<GraphT> minWeightParallelCheck = params_.syncCostMultiplierParallelCheck * instance.SynchronisationCosts();
+        const VWorkwT<GraphT> minSuperstepWeight = params_.syncCostMultiplierMinSuperstepWeight * instance.SynchronisationCosts();
 
         double desiredParallelism = static_cast<double>(p);
 
         VertexType totalAssigned = 0;
         supstep = 0;
 
-        while (total_assigned < N) {
-            VertexType limit = params.minSuperstepSize;
+        while (totalAssigned < N) {
+            VertexType limit = params_.minSuperstepSize;
             double bestScore = 0;
             double bestParallelism = 0;
 
@@ -200,12 +200,12 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                         break;
                     }
 
-                    newAssignments[0].push_back(chosen_node);
-                    schedule.SetAssignedProcessor(chosen_node, 0);
+                    newAssignments[0].push_back(chosenNode);
+                    schedule.SetAssignedProcessor(chosenNode, 0);
                     newTotalAssigned++;
-                    weightLimit += graph.VertexWorkWeight(chosen_node);
+                    weightLimit += graph.VertexWorkWeight(chosenNode);
 
-                    for (const VertexType &succ : graph.Children(chosen_node)) {
+                    for (const VertexType &succ : graph.Children(chosenNode)) {
                         if constexpr (HasVerticesInTopOrderV<GraphT>) {
                             if constexpr (HasChildrenInVertexOrderV<GraphT>) {
                                 if (succ >= endNode) {
@@ -246,12 +246,12 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                     }
                 }
 
-                totalWeightAssigned += weight_limit;
+                totalWeightAssigned += weightLimit;
 
                 // Processors 1 through P-1
                 for (unsigned proc = 1; proc < p; ++proc) {
                     VWorkwT<GraphT> currentWeightAssigned = 0;
-                    while (current_weight_assigned < weight_limit) {
+                    while (currentWeightAssigned < weightLimit) {
                         VertexType chosenNode = std::numeric_limits<VertexType>::max();
                         if (!procReady[proc].empty()) {
                             chosenNode = *procReady[proc].begin();
@@ -263,12 +263,12 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                             break;
                         }
 
-                        newAssignments[proc].push_back(chosen_node);
-                        schedule.SetAssignedProcessor(chosen_node, proc);
+                        newAssignments[proc].push_back(chosenNode);
+                        schedule.SetAssignedProcessor(chosenNode, proc);
                         newTotalAssigned++;
-                        currentWeightAssigned += graph.VertexWorkWeight(chosen_node);
+                        currentWeightAssigned += graph.VertexWorkWeight(chosenNode);
 
-                        for (const VertexType &succ : graph.Children(chosen_node)) {
+                        for (const VertexType &succ : graph.Children(chosenNode)) {
                             if constexpr (HasVerticesInTopOrderV<GraphT>) {
                                 if constexpr (HasChildrenInVertexOrderV<GraphT>) {
                                     if (succ >= endNode) {
@@ -309,17 +309,17 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                         }
                     }
 
-                    weightLimit = std::max(weight_limit, current_weight_assigned);
-                    totalWeightAssigned += current_weight_assigned;
+                    weightLimit = std::max(weightLimit, currentWeightAssigned);
+                    totalWeightAssigned += currentWeightAssigned;
                 }
 
                 bool acceptStep = false;
 
-                double score = static_cast<double>(total_weight_assigned)
-                               / static_cast<double>(weight_limit + instance.SynchronisationCosts());
+                double score = static_cast<double>(totalWeightAssigned)
+                               / static_cast<double>(weightLimit + instance.SynchronisationCosts());
                 double parallelism = 0;
                 if (weightLimit > 0) {
-                    parallelism = static_cast<double>(total_weight_assigned) / static_cast<double>(weight_limit);
+                    parallelism = static_cast<double>(totalWeightAssigned) / static_cast<double>(weightLimit);
                 }
 
                 if (score > 0.97 * bestScore) {    // It is possible to make this less strict, i.e. score > 0.98 * best_score.
@@ -339,25 +339,25 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
 
                 if (weightLimit <= minSuperstepWeight) {
                     continueSuperstepAttempts = true;
-                    if (totalAssigned + new_total_assigned == N) {
+                    if (totalAssigned + newTotalAssigned == N) {
                         acceptStep = true;
                         continueSuperstepAttempts = false;
                     }
                 }
 
-                if (totalAssigned + new_total_assigned == N) {
+                if (totalAssigned + newTotalAssigned == N) {
                     continueSuperstepAttempts = false;
                 }
 
                 // undo proc assingments and predec increases in any case
                 for (unsigned proc = 0; proc < p; ++proc) {
-                    for (const VertexType &node : new_assignments[proc]) {
+                    for (const VertexType &node : newAssignments[proc]) {
                         schedule.SetAssignedProcessor(node, UINT_MAX);
                     }
                 }
 
                 for (unsigned proc = 0; proc < p; ++proc) {
-                    for (const VertexType &node : new_assignments[proc]) {
+                    for (const VertexType &node : newAssignments[proc]) {
                         for (const VertexType &succ : graph.Children(node)) {
                             if constexpr (HasVerticesInTopOrderV<GraphT>) {
                                 if constexpr (HasChildrenInVertexOrderV<GraphT>) {
@@ -388,7 +388,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                 }
 
                 for (unsigned proc = 0; proc < p; ++proc) {
-                    for (const VertexType &node : new_assignments[proc]) {
+                    for (const VertexType &node : newAssignments[proc]) {
                         for (const VertexType &succ : graph.Children(node)) {
                             if constexpr (HasVerticesInTopOrderV<GraphT>) {
                                 if constexpr (HasChildrenInVertexOrderV<GraphT>) {
@@ -412,7 +412,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                 }
 
                 if (acceptStep) {
-                    bestNewAssignments.swap(new_assignments);
+                    bestNewAssignments.swap(newAssignments);
                     bestFutureReady.swap(futureReady);
                     bestProcReady.swap(procReady);
                     bestReadyIter = readyIter;
@@ -424,16 +424,16 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
 
             // apply best iteration
             ready.erase(ready.begin(), bestReadyIter);
-            ready.insert(best_futureReady.begin(), best_futureReady.end());
+            ready.insert(bestFutureReady.begin(), bestFutureReady.end());
             for (unsigned proc = 0; proc < p; proc++) {
-                ready.merge(best_procReady[proc]);
+                ready.merge(bestProcReady[proc]);
             }
 
             for (unsigned proc = 0; proc < p; ++proc) {
-                for (const VertexType &node : best_new_assignments[proc]) {
+                for (const VertexType &node : bestNewAssignments[proc]) {
                     schedule.SetAssignedProcessor(node, proc);
                     schedule.setAssignedSuperstepNoUpdateNumSuperstep(node, supstep);
-                    ++total_assigned;
+                    ++totalAssigned;
 
                     for (const VertexType &succ : graph.Children(node)) {
                         if constexpr (HasVerticesInTopOrderV<GraphT>) {
@@ -522,7 +522,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
         }
         startNodes.push_back(N);
 
-        static constexpr unsigned unsignedPadding = (cacheLineSize + sizeof(unsigned) - 1) / sizeof(unsigned);
+        static constexpr unsigned unsignedPadding = (CACHE_LINE_SIZE + sizeof(unsigned) - 1) / sizeof(unsigned);
         std::vector<unsigned> superstepsThread(numThreads * unsignedPadding, 0);
         std::vector<unsigned> supstepIncr(numThreads, 0);
         unsigned incr = 0;
@@ -585,13 +585,13 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
      * @return A pair containing the return status and the computed BspSchedule.
      */
     virtual ReturnStatus ComputeSchedule(BspSchedule<GraphT> &schedule) override {
-        unsigned numThreads = params.numThreads;
+        unsigned numThreads = params_.numThreads;
         if (numThreads == 0) {
             // numThreads = static_cast<unsigned>(std::sqrt( static_cast<double>((schedule.GetInstance().NumberOfVertices() / 1000000)))) + 1;
             numThreads
                 = static_cast<unsigned>(std::log2(static_cast<double>((schedule.GetInstance().NumberOfVertices() / 1000)))) + 1;
         }
-        numThreads = std::min(numThreads, params.maxNumThreads);
+        numThreads = std::min(numThreads, params_.maxNumThreads);
         if (numThreads == 0) {
             numThreads = 1;
         }
