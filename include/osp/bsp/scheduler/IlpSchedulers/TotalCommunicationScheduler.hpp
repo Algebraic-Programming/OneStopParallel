@@ -209,13 +209,13 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
             for (unsigned step = 0; step < numStep_; step++) {
                 VWorkwT<GraphT> maxWork = 0;
                 for (unsigned proc = 0; proc < instancePtr_->NumberOfProcessors(); proc++) {
-                    if (max_work < work[step][proc]) {
+                    if (maxWork < work[step][proc]) {
                         maxWork = work[step][proc];
                     }
                 }
 
                 assert(step <= std::numeric_limits<int>::max());
-                SetSolution((*maxWorkSuperstepVarPtr_)[static_cast<int>(step)], max_work);
+                SetSolution((*maxWorkSuperstepVarPtr_)[static_cast<int>(step)], maxWork);
             }
 
             if (instancePtr_->GetArchitecture().IsNumaArchitecture()) {
@@ -225,9 +225,9 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
                             int edgeId = 0;
                             for (const auto &ep : edge_view(instancePtr_->GetComputationalDag())) {
                                 if (schedule.AssignedProcessor(ep.source) == p1 && schedule.AssignedProcessor(ep.target) == p2) {
-                                    SetSolution((*edgeVarsPtr_)[p1][p2][edge_id], 1.0);
+                                    SetSolution((*edgeVarsPtr_)[p1][p2][edgeId], 1.0);
                                 } else {
-                                    SetSolution((*edgeVarsPtr_)[p1][p2][edge_id], 0.0);
+                                    SetSolution((*edgeVarsPtr_)[p1][p2][edgeId], 0.0);
                                 }
 
                                 edgeId++;
@@ -240,9 +240,9 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
                 int edgeId = 0;
                 for (const auto &ep : edge_view(instancePtr_->GetComputationalDag())) {
                     if (schedule.AssignedProcessor(ep.source) != schedule.AssignedProcessor(ep.target)) {
-                        SetSolution((*edgeVarsPtr_)[0][0][edge_id], 1.0);
+                        SetSolution((*edgeVarsPtr_)[0][0][edgeId], 1.0);
                     } else {
-                        SetSolution((*edgeVarsPtr_)[0][0][edge_id], 0.0);
+                        SetSolution((*edgeVarsPtr_)[0][0][edgeId], 0.0);
                     }
 
                     edgeId++;
@@ -272,7 +272,7 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
         for (const auto &node : instance.Vertices()) {
             for (unsigned processor = 0; processor < instance.NumberOfProcessors(); processor++) {
                 for (unsigned step = 0; step < maxNumberSupersteps_; step++) {
-                    if (node_to_processor_superstep_var[node][processor][step].Get(COPT_DBLINFO_VALUE) >= .99) {
+                    if (nodeToProcessorSuperstepVar_[node][processor][step].Get(COPT_DBLINFO_VALUE) >= .99) {
                         schedule.SetAssignedProcessor(node, processor);
                         schedule.SetAssignedSuperstep(node, step);
                     }
@@ -281,7 +281,7 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
         }
 
         if (cleanup) {
-            node_to_processor_superstep_var.clear();
+            nodeToProcessorSuperstepVar_.clear();
         }
     }
 
@@ -289,11 +289,11 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
         for (unsigned step = 0; step < maxNumberSupersteps_; step++) {
             if (step < initialSchedule_->NumberOfSupersteps()) {
                 assert(step <= std::numeric_limits<int>::max());
-                model.SetMipStart(superstep_used_var[static_cast<int>(step)], 1);
+                model.SetMipStart(superstepUsedVar_[static_cast<int>(step)], 1);
 
             } else {
                 assert(step <= std::numeric_limits<int>::max());
-                model.SetMipStart(superstep_used_var[static_cast<int>(step)], 0);
+                model.SetMipStart(superstepUsedVar_[static_cast<int>(step)], 0);
             }
         }
 
@@ -302,18 +302,18 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
                 for (unsigned step = 0; step < maxNumberSupersteps_; step++) {
                     if (proc == initialSchedule_->AssignedProcessor(node) && step == initialSchedule_->AssignedSuperstep(node)) {
                         assert(step <= std::numeric_limits<int>::max());
-                        model.SetMipStart(node_to_processor_superstep_var[node][proc][static_cast<int>(step)], 1);
+                        model.SetMipStart(nodeToProcessorSuperstepVar_[node][proc][static_cast<int>(step)], 1);
 
                     } else {
                         assert(step <= std::numeric_limits<int>::max());
-                        model.SetMipStart(node_to_processor_superstep_var[node][proc][static_cast<int>(step)], 0);
+                        model.SetMipStart(nodeToProcessorSuperstepVar_[node][proc][static_cast<int>(step)], 0);
                     }
                 }
             }
         }
 
         std::vector<std::vector<VWorkwT<GraphT>>> work(
-            max_number_supersteps, std::vector<VWorkwT<GraphT>>(initial_schedule->GetInstance().NumberOfProcessors(), 0));
+            maxNumberSupersteps_, std::vector<VWorkwT<GraphT>>(initial_schedule->GetInstance().NumberOfProcessors(), 0));
 
         for (const auto &node : initialSchedule_->GetInstance().Vertices()) {
             work[initialSchedule_->AssignedSuperstep(node)][initialSchedule_->AssignedProcessor(node)]
@@ -323,13 +323,13 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
         for (unsigned step = 0; step < maxNumberSupersteps_; step++) {
             VWorkwT<GraphT> maxWork = 0;
             for (unsigned i = 0; i < initialSchedule_->GetInstance().NumberOfProcessors(); i++) {
-                if (max_work < work[step][i]) {
+                if (maxWork < work[step][i]) {
                     maxWork = work[step][i];
                 }
             }
 
             assert(step <= std::numeric_limits<int>::max());
-            model.SetMipStart(max_work_superstep_var[static_cast<int>(step)], max_work);
+            model.SetMipStart(maxWorkSuperstepVar_[static_cast<int>(step)], maxWork);
         }
 
         model.LoadMipStart();
@@ -342,16 +342,16 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
         */
 
         // variables indicating if superstep is used at all
-        superstep_used_var = model.AddVars(static_cast<int>(max_number_supersteps), COPT_BINARY, "superstep_used");
+        superstepUsedVar_ = model.AddVars(static_cast<int>(maxNumberSupersteps_), COPT_BINARY, "superstep_used");
 
-        node_to_processor_superstep_var = std::vector<std::vector<VarArray>>(
+        nodeToProcessorSuperstepVar_ = std::vector<std::vector<VarArray>>(
             instance.NumberOfVertices(), std::vector<VarArray>(instance.NumberOfProcessors()));
         assert(maxNumberSupersteps_ <= std::numeric_limits<int>::max());
         // variables for assigments of nodes to processor and superstep
         for (const auto &node : instance.Vertices()) {
             for (unsigned int processor = 0; processor < instance.NumberOfProcessors(); processor++) {
-                node_to_processor_superstep_var[node][processor]
-                    = model.AddVars(static_cast<int>(max_number_supersteps), COPT_BINARY, "node_to_processor_superstep");
+                nodeToProcessorSuperstepVar_[node][processor]
+                    = model.AddVars(static_cast<int>(maxNumberSupersteps_), COPT_BINARY, "node_to_processor_superstep");
             }
         }
 
@@ -367,7 +367,7 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
                 for (unsigned step = 0; step < maxNumberSupersteps_; step++) {
                     Expr expr;
                     for (unsigned int node = 0; node < instance.NumberOfVertices(); node++) {
-                        expr += node_to_processor_superstep_var[node][processor][static_cast<int>(step)]
+                        expr += nodeToProcessorSuperstepVar_[node][processor][static_cast<int>(step)]
                                 * instance.GetComputationalDag().VertexMemWeight(node);
                     }
                     model.AddConstr(expr <= instance.GetArchitecture().memoryBound(processor));
@@ -376,10 +376,10 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
         }
 
         //  use consecutive supersteps starting from 0
-        model.AddConstr(superstep_used_var[0] == 1);
+        model.AddConstr(superstepUsedVar_[0] == 1);
 
         for (unsigned int step = 0; step < maxNumberSupersteps_ - 1; step++) {
-            model.AddConstr(superstep_used_var[static_cast<int>(step)] >= superstep_used_var[static_cast<int>(step + 1)]);
+            model.AddConstr(superstepUsedVar_[static_cast<int>(step)] >= superstepUsedVar_[static_cast<int>(step + 1)]);
         }
 
         // superstep is used at all
@@ -387,11 +387,11 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
             Expr expr;
             for (const auto &node : instance.Vertices()) {
                 for (unsigned int processor = 0; processor < instance.NumberOfProcessors(); processor++) {
-                    expr += node_to_processor_superstep_var[node][processor][static_cast<int>(step)];
+                    expr += nodeToProcessorSuperstepVar_[node][processor][static_cast<int>(step)];
                 }
             }
             model.AddConstr(expr <= static_cast<double>(instance.NumberOfVertices() * instance.NumberOfProcessors())
-                                        * superstep_used_var.GetVar(static_cast<int>(step)));
+                                        * superstepUsedVar_.GetVar(static_cast<int>(step)));
         }
 
         // nodes are assigend depending on whether recomputation is allowed or not
@@ -400,7 +400,7 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
             for (unsigned int processor = 0; processor < instance.NumberOfProcessors(); processor++) {
                 assert(maxNumberSupersteps_ <= std::numeric_limits<int>::max());
                 for (unsigned int step = 0; step < maxNumberSupersteps_; step++) {
-                    expr += node_to_processor_superstep_var[node][processor].GetVar(static_cast<int>(step));
+                    expr += nodeToProcessorSuperstepVar_[node][processor].GetVar(static_cast<int>(step));
                 }
             }
 
@@ -417,13 +417,13 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
 
                         for (unsigned p2 = 0; p2 < instance.NumberOfProcessors(); p2++) {
                             for (unsigned stepPrime = 0; stepPrime < step; stepPrime++) {
-                                expr1 += node_to_processor_superstep_var[source][p2][static_cast<int>(step_prime)];
+                                expr1 += nodeToProcessorSuperstepVar_[source][p2][static_cast<int>(stepPrime)];
                             }
                         }
 
-                        expr1 += node_to_processor_superstep_var[source][processor][static_cast<int>(step)];
+                        expr1 += nodeToProcessorSuperstepVar_[source][processor][static_cast<int>(step)];
 
-                        model.AddConstr(node_to_processor_superstep_var[node][processor][static_cast<int>(step)] <= expr1);
+                        model.AddConstr(nodeToProcessorSuperstepVar_[node][processor][static_cast<int>(step)] <= expr1);
                     }
                 }
             }
@@ -432,14 +432,14 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
         Expr totalEdgesCut;
 
         if (instance.GetArchitecture().IsNumaArchitecture()) {
-            edge_vars = std::vector<std::vector<VarArray>>(instance.NumberOfProcessors(),
+            edgeVars_ = std::vector<std::vector<VarArray>>(instance.NumberOfProcessors(),
                                                            std::vector<VarArray>(instance.NumberOfProcessors()));
 
             for (unsigned int p1 = 0; p1 < instance.NumberOfProcessors(); p1++) {
                 for (unsigned int p2 = 0; p2 < instance.NumberOfProcessors(); p2++) {
                     if (p1 != p2) {
                         assert(instance.GetComputationalDag().NumEdges() <= std::numeric_limits<int>::max());
-                        edge_vars[p1][p2]
+                        edgeVars_[p1][p2]
                             = model.AddVars(static_cast<int>(instance.GetComputationalDag().NumEdges()), COPT_BINARY, "edge");
 
                         int edgeId = 0;
@@ -447,12 +447,12 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
                             Expr expr1, expr2;
                             assert(maxNumberSupersteps_ <= std::numeric_limits<int>::max());
                             for (unsigned step = 0; step < maxNumberSupersteps_; step++) {
-                                expr1 += node_to_processor_superstep_var[ep.source][p1][static_cast<int>(step)];
-                                expr2 += node_to_processor_superstep_var[ep.target][p2][static_cast<int>(step)];
+                                expr1 += nodeToProcessorSuperstepVar_[ep.source][p1][static_cast<int>(step)];
+                                expr2 += nodeToProcessorSuperstepVar_[ep.target][p2][static_cast<int>(step)];
                             }
-                            model.AddConstr(edge_vars[p1][p2][edge_id] >= expr1 + expr2 - 1.001);
+                            model.AddConstr(edgeVars_[p1][p2][edgeId] >= expr1 + expr2 - 1.001);
 
-                            total_edges_cut += edge_vars[p1][p2][edge_id]
+                            totalEdgesCut += edgeVars_[p1][p2][edgeId]
                                                * instance.GetComputationalDag().VertexCommWeight(ep.source)
                                                * instance.SendCosts(p1, p2);
 
@@ -463,29 +463,29 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
             }
 
         } else {
-            edge_vars = std::vector<std::vector<VarArray>>(1, std::vector<VarArray>(1));
+            edgeVars_ = std::vector<std::vector<VarArray>>(1, std::vector<VarArray>(1));
             assert(instance.GetComputationalDag().NumEdges() <= std::numeric_limits<int>::max());
-            edge_vars[0][0] = model.AddVars(static_cast<int>(instance.GetComputationalDag().NumEdges()), COPT_BINARY, "edge");
+            edgeVars_[0][0] = model.AddVars(static_cast<int>(instance.GetComputationalDag().NumEdges()), COPT_BINARY, "edge");
 
             int edgeId = 0;
             for (const auto &ep : edge_view(instance.GetComputationalDag())) {
                 for (unsigned p1 = 0; p1 < instance.NumberOfProcessors(); p1++) {
                     Expr expr1, expr2;
                     for (unsigned step = 0; step < maxNumberSupersteps_; step++) {
-                        expr1 += node_to_processor_superstep_var[ep.source][p1][static_cast<int>(step)];
+                        expr1 += nodeToProcessorSuperstepVar_[ep.source][p1][static_cast<int>(step)];
                     }
 
                     for (unsigned p2 = 0; p2 < instance.NumberOfProcessors(); p2++) {
                         if (p1 != p2) {
                             for (unsigned step = 0; step < maxNumberSupersteps_; step++) {
-                                expr2 += node_to_processor_superstep_var[ep.target][p2][static_cast<int>(step)];
+                                expr2 += nodeToProcessorSuperstepVar_[ep.target][p2][static_cast<int>(step)];
                             }
                         }
                     }
-                    model.AddConstr(edge_vars[0][0][edge_id] >= expr1 + expr2 - 1.001);
+                    model.AddConstr(edgeVars_[0][0][edgeId] >= expr1 + expr2 - 1.001);
                 }
 
-                total_edges_cut += instance.GetComputationalDag().VertexCommWeight(ep.source) * edge_vars[0][0][edge_id];
+                totalEdgesCut += instance.GetComputationalDag().VertexCommWeight(ep.source) * edgeVars_[0][0][edgeId];
 
                 edgeId++;
             }
@@ -496,13 +496,13 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
         if (ignoreWorkloadBalance_) {
             for (unsigned step = 0; step < maxNumberSupersteps_; step++) {
                 assert(step <= std::numeric_limits<int>::max());
-                expr += instance.SynchronisationCosts() * superstep_used_var[static_cast<int>(step)];
+                expr += instance.SynchronisationCosts() * superstepUsedVar_[static_cast<int>(step)];
             }
 
         } else {
             assert(maxNumberSupersteps_ <= std::numeric_limits<int>::max());
-            max_work_superstep_var = model.AddVars(static_cast<int>(max_number_supersteps), COPT_CONTINUOUS, "max_work_superstep");
-            // coptModel.AddVars(max_number_supersteps, 0, COPT_INFINITY, 0, COPT_INTEGER, "max_work_superstep");
+            maxWorkSuperstepVar_ = model.AddVars(static_cast<int>(maxNumberSupersteps_), COPT_CONTINUOUS, "max_work_superstep");
+            // coptModel.AddVars(maxNumberSupersteps_, 0, COPT_INFINITY, 0, COPT_INTEGER, "max_work_superstep");
 
             for (unsigned int step = 0; step < maxNumberSupersteps_; step++) {
                 assert(step <= std::numeric_limits<int>::max());
@@ -510,17 +510,17 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
                     Expr exprWork;
                     for (const auto &node : instance.Vertices()) {
                         expr_work += instance.GetComputationalDag().VertexWorkWeight(node)
-                                     * node_to_processor_superstep_var[node][processor][static_cast<int>(step)];
+                                     * nodeToProcessorSuperstepVar_[node][processor][static_cast<int>(step)];
                     }
 
-                    model.AddConstr(max_work_superstep_var[static_cast<int>(step)] >= expr_work);
+                    model.AddConstr(maxWorkSuperstepVar_[static_cast<int>(step)] >= expr_work);
                 }
             }
 
             for (unsigned step = 0; step < maxNumberSupersteps_; step++) {
                 assert(step <= std::numeric_limits<int>::max());
-                expr += max_work_superstep_var[static_cast<int>(step)]
-                        + instance.SynchronisationCosts() * superstep_used_var[static_cast<int>(step)];
+                expr += maxWorkSuperstepVar_[static_cast<int>(step)]
+                        + instance.SynchronisationCosts() * superstepUsedVar_[static_cast<int>(step)];
             }
         }
 
@@ -529,7 +529,7 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
           */
 
         double commCost = static_cast<double>(instance.CommunicationCosts()) / instance.NumberOfProcessors();
-        model.SetObjective(comm_cost * total_edges_cut + expr - instance.SynchronisationCosts(), COPT_MINIMIZE);
+        model.SetObjective(comm_cost * totalEdgesCut + expr - instance.SynchronisationCosts(), COPT_MINIMIZE);
     }
 
   public:
@@ -546,12 +546,12 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
           solutionCallback_(),
           heuristicCallback_(),
           maxNumberSupersteps_(steps) {
-        heuristic_callback.maxWorkSuperstepVarPtr_ = &max_work_superstep_var;
-        heuristic_callback.superstepUsedVarPtr_ = &superstep_used_var;
-        heuristic_callback.nodeToProcessorSuperstepVarPtr_ = &node_to_processor_superstep_var;
-        heuristic_callback.edgeVarsPtr_ = &edge_vars;
+        heuristicCallback_.maxWorkSuperstepVarPtr_ = &maxWorkSuperstepVar_;
+        heuristicCallback_.superstepUsedVarPtr_ = &superstepUsedVar_;
+        heuristicCallback_.nodeToProcessorSuperstepVarPtr_ = &nodeToProcessorSuperstepVar_;
+        heuristicCallback_.edgeVarsPtr_ = &edgeVars_;
 
-        solution_callback.nodeToProcessorSuperstepVarPtr_ = &node_to_processor_superstep_var;
+        solution_callback.nodeToProcessorSuperstepVarPtr_ = &nodeToProcessorSuperstepVar_;
     }
 
     TotalCommunicationScheduler(const BspSchedule<GraphT> &schedule)
@@ -567,12 +567,12 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
           solutionCallback_(),
           heuristicCallback_(),
           maxNumberSupersteps_(schedule.NumberOfSupersteps()) {
-        heuristic_callback.maxWorkSuperstepVarPtr_ = &max_work_superstep_var;
-        heuristic_callback.superstepUsedVarPtr_ = &superstep_used_var;
-        heuristic_callback.nodeToProcessorSuperstepVarPtr_ = &node_to_processor_superstep_var;
-        heuristic_callback.edgeVarsPtr_ = &edge_vars;
+        heuristicCallback_.maxWorkSuperstepVarPtr_ = &maxWorkSuperstepVar_;
+        heuristicCallback_.superstepUsedVarPtr_ = &superstepUsedVar_;
+        heuristicCallback_.nodeToProcessorSuperstepVarPtr_ = &nodeToProcessorSuperstepVar_;
+        heuristicCallback_.edgeVarsPtr_ = &edgeVars_;
 
-        solution_callback.nodeToProcessorSuperstepVarPtr_ = &node_to_processor_superstep_var;
+        solution_callback.nodeToProcessorSuperstepVarPtr_ = &nodeToProcessorSuperstepVar_;
     }
 
     virtual ~TotalCommunicationScheduler() = default;
@@ -628,7 +628,7 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
         if (useLkHeuristicCallback_) {
             heuristicCallback_.instancePtr_ = &instance;
             heuristicCallback_.numStep_ = maxNumberSupersteps_;
-            model.SetCallback(&heuristic_callback, COPT_CBCONTEXT_MIPSOL);
+            model.SetCallback(&heuristicCallback_, COPT_CBCONTEXT_MIPSOL);
         }
 
         model.Solve();
