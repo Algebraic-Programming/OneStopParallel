@@ -79,7 +79,7 @@ class ComputationalDagVectorImpl {
     explicit ComputationalDagVectorImpl(const VertexIdx numVertices)
         : vertices_(numVertices), outNeigbors_(numVertices), inNeigbors_(numVertices), numEdges_(0), numVertexTypes_(0) {
         for (VertexIdx i = 0; i < numVertices; ++i) {
-            vertices_[i].id = i;
+            vertices_[i].id_ = i;
         }
     }
 

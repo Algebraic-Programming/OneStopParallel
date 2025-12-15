@@ -145,7 +145,7 @@ bool ReadComputationalDagHyperdagFormat(const std::string &filename, GraphT &gra
 }
 
 template <typename GraphT>
-bool ReadComputationalDagHyperdagFormatDb(std::ifstream &infile, GraphT &graph) {
+bool ReadComputationalDagHyperdagFormatDB(std::ifstream &infile, GraphT &graph) {
     std::string line;
 
     // Skip comment lines
@@ -272,7 +272,7 @@ bool ReadComputationalDagHyperdagFormatDb(std::ifstream &infile, GraphT &graph) 
 }
 
 template <typename GraphT>
-bool ReadComputationalDagHyperdagFormatDb(const std::string &filename, GraphT &graph) {
+bool ReadComputationalDagHyperdagFormatDB(const std::string &filename, GraphT &graph) {
     // Optional: limit file extension for safety
     if (std::filesystem::path(filename).extension() != ".hdag") {
         std::cerr << "Error: Only .hdag files are accepted.\n";
@@ -290,7 +290,7 @@ bool ReadComputationalDagHyperdagFormatDb(const std::string &filename, GraphT &g
         return false;
     }
 
-    return ReadComputationalDagHyperdagFormatDb(infile, graph);
+    return ReadComputationalDagHyperdagFormatDB(infile, graph);
 }
 
 }    // namespace file_reader

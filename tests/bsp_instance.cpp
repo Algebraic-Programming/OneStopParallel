@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(TestInstanceBicgstab) {
         std::cout << cwd << std::endl;
     }
 
-    bool status = file_reader::ReadComputationalDagHyperdagFormatDb((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(),
+    bool status = file_reader::ReadComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(),
                                                                     instance.GetComputationalDag());
 
     BOOST_CHECK(status);

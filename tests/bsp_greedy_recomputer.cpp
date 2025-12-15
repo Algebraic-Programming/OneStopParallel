@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(TestRecomputer) {
     BspScheduleRecomp<Graph> schedule(instance1);
     GreedyRecomputer<Graph> scheduler;
     scheduler.computeRecompSchedule(scheduleInitCs1, schedule);
-    BOOST_CHECK(schedule.satisfiesConstraints());
+    BOOST_CHECK(schedule.SatisfiesConstraints());
     BOOST_CHECK(schedule.ComputeCosts() < scheduleInitCs1.ComputeCosts());
     std::cout << "Cost decrease by greedy recomp: " << scheduleInitCs1.ComputeCosts() << " -> " << schedule.ComputeCosts()
               << std::endl;
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(TestRecomputer) {
     BOOST_CHECK(scheduleInitCs2.HasValidCommSchedule());
 
     scheduler.computeRecompSchedule(scheduleInitCs2, schedule);
-    BOOST_CHECK(schedule.satisfiesConstraints());
+    BOOST_CHECK(schedule.SatisfiesConstraints());
     BOOST_CHECK(schedule.ComputeCosts() < scheduleInitCs2.ComputeCosts());
     std::cout << "Cost decrease by greedy recomp: " << scheduleInitCs2.ComputeCosts() << " -> " << schedule.ComputeCosts()
               << std::endl;

@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(TestFull) {
     BspScheduleRecomp<graph> scheduleRecomp(instance);
     schedulerRecomp.setTimeLimitSeconds(10);
     schedulerRecomp.computeScheduleRecomp(schedule_recomp);
-    BOOST_CHECK(scheduleRecomp.satisfiesConstraints());
+    BOOST_CHECK(scheduleRecomp.SatisfiesConstraints());
 
     // WITH INITIALIZATION
 
@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(TestFull) {
     schedulerInit2.setTimeLimitSeconds(10);
     const auto resultInit2 = scheduler_init2.computeScheduleRecomp(schedule_improved2);
     BOOST_CHECK_EQUAL(ReturnStatus::BEST_FOUND, result_init2);
-    BOOST_CHECK(scheduleImproved2.satisfiesConstraints());
+    BOOST_CHECK(scheduleImproved2.SatisfiesConstraints());
 
     // initialize with recomputing schedule, return recomputing schedule
     BspScheduleRecomp<graph> scheduleImproved3(instance), schedule_init3(schedule_init_cs);
@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE(TestFull) {
     SchedulerInit3.setTimeLimitSeconds(10);
     const auto resultInit3 = scheduler_init3.computeScheduleRecomp(schedule_improved3);
     BOOST_CHECK_EQUAL(ReturnStatus::BEST_FOUND, result_init3);
-    BOOST_CHECK(scheduleImproved3.satisfiesConstraints());
+    BOOST_CHECK(scheduleImproved3.SatisfiesConstraints());
 
     // with vertex types
     BspInstance<graph> instanceTyped = instance;

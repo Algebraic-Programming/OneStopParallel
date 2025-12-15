@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(TestCostModelsSimpleDag) {
     // SS2: max(P0=0, P1=40) = 40
     // SS3: max(P0=0, P1=50) = 50
     // Total work = 10 + 30 + 40 + 50 = 130
-    BOOST_CHECK_EQUAL(schedule.computeWorkCosts(), 130);
+    BOOST_CHECK_EQUAL(schedule.ComputeWorkCosts(), 130);
 
     // LazyCommunicationCost
     // Sends/receives at step_needed - staleness (staleness=1)
