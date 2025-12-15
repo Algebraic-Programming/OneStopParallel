@@ -329,15 +329,15 @@ class VariancePartitioner : public LoadBalancerBase<GraphT, InterpolationT> {
                         if (numUnallocatedParents[chld] == 0) {
                             // std::cout << "Inserting child " << chld << " into ready.\n";
                             ready.insert(std::make_pair(chld, variancePriorities[chld]));
-                            bool is_proc_ready = true;
+                            bool isProcReady = true;
                             for (const auto &parent : graph.Parents(chld)) {
                                 if ((schedule.AssignedProcessor(parent) != proc)
                                     && (schedule.AssignedSuperstep(parent) == superstep)) {
-                                    is_proc_ready = false;
+                                    isProcReady = false;
                                     break;
                                 }
                             }
-                            if (is_proc_ready) {
+                            if (isProcReady) {
                                 procReady[proc].insert(std::make_pair(chld, variancePriorities[chld]));
                                 // std::cout << "Inserting child " << chld << " into procReady for processor " << proc
                                 // << ".\n";
