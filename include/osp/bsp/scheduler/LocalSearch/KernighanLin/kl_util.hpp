@@ -48,7 +48,7 @@ struct RewardPenaltyStrategy {
 };
 
 template <typename VertexType>
-struct SetVertexLockManger {
+struct SetVertexLockManager {
     std::unordered_set<VertexType> lockedNodes_;
 
     void Initialize(size_t) {}
@@ -63,7 +63,7 @@ struct SetVertexLockManger {
 };
 
 template <typename VertexType>
-struct VectorVertexLockManger {
+struct VectorVertexLockManager {
     std::vector<bool> lockedNodes_;
 
     void Initialize(size_t numNodes) { lockedNodes_.resize(numNodes); }

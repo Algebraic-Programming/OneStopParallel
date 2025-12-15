@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(LongestEdgeTriangleParallel) {
         BOOST_CHECK(statusGraph);
 
         auto startTime = std::chrono::high_resolution_clock::now();
-        auto deletedEdges = long_edges_in_triangles(graph);
+        auto deletedEdges = LongEdgesInTriangles(graph);
         auto finishTime = std::chrono::high_resolution_clock::now();
 
         std::cout << "\n" << filenameGraph << std::endl;
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(LongestEdgeTriangleParallel) {
                   << std::chrono::duration_cast<std::chrono::milliseconds>(finishTime - startTime).count() << "ms" << std::endl;
 
         startTime = std::chrono::high_resolution_clock::now();
-        auto deletedEdgesParallel = long_edges_in_triangles_parallel(graph);
+        auto deletedEdgesParallel = LongEdgesInTrianglesParallel(graph);
         finishTime = std::chrono::high_resolution_clock::now();
 
         std::cout << "Time for long_edges_in_triangles_parallel: "

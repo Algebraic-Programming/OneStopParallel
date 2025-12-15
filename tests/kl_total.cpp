@@ -91,12 +91,12 @@ BOOST_AUTO_TEST_CASE(KlImproverSmokeTest) {
 
     BspSchedule schedule(instance);
 
-    schedule.setAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
-    schedule.setAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
+    schedule.SetAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
+    schedule.SetAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
 
     schedule.UpdateNumberOfSupersteps();
 
-    using KlImproverT = kl_total_comm_improver<Graph, no_local_search_memory_constraint, 1, true>;
+    using KlImproverT = KlTotalCommImprover<Graph, NoLocalSearchMemoryConstraint, 1, true>;
     KlImproverT kl;
 
     auto status = kl.ImproveSchedule(schedule);
@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE(KlImproverOnTestGraphs) {
         BOOST_CHECK_EQUAL(&schedule.GetInstance(), &instance);
         BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
 
-        kl_total_comm_improver<Graph> kl;
+        KlTotalCommImprover<Graph> kl;
 
         auto status = kl.ImproveSchedule(schedule);
 
@@ -184,14 +184,14 @@ BOOST_AUTO_TEST_CASE(KlImproverSuperstepRemovalTest) {
     BspSchedule schedule(instance);
     instance.GetArchitecture().SetSynchronisationCosts(50);
     // Create a schedule with an almost empty superstep (step 1)
-    schedule.setAssignedProcessors({0, 0, 0, 0, 1, 1, 1, 1});
-    schedule.setAssignedSupersteps({0, 0, 0, 0, 1, 2, 2, 2});
+    schedule.SetAssignedProcessors({0, 0, 0, 0, 1, 1, 1, 1});
+    schedule.SetAssignedSupersteps({0, 0, 0, 0, 1, 2, 2, 2});
 
     schedule.UpdateNumberOfSupersteps();
     unsigned originalSteps = schedule.NumberOfSupersteps();
 
-    using CostF = kl_total_comm_cost_function<Graph, double, no_local_search_memory_constraint, 1, true>;
-    kl_improver<Graph, CostF, no_local_search_memory_constraint, 1, double> kl;
+    using CostF = KlTotalCommCostFunction<Graph, double, NoLocalSearchMemoryConstraint, 1, true>;
+    KlImprover<Graph, CostF, NoLocalSearchMemoryConstraint, 1, double> kl;
 
     auto status = kl.ImproveSchedule(schedule);
 
@@ -230,34 +230,34 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
 
     BspSchedule schedule(instance);
 
-    schedule.setAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
-    schedule.setAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
+    schedule.SetAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
+    schedule.SetAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
 
     schedule.UpdateNumberOfSupersteps();
 
-    using CostF = kl_total_comm_cost_function<Graph, double, no_local_search_memory_constraint, 1, true>;
-    using KlImproverTest = kl_improver_test<Graph, CostF, no_local_search_memory_constraint, 1, double>;
+    using CostF = KlTotalCommCostFunction<Graph, double, NoLocalSearchMemoryConstraint, 1, true>;
+    using KlImproverTest = KlImproverTest<Graph, CostF, NoLocalSearchMemoryConstraint, 1, double>;
     KlImproverTest kl;
 
-    kl.setup_schedule(schedule);
+    kl.SetupSchedule(schedule);
 
-    auto &klActiveSchedule = kl.get_active_schedule();
+    auto &klActiveSchedule = kl.GetActiveSchedule();
 
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(0), 5.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(0), 0.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(1), 9.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(1), 0.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(2), 7.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(2), 6.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(3), 9.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(3), 8.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepMaxWork(0), 5.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepSecondMaxWork(0), 0.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepMaxWork(1), 9.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepSecondMaxWork(1), 0.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepMaxWork(2), 7.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepSecondMaxWork(2), 6.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepMaxWork(3), 9.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepSecondMaxWork(3), 8.0);
 
-    BOOST_CHECK_EQUAL(klActiveSchedule.num_steps(), 4);
-    BOOST_CHECK_EQUAL(klActiveSchedule.is_feasible(), true);
+    BOOST_CHECK_EQUAL(klActiveSchedule.NumSteps(), 4);
+    BOOST_CHECK_EQUAL(klActiveSchedule.IsFeasible(), true);
 
-    auto nodeSelection = kl.insert_gain_heap_test_penalty({2, 3});
+    auto nodeSelection = kl.InsertGainHeapTestPenalty({2, 3});
 
-    auto &affinity = kl.get_affinity_table();
+    auto &affinity = kl.GetAffinityTable();
 
     BOOST_CHECK_CLOSE(affinity[v3][0][0], 5.5, 0.00001);
     BOOST_CHECK_CLOSE(affinity[v3][0][1], 4.0, 0.00001);
@@ -273,41 +273,41 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
     BOOST_CHECK_CLOSE(affinity[v4][1][1], -6.5, 0.00001);
     BOOST_CHECK_CLOSE(affinity[v4][1][2], -3.5, 0.00001);
 
-    auto recomputeMaxGain = kl.run_inner_iteration_test();
+    auto recomputeMaxGain = kl.RunInnerIterationTest();
     std::cout << "------------------------recompute max_gain: { ";
     for (const auto &[key, value] : recomputeMaxGain) {
         std::cout << key << " ";
     }
     std::cout << "}" << std::endl;
 
-    BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
 
-    recomputeMaxGain = kl.run_inner_iteration_test();
+    recomputeMaxGain = kl.RunInnerIterationTest();
     std::cout << "recompute max_gain: { ";
     for (const auto &[key, value] : recomputeMaxGain) {
         std::cout << key << " ";
     }
     std::cout << "}" << std::endl;
 
-    BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
 
-    recomputeMaxGain = kl.run_inner_iteration_test();
+    recomputeMaxGain = kl.RunInnerIterationTest();
     std::cout << "recompute max_gain: { ";
     for (const auto &[key, value] : recomputeMaxGain) {
         std::cout << key << " ";
     }
     std::cout << "}" << std::endl;
 
-    BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
 
-    recomputeMaxGain = kl.run_inner_iteration_test();
+    recomputeMaxGain = kl.RunInnerIterationTest();
     std::cout << "recompute max_gain: { ";
     for (const auto &[key, value] : recomputeMaxGain) {
         std::cout << key << " ";
     }
     std::cout << "}" << std::endl;
 
-    BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
 }
 
 BOOST_AUTO_TEST_CASE(KlImproverInnerLoopPenaltyTest) {
@@ -340,58 +340,58 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopPenaltyTest) {
 
     BspSchedule schedule(instance);
 
-    schedule.setAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
-    schedule.setAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
+    schedule.SetAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
+    schedule.SetAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
 
     schedule.UpdateNumberOfSupersteps();
 
-    using CostF = kl_total_comm_cost_function<Graph, double, no_local_search_memory_constraint, 1, true>;
-    using KlImproverTest = kl_improver_test<Graph, CostF, no_local_search_memory_constraint, 1, double>;
+    using CostF = KlTotalCommCostFunction<Graph, double, NoLocalSearchMemoryConstraint, 1, true>;
+    using KlImproverTest = KlImproverTest<Graph, CostF, NoLocalSearchMemoryConstraint, 1, double>;
     KlImproverTest kl;
 
-    kl.setup_schedule(schedule);
+    kl.SetupSchedule(schedule);
 
-    // auto &kl_active_schedule = kl.get_active_schedule();
+    // auto &kl_active_schedule = kl.GetActiveSchedule();
 
-    BOOST_CHECK_CLOSE(51.5, kl.get_current_cost(), 0.00001);
+    BOOST_CHECK_CLOSE(51.5, kl.GetCurrentCost(), 0.00001);
 
-    auto nodeSelection = kl.insert_gain_heap_test_penalty({7});
+    auto nodeSelection = kl.InsertGainHeapTestPenalty({7});
 
-    auto recomputeMaxGain = kl.run_inner_iteration_test();
+    auto recomputeMaxGain = kl.RunInnerIterationTest();
     std::cout << "-----------recompute max_gain: { ";
     for (const auto &[key, value] : recomputeMaxGain) {
         std::cout << key << " ";
     }
     std::cout << "}" << std::endl;
 
-    BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
 
-    recomputeMaxGain = kl.run_inner_iteration_test();
+    recomputeMaxGain = kl.RunInnerIterationTest();
     std::cout << "recompute max_gain: { ";
     for (const auto &[key, value] : recomputeMaxGain) {
         std::cout << key << " ";
     }
     std::cout << "}" << std::endl;
 
-    BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
 
-    recomputeMaxGain = kl.run_inner_iteration_test();
+    recomputeMaxGain = kl.RunInnerIterationTest();
     std::cout << "recompute max_gain: { ";
     for (const auto &[key, value] : recomputeMaxGain) {
         std::cout << key << " ";
     }
     std::cout << "}" << std::endl;
 
-    BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
 
-    recomputeMaxGain = kl.run_inner_iteration_test();
+    recomputeMaxGain = kl.RunInnerIterationTest();
     std::cout << "recompute max_gain: { ";
     for (const auto &[key, value] : recomputeMaxGain) {
         std::cout << key << " ";
     }
     std::cout << "}" << std::endl;
 
-    BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
 }
 
 BOOST_AUTO_TEST_CASE(KlImproverViolationHandlingTest) {
@@ -424,21 +424,21 @@ BOOST_AUTO_TEST_CASE(KlImproverViolationHandlingTest) {
 
     BspSchedule schedule(instance);
 
-    schedule.setAssignedProcessors({0, 1, 0, 0, 1, 0, 0, 1});    // v1->v2 is on same step, different procs
-    schedule.setAssignedSupersteps({0, 0, 2, 1, 2, 2, 3, 3});
+    schedule.SetAssignedProcessors({0, 1, 0, 0, 1, 0, 0, 1});    // v1->v2 is on same step, different procs
+    schedule.SetAssignedSupersteps({0, 0, 2, 1, 2, 2, 3, 3});
 
     schedule.UpdateNumberOfSupersteps();
 
-    using CostF = kl_total_comm_cost_function<Graph, double, no_local_search_memory_constraint, 1, true>;
-    kl_improver_test<Graph, CostF, no_local_search_memory_constraint, 1, double> kl;
+    using CostF = KlTotalCommCostFunction<Graph, double, NoLocalSearchMemoryConstraint, 1, true>;
+    KlImproverTest<Graph, CostF, NoLocalSearchMemoryConstraint, 1, double> kl;
 
-    kl.setup_schedule(schedule);
+    kl.SetupSchedule(schedule);
 
-    kl.compute_violations_test();
+    kl.ComputeViolationsTest();
 
-    BOOST_CHECK_EQUAL(kl.is_feasible(), false);
+    BOOST_CHECK_EQUAL(kl.IsFeasible(), false);
 
-    kl_improver<Graph, CostF, no_local_search_memory_constraint, 1, double> klImprover;
+    KlImprover<Graph, CostF, NoLocalSearchMemoryConstraint, 1, double> klImprover;
     klImprover.ImproveSchedule(schedule);
 
     BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
@@ -474,50 +474,50 @@ BOOST_AUTO_TEST_CASE(KlBase1) {
 
     BspSchedule schedule(instance);
 
-    schedule.setAssignedProcessors({0, 0, 0, 0, 0, 0, 0, 0});
-    schedule.setAssignedSupersteps({0, 0, 0, 0, 0, 0, 0, 0});
+    schedule.SetAssignedProcessors({0, 0, 0, 0, 0, 0, 0, 0});
+    schedule.SetAssignedSupersteps({0, 0, 0, 0, 0, 0, 0, 0});
 
     schedule.UpdateNumberOfSupersteps();
 
-    using CostF = kl_total_comm_cost_function<Graph, double, no_local_search_memory_constraint, 1, true>;
-    kl_improver_test<Graph, CostF, no_local_search_memory_constraint, 1, double> kl;
+    using CostF = KlTotalCommCostFunction<Graph, double, NoLocalSearchMemoryConstraint, 1, true>;
+    KlImproverTest<Graph, CostF, NoLocalSearchMemoryConstraint, 1, double> kl;
 
-    kl.setup_schedule(schedule);
+    kl.SetupSchedule(schedule);
 
-    auto &klActiveSchedule = kl.get_active_schedule();
+    auto &klActiveSchedule = kl.GetActiveSchedule();
 
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(0), 44.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(0), 0.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.num_steps(), 1);
-    BOOST_CHECK_CLOSE(kl.get_current_cost(), 44.0, 0.00001);
-    BOOST_CHECK_EQUAL(kl.is_feasible(), true);
-    BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost(), 44.0, 0.00001);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepMaxWork(0), 44.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepSecondMaxWork(0), 0.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.NumSteps(), 1);
+    BOOST_CHECK_CLOSE(kl.GetCurrentCost(), 44.0, 0.00001);
+    BOOST_CHECK_EQUAL(kl.IsFeasible(), true);
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().compute_schedule_cost(), 44.0, 0.00001);
 
-    using KlMove = kl_move_struct<double, VertexType>;
+    using KlMove = KlMoveStruct<double, VertexType>;
 
     KlMove move1(v1, 2.0 - 13.5, 0, 0, 1, 0);
 
-    kl.apply_move_test(move1);
+    kl.ApplyMoveTest(move1);
 
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(0), 42.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(0), 2.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.num_steps(), 1);
-    BOOST_CHECK_EQUAL(kl.is_feasible(), false);
-    BOOST_CHECK_CLOSE(kl.get_current_cost(), kl.get_comm_cost_f().compute_schedule_cost(), 0.00001);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepMaxWork(0), 42.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepSecondMaxWork(0), 2.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.NumSteps(), 1);
+    BOOST_CHECK_EQUAL(kl.IsFeasible(), false);
+    BOOST_CHECK_CLOSE(kl.GetCurrentCost(), kl.GetCommCostF().compute_schedule_cost(), 0.00001);
 
     KlMove move2(v2, 3.0 + 4.5 - 4.0, 0, 0, 1, 0);
 
-    kl.apply_move_test(move2);
+    kl.ApplyMoveTest(move2);
 
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(0), 39.0);          // 42-3
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(0), 5.0);    // 2+3
-    BOOST_CHECK_EQUAL(klActiveSchedule.num_steps(), 1);
-    BOOST_CHECK_EQUAL(kl.is_feasible(), false);
-    BOOST_CHECK_CLOSE(kl.get_current_cost(), kl.get_comm_cost_f().compute_schedule_cost(), 0.00001);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepMaxWork(0), 39.0);         // 42-3
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepSecondMaxWork(0), 5.0);    // 2+3
+    BOOST_CHECK_EQUAL(klActiveSchedule.NumSteps(), 1);
+    BOOST_CHECK_EQUAL(kl.IsFeasible(), false);
+    BOOST_CHECK_CLOSE(kl.GetCurrentCost(), kl.GetCommCostF().compute_schedule_cost(), 0.00001);
 
-    kl.insert_gain_heap_test({0, 1, 2, 3, 4, 5, 6, 7});
+    kl.InsertGainHeapTest({0, 1, 2, 3, 4, 5, 6, 7});
 
-    auto &affinity = kl.get_affinity_table();
+    auto &affinity = kl.GetAffinityTable();
 
     BOOST_CHECK_CLOSE(affinity[v1][0][1], 2.0 - 4.5, 0.00001);
     BOOST_CHECK_CLOSE(affinity[v1][1][1], 0.0, 0.00001);
@@ -526,16 +526,16 @@ BOOST_AUTO_TEST_CASE(KlBase1) {
     BOOST_CHECK_CLOSE(affinity[v3][0][1], 4.0, 0.00001);
 
     KlMove move3(v7, 7.0, 0, 0, 1, 0);
-    kl.apply_move_test(move3);
-    BOOST_CHECK_EQUAL(kl.is_feasible(), false);
+    kl.ApplyMoveTest(move3);
+    BOOST_CHECK_EQUAL(kl.IsFeasible(), false);
 
     KlMove move4(v2, 7.0, 1, 0, 0, 0);
-    kl.apply_move_test(move4);
-    BOOST_CHECK_EQUAL(kl.is_feasible(), false);
+    kl.ApplyMoveTest(move4);
+    BOOST_CHECK_EQUAL(kl.IsFeasible(), false);
 
     KlMove move5(v1, 7.0, 1, 0, 0, 0);
-    kl.apply_move_test(move5);
-    BOOST_CHECK_EQUAL(kl.is_feasible(), true);
+    kl.ApplyMoveTest(move5);
+    BOOST_CHECK_EQUAL(kl.IsFeasible(), true);
 }
 
 BOOST_AUTO_TEST_CASE(KlBase2) {
@@ -568,83 +568,83 @@ BOOST_AUTO_TEST_CASE(KlBase2) {
 
     BspSchedule schedule(instance);
 
-    schedule.setAssignedProcessors({0, 1, 0, 0, 1, 0, 0, 1});
-    schedule.setAssignedSupersteps({0, 1, 1, 1, 2, 2, 3, 3});
+    schedule.SetAssignedProcessors({0, 1, 0, 0, 1, 0, 0, 1});
+    schedule.SetAssignedSupersteps({0, 1, 1, 1, 2, 2, 3, 3});
 
     schedule.UpdateNumberOfSupersteps();
 
-    using CostF = kl_total_comm_cost_function<Graph, double, no_local_search_memory_constraint, 1, true>;
-    kl_improver_test<Graph, CostF, no_local_search_memory_constraint, 1, double> kl;
+    using CostF = KlTotalCommCostFunction<Graph, double, NoLocalSearchMemoryConstraint, 1, true>;
+    KlImproverTest<Graph, CostF, NoLocalSearchMemoryConstraint, 1, double> kl;
 
-    kl.setup_schedule(schedule);
+    kl.SetupSchedule(schedule);
 
-    auto &klActiveSchedule = kl.get_active_schedule();
+    auto &klActiveSchedule = kl.GetActiveSchedule();
 
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(0), 2.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(0), 0.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(1), 9.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(1), 3.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(2), 7.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(2), 6.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(3), 9.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(3), 8.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepMaxWork(0), 2.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepSecondMaxWork(0), 0.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepMaxWork(1), 9.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepSecondMaxWork(1), 3.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepMaxWork(2), 7.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepSecondMaxWork(2), 6.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepMaxWork(3), 9.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepSecondMaxWork(3), 8.0);
 
-    BOOST_CHECK_EQUAL(klActiveSchedule.num_steps(), 4);
-    BOOST_CHECK_CLOSE(kl.get_current_cost(), kl.get_comm_cost_f().compute_schedule_cost(), 0.00001);
-    BOOST_CHECK_EQUAL(kl.is_feasible(), true);
+    BOOST_CHECK_EQUAL(klActiveSchedule.NumSteps(), 4);
+    BOOST_CHECK_CLOSE(kl.GetCurrentCost(), kl.GetCommCostF().compute_schedule_cost(), 0.00001);
+    BOOST_CHECK_EQUAL(kl.IsFeasible(), true);
 
-    using KlMove = kl_move_struct<double, VertexType>;
+    using KlMove = KlMoveStruct<double, VertexType>;
 
     KlMove move1(v1, 0.0 - 4.5, 0, 0, 1, 0);
 
-    kl.apply_move_test(move1);
+    kl.ApplyMoveTest(move1);
 
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(0), 2.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(0), 0.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(1), 9.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(1), 3.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(2), 7.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(2), 6.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(3), 9.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(3), 8.0);
-    BOOST_CHECK_EQUAL(kl.is_feasible(), true);
-    BOOST_CHECK_CLOSE(kl.get_current_cost(), kl.get_comm_cost_f().compute_schedule_cost(), 0.00001);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepMaxWork(0), 2.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepSecondMaxWork(0), 0.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepMaxWork(1), 9.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepSecondMaxWork(1), 3.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepMaxWork(2), 7.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepSecondMaxWork(2), 6.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepMaxWork(3), 9.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepSecondMaxWork(3), 8.0);
+    BOOST_CHECK_EQUAL(kl.IsFeasible(), true);
+    BOOST_CHECK_CLOSE(kl.GetCurrentCost(), kl.GetCommCostF().compute_schedule_cost(), 0.00001);
 
     KlMove move2(v2, -1.0 - 8.5, 1, 1, 0, 0);
 
-    kl.apply_move_test(move2);
+    kl.ApplyMoveTest(move2);
 
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(0), 3.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(0), 2.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(1), 9.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(1), 0.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(2), 7.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(2), 6.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(3), 9.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(3), 8.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.num_steps(), 4);
-    BOOST_CHECK_EQUAL(kl.is_feasible(), false);
-    BOOST_CHECK_CLOSE(kl.get_current_cost(), kl.get_comm_cost_f().compute_schedule_cost(), 0.00001);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepMaxWork(0), 3.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepSecondMaxWork(0), 2.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepMaxWork(1), 9.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepSecondMaxWork(1), 0.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepMaxWork(2), 7.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepSecondMaxWork(2), 6.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepMaxWork(3), 9.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepSecondMaxWork(3), 8.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.NumSteps(), 4);
+    BOOST_CHECK_EQUAL(kl.IsFeasible(), false);
+    BOOST_CHECK_CLOSE(kl.GetCurrentCost(), kl.GetCommCostF().compute_schedule_cost(), 0.00001);
 
     KlMove moveX(v2, -2.0 + 8.5, 0, 0, 1, 0);
 
-    kl.apply_move_test(moveX);
+    kl.ApplyMoveTest(moveX);
 
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(0), 5.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(0), 0.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(1), 9.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(1), 0.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(2), 7.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(2), 6.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(3), 9.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(3), 8.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.num_steps(), 4);
-    BOOST_CHECK_EQUAL(kl.is_feasible(), true);
-    BOOST_CHECK_CLOSE(kl.get_current_cost(), kl.get_comm_cost_f().compute_schedule_cost(), 0.00001);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepMaxWork(0), 5.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepSecondMaxWork(0), 0.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepMaxWork(1), 9.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepSecondMaxWork(1), 0.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepMaxWork(2), 7.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepSecondMaxWork(2), 6.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepMaxWork(3), 9.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepSecondMaxWork(3), 8.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.NumSteps(), 4);
+    BOOST_CHECK_EQUAL(kl.IsFeasible(), true);
+    BOOST_CHECK_CLOSE(kl.GetCurrentCost(), kl.GetCommCostF().compute_schedule_cost(), 0.00001);
 
-    kl.insert_gain_heap_test({0, 1, 2, 3, 4, 5, 6, 7});
+    kl.InsertGainHeapTest({0, 1, 2, 3, 4, 5, 6, 7});
 
-    auto &affinity = kl.get_affinity_table();
+    auto &affinity = kl.GetAffinityTable();
 
     BOOST_CHECK_CLOSE(affinity[v1][0][1], -4.5, 0.00001);
     BOOST_CHECK_CLOSE(affinity[v1][0][2], -2.5, 0.00001);
@@ -729,33 +729,33 @@ BOOST_AUTO_TEST_CASE(KlBase3) {
 
     BspSchedule schedule(instance);
 
-    schedule.setAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
-    schedule.setAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
+    schedule.SetAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
+    schedule.SetAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
 
     schedule.UpdateNumberOfSupersteps();
 
-    using CostF = kl_total_comm_cost_function<Graph, double, no_local_search_memory_constraint, 1, true>;
-    kl_improver_test<Graph, CostF, no_local_search_memory_constraint, 1, double> kl;
+    using CostF = KlTotalCommCostFunction<Graph, double, NoLocalSearchMemoryConstraint, 1, true>;
+    KlImproverTest<Graph, CostF, NoLocalSearchMemoryConstraint, 1, double> kl;
 
-    kl.setup_schedule(schedule);
+    kl.SetupSchedule(schedule);
 
-    auto &klActiveSchedule = kl.get_active_schedule();
+    auto &klActiveSchedule = kl.GetActiveSchedule();
 
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(0), 5.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(0), 0.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(1), 9.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(1), 0.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(2), 7.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(2), 6.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(3), 9.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(3), 8.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepMaxWork(0), 5.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepSecondMaxWork(0), 0.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepMaxWork(1), 9.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepSecondMaxWork(1), 0.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepMaxWork(2), 7.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepSecondMaxWork(2), 6.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepMaxWork(3), 9.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepSecondMaxWork(3), 8.0);
 
-    BOOST_CHECK_EQUAL(klActiveSchedule.num_steps(), 4);
-    BOOST_CHECK_EQUAL(klActiveSchedule.is_feasible(), true);
+    BOOST_CHECK_EQUAL(klActiveSchedule.NumSteps(), 4);
+    BOOST_CHECK_EQUAL(klActiveSchedule.IsFeasible(), true);
 
-    kl.insert_gain_heap_test_penalty({0, 1, 2, 3, 4, 5, 6, 7});
+    kl.InsertGainHeapTestPenalty({0, 1, 2, 3, 4, 5, 6, 7});
 
-    auto &affinity = kl.get_affinity_table();
+    auto &affinity = kl.GetAffinityTable();
 
     BOOST_CHECK_CLOSE(affinity[v1][0][1], 1.0, 0.00001);
     BOOST_CHECK_CLOSE(affinity[v1][0][2], 3.0, 0.00001);
@@ -810,11 +810,11 @@ BOOST_AUTO_TEST_CASE(KlBase3) {
     BOOST_CHECK_CLOSE(affinity[v8][1][1], 1.0, 0.00001);
 }
 
-// BOOST_AUTO_TEST_CASE(kl_improver_incremental_update_test) {
+// BOOST_AUTO_TEST_CASE(KlImprover_incremental_update_test) {
 
 //     using graph = ComputationalDagEdgeIdxVectorImplDefIntT;
 //     using VertexType = graph::VertexIdx;
-//     using kl_move = kl_move_struct<double, VertexType>;
+//     using kl_move = KlMoveStruct<double, VertexType>;
 
 //     graph dag;
 
@@ -842,99 +842,99 @@ BOOST_AUTO_TEST_CASE(KlBase3) {
 
 //     BspSchedule schedule(instance);
 
-//     schedule.setAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
-//     schedule.setAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
+//     schedule.SetAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
+//     schedule.SetAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
 
 //     schedule.UpdateNumberOfSupersteps();
 
-//     using cost_f = kl_total_comm_cost_function<graph, double, no_local_search_memory_constraint, 1, true>;
-//     using kl_improver_test = kl_improver_test<graph, cost_f, no_local_search_memory_constraint, 1, double>;
-//     kl_improver_test kl;
+//     using cost_f = KlTotalCommCostFunction<graph, double, NoLocalSearchMemoryConstraint, 1, true>;
+//     using KlImproverTest = KlImproverTest<graph, cost_f, NoLocalSearchMemoryConstraint, 1, double>;
+//     KlImproverTest kl;
 
-//     kl.setup_schedule(schedule);
+//     kl.SetupSchedule(schedule);
 
-//     auto node_selection = kl.insert_gain_heap_test({0, 1, 2, 3, 4, 5, 6, 7});
+//     auto node_selection = kl.InsertGainHeapTest({0, 1, 2, 3, 4, 5, 6, 7});
 
 //     std::set<VertexType> nodes_to_check = {0, 1, 2, 3, 4, 5, 6, 7};
-//     auto& affinity = kl.get_affinity_table();
+//     auto& affinity = kl.GetAffinityTable();
 
 //     kl_move move_1(v7, 0.0, 0, 3, 0, 2);
-//     kl.update_affinity_table_test(move_1, node_selection);
+//     kl.UpdateAffinityTableTest(move_1, node_selection);
 
 //     BspSchedule<graph> test_sched_1(instance);
-//     kl.get_active_schedule_test(test_sched_1);
-//     kl_improver_test kl_1;
-//     kl_1.setup_schedule(test_sched_1);
-//     kl_1.insert_gain_heap_test({0, 1, 2, 3, 4, 5, 6, 7});
+//     kl.GetActiveSchedule_test(test_sched_1);
+//     KlImproverTest kl_1;
+//     kl_1.SetupSchedule(test_sched_1);
+//     kl_1.InsertGainHeapTest({0, 1, 2, 3, 4, 5, 6, 7});
 
 //     nodes_to_check.erase(v7);
 
-//     check_equal_affinity_table(affinity, kl_1.get_affinity_table(), nodes_to_check);
+//     check_equal_affinity_table(affinity, kl_1.GetAffinityTable(), nodes_to_check);
 
 //     kl_move move_2(v4, 0.0, 0, 1 , 0, 2);
-//     kl.update_affinity_table_test(move_2, node_selection);
+//     kl.UpdateAffinityTableTest(move_2, node_selection);
 
 //     BspSchedule<graph> test_sched_2(instance);
-//     kl.get_active_schedule_test(test_sched_2);
-//     kl_improver_test kl_2;
-//     kl_2.setup_schedule(test_sched_2);
-//     kl_2.insert_gain_heap_test({0, 1, 2, 3, 4, 5, 6, 7});
+//     kl.GetActiveSchedule_test(test_sched_2);
+//     KlImproverTest kl_2;
+//     kl_2.SetupSchedule(test_sched_2);
+//     kl_2.InsertGainHeapTest({0, 1, 2, 3, 4, 5, 6, 7});
 
 //     nodes_to_check.erase(v4);
 
-//     check_equal_affinity_table(affinity, kl_2.get_affinity_table(), nodes_to_check);
+//     check_equal_affinity_table(affinity, kl_2.GetAffinityTable(), nodes_to_check);
 
 //     kl_move move_3(v2, 0.0, 1, 0 , 0, 0);
-//     kl.update_affinity_table_test(move_3, node_selection);
+//     kl.UpdateAffinityTableTest(move_3, node_selection);
 
 //     BspSchedule<graph> test_sched_3(instance);
-//     kl.get_active_schedule_test(test_sched_3);
-//     kl_improver_test kl_3;
-//     kl_3.setup_schedule(test_sched_3);
-//     kl_3.insert_gain_heap_test({0, 1, 2, 3, 4, 5, 6, 7});
+//     kl.GetActiveSchedule_test(test_sched_3);
+//     KlImproverTest kl_3;
+//     kl_3.SetupSchedule(test_sched_3);
+//     kl_3.InsertGainHeapTest({0, 1, 2, 3, 4, 5, 6, 7});
 
 //     nodes_to_check.erase(v2);
 
-//     check_equal_affinity_table(affinity, kl_3.get_affinity_table(), nodes_to_check);
+//     check_equal_affinity_table(affinity, kl_3.GetAffinityTable(), nodes_to_check);
 
 //     kl_move move_4(v6, 0.0, 0, 2 , 1, 3);
-//     kl.update_affinity_table_test(move_4, node_selection);
+//     kl.UpdateAffinityTableTest(move_4, node_selection);
 
 //     BspSchedule<graph> test_sched_4(instance);
-//     kl.get_active_schedule_test(test_sched_4);
-//     kl_improver_test kl_4;
-//     kl_4.setup_schedule(test_sched_4);
-//     kl_4.insert_gain_heap_test({0, 1, 2, 3, 4, 5, 6, 7});
+//     kl.GetActiveSchedule_test(test_sched_4);
+//     KlImproverTest kl_4;
+//     kl_4.SetupSchedule(test_sched_4);
+//     kl_4.InsertGainHeapTest({0, 1, 2, 3, 4, 5, 6, 7});
 
 //     nodes_to_check.erase(v6);
 
-//     check_equal_affinity_table(affinity, kl_4.get_affinity_table(), nodes_to_check);
+//     check_equal_affinity_table(affinity, kl_4.GetAffinityTable(), nodes_to_check);
 
 //     kl_move move_5(v8, 0.0, 1, 3 , 0, 2);
-//     kl.update_affinity_table_test(move_5, node_selection);
+//     kl.UpdateAffinityTableTest(move_5, node_selection);
 
 //     BspSchedule<graph> test_sched_5(instance);
-//     kl.get_active_schedule_test(test_sched_5);
-//     kl_improver_test kl_5;
-//     kl_5.setup_schedule(test_sched_5);
-//     kl_5.insert_gain_heap_test({0, 1, 2, 3, 4, 5, 6, 7});
+//     kl.GetActiveSchedule_test(test_sched_5);
+//     KlImproverTest kl_5;
+//     kl_5.SetupSchedule(test_sched_5);
+//     kl_5.InsertGainHeapTest({0, 1, 2, 3, 4, 5, 6, 7});
 
 //     nodes_to_check.erase(v8);
 
-//     check_equal_affinity_table(affinity, kl_5.get_affinity_table(), nodes_to_check);
+//     check_equal_affinity_table(affinity, kl_5.GetAffinityTable(), nodes_to_check);
 
 //     kl_move move_6(v3, 0.0, 0, 1 , 1, 1);
-//     kl.update_affinity_table_test(move_6, node_selection);
+//     kl.UpdateAffinityTableTest(move_6, node_selection);
 
 //     BspSchedule<graph> test_sched_6(instance);
-//     kl.get_active_schedule_test(test_sched_6);
-//     kl_improver_test kl_6;
-//     kl_6.setup_schedule(test_sched_6);
-//     kl_6.insert_gain_heap_test({0, 1, 2, 3, 4, 5, 6, 7});
+//     kl.GetActiveSchedule_test(test_sched_6);
+//     KlImproverTest kl_6;
+//     kl_6.SetupSchedule(test_sched_6);
+//     kl_6.InsertGainHeapTest({0, 1, 2, 3, 4, 5, 6, 7});
 
 //     nodes_to_check.erase(v3);
 
-//     check_equal_affinity_table(affinity, kl_6.get_affinity_table(), nodes_to_check);
+//     check_equal_affinity_table(affinity, kl_6.GetAffinityTable(), nodes_to_check);
 
 // };
 
@@ -989,7 +989,7 @@ BOOST_AUTO_TEST_CASE(KlBase3) {
 //         BOOST_CHECK_EQUAL(&schedule.GetInstance(), &instance);
 //         BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
 
-//         kl_total_comm_improver<graph,no_local_search_memory_constraint,1,true> kl;
+//         KlTotalCommImprover<graph,NoLocalSearchMemoryConstraint,1,true> kl;
 
 //         auto start_time = std::chrono::high_resolution_clock::now();
 //         auto status = kl.ImproveSchedule(schedule);
@@ -1071,7 +1071,7 @@ BOOST_AUTO_TEST_CASE(KlBase3) {
 //         BOOST_CHECK_EQUAL(&schedule.GetInstance(), &instance);
 //         BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
 
-//         kl_total_comm_improver_mt<graph,no_local_search_memory_constraint,1,true> kl;
+//         KlTotalCommImprover_mt<graph,NoLocalSearchMemoryConstraint,1,true> kl;
 
 //         auto start_time = std::chrono::high_resolution_clock::now();
 //         auto status = kl.ImproveSchedule(schedule);

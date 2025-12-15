@@ -473,9 +473,9 @@ class OrbitGraphProcessor {
                 }
 
                 const bool uIsSignificant = (uSize >= minSymmetry_)
-                                            && (currentCoarseGraph.VertexWorkWeight(u) > lock_threshold_per_type[u_type]);
+                                            && (currentCoarseGraph.VertexWorkWeight(u) > lockThresholdPerType[uType]);
                 const bool vIsSignificant = (vSize >= minSymmetry_)
-                                            && (currentCoarseGraph.VertexWorkWeight(v) > lock_threshold_per_type[v_type]);
+                                            && (currentCoarseGraph.VertexWorkWeight(v) > lockThresholdPerType[vType]);
 
                 if (uIsSignificant && vIsSignificant) {
                     // Both are significant ---
@@ -546,11 +546,9 @@ class OrbitGraphProcessor {
 
     void SetMergeDifferentNodeTypes(bool flag) { mergeDifferentNodeTypes_ = flag; }
 
-    void SetWorkThreshold(VWorkwT<ConstrGraphT> workThreshold) { work_threshold_ = workThreshold; }
+    void SetWorkThreshold(VWorkwT<ConstrGraphT> workThreshold) { workThreshold_ = workThreshold; }
 
-    void SetCriticalPathThreshold(VWorkwT<ConstrGraphT> criticalPathThreshold) {
-        critical_path_threshold_ = criticalPathThreshold;
-    }
+    void SetCriticalPathThreshold(VWorkwT<ConstrGraphT> criticalPathThreshold) { criticalPathThreshold_ = criticalPathThreshold; }
 
     void SetLockRatio(double lockRatio) { lockOrbitRatio_ = lockRatio; }
 
@@ -858,7 +856,7 @@ class OrbitGraphProcessor {
             currentGroups[coarseNode].subgraphs.push_back({i});
         }
 
-        if constexpr (HasTypedVerticesV<Constr_Graph_t>) {
+        if constexpr (HasTypedVerticesV<ConstrGraphT>) {
             if constexpr (verbose_) {
                 std::cout << "Attempting to merge same node types.\n";
             }
@@ -869,8 +867,8 @@ class OrbitGraphProcessor {
         if constexpr (verbose_) {
             std::cout << "Attempting to merge different node types.\n";
         }
-        contract_edges(originalDag, currentCoarseGraph, currentGroups, currentContractionMap, false, mergeDifferentNodeType_);
-        contract_edges(originalDag, currentCoarseGraph, currentGroups, currentContractionMap, true, mergeDifferentNodeType_);
+        contract_edges(originalDag, currentCoarseGraph, currentGroups, currentContractionMap, false, mergeDifferentNodeTypes_);
+        contract_edges(originalDag, currentCoarseGraph, currentGroups, currentContractionMap, true, mergeDifferentNodeTypes_);
 
         if constexpr (verbose_) {
             std::cout << "Attempting to merge small orbits.\n";
@@ -881,7 +879,7 @@ class OrbitGraphProcessor {
         nonViableEdgesCache_.clear();
 
         contract_edges(
-            originalDag, currentCoarseGraph, currentGroups, currentContractionMap, true, mergeDifferentNodeType_, workThreshold_);
+            originalDag, currentCoarseGraph, currentGroups, currentContractionMap, true, mergeDifferentNodeTypes_, workThreshold_);
 
         finalCoarseGraph_ = std::move(currentCoarseGraph);
         finalContractionMap_ = std::move(currentContractionMap);
@@ -913,8 +911,7 @@ class OrbitGraphProcessor {
         }
 
         if constexpr (verbose_) {
-            std::cout << " Starting adaptive symmetry coarsening with critical_path_threshold: " << critical_path_threshold_
-                      << "\n";
+            std::cout << " Starting adaptive symmetry coarsening with critical_path_threshold: " << criticalPathThreshold_ << "\n";
         }
 
         for (const auto sym : symmetryLevelsToTest) {
@@ -929,12 +926,12 @@ class OrbitGraphProcessor {
             contract_edges_adpative_sym(
                 originalDag, currentCoarseGraph, currentGroups, currentContractionMap, false, isLastLoop, lockThresholdPerType);
 
-            if (mergeDifferentNodeType_) {
+            if (mergeDifferentNodeTypes_) {
                 contract_edges_adpative_sym(originalDag,
                                             currentCoarseGraph,
                                             currentGroups,
                                             currentContractionMap,
-                                            mergeDifferentNodeType_,
+                                            mergeDifferentNodeTypes_,
                                             isLastLoop,
                                             lockThresholdPerType);
             }
@@ -944,14 +941,14 @@ class OrbitGraphProcessor {
                                         currentCoarseGraph,
                                         currentGroups,
                                         currentContractionMap,
-                                        mergeDifferentNodeType_,
+                                        mergeDifferentNodeTypes_,
                                         isLastLoop,
                                         lockThresholdPerType,
                                         criticalPathThreshold_);
         }
 
         if constexpr (verbose_) {
-            std::cout << " Merging small orbits with work threshold: " << work_threshold_ << "\n";
+            std::cout << " Merging small orbits with work threshold: " << workThreshold_ << "\n";
         }
         nonViableEdgesCache_.clear();
         mergeSmallOrbits(originalDag, currentCoarseGraph, currentGroups, currentContractionMap, workThreshold_);
@@ -1007,7 +1004,7 @@ class OrbitGraphProcessor {
 
         auto map = CreateInducedSubgraphMap(originalDag, inducedSubgraph, allNodes);
         std::vector<VertexType> components;    // local -> component_id
-        size_t numComponents = compute_weakly_connected_components(inducedSubgraph, components);
+        size_t numComponents = ComputeWeaklyConnectedComponents(inducedSubgraph, components);
         outNewSubgraphs.assign(numComponents, std::vector<VertexType>());
 
         if (allNodes.empty()) {    // Handle empty graph case

@@ -401,8 +401,8 @@ BOOST_AUTO_TEST_CASE(TestUtil1) {
 
     size_t i = 0;
     for (const auto &e : EdgeView(graph)) {
-        BOOST_CHECK_EQUAL(e.source, edgeSource[i]);
-        BOOST_CHECK_EQUAL(e.target, edgeTarget[i]);
+        BOOST_CHECK_EQUAL(e.source_, edgeSource[i]);
+        BOOST_CHECK_EQUAL(e.target_, edgeTarget[i]);
 
         ++i;
     }
@@ -462,13 +462,13 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 
     for (const auto i : graph.Vertices()) {
         const auto v = graph.GetBoostGraph()[i];
-        BOOST_CHECK_EQUAL(v.workWeight, workW[i]);
-        BOOST_CHECK_EQUAL(v.workWeight, graph.VertexWorkWeight(i));
-        BOOST_CHECK_EQUAL(v.communicationWeight, commW[i]);
-        BOOST_CHECK_EQUAL(v.communicationWeight, graph.VertexCommWeight(i));
+        BOOST_CHECK_EQUAL(v.workWeight_, workW[i]);
+        BOOST_CHECK_EQUAL(v.workWeight_, graph.VertexWorkWeight(i));
+        BOOST_CHECK_EQUAL(v.communicationWeight_, commW[i]);
+        BOOST_CHECK_EQUAL(v.communicationWeight_, graph.VertexCommWeight(i));
     }
 
-    BOOST_CHECK_EQUAL(sumOfVerticesWorkWeights({0, 1}, graph), 2);
+    BOOST_CHECK_EQUAL(SumOfVerticesWorkWeights({0, 1}, graph), 2);
     {
         int sumOfWorkWeights = graph.VertexWorkWeight(0) + graph.VertexWorkWeight(1);
         BOOST_CHECK_EQUAL(2, sumOfWorkWeights);
@@ -628,7 +628,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     for (unsigned loops = 0; loops < 10; loops++) {
         for (unsigned noise = 0; noise < 6; noise++) {
             for (auto &poisPara : poissonParams) {
-                std::vector<int> posetIntMap = get_strict_poset_integer_map(noise, poisPara, graph);
+                std::vector<int> posetIntMap = GetStrictPosetIntegerMap(noise, poisPara, graph);
 
                 for (const auto &vertex : graph.Vertices()) {
                     for (const auto &child : graph.Children(vertex)) {
@@ -694,13 +694,13 @@ BOOST_AUTO_TEST_CASE(TestEdgeViewIndexedAccess) {
     ComputationalDagVectorImplDefUnsignedT graph = ConstrGraph1();
     auto allEdges = EdgeView(graph);
 
-    // Check initial iterator
+    // Check initial Iterator
     auto it = allEdges.begin();
 
     // Check each edge by index
     for (size_t i = 0; i < graph.NumEdges(); ++i) {
-        // Construct iterator directly to index i
-        auto indexedIt = decltype(allEdges)::iterator(i, graph);
+        // Construct Iterator directly to index i
+        auto indexedIt = decltype(allEdges)::Iterator(i, graph);
         BOOST_CHECK(indexedIt == it);
         BOOST_CHECK(*indexedIt == *it);
 
@@ -708,10 +708,10 @@ BOOST_AUTO_TEST_CASE(TestEdgeViewIndexedAccess) {
     }
 
     // Check end condition
-    auto endIt = decltype(allEdges)::iterator(graph.NumEdges(), graph);
+    auto endIt = decltype(allEdges)::Iterator(graph.NumEdges(), graph);
     BOOST_CHECK(endIt == allEdges.end());
 
     // Check out of bounds
-    auto oobIt = decltype(allEdges)::iterator(graph.NumEdges() + 5, graph);
+    auto oobIt = decltype(allEdges)::Iterator(graph.NumEdges() + 5, graph);
     BOOST_CHECK(oobIt == allEdges.end());
 }

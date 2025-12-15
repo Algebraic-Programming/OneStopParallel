@@ -55,7 +55,7 @@ class TrimmedGroupScheduler : public Scheduler<ConstrGraphT> {
         const BspArchitecture<ConstrGraphT> &arch = instance.GetArchitecture();
 
         // Find the weakly connected components. These are assumed to be isomorphic subgraphs.
-        std::vector<VertexIdxT<Constr_Graph_t>> componentMap(dag.NumVertices());
+        std::vector<VertexIdxT<ConstrGraphT>> componentMap(dag.NumVertices());
         size_t numComponents = ComputeWeaklyConnectedComponents(dag, componentMap);
 
         if (numComponents == 0) {
@@ -69,8 +69,8 @@ class TrimmedGroupScheduler : public Scheduler<ConstrGraphT> {
         }
 
         // Group vertices by component.
-        std::vector<std::vector<VertexIdxT<Constr_Graph_t>>> componentsVertices(numComponents);
-        for (VertexIdxT<Constr_Graph_t> v = 0; v < dag.NumVertices(); ++v) {
+        std::vector<std::vector<VertexIdxT<ConstrGraphT>>> componentsVertices(numComponents);
+        for (VertexIdxT<ConstrGraphT> v = 0; v < dag.NumVertices(); ++v) {
             componentsVertices[componentMap[v]].push_back(v);
         }
 
@@ -100,10 +100,10 @@ class TrimmedGroupScheduler : public Scheduler<ConstrGraphT> {
         }
 
         std::vector<unsigned> subProcCounts(arch.GetNumberOfProcessorTypes());
-        std::vector<VMemwT<Constr_Graph_t>> memWeights(arch.GetNumberOfProcessorTypes(), 0);
+        std::vector<VMemwT<ConstrGraphT>> memWeights(arch.GetNumberOfProcessorTypes(), 0);
         for (unsigned typeIdx = 0; typeIdx < arch.GetNumberOfProcessorTypes(); ++typeIdx) {
             subProcCounts[typeIdx] = arch.GetProcessorTypeCount()[typeIdx] / minNonZeroProcs_;
-            memWeights[typeIdx] = static_cast<VMemwT<Constr_Graph_t>>(arch.MaxMemoryBoundProcType(typeIdx));
+            memWeights[typeIdx] = static_cast<VMemwT<ConstrGraphT>>(arch.MaxMemoryBoundProcType(typeIdx));
         }
 
         if constexpr (verbose_) {
@@ -127,7 +127,7 @@ class TrimmedGroupScheduler : public Scheduler<ConstrGraphT> {
 
         unsigned maxSupersteps = 0;
         for (unsigned i = 0; i < minNonZeroProcs_; ++i) {
-            std::vector<VertexIdxT<Constr_Graph_t>> groupVertices;
+            std::vector<VertexIdxT<ConstrGraphT>> groupVertices;
             for (unsigned compIdx : componentIndicesPerGroup[i]) {
                 groupVertices.insert(groupVertices.end(), componentsVertices[compIdx].begin(), componentsVertices[compIdx].end());
             }

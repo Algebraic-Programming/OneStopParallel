@@ -48,15 +48,15 @@ namespace osp {
  * for these trimmed groups.
  *
  * @tparam Graph_t The type of the input computational DAG.
- * @tparam Constr_Graph_t The type of the constructable computational DAG used for internal representations.
+ * @tparam ConstrGraphT The type of the constructable computational DAG used for internal representations.
  */
 template <typename GraphT, typename ConstrGraphT>
 class IsomorphicSubgraphScheduler {
     static_assert(IsComputationalDagV<GraphT>, "Graph must be a computational DAG");
-    static_assert(IsComputationalDagV<Constr_Graph_t>, "Constr_Graph_t must be a computational DAG");
-    static_assert(IsConstructableCdagV<Constr_Graph_t>, "Constr_Graph_t must satisfy the constructable_cdag_vertex concept");
-    static_assert(std::is_same_v<VertexIdxT<GraphT>, VertexIdxT<Constr_Graph_t>>,
-                  "Graph_t and Constr_Graph_t must have the same VertexIdx types");
+    static_assert(IsComputationalDagV<ConstrGraphT>, "ConstrGraphT must be a computational DAG");
+    static_assert(IsConstructableCdagV<ConstrGraphT>, "ConstrGraphT must satisfy the constructable_cdag_vertex concept");
+    static_assert(std::is_same_v<VertexIdxT<GraphT>, VertexIdxT<ConstrGraphT>>,
+                  "Graph_t and ConstrGraphT must have the same VertexIdx types");
 
   private:
     static constexpr bool verbose_ = false;
@@ -66,8 +66,8 @@ class IsomorphicSubgraphScheduler {
     bool useMaxGroupSize_ = false;
     unsigned maxGroupSize_ = 0;
     bool plotDotGraphs_ = false;
-    VWorkwT<Constr_Graph_t> workThreshold_ = 10;
-    VWorkwT<Constr_Graph_t> criticalPathThreshold_ = 10;
+    VWorkwT<ConstrGraphT> workThreshold_ = 10;
+    VWorkwT<ConstrGraphT> criticalPathThreshold_ = 10;
     double orbitLockRatio_ = 0.4;
     double naturalBreaksCountPercentage_ = 0.1;
     bool mergeDifferentNodeTypes_ = true;
@@ -77,20 +77,18 @@ class IsomorphicSubgraphScheduler {
 
   public:
     explicit IsomorphicSubgraphScheduler(Scheduler<ConstrGraphT> &bspScheduler)
-        : hash_computer_(nullptr), bspScheduler_(&bspScheduler), plotDotGraphs_(false) {}
+        : hashComputer_(nullptr), bspScheduler_(&bspScheduler), plotDotGraphs_(false) {}
 
     IsomorphicSubgraphScheduler(Scheduler<ConstrGraphT> &bspScheduler, const HashComputer<VertexIdxT<GraphT>> &hashComputer)
-        : hash_computer_(&hash_computer), bspScheduler_(&bspScheduler), plotDotGraphs_(false) {}
+        : hashComputer_(&hashComputer), bspScheduler_(&bspScheduler), plotDotGraphs_(false) {}
 
     virtual ~IsomorphicSubgraphScheduler() {}
 
     void SetMergeDifferentTypes(bool flag) { mergeDifferentNodeTypes_ = flag; }
 
-    void SetWorkThreshold(VWorkwT<Constr_Graph_t> workThreshold) { workThreshold_ = workThreshold; }
+    void SetWorkThreshold(VWorkwT<ConstrGraphT> workThreshold) { workThreshold_ = workThreshold; }
 
-    void SetCriticalPathThreshold(VWorkwT<Constr_Graph_t> criticalPathThreshold) {
-        criticalPathThreshold_ = criticalPathThreshold;
-    }
+    void SetCriticalPathThreshold(VWorkwT<ConstrGraphT> criticalPathThreshold) { criticalPathThreshold_ = criticalPathThreshold; }
 
     void SetOrbitLockRatio(double orbitLockRatio) { orbitLockRatio_ = orbitLockRatio; }
 
@@ -130,13 +128,13 @@ class IsomorphicSubgraphScheduler {
         }
 
         std::unique_ptr<HashComputer<VertexIdxT<GraphT>>> localHasher;
-        if (!hash_computer_) {
+        if (!hashComputer_) {
             localHasher = std::make_unique<MerkleHashComputer<GraphT, BwdMerkleNodeHashFunc<GraphT>, true>>(
                 instance.GetComputationalDag(), instance.GetComputationalDag());
-            hash_computer_ = local_hasher.get();
+            hashComputer_ = localHasher.get();
         }
 
-        orbitProcessor.DiscoverIsomorphicGroups(instance.GetComputationalDag(), *hash_computer_);
+        orbitProcessor.DiscoverIsomorphicGroups(instance.GetComputationalDag(), *hashComputer_);
 
         auto isomorphicGroups = orbitProcessor.GetFinalGroups();
 
@@ -180,7 +178,7 @@ class IsomorphicSubgraphScheduler {
         BspInstance<CGT> instance_;
         std::vector<unsigned> multiplicities_;
         std::vector<unsigned> maxNumProcessors_;
-        std::vector<std::vector<VWorkwT<G_t>>> requiredProcTypes_;
+        std::vector<std::vector<VWorkwT<GT>>> requiredProcTypes_;
     };
 
     void TrimSubgraphGroups(std::vector<typename OrbitGraphProcessor<GraphT, ConstrGraphT>::Group> &isomorphicGroups,
@@ -498,7 +496,7 @@ class IsomorphicSubgraphScheduler {
                 std::string timestamp = ss.str() + "_";
 
                 DotFileWriter writer;
-                writer.write_colored_graph(timestamp + "iso_group_rep_" + std::to_string(groupIdx) + ".dot", repDag, colors);
+                writer.WriteColoredGraph(timestamp + "iso_group_rep_" + std::to_string(groupIdx) + ".dot", repDag, colors);
             }
 
             const bool maxBsp = useMaxBsp_ && (representativeInstance.GetComputationalDag().NumEdges() == 0)

@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 
     BOOST_CHECK(topOrder.size() == graph.NumVertices());
 
-    indexInTopOrder = sorting_arrangement(topOrder);
+    indexInTopOrder = SortingArrangement(topOrder);
 
     for (const auto &i : topOrder) {
         for (const auto &j : graph.Children(i)) {
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 
     BOOST_CHECK(topOrder.size() == graph.NumVertices());
 
-    indexInTopOrder = sorting_arrangement(topOrder);
+    indexInTopOrder = SortingArrangement(topOrder);
 
     for (const auto &i : topOrder) {
         for (const auto &j : graph.Children(i)) {
@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 
     BOOST_CHECK(topOrder.size() == graph.NumVertices());
 
-    indexInTopOrder = sorting_arrangement(topOrder);
+    indexInTopOrder = SortingArrangement(topOrder);
 
     for (const auto &i : topOrder) {
         for (const auto &j : graph.Children(i)) {
@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 
     BOOST_CHECK(topOrder.size() == graph.NumVertices());
 
-    indexInTopOrder = sorting_arrangement(topOrder);
+    indexInTopOrder = SortingArrangement(topOrder);
 
     for (const auto &i : topOrder) {
         for (const auto &j : graph.Children(i)) {
@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 
     BOOST_CHECK(topOrder.size() == graph.NumVertices());
 
-    indexInTopOrder = sorting_arrangement(topOrder);
+    indexInTopOrder = SortingArrangement(topOrder);
 
     for (const auto &i : topOrder) {
         for (const auto &j : graph.Children(i)) {
@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     BOOST_CHECK(topOrder.size() == graph.NumVertices());
     BOOST_CHECK(GetTopOrder(graphEmpty).size() == graphEmpty.NumVertices());
 
-    indexInTopOrder = sorting_arrangement(topOrder);
+    indexInTopOrder = SortingArrangement(topOrder);
 
     for (const auto &i : topOrder) {
         for (const auto &j : graph.Children(i)) {
@@ -167,7 +167,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 
     size_t idx = 0;
     std::vector<VertexType> bfsViewTopSort;
-    for (const auto &v : bfs_top_sort_view(graph)) {
+    for (const auto &v : BfsTopSortView(graph)) {
         bfsViewTopSort.push_back(v);
         BOOST_CHECK_EQUAL(topOrder[idx], v);
         ++idx;
@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 
     BOOST_CHECK_EQUAL(bfsViewTopSort.size(), graph.NumVertices());
 
-    indexInTopOrder = sorting_arrangement(bfsViewTopSort);
+    indexInTopOrder = SortingArrangement(bfsViewTopSort);
     for (const auto &i : bfsViewTopSort) {
         for (const auto &j : graph.Children(i)) {
             BOOST_CHECK_LT(indexInTopOrder[i], indexInTopOrder[j]);
@@ -183,13 +183,13 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     }
 
     std::vector<VertexType> dfsViewTopSort;
-    for (const auto &v : top_sort_view(graph)) {
+    for (const auto &v : TopSortView(graph)) {
         dfsViewTopSort.push_back(v);
     }
 
     BOOST_CHECK_EQUAL(dfsViewTopSort.size(), graph.NumVertices());
 
-    indexInTopOrder = sorting_arrangement(dfsViewTopSort);
+    indexInTopOrder = SortingArrangement(dfsViewTopSort);
     for (const auto &i : dfsViewTopSort) {
         for (const auto &j : graph.Children(i)) {
             BOOST_CHECK_LT(indexInTopOrder[i], indexInTopOrder[j]);
@@ -209,13 +209,13 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
 
     std::vector<VertexType> locViewTopSort;
 
-    for (const auto &v : locality_top_sort_view(graph)) {
+    for (const auto &v : LocalityTopSortView(graph)) {
         locViewTopSort.push_back(v);
     }
 
     BOOST_CHECK_EQUAL(locViewTopSort.size(), graph.NumVertices());
 
-    indexInTopOrder = sorting_arrangement(locViewTopSort);
+    indexInTopOrder = SortingArrangement(locViewTopSort);
     for (const auto &i : locViewTopSort) {
         for (const auto &j : graph.Children(i)) {
             BOOST_CHECK_LT(indexInTopOrder[i], indexInTopOrder[j]);
@@ -234,13 +234,13 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     BOOST_CHECK_EQUAL(locViewTopSort[9], 7);
 
     std::vector<VertexType> maxChildrenViewTopSort;
-    for (const auto &v : max_children_top_sort_view(graph)) {
+    for (const auto &v : MaxChildrenTopSortView(graph)) {
         maxChildrenViewTopSort.push_back(v);
     }
 
     BOOST_CHECK_EQUAL(maxChildrenViewTopSort.size(), graph.NumVertices());
 
-    indexInTopOrder = sorting_arrangement(maxChildrenViewTopSort);
+    indexInTopOrder = SortingArrangement(maxChildrenViewTopSort);
     for (const auto &i : maxChildrenViewTopSort) {
         for (const auto &j : graph.Children(i)) {
             BOOST_CHECK_LT(indexInTopOrder[i], indexInTopOrder[j]);
@@ -259,12 +259,12 @@ BOOST_AUTO_TEST_CASE(ComputationalDagConstructor) {
     BOOST_CHECK_EQUAL(maxChildrenViewTopSort[9], 7);
 
     std::vector<VertexType> randomViewTopSort;
-    for (const auto &v : random_top_sort_view(graph)) {
+    for (const auto &v : RandomTopSortView(graph)) {
         randomViewTopSort.push_back(v);
     }
     BOOST_CHECK_EQUAL(randomViewTopSort.size(), graph.NumVertices());
 
-    indexInTopOrder = sorting_arrangement(randomViewTopSort);
+    indexInTopOrder = SortingArrangement(randomViewTopSort);
 
     for (const auto &i : randomViewTopSort) {
         for (const auto &j : graph.Children(i)) {
@@ -304,7 +304,7 @@ BOOST_AUTO_TEST_CASE(TopSortTemplateOverloadCsr) {
     std::vector<size_t> expectedTopOrder{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
 
     size_t idx = 0;
-    for (const auto &v : top_sort_view(graphCsr)) {
+    for (const auto &v : TopSortView(graphCsr)) {
         BOOST_CHECK_EQUAL(topOrder[idx], v);
         BOOST_CHECK_EQUAL(expectedTopOrder[idx], v);
         ++idx;

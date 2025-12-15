@@ -130,9 +130,9 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverWithNodeTypesTest) {
         AddMemWeights(instance.GetComputationalDag());
         AddNodeTypes(instance.GetComputationalDag());
 
-        instance.GetArchitecture().setProcessorsWithTypes({0, 0, 1, 1});
+        instance.GetArchitecture().SetProcessorsWithTypes({0, 0, 1, 1});
 
-        instance.setDiagonalCompatibilityMatrix(2);
+        instance.SetDiagonalCompatibilityMatrix(2);
 
         BspSchedule<Graph> schedule(instance);
         const auto result = testScheduler.ComputeSchedule(schedule);
@@ -140,15 +140,15 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverWithNodeTypesTest) {
         BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
         BOOST_CHECK_EQUAL(&schedule.GetInstance(), &instance);
         BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
-        BOOST_CHECK(schedule.satisfiesNodeTypeConstraints());
+        BOOST_CHECK(schedule.SatisfiesNodeTypeConstraints());
 
-        kl_total_lambda_comm_improver<Graph, no_local_search_memory_constraint, 1> kl;
+        KlTotalLambdaCommImprover<Graph, NoLocalSearchMemoryConstraint, 1> kl;
 
         auto status = kl.ImproveSchedule(schedule);
 
         BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
         BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
-        BOOST_CHECK(schedule.satisfiesNodeTypeConstraints());
+        BOOST_CHECK(schedule.SatisfiesNodeTypeConstraints());
     }
 }
 
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverOnTestGraphs) {
         BOOST_CHECK_EQUAL(&schedule.GetInstance(), &instance);
         BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
 
-        kl_total_lambda_comm_improver<Graph, no_local_search_memory_constraint, 1> kl;
+        KlTotalLambdaCommImprover<Graph, NoLocalSearchMemoryConstraint, 1> kl;
 
         auto status = kl.ImproveSchedule(schedule);
 
@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverOnTestGraphs) {
 
 //     using graph = ComputationalDagEdgeIdxVectorImplDefIntT;
 //     using VertexType = graph::VertexIdx;
-//     using kl_move = kl_move_struct<double, VertexType>;
+//     using kl_move = KlMoveStruct<double, VertexType>;
 
 //     graph dag;
 
@@ -238,127 +238,127 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverOnTestGraphs) {
 
 //     BspSchedule schedule(instance);
 
-//     schedule.setAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
-//     schedule.setAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
+//     schedule.SetAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
+//     schedule.SetAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
 
 //     schedule.UpdateNumberOfSupersteps();
 
-//     using cost_f = kl_hyper_total_comm_cost_function<graph, double, no_local_search_memory_constraint, 1>;
-//     using kl_improver_test = kl_improver_test<graph, cost_f, no_local_search_memory_constraint, 1, double>;
-//     kl_improver_test kl;
+//     using cost_f = KlHyperTotalCommCostFunction<graph, double, NoLocalSearchMemoryConstraint, 1>;
+//     using KlImproverTest = KlImproverTest<graph, cost_f, NoLocalSearchMemoryConstraint, 1, double>;
+//     KlImproverTest kl;
 
-//     kl.setup_schedule(schedule);
+//     kl.SetupSchedule(schedule);
 
-//     auto &kl_active_schedule = kl.get_active_schedule();
+//     auto &kl_active_schedule = kl.GetActiveSchedule();
 
-//     BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_max_work(0), 5.0);
-//     BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_second_max_work(0), 0.0);
-//     BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_max_work(1), 9.0);
-//     BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_second_max_work(1), 0.0);
-//     BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_max_work(2), 7.0);
-//     BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_second_max_work(2), 6.0);
-//     BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_max_work(3), 9.0);
-//     BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_second_max_work(3), 8.0);
+//     BOOST_CHECK_EQUAL(kl_active_schedule.workDatastructures_.StepMaxWork(0), 5.0);
+//     BOOST_CHECK_EQUAL(kl_active_schedule.workDatastructures_.StepSecondMaxWork(0), 0.0);
+//     BOOST_CHECK_EQUAL(kl_active_schedule.workDatastructures_.StepMaxWork(1), 9.0);
+//     BOOST_CHECK_EQUAL(kl_active_schedule.workDatastructures_.StepSecondMaxWork(1), 0.0);
+//     BOOST_CHECK_EQUAL(kl_active_schedule.workDatastructures_.StepMaxWork(2), 7.0);
+//     BOOST_CHECK_EQUAL(kl_active_schedule.workDatastructures_.StepSecondMaxWork(2), 6.0);
+//     BOOST_CHECK_EQUAL(kl_active_schedule.workDatastructures_.StepMaxWork(3), 9.0);
+//     BOOST_CHECK_EQUAL(kl_active_schedule.workDatastructures_.StepSecondMaxWork(3), 8.0);
 
-//     BOOST_CHECK_EQUAL(kl_active_schedule.num_steps(), 4);
-//     BOOST_CHECK_EQUAL(kl_active_schedule.is_feasible(), true);
+//     BOOST_CHECK_EQUAL(kl_active_schedule.NumSteps(), 4);
+//     BOOST_CHECK_EQUAL(kl_active_schedule.IsFeasible(), true);
 
-//     auto node_selection = kl.insert_gain_heap_test({0, 1, 2, 3, 4, 5, 6, 7});
+//     auto node_selection = kl.InsertGainHeapTest({0, 1, 2, 3, 4, 5, 6, 7});
 
 //     std::set<VertexType> nodes_to_check = {0, 1, 2, 3, 4, 5, 6, 7};
-//     auto& affinity = kl.get_affinity_table();
-//     auto& lambda_map = kl.get_comm_cost_f().node_lambda_map;
+//     auto& affinity = kl.GetAffinityTable();
+//     auto& lambda_map = kl.GetCommCostF().node_lambda_map;
 
 //     kl_move move_1(v7, 0.0, 0, 3, 0, 2);
-//     kl.update_affinity_table_test(move_1, node_selection);
+//     kl.UpdateAffinityTableTest(move_1, node_selection);
 
 //     BspSchedule<graph> test_sched_1(instance);
-//     kl.get_active_schedule_test(test_sched_1);
-//     kl_improver_test kl_1;
-//     kl_1.setup_schedule(test_sched_1);
-//     kl_1.insert_gain_heap_test({0, 1, 2, 3, 4, 5, 6, 7});
+//     kl.GetActiveSchedule_test(test_sched_1);
+//     KlImproverTest kl_1;
+//     kl_1.SetupSchedule(test_sched_1);
+//     kl_1.InsertGainHeapTest({0, 1, 2, 3, 4, 5, 6, 7});
 
 //     nodes_to_check.erase(v7);
 
-//     check_equal_lambda_map(lambda_map, kl_1.get_comm_cost_f().node_lambda_map);
-//     check_equal_affinity_table(affinity, kl_1.get_affinity_table(), nodes_to_check);
+//     CheckEqualLambdaMap(lambda_map, kl_1.GetCommCostF().node_lambda_map);
+//     CheckEqualAffinityTable(affinity, kl_1.GetAffinityTable(), nodes_to_check);
 
 //     kl_move move_2(v4, 0.0, 0, 1 , 0, 2);
-//     kl.update_affinity_table_test(move_2, node_selection);
+//     kl.UpdateAffinityTableTest(move_2, node_selection);
 
 //     BspSchedule<graph> test_sched_2(instance);
-//     kl.get_active_schedule_test(test_sched_2);
-//     kl_improver_test kl_2;
-//     kl_2.setup_schedule(test_sched_2);
-//     kl_2.insert_gain_heap_test({0, 1, 2, 3, 4, 5, 6, 7});
+//     kl.GetActiveSchedule_test(test_sched_2);
+//     KlImproverTest kl_2;
+//     kl_2.SetupSchedule(test_sched_2);
+//     kl_2.InsertGainHeapTest({0, 1, 2, 3, 4, 5, 6, 7});
 
 //     nodes_to_check.erase(v4);
 
-//     check_equal_lambda_map(lambda_map, kl_2.get_comm_cost_f().node_lambda_map);
-//     check_equal_affinity_table(affinity, kl_2.get_affinity_table(), nodes_to_check);
+//     CheckEqualLambdaMap(lambda_map, kl_2.GetCommCostF().node_lambda_map);
+//     CheckEqualAffinityTable(affinity, kl_2.GetAffinityTable(), nodes_to_check);
 
 //     kl_move move_3(v2, 0.0, 1, 0 , 0, 0);
-//     kl.update_affinity_table_test(move_3, node_selection);
+//     kl.UpdateAffinityTableTest(move_3, node_selection);
 
 //     BspSchedule<graph> test_sched_3(instance);
-//     kl.get_active_schedule_test(test_sched_3);
-//     kl_improver_test kl_3;
-//     kl_3.setup_schedule(test_sched_3);
-//     kl_3.insert_gain_heap_test({0, 1, 2, 3, 4, 5, 6, 7});
+//     kl.GetActiveSchedule_test(test_sched_3);
+//     KlImproverTest kl_3;
+//     kl_3.SetupSchedule(test_sched_3);
+//     kl_3.InsertGainHeapTest({0, 1, 2, 3, 4, 5, 6, 7});
 
 //     nodes_to_check.erase(v2);
 
-//     check_equal_lambda_map(lambda_map, kl_3.get_comm_cost_f().node_lambda_map);
-//     check_equal_affinity_table(affinity, kl_3.get_affinity_table(), nodes_to_check);
+//     CheckEqualLambdaMap(lambda_map, kl_3.GetCommCostF().node_lambda_map);
+//     CheckEqualAffinityTable(affinity, kl_3.GetAffinityTable(), nodes_to_check);
 
 //     kl_move move_4(v6, 0.0, 0, 2 , 1, 3);
-//     kl.update_affinity_table_test(move_4, node_selection);
+//     kl.UpdateAffinityTableTest(move_4, node_selection);
 
 //     BspSchedule<graph> test_sched_4(instance);
-//     kl.get_active_schedule_test(test_sched_4);
-//     kl_improver_test kl_4;
-//     kl_4.setup_schedule(test_sched_4);
-//     kl_4.insert_gain_heap_test({0, 1, 2, 3, 4, 5, 6, 7});
+//     kl.GetActiveSchedule_test(test_sched_4);
+//     KlImproverTest kl_4;
+//     kl_4.SetupSchedule(test_sched_4);
+//     kl_4.InsertGainHeapTest({0, 1, 2, 3, 4, 5, 6, 7});
 
 //     nodes_to_check.erase(v6);
 
-//     check_equal_lambda_map(lambda_map, kl_4.get_comm_cost_f().node_lambda_map);
-//     check_equal_affinity_table(affinity, kl_4.get_affinity_table(), nodes_to_check);
+//     CheckEqualLambdaMap(lambda_map, kl_4.GetCommCostF().node_lambda_map);
+//     CheckEqualAffinityTable(affinity, kl_4.GetAffinityTable(), nodes_to_check);
 
 //     kl_move move_5(v8, 0.0, 1, 3 , 0, 2);
-//     kl.update_affinity_table_test(move_5, node_selection);
+//     kl.UpdateAffinityTableTest(move_5, node_selection);
 
 //     BspSchedule<graph> test_sched_5(instance);
-//     kl.get_active_schedule_test(test_sched_5);
-//     kl_improver_test kl_5;
-//     kl_5.setup_schedule(test_sched_5);
-//     kl_5.insert_gain_heap_test({0, 1, 2, 3, 4, 5, 6, 7});
+//     kl.GetActiveSchedule_test(test_sched_5);
+//     KlImproverTest kl_5;
+//     kl_5.SetupSchedule(test_sched_5);
+//     kl_5.InsertGainHeapTest({0, 1, 2, 3, 4, 5, 6, 7});
 
 //     nodes_to_check.erase(v8);
 
-//     check_equal_lambda_map(lambda_map, kl_5.get_comm_cost_f().node_lambda_map);
-//     check_equal_affinity_table(affinity, kl_5.get_affinity_table(), nodes_to_check);
+//     CheckEqualLambdaMap(lambda_map, kl_5.GetCommCostF().node_lambda_map);
+//     CheckEqualAffinityTable(affinity, kl_5.GetAffinityTable(), nodes_to_check);
 
 //     kl_move move_6(v3, 0.0, 0, 1 , 1, 1);
-//     kl.update_affinity_table_test(move_6, node_selection);
+//     kl.UpdateAffinityTableTest(move_6, node_selection);
 
 //     BspSchedule<graph> test_sched_6(instance);
-//     kl.get_active_schedule_test(test_sched_6);
-//     kl_improver_test kl_6;
-//     kl_6.setup_schedule(test_sched_6);
-//     kl_6.insert_gain_heap_test({0, 1, 2, 3, 4, 5, 6, 7});
+//     kl.GetActiveSchedule_test(test_sched_6);
+//     KlImproverTest kl_6;
+//     kl_6.SetupSchedule(test_sched_6);
+//     kl_6.InsertGainHeapTest({0, 1, 2, 3, 4, 5, 6, 7});
 
 //     nodes_to_check.erase(v3);
 
-//     check_equal_lambda_map(lambda_map, kl_6.get_comm_cost_f().node_lambda_map);
-//     check_equal_affinity_table(affinity, kl_6.get_affinity_table(), nodes_to_check);
+//     CheckEqualLambdaMap(lambda_map, kl_6.GetCommCostF().node_lambda_map);
+//     CheckEqualAffinityTable(affinity, kl_6.GetAffinityTable(), nodes_to_check);
 
 // };
 
 // BOOST_AUTO_TEST_CASE(kl_lambda_improver_inner_loop_test) {
 //     using graph = ComputationalDagEdgeIdxVectorImplDefIntT;
 //     using VertexType = graph::VertexIdx;
-//     using kl_move = kl_move_struct<double, VertexType>;
+//     using kl_move = KlMoveStruct<double, VertexType>;
 
 //     graph dag;
 
@@ -386,103 +386,103 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverOnTestGraphs) {
 
 //     BspSchedule schedule(instance);
 
-//     schedule.setAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
-//     schedule.setAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
+//     schedule.SetAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
+//     schedule.SetAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
 
 //     schedule.UpdateNumberOfSupersteps();
 
-//     using cost_f = kl_hyper_total_comm_cost_function<graph, double, no_local_search_memory_constraint, 1>;
-//     using kl_improver_test = kl_improver_test<graph, cost_f, no_local_search_memory_constraint, 1, double>;
-//     kl_improver_test kl;
+//     using cost_f = KlHyperTotalCommCostFunction<graph, double, NoLocalSearchMemoryConstraint, 1>;
+//     using KlImproverTest = KlImproverTest<graph, cost_f, NoLocalSearchMemoryConstraint, 1, double>;
+//     KlImproverTest kl;
 
-//     kl.setup_schedule(schedule);
+//     kl.SetupSchedule(schedule);
 
-//     auto &kl_active_schedule = kl.get_active_schedule();
+//     auto &kl_active_schedule = kl.GetActiveSchedule();
 
-//     BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_max_work(0), 5.0);
-//     BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_second_max_work(0), 0.0);
-//     BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_max_work(1), 9.0);
-//     BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_second_max_work(1), 0.0);
-//     BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_max_work(2), 7.0);
-//     BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_second_max_work(2), 6.0);
-//     BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_max_work(3), 9.0);
-//     BOOST_CHECK_EQUAL(kl_active_schedule.work_datastructures.step_second_max_work(3), 8.0);
+//     BOOST_CHECK_EQUAL(kl_active_schedule.workDatastructures_.StepMaxWork(0), 5.0);
+//     BOOST_CHECK_EQUAL(kl_active_schedule.workDatastructures_.StepSecondMaxWork(0), 0.0);
+//     BOOST_CHECK_EQUAL(kl_active_schedule.workDatastructures_.StepMaxWork(1), 9.0);
+//     BOOST_CHECK_EQUAL(kl_active_schedule.workDatastructures_.StepSecondMaxWork(1), 0.0);
+//     BOOST_CHECK_EQUAL(kl_active_schedule.workDatastructures_.StepMaxWork(2), 7.0);
+//     BOOST_CHECK_EQUAL(kl_active_schedule.workDatastructures_.StepSecondMaxWork(2), 6.0);
+//     BOOST_CHECK_EQUAL(kl_active_schedule.workDatastructures_.StepMaxWork(3), 9.0);
+//     BOOST_CHECK_EQUAL(kl_active_schedule.workDatastructures_.StepSecondMaxWork(3), 8.0);
 
-//      auto node_selection = kl.insert_gain_heap_test({0, 1, 2, 3, 4, 5, 6, 7});
+//      auto node_selection = kl.InsertGainHeapTest({0, 1, 2, 3, 4, 5, 6, 7});
 
 //     std::set<VertexType> nodes_to_check = {0, 1, 2, 3, 4, 5, 6, 7};
-//     auto& affinity = kl.get_affinity_table();
-//     auto& lambda_map = kl.get_comm_cost_f().node_lambda_map;
+//     auto& affinity = kl.GetAffinityTable();
+//     auto& lambda_map = kl.GetCommCostF().node_lambda_map;
 
 //     kl_move move_2(v4, 0.0, 0, 1 , 1, 2);
-//     kl.update_affinity_table_test(move_2, node_selection);
+//     kl.UpdateAffinityTableTest(move_2, node_selection);
 
 //     BspSchedule<graph> test_sched_2(instance);
-//     kl.get_active_schedule_test(test_sched_2);
-//     kl_improver_test kl_2;
-//     kl_2.setup_schedule(test_sched_2);
-//     kl_2.insert_gain_heap_test_penalty({0, 1, 2, 3, 4, 5, 6, 7});
+//     kl.GetActiveSchedule_test(test_sched_2);
+//     KlImproverTest kl_2;
+//     kl_2.SetupSchedule(test_sched_2);
+//     kl_2.InsertGainHeapTestPenalty({0, 1, 2, 3, 4, 5, 6, 7});
 
 //     nodes_to_check.erase(v4);
 
-//     check_equal_lambda_map(lambda_map, kl_2.get_comm_cost_f().node_lambda_map);
-//     check_equal_affinity_table(affinity, kl_2.get_affinity_table(), nodes_to_check);
+//     CheckEqualLambdaMap(lambda_map, kl_2.GetCommCostF().node_lambda_map);
+//     CheckEqualAffinityTable(affinity, kl_2.GetAffinityTable(), nodes_to_check);
 
 //     kl_move move_3(v2, 0.0, 1, 0 , 0, 1);
-//     kl.update_affinity_table_test(move_3, node_selection);
+//     kl.UpdateAffinityTableTest(move_3, node_selection);
 
 //     BspSchedule<graph> test_sched_3(instance);
-//     kl.get_active_schedule_test(test_sched_3);
-//     kl_improver_test kl_3;
-//     kl_3.setup_schedule(test_sched_3);
-//     kl_3.insert_gain_heap_test_penalty({0, 1, 2, 3, 4, 5, 6, 7});
+//     kl.GetActiveSchedule_test(test_sched_3);
+//     KlImproverTest kl_3;
+//     kl_3.SetupSchedule(test_sched_3);
+//     kl_3.InsertGainHeapTestPenalty({0, 1, 2, 3, 4, 5, 6, 7});
 
 //     nodes_to_check.erase(v2);
 
-//     check_equal_lambda_map(lambda_map, kl_3.get_comm_cost_f().node_lambda_map);
-//     check_equal_affinity_table(affinity, kl_3.get_affinity_table(), nodes_to_check);
+//     CheckEqualLambdaMap(lambda_map, kl_3.GetCommCostF().node_lambda_map);
+//     CheckEqualAffinityTable(affinity, kl_3.GetAffinityTable(), nodes_to_check);
 
 //     kl_move move_4(v6, 0.0, 0, 2 , 1, 3);
-//     kl.update_affinity_table_test(move_4, node_selection);
+//     kl.UpdateAffinityTableTest(move_4, node_selection);
 
 //     BspSchedule<graph> test_sched_4(instance);
-//     kl.get_active_schedule_test(test_sched_4);
-//     kl_improver_test kl_4;
-//     kl_4.setup_schedule(test_sched_4);
-//     kl_4.insert_gain_heap_test_penalty({0, 1, 2, 3, 4, 5, 6, 7});
+//     kl.GetActiveSchedule_test(test_sched_4);
+//     KlImproverTest kl_4;
+//     kl_4.SetupSchedule(test_sched_4);
+//     kl_4.InsertGainHeapTestPenalty({0, 1, 2, 3, 4, 5, 6, 7});
 
 //     nodes_to_check.erase(v6);
 
-//     check_equal_lambda_map(lambda_map, kl_4.get_comm_cost_f().node_lambda_map);
-//     check_equal_affinity_table(affinity, kl_4.get_affinity_table(), nodes_to_check);
+//     CheckEqualLambdaMap(lambda_map, kl_4.GetCommCostF().node_lambda_map);
+//     CheckEqualAffinityTable(affinity, kl_4.GetAffinityTable(), nodes_to_check);
 
 //     kl_move move_5(v8, 0.0, 1, 3 , 0, 3);
-//     kl.update_affinity_table_test(move_5, node_selection);
+//     kl.UpdateAffinityTableTest(move_5, node_selection);
 
 //     BspSchedule<graph> test_sched_5(instance);
-//     kl.get_active_schedule_test(test_sched_5);
-//     kl_improver_test kl_5;
-//     kl_5.setup_schedule(test_sched_5);
-//     kl_5.insert_gain_heap_test_penalty({0, 1, 2, 3, 4, 5, 6, 7});
+//     kl.GetActiveSchedule_test(test_sched_5);
+//     KlImproverTest kl_5;
+//     kl_5.SetupSchedule(test_sched_5);
+//     kl_5.InsertGainHeapTestPenalty({0, 1, 2, 3, 4, 5, 6, 7});
 
 //     nodes_to_check.erase(v8);
 
-//     check_equal_lambda_map(lambda_map, kl_5.get_comm_cost_f().node_lambda_map);
-//     check_equal_affinity_table(affinity, kl_5.get_affinity_table(), nodes_to_check);
+//     CheckEqualLambdaMap(lambda_map, kl_5.GetCommCostF().node_lambda_map);
+//     CheckEqualAffinityTable(affinity, kl_5.GetAffinityTable(), nodes_to_check);
 
 //     kl_move move_6(v3, 0.0, 0, 1 , 1, 1);
-//     kl.update_affinity_table_test(move_6, node_selection);
+//     kl.UpdateAffinityTableTest(move_6, node_selection);
 
 //     BspSchedule<graph> test_sched_6(instance);
-//     kl.get_active_schedule_test(test_sched_6);
-//     kl_improver_test kl_6;
-//     kl_6.setup_schedule(test_sched_6);
-//     kl_6.insert_gain_heap_test_penalty({0, 1, 2, 3, 4, 5, 6, 7});
+//     kl.GetActiveSchedule_test(test_sched_6);
+//     KlImproverTest kl_6;
+//     kl_6.SetupSchedule(test_sched_6);
+//     kl_6.InsertGainHeapTestPenalty({0, 1, 2, 3, 4, 5, 6, 7});
 
 //     nodes_to_check.erase(v3);
 
-//     check_equal_lambda_map(lambda_map, kl_6.get_comm_cost_f().node_lambda_map);
-//     check_equal_affinity_table(affinity, kl_6.get_affinity_table(), nodes_to_check);
+//     CheckEqualLambdaMap(lambda_map, kl_6.GetCommCostF().node_lambda_map);
+//     CheckEqualAffinityTable(affinity, kl_6.GetAffinityTable(), nodes_to_check);
 
 // };
 
@@ -516,68 +516,68 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverInnerLoopPenaltyTest) {
 
     BspSchedule schedule(instance);
 
-    schedule.setAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
-    schedule.setAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
+    schedule.SetAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
+    schedule.SetAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
 
     schedule.UpdateNumberOfSupersteps();
 
-    using CostF = kl_hyper_total_comm_cost_function<Graph, double, no_local_search_memory_constraint, 1>;
-    using KlImproverTest = kl_improver_test<Graph, CostF, no_local_search_memory_constraint, 1, double>;
+    using CostF = KlHyperTotalCommCostFunction<Graph, double, NoLocalSearchMemoryConstraint, 1>;
+    using KlImproverTest = KlImproverTest<Graph, CostF, NoLocalSearchMemoryConstraint, 1, double>;
     KlImproverTest kl;
 
-    kl.setup_schedule(schedule);
+    kl.SetupSchedule(schedule);
 
-    auto &klActiveSchedule = kl.get_active_schedule();
+    auto &klActiveSchedule = kl.GetActiveSchedule();
 
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(0), 5.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(0), 0.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(1), 9.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(1), 0.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(2), 7.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(2), 6.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(3), 9.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(3), 8.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepMaxWork(0), 5.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepSecondMaxWork(0), 0.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepMaxWork(1), 9.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepSecondMaxWork(1), 0.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepMaxWork(2), 7.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepSecondMaxWork(2), 6.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepMaxWork(3), 9.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepSecondMaxWork(3), 8.0);
 
-    BOOST_CHECK_EQUAL(klActiveSchedule.num_steps(), 4);
-    BOOST_CHECK_EQUAL(klActiveSchedule.is_feasible(), true);
+    BOOST_CHECK_EQUAL(klActiveSchedule.NumSteps(), 4);
+    BOOST_CHECK_EQUAL(klActiveSchedule.IsFeasible(), true);
 
-    auto nodeSelection = kl.insert_gain_heap_test_penalty({2, 3});
+    auto nodeSelection = kl.InsertGainHeapTestPenalty({2, 3});
 
-    auto recomputeMaxGain = kl.run_inner_iteration_test();    // best move 3
+    auto recomputeMaxGain = kl.RunInnerIterationTest();    // best move 3
     std::cout << "------------------------recompute max_gain: { ";
     for (const auto &[key, value] : recomputeMaxGain) {
         std::cout << key << " ";
     }
     std::cout << "}" << std::endl;
 
-    BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
 
-    recomputeMaxGain = kl.run_inner_iteration_test();    // best move 0
+    recomputeMaxGain = kl.RunInnerIterationTest();    // best move 0
     std::cout << "recompute max_gain: { ";
     for (const auto &[key, value] : recomputeMaxGain) {
         std::cout << key << " ";
     }
     std::cout << "}" << std::endl;
 
-    BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
 
-    recomputeMaxGain = kl.run_inner_iteration_test();    // best move 1
+    recomputeMaxGain = kl.RunInnerIterationTest();    // best move 1
     std::cout << "recompute max_gain: { ";
     for (const auto &[key, value] : recomputeMaxGain) {
         std::cout << key << " ";
     }
     std::cout << "}" << std::endl;
 
-    BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
 
-    recomputeMaxGain = kl.run_inner_iteration_test();
+    recomputeMaxGain = kl.RunInnerIterationTest();
     std::cout << "recompute max_gain: { ";
     for (const auto &[key, value] : recomputeMaxGain) {
         std::cout << key << " ";
     }
     std::cout << "}" << std::endl;
 
-    BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
 }
 
 BOOST_AUTO_TEST_CASE(KlLambdaImproverInnerLoopLambdaMapTest) {
@@ -610,31 +610,31 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverInnerLoopLambdaMapTest) {
 
     BspSchedule schedule(instance);
 
-    schedule.setAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
-    schedule.setAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
+    schedule.SetAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
+    schedule.SetAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
 
     schedule.UpdateNumberOfSupersteps();
 
-    using CostF = kl_hyper_total_comm_cost_function<Graph, double, no_local_search_memory_constraint, 1>;
-    using KlImproverTest = kl_improver_test<Graph, CostF, no_local_search_memory_constraint, 1, double>;
+    using CostF = KlHyperTotalCommCostFunction<Graph, double, NoLocalSearchMemoryConstraint, 1>;
+    using KlImproverTest = KlImproverTest<Graph, CostF, NoLocalSearchMemoryConstraint, 1, double>;
     KlImproverTest kl;
 
-    kl.setup_schedule(schedule);
+    kl.SetupSchedule(schedule);
 
-    BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
 
-    auto nodeSelection = kl.insert_gain_heap_test_penalty({7});
+    auto nodeSelection = kl.InsertGainHeapTestPenalty({7});
 
-    auto recomputeMaxGain = kl.run_inner_iteration_test();
+    auto recomputeMaxGain = kl.RunInnerIterationTest();
     std::cout << "-----------recompute max_gain: { ";
     for (const auto &[key, value] : recomputeMaxGain) {
         std::cout << key << " ";
     }
     std::cout << "}" << std::endl;
 
-    BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
 
-    auto &lambdaMap = kl.get_comm_cost_f().node_lambda_map;
+    auto &lambdaMap = kl.GetCommCostF().node_lambda_map;
 
     BOOST_CHECK(lambdaMap.get_proc_entry(v1, 0) == 2);
     BOOST_CHECK(lambdaMap.get_proc_entry(v1, 1) == 1);
@@ -653,32 +653,32 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverInnerLoopLambdaMapTest) {
     BOOST_CHECK(lambdaMap.has_no_proc_entry(v8, 0));
     BOOST_CHECK(lambdaMap.has_no_proc_entry(v8, 0));
 
-    recomputeMaxGain = kl.run_inner_iteration_test();
+    recomputeMaxGain = kl.RunInnerIterationTest();
     std::cout << "recompute max_gain: { ";
     for (const auto &[key, value] : recomputeMaxGain) {
         std::cout << key << " ";
     }
     std::cout << "}" << std::endl;
 
-    BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
 
-    recomputeMaxGain = kl.run_inner_iteration_test();
+    recomputeMaxGain = kl.RunInnerIterationTest();
     std::cout << "recompute max_gain: { ";
     for (const auto &[key, value] : recomputeMaxGain) {
         std::cout << key << " ";
     }
     std::cout << "}" << std::endl;
 
-    BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
 
-    recomputeMaxGain = kl.run_inner_iteration_test();
+    recomputeMaxGain = kl.RunInnerIterationTest();
     std::cout << "recompute max_gain: { ";
     for (const auto &[key, value] : recomputeMaxGain) {
         std::cout << key << " ";
     }
     std::cout << "}" << std::endl;
 
-    BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
 }
 
 // BOOST_AUTO_TEST_CASE(kl_lambda_total_comm_large_test_graphs) {
@@ -731,7 +731,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverInnerLoopLambdaMapTest) {
 //         BOOST_CHECK_EQUAL(&schedule.GetInstance(), &instance);
 //         BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
 
-//         kl_total_lambda_comm_improver<graph,no_local_search_memory_constraint,1> kl;
+//         KlTotalLambdaCommImprover<graph,NoLocalSearchMemoryConstraint,1> kl;
 //         auto start_time = std::chrono::high_resolution_clock::now();
 //         auto status = kl.ImproveSchedule(schedule);
 //         auto finish_time = std::chrono::high_resolution_clock::now();
@@ -810,7 +810,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverInnerLoopLambdaMapTest) {
 //         BOOST_CHECK_EQUAL(&schedule.GetInstance(), &instance);
 //         BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
 
-//         kl_total_lambda_comm_improver_mt<graph,no_local_search_memory_constraint,1> kl;
+//         KlTotalLambdaCommImprover_mt<graph,NoLocalSearchMemoryConstraint,1> kl;
 //         auto start_time = std::chrono::high_resolution_clock::now();
 //         auto status = kl.ImproveSchedule(schedule);
 //         auto finish_time = std::chrono::high_resolution_clock::now();
