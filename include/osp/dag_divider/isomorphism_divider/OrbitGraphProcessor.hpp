@@ -78,7 +78,7 @@ class OrbitGraphProcessor {
         // Each vector of vertices represents one of the isomorphic subgraphs in this group.
         std::vector<std::vector<VertexType>> subgraphs_;
 
-        inline size_t size() const { return subgraphs.size(); }
+        inline size_t size() const { return subgraphs_.size(); }
     };
 
   private:
@@ -224,7 +224,7 @@ class OrbitGraphProcessor {
                         }
                     }
 
-                    if (non_viable_edges_cache_.count({u, v}) || non_viable_crit_path_edges_cache_.count({u, v})) {
+                    if (nonViableEdgesCache_.count({u, v}) || nonViableCritPathEdgesCache_.count({u, v})) {
                         if constexpr (verbose_) {
                             std::cout << "  - Merge of " << u << " and " << v << " already checked. Skipping.\n";
                         }
@@ -255,7 +255,7 @@ class OrbitGraphProcessor {
                     }
 
                     std::vector<std::vector<VertexType>> newSubgraphs;
-                    const bool mergeIsValid = is_merge_viable(original_dag, current_groups[u], current_groups[v], new_subgraphs);
+                    const bool mergeIsValid = isMergeViable(originalDag, currentGroups[u], currentGroups[v], newSubgraphs);
 
                     if (!mergeIsValid) {
                         if constexpr (verbose_) {
@@ -416,7 +416,7 @@ class OrbitGraphProcessor {
                     continue;
                 }
 
-                if constexpr (HasTypedVerticesV<Constr_Graph_t>) {
+                if constexpr (HasTypedVerticesV<ConstrGraphT>) {
                     if (not mergeDifferentNodeTypes) {
                         if (currentCoarseGraph.VertexType(u) != currentCoarseGraph.VertexType(v)) {
                             if constexpr (verbose_) {
@@ -467,7 +467,7 @@ class OrbitGraphProcessor {
 
                 VTypeT<GraphT> uType = 0;
                 VTypeT<GraphT> vType = 0;
-                if (not merge_different_node_types && HasTypedVerticesV<GraphT>) {
+                if (not mergeDifferentNodeTypes && HasTypedVerticesV<GraphT>) {
                     uType = currentCoarseGraph.VertexType(u);
                     vType = currentCoarseGraph.VertexType(v);
                 }

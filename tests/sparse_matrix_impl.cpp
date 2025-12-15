@@ -86,10 +86,10 @@ BOOST_AUTO_TEST_CASE(TestSparseMatrixAdapter1) {
     lCsr.setFromTriplets(triplets.begin(), triplets.end());
 
     SparseMatrixImp<int32_t> graph;
-    graph.setCSR(&lCsr);
+    graph.SetCsr(&lCsr);
     SmCsc lCsc{};
     lCsc = lCsr;
-    graph.setCSC(&lCsc);
+    graph.SetCsc(&lCsc);
 
     BOOST_CHECK_EQUAL(graph.NumEdges(), 11);
     BOOST_CHECK_EQUAL(graph.NumVertices(), 7);
@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE(TestSparseMatrixAdapter1) {
 
     unsigned count = 0;
     for (const auto &e : Edges(graph)) {
-        std::cout << e.source << " -> " << e.target << std::endl;
+        std::cout << e.source_ << " -> " << e.target_ << std::endl;
         count++;
     }
     BOOST_CHECK_EQUAL(count, 11);

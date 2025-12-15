@@ -77,7 +77,7 @@ std::vector<std::vector<VertexIdxT<GraphT>>> StronglyConnectedComponents(const G
                     ++childIter;
 
                     if (ids[to] == unvisited) {
-                        dfs_stack.emplace_back(to, std::make_pair(graph.Children(to).begin(), graph.Children(to).end()));
+                        dfsStack.emplace_back(to, std::make_pair(graph.Children(to).begin(), graph.Children(to).end()));
                         s.push(to);
                         onStack[to] = true;
                         ids[to] = low[to] = idCounter++;

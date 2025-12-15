@@ -73,14 +73,14 @@ BOOST_AUTO_TEST_CASE(ConnectedComponentPartTest) {
     BOOST_CHECK_EQUAL(status, ReturnStatus::OSP_SUCCESS);
     BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
 
-    BOOST_CHECK(partitioner.get_sub_dags().size() == 1);
-    BOOST_CHECK(partitioner.get_sub_dags()[0].NumVertices() == 8);
-    BOOST_CHECK(partitioner.get_sub_dags()[0].NumEdges() == 9);
+    BOOST_CHECK(partitioner.GetSubDags().size() == 1);
+    BOOST_CHECK(partitioner.GetSubDags()[0].NumVertices() == 8);
+    BOOST_CHECK(partitioner.GetSubDags()[0].NumEdges() == 9);
 
     for (unsigned i = 0; i < 8; i++) {
-        BOOST_CHECK_EQUAL(partitioner.get_component()[i], 0);
-        BOOST_CHECK(partitioner.get_vertex_map()[i] <= i + 1);
-        BOOST_CHECK(partitioner.get_vertex_mapping()[0].at(i) <= 1 + i);
+        BOOST_CHECK_EQUAL(partitioner.GetComponent()[i], 0);
+        BOOST_CHECK(partitioner.GetVertexMap()[i] <= i + 1);
+        BOOST_CHECK(partitioner.GetVertexMapping()[0].at(i) <= 1 + i);
     }
 
     VertexType v9 = dag.AddVertex(2, 1, 4);
@@ -93,24 +93,24 @@ BOOST_AUTO_TEST_CASE(ConnectedComponentPartTest) {
     dag.AddEdge(v9, v12);
     dag.AddEdge(v10, v11);
 
-    partitioner.compute_connected_components(dag);
+    partitioner.ComputeConnectedComponents(dag);
 
-    BOOST_CHECK_EQUAL(partitioner.get_sub_dags().size(), 2);
-    BOOST_CHECK_EQUAL(partitioner.get_sub_dags()[0].NumVertices(), 8);
-    BOOST_CHECK_EQUAL(partitioner.get_sub_dags()[0].NumEdges(), 9);
-    BOOST_CHECK_EQUAL(partitioner.get_sub_dags()[1].NumVertices(), 4);
-    BOOST_CHECK_EQUAL(partitioner.get_sub_dags()[1].NumEdges(), 4);
+    BOOST_CHECK_EQUAL(partitioner.GetSubDags().size(), 2);
+    BOOST_CHECK_EQUAL(partitioner.GetSubDags()[0].NumVertices(), 8);
+    BOOST_CHECK_EQUAL(partitioner.GetSubDags()[0].NumEdges(), 9);
+    BOOST_CHECK_EQUAL(partitioner.GetSubDags()[1].NumVertices(), 4);
+    BOOST_CHECK_EQUAL(partitioner.GetSubDags()[1].NumEdges(), 4);
 
     for (unsigned i = 0; i < 8; i++) {
-        BOOST_CHECK_EQUAL(partitioner.get_component()[i], 0);
-        BOOST_CHECK(partitioner.get_vertex_map()[i] <= i + 1);
-        BOOST_CHECK(partitioner.get_vertex_mapping()[0].at(i) <= 1 + i);
+        BOOST_CHECK_EQUAL(partitioner.GetComponent()[i], 0);
+        BOOST_CHECK(partitioner.GetVertexMap()[i] <= i + 1);
+        BOOST_CHECK(partitioner.GetVertexMapping()[0].at(i) <= 1 + i);
     }
 
     for (unsigned i = 8; i < 12; i++) {
-        BOOST_CHECK_EQUAL(partitioner.get_component()[i], 1);
-        BOOST_CHECK(partitioner.get_vertex_map()[i] <= 1 + i - 8);
-        BOOST_CHECK(partitioner.get_vertex_mapping()[1].at(i - 8) <= 1 + i);
+        BOOST_CHECK_EQUAL(partitioner.GetComponent()[i], 1);
+        BOOST_CHECK(partitioner.GetVertexMap()[i] <= 1 + i - 8);
+        BOOST_CHECK(partitioner.GetVertexMapping()[1].at(i - 8) <= 1 + i);
     }
 
     BspInstance<ComputationalDagVectorImplDefIntT> instanceNew(dag, arch);

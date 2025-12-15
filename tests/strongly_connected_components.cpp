@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_SUITE(strongly_connected_components_test_suite)
 
 BOOST_AUTO_TEST_CASE(EmptyGraphTest) {
     Graph g;
-    auto sccs = osp::strongly_connected_components(g);
+    auto sccs = osp::StronglyConnectedComponents(g);
     BOOST_CHECK(sccs.empty());
 }
 
@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(NoEdgesTest) {
     g.AddVertex(1, 1, 1);
     g.AddVertex(1, 1, 1);
 
-    auto sccs = osp::strongly_connected_components(g);
+    auto sccs = osp::StronglyConnectedComponents(g);
     std::vector<std::vector<VertexType>> expected = {{0}, {1}, {2}};
     CheckSccsEqual(sccs, expected);
 }
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(LineGraphTest) {
     g.AddEdge(1, 2);
     g.AddEdge(2, 3);
 
-    auto sccs = osp::strongly_connected_components(g);
+    auto sccs = osp::StronglyConnectedComponents(g);
     std::vector<std::vector<VertexType>> expected = {{0}, {1}, {2}, {3}};
     CheckSccsEqual(sccs, expected);
 }
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(SimpleCycleTest) {
     g.AddEdge(1, 2);
     g.AddEdge(2, 0);
 
-    auto sccs = osp::strongly_connected_components(g);
+    auto sccs = osp::StronglyConnectedComponents(g);
     std::vector<std::vector<VertexType>> expected = {
         {0, 1, 2}
     };
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(FullGraphIsSCCTest) {
     g.AddEdge(0, 2);
     g.AddEdge(2, 0);
 
-    auto sccs = osp::strongly_connected_components(g);
+    auto sccs = osp::StronglyConnectedComponents(g);
     std::vector<std::vector<VertexType>> expected = {
         {0, 1, 2}
     };
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(MultipleSCCsTest) {
     g.AddEdge(4, 6);
     g.AddEdge(5, 7);
 
-    auto sccs = osp::strongly_connected_components(g);
+    auto sccs = osp::StronglyConnectedComponents(g);
     std::vector<std::vector<VertexType>> expected = {
         {0, 1, 2},
         {3, 4},
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(ComplexGraphFromPaperTest) {
     g.AddEdge(7, 3);
     g.AddEdge(7, 6);
 
-    auto sccs = osp::strongly_connected_components(g);
+    auto sccs = osp::StronglyConnectedComponents(g);
     std::vector<std::vector<VertexType>> expected = {
         {0, 1, 4},
         {2, 3, 7},
