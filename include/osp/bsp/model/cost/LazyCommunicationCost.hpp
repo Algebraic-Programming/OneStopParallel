@@ -63,7 +63,7 @@ void ComputeLazyCommunicationCosts(const BspSchedule<GraphT> &schedule,
                                   schedule.NumberOfSupersteps(),
                                   schedule.AssignedProcessors(),
                                   schedule.AssignedSupersteps(),
-                                  schedule.getStaleness(),
+                                  schedule.GetStaleness(),
                                   rec,
                                   send);
 }

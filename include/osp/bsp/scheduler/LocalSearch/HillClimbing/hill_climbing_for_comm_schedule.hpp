@@ -166,9 +166,9 @@ void HillClimbingForCommSteps<GraphT>::Init() {
                 for (const vertex_idx &pred : G.Parents(node)) {
                     if (schedule->AssignedProcessor(pred) != schedule->AssignedProcessor(node)
                         && commSchedule[pred][schedule->AssignedProcessor(node)] == UINT_MAX) {
-                        commSchedule[pred][schedule->AssignedProcessor(node)] = step - schedule->getStaleness();
+                        commSchedule[pred][schedule->AssignedProcessor(node)] = step - schedule->GetStaleness();
                         commBounds[pred][schedule->AssignedProcessor(node)]
-                            = std::make_pair(schedule->AssignedSuperstep(pred), step - schedule->getStaleness());
+                            = std::make_pair(schedule->AssignedSuperstep(pred), step - schedule->GetStaleness());
                     }
                 }
             }
@@ -216,7 +216,7 @@ void HillClimbingForCommSteps<GraphT>::Init() {
 
     // set minimum cost - differs for BSP and MaxBSP
     minimum_cost_per_superstep.clear();
-    if (schedule_->getStaleness() == 1) {
+    if (schedule_->GetStaleness() == 1) {
         minimum_cost_per_superstep.resize(M - 1, 0);
     } else {
         minimum_cost_per_superstep = cost_helpers::compute_max_work_per_step(*schedule);
