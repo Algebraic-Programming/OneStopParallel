@@ -56,9 +56,9 @@ BOOST_AUTO_TEST_CASE(EmptyGraphTest) {
 
 BOOST_AUTO_TEST_CASE(NoEdgesTest) {
     Graph g;
-    g.add_vertex(1, 1, 1);
-    g.add_vertex(1, 1, 1);
-    g.add_vertex(1, 1, 1);
+    g.AddVertex(1, 1, 1);
+    g.AddVertex(1, 1, 1);
+    g.AddVertex(1, 1, 1);
 
     auto sccs = osp::strongly_connected_components(g);
     std::vector<std::vector<VertexType>> expected = {{0}, {1}, {2}};
@@ -67,10 +67,10 @@ BOOST_AUTO_TEST_CASE(NoEdgesTest) {
 
 BOOST_AUTO_TEST_CASE(LineGraphTest) {
     Graph g;
-    g.add_vertex(1, 1, 1);
-    g.add_vertex(1, 1, 1);
-    g.add_vertex(1, 1, 1);
-    g.add_vertex(1, 1, 1);
+    g.AddVertex(1, 1, 1);
+    g.AddVertex(1, 1, 1);
+    g.AddVertex(1, 1, 1);
+    g.AddVertex(1, 1, 1);
     g.add_edge(0, 1);
     g.add_edge(1, 2);
     g.add_edge(2, 3);
@@ -82,9 +82,9 @@ BOOST_AUTO_TEST_CASE(LineGraphTest) {
 
 BOOST_AUTO_TEST_CASE(SimpleCycleTest) {
     Graph g;
-    g.add_vertex(1, 1, 1);
-    g.add_vertex(1, 1, 1);
-    g.add_vertex(1, 1, 1);
+    g.AddVertex(1, 1, 1);
+    g.AddVertex(1, 1, 1);
+    g.AddVertex(1, 1, 1);
     g.add_edge(0, 1);
     g.add_edge(1, 2);
     g.add_edge(2, 0);
@@ -98,9 +98,9 @@ BOOST_AUTO_TEST_CASE(SimpleCycleTest) {
 
 BOOST_AUTO_TEST_CASE(FullGraphIsSCCTest) {
     Graph g;
-    g.add_vertex(1, 1, 1);
-    g.add_vertex(1, 1, 1);
-    g.add_vertex(1, 1, 1);
+    g.AddVertex(1, 1, 1);
+    g.AddVertex(1, 1, 1);
+    g.AddVertex(1, 1, 1);
     g.add_edge(0, 1);
     g.add_edge(1, 0);
     g.add_edge(1, 2);
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(FullGraphIsSCCTest) {
 BOOST_AUTO_TEST_CASE(MultipleSCCsTest) {
     Graph g;
     for (int i = 0; i < 8; ++i) {
-        g.add_vertex(1, 1, 1);
+        g.AddVertex(1, 1, 1);
     }
 
     g.add_edge(0, 1);
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(MultipleSCCsTest) {
 BOOST_AUTO_TEST_CASE(ComplexGraphFromPaperTest) {
     Graph g;
     for (int i = 0; i < 8; ++i) {
-        g.add_vertex(1, 1, 1);
+        g.AddVertex(1, 1, 1);
     }
     g.add_edge(0, 1);
     g.add_edge(1, 2);

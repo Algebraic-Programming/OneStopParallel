@@ -67,14 +67,14 @@ BOOST_AUTO_TEST_CASE(KlImproverSmokeTest) {
 
     Graph dag;
 
-    const VertexType v1 = dag.add_vertex(2, 9, 2);
-    const VertexType v2 = dag.add_vertex(3, 8, 4);
-    const VertexType v3 = dag.add_vertex(4, 7, 3);
-    const VertexType v4 = dag.add_vertex(5, 6, 2);
-    const VertexType v5 = dag.add_vertex(6, 5, 6);
-    const VertexType v6 = dag.add_vertex(7, 4, 2);
-    dag.add_vertex(8, 3, 4);
-    const VertexType v8 = dag.add_vertex(9, 2, 1);
+    const VertexType v1 = dag.AddVertex(2, 9, 2);
+    const VertexType v2 = dag.AddVertex(3, 8, 4);
+    const VertexType v3 = dag.AddVertex(4, 7, 3);
+    const VertexType v4 = dag.AddVertex(5, 6, 2);
+    const VertexType v5 = dag.AddVertex(6, 5, 6);
+    const VertexType v6 = dag.AddVertex(7, 4, 2);
+    dag.AddVertex(8, 3, 4);
+    const VertexType v8 = dag.AddVertex(9, 2, 1);
 
     dag.add_edge(v1, v2, 2);
     dag.add_edge(v1, v3, 2);
@@ -159,14 +159,14 @@ BOOST_AUTO_TEST_CASE(KlImproverSuperstepRemovalTest) {
 
     Graph dag;
 
-    const VertexType v1 = dag.add_vertex(2, 9, 2);
-    const VertexType v2 = dag.add_vertex(3, 8, 4);
-    const VertexType v3 = dag.add_vertex(4, 7, 3);
-    const VertexType v4 = dag.add_vertex(1, 6, 2);
-    const VertexType v5 = dag.add_vertex(6, 5, 6);
-    const VertexType v6 = dag.add_vertex(7, 4, 2);
-    dag.add_vertex(8, 3, 4);
-    const VertexType v8 = dag.add_vertex(9, 2, 1);
+    const VertexType v1 = dag.AddVertex(2, 9, 2);
+    const VertexType v2 = dag.AddVertex(3, 8, 4);
+    const VertexType v3 = dag.AddVertex(4, 7, 3);
+    const VertexType v4 = dag.AddVertex(1, 6, 2);
+    const VertexType v5 = dag.AddVertex(6, 5, 6);
+    const VertexType v6 = dag.AddVertex(7, 4, 2);
+    dag.AddVertex(8, 3, 4);
+    const VertexType v8 = dag.AddVertex(9, 2, 1);
 
     dag.add_edge(v1, v2, 2);
     dag.add_edge(v2, v3, 2);
@@ -206,14 +206,14 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
 
     Graph dag;
 
-    const VertexType v1 = dag.add_vertex(2, 9, 2);
-    const VertexType v2 = dag.add_vertex(3, 8, 4);
-    const VertexType v3 = dag.add_vertex(4, 7, 3);
-    const VertexType v4 = dag.add_vertex(5, 6, 2);
-    const VertexType v5 = dag.add_vertex(6, 5, 6);
-    const VertexType v6 = dag.add_vertex(7, 4, 2);
-    dag.add_vertex(8, 3, 4);
-    const VertexType v8 = dag.add_vertex(9, 2, 1);
+    const VertexType v1 = dag.AddVertex(2, 9, 2);
+    const VertexType v2 = dag.AddVertex(3, 8, 4);
+    const VertexType v3 = dag.AddVertex(4, 7, 3);
+    const VertexType v4 = dag.AddVertex(5, 6, 2);
+    const VertexType v5 = dag.AddVertex(6, 5, 6);
+    const VertexType v6 = dag.AddVertex(7, 4, 2);
+    dag.AddVertex(8, 3, 4);
+    const VertexType v8 = dag.AddVertex(9, 2, 1);
 
     dag.add_edge(v1, v2, 2);
     dag.add_edge(v1, v3, 2);
@@ -316,14 +316,14 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopPenaltyTest) {
 
     Graph dag;
 
-    const VertexType v1 = dag.add_vertex(2, 9, 2);
-    const VertexType v2 = dag.add_vertex(3, 8, 4);
-    const VertexType v3 = dag.add_vertex(4, 7, 3);
-    const VertexType v4 = dag.add_vertex(5, 6, 2);
-    const VertexType v5 = dag.add_vertex(6, 5, 6);
-    const VertexType v6 = dag.add_vertex(7, 4, 2);
-    dag.add_vertex(8, 3, 4);
-    const VertexType v8 = dag.add_vertex(9, 2, 1);
+    const VertexType v1 = dag.AddVertex(2, 9, 2);
+    const VertexType v2 = dag.AddVertex(3, 8, 4);
+    const VertexType v3 = dag.AddVertex(4, 7, 3);
+    const VertexType v4 = dag.AddVertex(5, 6, 2);
+    const VertexType v5 = dag.AddVertex(6, 5, 6);
+    const VertexType v6 = dag.AddVertex(7, 4, 2);
+    dag.AddVertex(8, 3, 4);
+    const VertexType v8 = dag.AddVertex(9, 2, 1);
 
     dag.add_edge(v1, v2, 2);
     dag.add_edge(v1, v3, 2);
@@ -400,14 +400,14 @@ BOOST_AUTO_TEST_CASE(KlImproverViolationHandlingTest) {
 
     Graph dag;
 
-    const VertexType v1 = dag.add_vertex(2, 9, 2);
-    const VertexType v2 = dag.add_vertex(3, 8, 4);
-    const VertexType v3 = dag.add_vertex(4, 7, 3);
-    const VertexType v4 = dag.add_vertex(5, 6, 2);
-    const VertexType v5 = dag.add_vertex(6, 5, 6);
-    const VertexType v6 = dag.add_vertex(7, 4, 2);
-    dag.add_vertex(8, 3, 4);
-    const VertexType v8 = dag.add_vertex(9, 2, 1);
+    const VertexType v1 = dag.AddVertex(2, 9, 2);
+    const VertexType v2 = dag.AddVertex(3, 8, 4);
+    const VertexType v3 = dag.AddVertex(4, 7, 3);
+    const VertexType v4 = dag.AddVertex(5, 6, 2);
+    const VertexType v5 = dag.AddVertex(6, 5, 6);
+    const VertexType v6 = dag.AddVertex(7, 4, 2);
+    dag.AddVertex(8, 3, 4);
+    const VertexType v8 = dag.AddVertex(9, 2, 1);
 
     dag.add_edge(v1, v2, 2);
     dag.add_edge(v1, v3, 2);
@@ -450,14 +450,14 @@ BOOST_AUTO_TEST_CASE(KlBase1) {
 
     Graph dag;
 
-    const VertexType v1 = dag.add_vertex(2, 9, 2);
-    const VertexType v2 = dag.add_vertex(3, 8, 4);
-    const VertexType v3 = dag.add_vertex(4, 7, 3);
-    const VertexType v4 = dag.add_vertex(5, 6, 2);
-    const VertexType v5 = dag.add_vertex(6, 5, 6);
-    const VertexType v6 = dag.add_vertex(7, 4, 2);
-    const VertexType v7 = dag.add_vertex(8, 3, 4);
-    const VertexType v8 = dag.add_vertex(9, 2, 1);
+    const VertexType v1 = dag.AddVertex(2, 9, 2);
+    const VertexType v2 = dag.AddVertex(3, 8, 4);
+    const VertexType v3 = dag.AddVertex(4, 7, 3);
+    const VertexType v4 = dag.AddVertex(5, 6, 2);
+    const VertexType v5 = dag.AddVertex(6, 5, 6);
+    const VertexType v6 = dag.AddVertex(7, 4, 2);
+    const VertexType v7 = dag.AddVertex(8, 3, 4);
+    const VertexType v8 = dag.AddVertex(9, 2, 1);
 
     dag.add_edge(v1, v2, 2);
     dag.add_edge(v1, v3, 2);
@@ -544,14 +544,14 @@ BOOST_AUTO_TEST_CASE(KlBase2) {
 
     Graph dag;
 
-    const VertexType v1 = dag.add_vertex(2, 9, 2);
-    const VertexType v2 = dag.add_vertex(3, 8, 4);
-    const VertexType v3 = dag.add_vertex(4, 7, 3);
-    const VertexType v4 = dag.add_vertex(5, 6, 2);
-    const VertexType v5 = dag.add_vertex(6, 5, 6);
-    const VertexType v6 = dag.add_vertex(7, 4, 2);
-    const VertexType v7 = dag.add_vertex(8, 3, 4);
-    const VertexType v8 = dag.add_vertex(9, 2, 1);
+    const VertexType v1 = dag.AddVertex(2, 9, 2);
+    const VertexType v2 = dag.AddVertex(3, 8, 4);
+    const VertexType v3 = dag.AddVertex(4, 7, 3);
+    const VertexType v4 = dag.AddVertex(5, 6, 2);
+    const VertexType v5 = dag.AddVertex(6, 5, 6);
+    const VertexType v6 = dag.AddVertex(7, 4, 2);
+    const VertexType v7 = dag.AddVertex(8, 3, 4);
+    const VertexType v8 = dag.AddVertex(9, 2, 1);
 
     dag.add_edge(v1, v2, 2);
     dag.add_edge(v1, v3, 2);
@@ -705,14 +705,14 @@ BOOST_AUTO_TEST_CASE(KlBase3) {
 
     Graph dag;
 
-    const VertexType v1 = dag.add_vertex(2, 9, 2);
-    const VertexType v2 = dag.add_vertex(3, 8, 4);
-    const VertexType v3 = dag.add_vertex(4, 7, 3);
-    const VertexType v4 = dag.add_vertex(5, 6, 2);
-    const VertexType v5 = dag.add_vertex(6, 5, 6);
-    const VertexType v6 = dag.add_vertex(7, 4, 2);
-    const VertexType v7 = dag.add_vertex(8, 3, 4);
-    const VertexType v8 = dag.add_vertex(9, 2, 1);
+    const VertexType v1 = dag.AddVertex(2, 9, 2);
+    const VertexType v2 = dag.AddVertex(3, 8, 4);
+    const VertexType v3 = dag.AddVertex(4, 7, 3);
+    const VertexType v4 = dag.AddVertex(5, 6, 2);
+    const VertexType v5 = dag.AddVertex(6, 5, 6);
+    const VertexType v6 = dag.AddVertex(7, 4, 2);
+    const VertexType v7 = dag.AddVertex(8, 3, 4);
+    const VertexType v8 = dag.AddVertex(9, 2, 1);
 
     dag.add_edge(v1, v2, 2);
     dag.add_edge(v1, v3, 2);
@@ -818,14 +818,14 @@ BOOST_AUTO_TEST_CASE(KlBase3) {
 
 //     graph dag;
 
-//     const VertexType v1 = dag.add_vertex(2, 9, 2);
-//     const VertexType v2 = dag.add_vertex(3, 8, 4);
-//     const VertexType v3 = dag.add_vertex(4, 7, 3);
-//     const VertexType v4 = dag.add_vertex(5, 6, 2);
-//     const VertexType v5 = dag.add_vertex(6, 5, 6);
-//     const VertexType v6 = dag.add_vertex(7, 4, 2);
-//     const VertexType v7 = dag.add_vertex(8, 3, 4);
-//     const VertexType v8 = dag.add_vertex(9, 2, 1);
+//     const VertexType v1 = dag.AddVertex(2, 9, 2);
+//     const VertexType v2 = dag.AddVertex(3, 8, 4);
+//     const VertexType v3 = dag.AddVertex(4, 7, 3);
+//     const VertexType v4 = dag.AddVertex(5, 6, 2);
+//     const VertexType v5 = dag.AddVertex(6, 5, 6);
+//     const VertexType v6 = dag.AddVertex(7, 4, 2);
+//     const VertexType v7 = dag.AddVertex(8, 3, 4);
+//     const VertexType v8 = dag.AddVertex(9, 2, 1);
 
 //     dag.add_edge(v1, v2, 2);
 //     dag.add_edge(v1, v3, 2);

@@ -82,7 +82,7 @@ inline GraphT ConstructMultiPipelineDag(unsigned numPipelines, unsigned pipeline
     for (unsigned i = 0; i < numPipelines; ++i) {
         for (unsigned j = 0; j < pipelineLen; ++j) {
             // Nodes at the same stage 'j' have the same work weight
-            dag.add_vertex(10 * (j + 1), 1, 1);
+            dag.AddVertex(10 * (j + 1), 1, 1);
         }
     }
 
@@ -113,8 +113,8 @@ inline GraphT ConstructLadderDag(unsigned numRungs) {
     }
 
     for (unsigned i = 0; i < numRungs + 1; ++i) {
-        dag.add_vertex(10, 1, 1);    // Left side node
-        dag.add_vertex(20, 1, 1);    // Right side node
+        dag.AddVertex(10, 1, 1);    // Left side node
+        dag.AddVertex(20, 1, 1);    // Right side node
     }
 
     for (unsigned i = 0; i < numRungs; ++i) {
@@ -145,7 +145,7 @@ inline GraphT ConstructAsymmetricDag(unsigned numNodes) {
     static_assert(IsConstructableCdagV<GraphT>, "Graph_t must be a constructable computational DAG");
     GraphT dag;
     for (unsigned i = 0; i < numNodes; ++i) {
-        dag.add_vertex(10 * (i + 1), 1, 1);
+        dag.AddVertex(10 * (i + 1), 1, 1);
         if (i > 0) {
             dag.add_edge(i - 1, i);
         }
@@ -169,7 +169,7 @@ inline GraphT ConstructBinaryOutTree(unsigned height) {
     }
 
     for (unsigned i = 0; i < numNodes; ++i) {
-        dag.add_vertex(10, 1, 1);
+        dag.AddVertex(10, 1, 1);
     }
 
     for (unsigned i = 0; i < numNodes / 2; ++i) {
@@ -195,7 +195,7 @@ inline GraphT ConstructBinaryInTree(unsigned height) {
     }
 
     for (unsigned i = 0; i < numNodes; ++i) {
-        dag.add_vertex(10, 1, 1);
+        dag.AddVertex(10, 1, 1);
     }
 
     for (unsigned i = 0; i < numNodes / 2; ++i) {
@@ -221,7 +221,7 @@ inline GraphT ConstructGridDag(unsigned rows, unsigned cols) {
     }
 
     for (unsigned i = 0; i < rows * cols; ++i) {
-        dag.add_vertex(10, 1, 1);
+        dag.AddVertex(10, 1, 1);
     }
 
     for (unsigned r = 0; r < rows; ++r) {
@@ -253,7 +253,7 @@ inline GraphT ConstructButterflyDag(unsigned stages) {
 
     unsigned n = 1U << stages;
     for (unsigned i = 0; i < (stages + 1) * n; ++i) {
-        dag.add_vertex(10, 1, 1);
+        dag.AddVertex(10, 1, 1);
     }
 
     for (unsigned s = 0; s < stages; ++s) {

@@ -35,10 +35,10 @@ using KlActiveScheduleT = kl_active_schedule<Graph, double, no_local_search_memo
 BOOST_AUTO_TEST_CASE(TestArrangeSuperstepCommData) {
     Graph dag;
 
-    dag.add_vertex(1, 1, 1);
-    dag.add_vertex(1, 1, 1);
-    dag.add_vertex(1, 1, 1);
-    dag.add_vertex(1, 1, 1);
+    dag.AddVertex(1, 1, 1);
+    dag.AddVertex(1, 1, 1);
+    dag.AddVertex(1, 1, 1);
+    dag.AddVertex(1, 1, 1);
 
     BspArchitecture<Graph> arch;
     arch.setNumberOfProcessors(4);
@@ -169,17 +169,17 @@ BOOST_AUTO_TEST_CASE(TestComputeCommDatastructures) {
 
     // Create 6 vertices with specific comm weights
     // Node 0: weight 10 (sends to 1)
-    dag.add_vertex(1, 10, 1);
+    dag.AddVertex(1, 10, 1);
     // Node 1: weight 1
-    dag.add_vertex(1, 1, 1);
+    dag.AddVertex(1, 1, 1);
     // Node 2: weight 5 (sends to 3)
-    dag.add_vertex(1, 5, 1);
+    dag.AddVertex(1, 5, 1);
     // Node 3: weight 1
-    dag.add_vertex(1, 1, 1);
+    dag.AddVertex(1, 1, 1);
     // Node 4: weight 2 (local to 5)
-    dag.add_vertex(1, 2, 1);
+    dag.AddVertex(1, 2, 1);
     // Node 5: weight 1
-    dag.add_vertex(1, 1, 1);
+    dag.AddVertex(1, 1, 1);
 
     // Add edges
     // 0 -> 1
@@ -328,12 +328,12 @@ BOOST_AUTO_TEST_CASE(TestUpdateDatastructureAfterMove) {
     Graph dag;
 
     // Create 6 vertices with specific comm weights
-    dag.add_vertex(1, 10, 1);    // 0
-    dag.add_vertex(1, 1, 1);     // 1
-    dag.add_vertex(1, 5, 1);     // 2
-    dag.add_vertex(1, 1, 1);     // 3
-    dag.add_vertex(1, 2, 1);     // 4
-    dag.add_vertex(1, 1, 1);     // 5
+    dag.AddVertex(1, 10, 1);    // 0
+    dag.AddVertex(1, 1, 1);     // 1
+    dag.AddVertex(1, 5, 1);     // 2
+    dag.AddVertex(1, 1, 1);     // 3
+    dag.AddVertex(1, 2, 1);     // 4
+    dag.AddVertex(1, 1, 1);     // 5
 
     // Add edges
     dag.add_edge(0, 1, 1);
@@ -414,10 +414,10 @@ BOOST_AUTO_TEST_CASE(TestMultipleSequentialMoves) {
     Graph dag;
 
     // Create a linear chain: 0 -> 1 -> 2 -> 3
-    dag.add_vertex(1, 10, 1);    // 0
-    dag.add_vertex(1, 8, 1);     // 1
-    dag.add_vertex(1, 6, 1);     // 2
-    dag.add_vertex(1, 4, 1);     // 3
+    dag.AddVertex(1, 10, 1);    // 0
+    dag.AddVertex(1, 8, 1);     // 1
+    dag.AddVertex(1, 6, 1);     // 2
+    dag.AddVertex(1, 4, 1);     // 3
 
     dag.add_edge(0, 1, 1);
     dag.add_edge(1, 2, 1);
@@ -491,10 +491,10 @@ BOOST_AUTO_TEST_CASE(TestNodeWithMultipleChildren) {
     Graph dag;
 
     // Tree structure: Node 0 has three children (1, 2, 3)
-    dag.add_vertex(1, 10, 1);    // 0
-    dag.add_vertex(1, 1, 1);     // 1
-    dag.add_vertex(1, 1, 1);     // 2
-    dag.add_vertex(1, 1, 1);     // 3
+    dag.AddVertex(1, 10, 1);    // 0
+    dag.AddVertex(1, 1, 1);     // 1
+    dag.AddVertex(1, 1, 1);     // 2
+    dag.AddVertex(1, 1, 1);     // 3
 
     dag.add_edge(0, 1, 1);
     dag.add_edge(0, 2, 1);
@@ -570,9 +570,9 @@ BOOST_AUTO_TEST_CASE(TestCrossStepMoves) {
     Graph dag;
 
     // 0 -> 1 -> 2
-    dag.add_vertex(1, 10, 1);    // 0
-    dag.add_vertex(1, 8, 1);     // 1
-    dag.add_vertex(1, 6, 1);     // 2
+    dag.AddVertex(1, 10, 1);    // 0
+    dag.AddVertex(1, 8, 1);     // 1
+    dag.AddVertex(1, 6, 1);     // 2
 
     dag.add_edge(0, 1, 1);
     dag.add_edge(1, 2, 1);
@@ -629,14 +629,14 @@ BOOST_AUTO_TEST_CASE(TestComplexScenarioUserProvided) {
 
     // Vertices from user request
     // v1(0): w=2, c=9, m=2
-    const auto v1 = dag.add_vertex(2, 9, 2);
-    const auto v2 = dag.add_vertex(3, 8, 4);
-    const auto v3 = dag.add_vertex(4, 7, 3);
-    const auto v4 = dag.add_vertex(5, 6, 2);
-    const auto v5 = dag.add_vertex(6, 5, 6);
-    const auto v6 = dag.add_vertex(7, 4, 2);
-    dag.add_vertex(8, 3, 4);                    // v7 (index 6)
-    const auto v8 = dag.add_vertex(9, 2, 1);    // v8 (index 7)
+    const auto v1 = dag.AddVertex(2, 9, 2);
+    const auto v2 = dag.AddVertex(3, 8, 4);
+    const auto v3 = dag.AddVertex(4, 7, 3);
+    const auto v4 = dag.AddVertex(5, 6, 2);
+    const auto v5 = dag.AddVertex(6, 5, 6);
+    const auto v6 = dag.AddVertex(7, 4, 2);
+    dag.AddVertex(8, 3, 4);                    // v7 (index 6)
+    const auto v8 = dag.AddVertex(9, 2, 1);    // v8 (index 7)
 
     // Edges
     dag.add_edge(v1, v2, 2);
@@ -1089,9 +1089,9 @@ BOOST_AUTO_TEST_CASE(TestLadderGraphMoves) {
 BOOST_AUTO_TEST_CASE(TestLazyAndBufferedModes) {
     std::cout << "Setup Graph" << std::endl;
     Graph instance;
-    instance.add_vertex(1, 10, 1);
-    instance.add_vertex(1, 10, 1);
-    instance.add_vertex(1, 10, 1);
+    instance.AddVertex(1, 10, 1);
+    instance.AddVertex(1, 10, 1);
+    instance.AddVertex(1, 10, 1);
 
     instance.add_edge(0, 1, 1);
     instance.add_edge(0, 2, 1);

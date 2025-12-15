@@ -110,10 +110,10 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessorSimpleMerge) {
     // Two parallel pipelines that are structurally identical
     // 0 -> 1
     // 2 -> 3
-    dag.add_vertex(10, 1, 1);    // 0
-    dag.add_vertex(10, 1, 1);    // 1
-    dag.add_vertex(10, 1, 1);    // 2
-    dag.add_vertex(10, 1, 1);    // 3
+    dag.AddVertex(10, 1, 1);    // 0
+    dag.AddVertex(10, 1, 1);    // 1
+    dag.AddVertex(10, 1, 1);    // 2
+    dag.AddVertex(10, 1, 1);    // 3
     dag.add_edge(0, 1);
     dag.add_edge(2, 3);
 
@@ -145,10 +145,10 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessorSimpleMerge) {
 BOOST_AUTO_TEST_CASE(OrbitGraphProcessorForkJoinNoMerge) {
     GraphT dag;
     // 0 -> {1, 2} -> 3. Nodes 1 and 2 are in the same orbit.
-    dag.add_vertex(10, 1, 1);    // 0
-    dag.add_vertex(20, 1, 1);    // 1
-    dag.add_vertex(20, 1, 1);    // 2
-    dag.add_vertex(30, 1, 1);    // 3
+    dag.AddVertex(10, 1, 1);    // 0
+    dag.AddVertex(20, 1, 1);    // 1
+    dag.AddVertex(20, 1, 1);    // 2
+    dag.AddVertex(30, 1, 1);    // 3
     dag.add_edge(0, 1);
     dag.add_edge(0, 2);
     dag.add_edge(1, 3);

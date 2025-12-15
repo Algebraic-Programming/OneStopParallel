@@ -364,7 +364,7 @@ GraphT PebblingPartialILP<GraphT>::ContractByPartition(const BspInstance<GraphT>
 
     GraphT contracted;
     for (VertexIdx node = 0; node < nrNewNodes; ++node) {
-        contracted.add_vertex(0, 0, 0);
+        contracted.AddVertex(0, 0, 0);
     }
 
     std::set<std::pair<VertexIdx, VertexIdx>> edges;

@@ -210,14 +210,14 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverOnTestGraphs) {
 
 //     graph dag;
 
-//     const VertexType v1 = dag.add_vertex(2, 9, 2);
-//     const VertexType v2 = dag.add_vertex(3, 8, 4);
-//     const VertexType v3 = dag.add_vertex(4, 7, 3);
-//     const VertexType v4 = dag.add_vertex(5, 6, 2);
-//     const VertexType v5 = dag.add_vertex(6, 5, 6);
-//     const VertexType v6 = dag.add_vertex(7, 4, 2);
-//     const VertexType v7 = dag.add_vertex(8, 3, 4);
-//     const VertexType v8 = dag.add_vertex(9, 2, 1);
+//     const VertexType v1 = dag.AddVertex(2, 9, 2);
+//     const VertexType v2 = dag.AddVertex(3, 8, 4);
+//     const VertexType v3 = dag.AddVertex(4, 7, 3);
+//     const VertexType v4 = dag.AddVertex(5, 6, 2);
+//     const VertexType v5 = dag.AddVertex(6, 5, 6);
+//     const VertexType v6 = dag.AddVertex(7, 4, 2);
+//     const VertexType v7 = dag.AddVertex(8, 3, 4);
+//     const VertexType v8 = dag.AddVertex(9, 2, 1);
 
 //     dag.add_edge(v1, v2, 2);
 //     dag.add_edge(v1, v3, 2);
@@ -362,14 +362,14 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverOnTestGraphs) {
 
 //     graph dag;
 
-//     const VertexType v1 = dag.add_vertex(2, 9, 2);
-//     const VertexType v2 = dag.add_vertex(3, 8, 4);
-//     const VertexType v3 = dag.add_vertex(4, 7, 3);
-//     const VertexType v4 = dag.add_vertex(5, 6, 2);
-//     const VertexType v5 = dag.add_vertex(6, 5, 6);
-//     const VertexType v6 = dag.add_vertex(7, 4, 2);
-//     dag.add_vertex(8, 3, 4);
-//     const VertexType v8 = dag.add_vertex(9, 2, 1);
+//     const VertexType v1 = dag.AddVertex(2, 9, 2);
+//     const VertexType v2 = dag.AddVertex(3, 8, 4);
+//     const VertexType v3 = dag.AddVertex(4, 7, 3);
+//     const VertexType v4 = dag.AddVertex(5, 6, 2);
+//     const VertexType v5 = dag.AddVertex(6, 5, 6);
+//     const VertexType v6 = dag.AddVertex(7, 4, 2);
+//     dag.AddVertex(8, 3, 4);
+//     const VertexType v8 = dag.AddVertex(9, 2, 1);
 
 //     dag.add_edge(v1, v2, 2);
 //     dag.add_edge(v1, v3, 2);
@@ -492,14 +492,14 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverInnerLoopPenaltyTest) {
 
     Graph dag;
 
-    const VertexType v1 = dag.add_vertex(2, 9, 2);
-    const VertexType v2 = dag.add_vertex(3, 8, 4);
-    const VertexType v3 = dag.add_vertex(4, 7, 3);
-    const VertexType v4 = dag.add_vertex(5, 6, 2);
-    const VertexType v5 = dag.add_vertex(6, 5, 6);
-    const VertexType v6 = dag.add_vertex(7, 4, 2);
-    dag.add_vertex(8, 3, 4);
-    const VertexType v8 = dag.add_vertex(9, 2, 1);
+    const VertexType v1 = dag.AddVertex(2, 9, 2);
+    const VertexType v2 = dag.AddVertex(3, 8, 4);
+    const VertexType v3 = dag.AddVertex(4, 7, 3);
+    const VertexType v4 = dag.AddVertex(5, 6, 2);
+    const VertexType v5 = dag.AddVertex(6, 5, 6);
+    const VertexType v6 = dag.AddVertex(7, 4, 2);
+    dag.AddVertex(8, 3, 4);
+    const VertexType v8 = dag.AddVertex(9, 2, 1);
 
     dag.add_edge(v1, v2, 2);
     dag.add_edge(v1, v3, 2);
@@ -586,14 +586,14 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverInnerLoopLambdaMapTest) {
 
     Graph dag;
 
-    const VertexType v1 = dag.add_vertex(2, 9, 2);
-    const VertexType v2 = dag.add_vertex(3, 8, 4);
-    const VertexType v3 = dag.add_vertex(4, 7, 3);
-    const VertexType v4 = dag.add_vertex(5, 6, 2);
-    const VertexType v5 = dag.add_vertex(6, 5, 6);
-    const VertexType v6 = dag.add_vertex(7, 4, 2);
-    const VertexType v7 = dag.add_vertex(8, 3, 4);
-    const VertexType v8 = dag.add_vertex(9, 2, 1);
+    const VertexType v1 = dag.AddVertex(2, 9, 2);
+    const VertexType v2 = dag.AddVertex(3, 8, 4);
+    const VertexType v3 = dag.AddVertex(4, 7, 3);
+    const VertexType v4 = dag.AddVertex(5, 6, 2);
+    const VertexType v5 = dag.AddVertex(6, 5, 6);
+    const VertexType v6 = dag.AddVertex(7, 4, 2);
+    const VertexType v7 = dag.AddVertex(8, 3, 4);
+    const VertexType v8 = dag.AddVertex(9, 2, 1);
 
     dag.add_edge(v1, v2, 2);
     dag.add_edge(v1, v3, 2);

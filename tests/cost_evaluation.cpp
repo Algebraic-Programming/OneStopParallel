@@ -38,11 +38,11 @@ BOOST_AUTO_TEST_CASE(TestCostModelsSimpleDag) {
     instance.setSynchronisationCosts(5);
 
     auto &dag = instance.GetComputationalDag();
-    dag.add_vertex(10, 1, 0);
-    dag.add_vertex(20, 2, 0);
-    dag.add_vertex(30, 3, 0);
-    dag.add_vertex(40, 4, 0);
-    dag.add_vertex(50, 5, 0);
+    dag.AddVertex(10, 1, 0);
+    dag.AddVertex(20, 2, 0);
+    dag.AddVertex(30, 3, 0);
+    dag.AddVertex(40, 4, 0);
+    dag.AddVertex(50, 5, 0);
     dag.add_edge(0, 1);
     dag.add_edge(0, 2);
     dag.add_edge(1, 4);

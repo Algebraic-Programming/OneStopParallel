@@ -35,14 +35,14 @@ using VertexType = VertexIdxT<ComputationalDag>;
 BOOST_AUTO_TEST_CASE(CuthillMckee1) {
     ComputationalDag dag;
 
-    dag.add_vertex(2, 9);
-    dag.add_vertex(3, 8);
-    dag.add_vertex(4, 7);
-    dag.add_vertex(5, 6);
-    dag.add_vertex(6, 5);
-    dag.add_vertex(7, 4);
-    dag.add_vertex(8, 3);
-    dag.add_vertex(9, 2);
+    dag.AddVertex(2, 9);
+    dag.AddVertex(3, 8);
+    dag.AddVertex(4, 7);
+    dag.AddVertex(5, 6);
+    dag.AddVertex(6, 5);
+    dag.AddVertex(7, 4);
+    dag.AddVertex(8, 3);
+    dag.AddVertex(9, 2);
 
     dag.add_edge(0, 1, 2);
     dag.add_edge(0, 2, 3);

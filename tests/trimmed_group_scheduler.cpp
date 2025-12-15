@@ -78,9 +78,9 @@ BOOST_AUTO_TEST_CASE(EmptyGraphTest) {
 
 BOOST_AUTO_TEST_CASE(SingleComponentSingleProcessorTypeTest) {
     // Graph: 0-1-2 (single component)
-    dag_.add_vertex(1, 1, 1, 0);    // 0
-    dag_.add_vertex(1, 1, 1, 0);    // 1
-    dag_.add_vertex(1, 1, 1, 0);    // 2
+    dag_.AddVertex(1, 1, 1, 0);    // 0
+    dag_.AddVertex(1, 1, 1, 0);    // 1
+    dag_.AddVertex(1, 1, 1, 0);    // 2
     dag_.add_edge(0, 1);
     dag_.add_edge(1, 2);
     instance_.GetComputationalDag() = dag_;
@@ -109,10 +109,10 @@ BOOST_AUTO_TEST_CASE(SingleComponentSingleProcessorTypeTest) {
 
 BOOST_AUTO_TEST_CASE(MultipleComponentsSingleProcessorTypeEvenDistributionTest) {
     // Graph: 0-1 (component 0), 2-3 (component 1)
-    dag_.add_vertex(1, 1, 1, 0);    // 0
-    dag_.add_vertex(1, 1, 1, 0);    // 1
-    dag_.add_vertex(1, 1, 1, 0);    // 2
-    dag_.add_vertex(1, 1, 1, 0);    // 3
+    dag_.AddVertex(1, 1, 1, 0);    // 0
+    dag_.AddVertex(1, 1, 1, 0);    // 1
+    dag_.AddVertex(1, 1, 1, 0);    // 2
+    dag_.AddVertex(1, 1, 1, 0);    // 3
     dag_.add_edge(0, 1);
     dag_.add_edge(2, 3);
     instance_.GetComputationalDag() = dag_;
@@ -147,9 +147,9 @@ BOOST_AUTO_TEST_CASE(MultipleComponentsSingleProcessorTypeEvenDistributionTest) 
 
 BOOST_AUTO_TEST_CASE(MultipleComponentsSingleProcessorTypeUnevenDistributionTest) {
     // Graph: 0 (component 0), 1 (component 1), 2 (component 2) - all isolated
-    dag_.add_vertex(1, 1, 1, 0);    // 0
-    dag_.add_vertex(1, 1, 1, 0);    // 1
-    dag_.add_vertex(1, 1, 1, 0);    // 2
+    dag_.AddVertex(1, 1, 1, 0);    // 0
+    dag_.AddVertex(1, 1, 1, 0);    // 1
+    dag_.AddVertex(1, 1, 1, 0);    // 2
     instance_.GetComputationalDag() = dag_;
 
     // Architecture: 6 processors of type 0
@@ -184,8 +184,8 @@ BOOST_AUTO_TEST_CASE(MultipleComponentsSingleProcessorTypeUnevenDistributionTest
 
 BOOST_AUTO_TEST_CASE(MultipleComponentsHeterogeneousArchitectureTest) {
     // Graph: 0 (type 0), 1 (type 1) - isolated nodes
-    dag_.add_vertex(1, 1, 1, 0);    // 0 (component 0, type 0)
-    dag_.add_vertex(1, 1, 1, 1);    // 1 (component 1, type 1)
+    dag_.AddVertex(1, 1, 1, 0);    // 0 (component 0, type 0)
+    dag_.AddVertex(1, 1, 1, 1);    // 1 (component 1, type 1)
     instance_.GetComputationalDag() = dag_;
 
     // Architecture: 2 processors of type 0 (global 0,1), 2 processors of type 1 (global 2,3)

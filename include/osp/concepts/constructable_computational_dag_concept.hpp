@@ -71,7 +71,7 @@ inline constexpr bool IsModifiableCdagVertexV = IsModifiableCdagVertex<T>::value
  * @brief Concept to check if vertices can be added to the graph.
  *
  * Requires:
- * - `add_vertex(work_weight, comm_weight, mem_weight)`
+ * - `AddVertex(work_weight, comm_weight, mem_weight)`
  * - Constructibility from `vertex_idx_t` (for reserving size).
  *
  * @tparam T The graph type.
@@ -112,7 +112,7 @@ inline constexpr bool IsModifiableCdagTypedVertexV = IsModifiableCdagTypedVertex
  * @brief Concept to check if typed vertices can be added.
  *
  * Requires:
- * - `add_vertex(work, comm, mem, type)`
+ * - `AddVertex(work, comm, mem, type)`
  *
  * @tparam T The graph type.
  */

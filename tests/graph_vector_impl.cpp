@@ -34,14 +34,14 @@ computational_dag_vector_impl_def_t ConstrGraph1() {
 
     using VertexIdx = computational_dag_vector_impl_def_t::VertexIdx;
 
-    VertexIdx v1 = graph.add_vertex(1, 2, 3, 4);
-    VertexIdx v2 = graph.add_vertex(5, 6, 7, 8);
-    VertexIdx v3 = graph.add_vertex(9, 10, 11, 12);
-    VertexIdx v4 = graph.add_vertex(13, 14, 15, 16);
-    VertexIdx v5 = graph.add_vertex(17, 18, 19, 20);
-    VertexIdx v6 = graph.add_vertex(21, 22, 23, 24);
-    VertexIdx v7 = graph.add_vertex(25, 26, 27, 28);
-    VertexIdx v8 = graph.add_vertex(29, 30, 31, 32);
+    VertexIdx v1 = graph.AddVertex(1, 2, 3, 4);
+    VertexIdx v2 = graph.AddVertex(5, 6, 7, 8);
+    VertexIdx v3 = graph.AddVertex(9, 10, 11, 12);
+    VertexIdx v4 = graph.AddVertex(13, 14, 15, 16);
+    VertexIdx v5 = graph.AddVertex(17, 18, 19, 20);
+    VertexIdx v6 = graph.AddVertex(21, 22, 23, 24);
+    VertexIdx v7 = graph.AddVertex(25, 26, 27, 28);
+    VertexIdx v8 = graph.AddVertex(29, 30, 31, 32);
 
     graph.add_edge(v1, v2);
     graph.add_edge(v1, v3);
@@ -142,10 +142,10 @@ BOOST_AUTO_TEST_CASE(TestDag) {
 BOOST_AUTO_TEST_CASE(TestConstrDag) {
     computational_dag_vector_impl_def_int_t graph;
 
-    graph.add_vertex(1, 2, 3);
-    graph.add_vertex(5, 6, 7);
-    graph.add_vertex(9, 10, 11);
-    graph.add_vertex(13, 14, 15);
+    graph.AddVertex(1, 2, 3);
+    graph.AddVertex(5, 6, 7);
+    graph.AddVertex(9, 10, 11);
+    graph.AddVertex(13, 14, 15);
 
     graph.add_edge(0, 1);
     graph.add_edge(0, 2);
@@ -169,8 +169,8 @@ BOOST_AUTO_TEST_CASE(TestConstrDag) {
 
     boost_graph_int_t bG1;
 
-    bG1.add_vertex(1, 2, 3, 4);
-    bG1.add_vertex(5, 6, 7, 8);
+    bG1.AddVertex(1, 2, 3, 4);
+    bG1.AddVertex(5, 6, 7, 8);
 
     bG1.add_edge(0, 1, 9);
 

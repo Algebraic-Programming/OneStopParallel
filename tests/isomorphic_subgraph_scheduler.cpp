@@ -72,10 +72,10 @@ BOOST_AUTO_TEST_CASE(TrimSubgraphGroupsTestNoTrim) {
 
     BspInstance<GraphT> instance;
     auto &dag = instance.GetComputationalDag();
-    dag.add_vertex(1, 1, 1, 0);                                                     // 0
-    dag.add_vertex(1, 1, 1, 0);                                                     // 1
-    dag.add_vertex(1, 1, 1, 0);                                                     // 2
-    dag.add_vertex(1, 1, 1, 0);                                                     // 3
+    dag.AddVertex(1, 1, 1, 0);                                                     // 0
+    dag.AddVertex(1, 1, 1, 0);                                                     // 1
+    dag.AddVertex(1, 1, 1, 0);                                                     // 2
+    dag.AddVertex(1, 1, 1, 0);                                                     // 3
     instance.GetArchitecture().setProcessorsWithTypes({0, 0, 0, 0, 0, 0, 0, 0});    // 8 processors of type 0
     instance.setDiagonalCompatibilityMatrix(1);
 
@@ -99,12 +99,12 @@ BOOST_AUTO_TEST_CASE(TrimSubgraphGroupsTestWithTrim) {
 
     BspInstance<GraphT> instance;
     auto &dag = instance.GetComputationalDag();
-    dag.add_vertex(10, 1, 1, 0);                                                    // 0
-    dag.add_vertex(10, 1, 1, 0);                                                    // 1
-    dag.add_vertex(10, 1, 1, 0);                                                    // 2
-    dag.add_vertex(10, 1, 1, 0);                                                    // 3
-    dag.add_vertex(10, 1, 1, 0);                                                    // 4
-    dag.add_vertex(10, 1, 1, 0);                                                    // 5
+    dag.AddVertex(10, 1, 1, 0);                                                    // 0
+    dag.AddVertex(10, 1, 1, 0);                                                    // 1
+    dag.AddVertex(10, 1, 1, 0);                                                    // 2
+    dag.AddVertex(10, 1, 1, 0);                                                    // 3
+    dag.AddVertex(10, 1, 1, 0);                                                    // 4
+    dag.AddVertex(10, 1, 1, 0);                                                    // 5
     instance.GetArchitecture().setProcessorsWithTypes({0, 0, 0, 0, 0, 0, 0, 0});    // 8 processors of type 0
     instance.setDiagonalCompatibilityMatrix(1);
 
@@ -144,22 +144,22 @@ BOOST_AUTO_TEST_CASE(TrimSubgraphGroupsTestMultipleGroups) {
     BspInstance<GraphT> instance;
     auto &dag = instance.GetComputationalDag();
     for (int i = 0; i < 6; ++i) {
-        dag.add_vertex(1, 1, 1, 0);    // 0-5
+        dag.AddVertex(1, 1, 1, 0);    // 0-5
     }
     for (int i = 0; i < 3; ++i) {
-        dag.add_vertex(1, 1, 1, 0);    // 6-8, but we will use 10-12 in test
+        dag.AddVertex(1, 1, 1, 0);    // 6-8, but we will use 10-12 in test
     }
     for (int i = 0; i < 2; ++i) {
-        dag.add_vertex(1, 1, 1, 0);    // 9-10
+        dag.AddVertex(1, 1, 1, 0);    // 9-10
     }
     for (int i = 0; i < 2; ++i) {
-        dag.add_vertex(1, 1, 1, 0);    // 11-12
+        dag.AddVertex(1, 1, 1, 0);    // 11-12
     }
     for (int i = 0; i < 8; ++i) {
-        dag.add_vertex(1, 1, 1, 0);    // 13-20
+        dag.AddVertex(1, 1, 1, 0);    // 13-20
     }
     for (int i = 0; i < 5; ++i) {
-        dag.add_vertex(1, 1, 1, 0);    // 21-25
+        dag.AddVertex(1, 1, 1, 0);    // 21-25
     }
     // Make sure all vertices used in iso_groups exist.
     // All are type 0.
@@ -207,12 +207,12 @@ BOOST_AUTO_TEST_CASE(ScheduleIsomorphicGroupHeterogeneousArch) {
     // Two isomorphic groups:
     // Group 0: {0,1}, {2,3} (type 0)
     // Group 1: {4}, {5} (type 1)
-    dag.add_vertex(10, 1, 1, 0);
-    dag.add_vertex(10, 1, 1, 0);    // 0, 1
-    dag.add_vertex(10, 1, 1, 0);
-    dag.add_vertex(10, 1, 1, 0);    // 2, 3
-    dag.add_vertex(20, 1, 1, 1);    // 4
-    dag.add_vertex(20, 1, 1, 1);    // 5
+    dag.AddVertex(10, 1, 1, 0);
+    dag.AddVertex(10, 1, 1, 0);    // 0, 1
+    dag.AddVertex(10, 1, 1, 0);
+    dag.AddVertex(10, 1, 1, 0);    // 2, 3
+    dag.AddVertex(20, 1, 1, 1);    // 4
+    dag.AddVertex(20, 1, 1, 1);    // 5
     dag.add_edge(0, 1);
     dag.add_edge(2, 3);
     dag.add_edge(1, 4);
@@ -275,13 +275,13 @@ BOOST_AUTO_TEST_CASE(ScheduleIsomorphicGroupShuffledIDs) {
     auto &dag = instance.GetComputationalDag();
 
     // Group 0, Subgraph 1: 0 -> 1
-    dag.add_vertex(10, 1, 1, 0);    // 0
-    dag.add_vertex(20, 1, 1, 0);    // 1
+    dag.AddVertex(10, 1, 1, 0);    // 0
+    dag.AddVertex(20, 1, 1, 0);    // 1
     dag.add_edge(0, 1);
 
     // Group 0, Subgraph 2 (isomorphic to 1, but with shuffled IDs): 3 -> 2
-    dag.add_vertex(20, 1, 1, 0);    // 2 (work 20, corresponds to node 1)
-    dag.add_vertex(10, 1, 1, 0);    // 3 (work 10, corresponds to node 0)
+    dag.AddVertex(20, 1, 1, 0);    // 2 (work 20, corresponds to node 1)
+    dag.AddVertex(10, 1, 1, 0);    // 3 (work 10, corresponds to node 0)
     dag.add_edge(3, 2);
 
     // Architecture: 2 processors, so each subgraph gets its own partition space.
@@ -335,10 +335,10 @@ BOOST_AUTO_TEST_CASE(ScheduleIsomorphicGroupShuffledIDs) {
 //     auto& dag = instance.GetComputationalDag();
 
 //     // Group 0, Subgraph 1: 0 -> {1,2} -> 3
-//     dag.add_vertex(10, 1, 1, 0); // 0 (source)
-//     dag.add_vertex(20, 1, 1, 0); // 1 (middle)
-//     dag.add_vertex(20, 1, 1, 0); // 2 (middle)
-//     dag.add_vertex(30, 1, 1, 0); // 3 (sink)
+//     dag.AddVertex(10, 1, 1, 0); // 0 (source)
+//     dag.AddVertex(20, 1, 1, 0); // 1 (middle)
+//     dag.AddVertex(20, 1, 1, 0); // 2 (middle)
+//     dag.AddVertex(30, 1, 1, 0); // 3 (sink)
 //     dag.add_edge(0, 1);
 //     dag.add_edge(0, 2);
 //     dag.add_edge(1, 3);
@@ -346,10 +346,10 @@ BOOST_AUTO_TEST_CASE(ScheduleIsomorphicGroupShuffledIDs) {
 
 //     // Group 0, Subgraph 2 (isomorphic, but with shuffled IDs and different topology)
 //     // Structure: 7 -> {5,4} -> 6
-//     dag.add_vertex(20, 1, 1, 0); // 4 (middle, corresponds to node 2)
-//     dag.add_vertex(20, 1, 1, 0); // 5 (middle, corresponds to node 1)
-//     dag.add_vertex(30, 1, 1, 0); // 6 (sink, corresponds to node 3)
-//     dag.add_vertex(10, 1, 1, 0); // 7 (source, corresponds to node 0)
+//     dag.AddVertex(20, 1, 1, 0); // 4 (middle, corresponds to node 2)
+//     dag.AddVertex(20, 1, 1, 0); // 5 (middle, corresponds to node 1)
+//     dag.AddVertex(30, 1, 1, 0); // 6 (sink, corresponds to node 3)
+//     dag.AddVertex(10, 1, 1, 0); // 7 (source, corresponds to node 0)
 //     dag.add_edge(7, 4);
 //     dag.add_edge(7, 5);
 //     dag.add_edge(4, 6);

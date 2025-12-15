@@ -36,18 +36,18 @@ using ConstrGraphT = computational_dag_vector_impl_def_t;
 BOOST_AUTO_TEST_CASE(MapperSimpleChain) {
     // Rep: 0 -> 1 -> 2
     ConstrGraphT repGraph;
-    repGraph.add_vertex(10, 1, 1);
-    repGraph.add_vertex(20, 1, 1);
-    repGraph.add_vertex(30, 1, 1);
+    repGraph.AddVertex(10, 1, 1);
+    repGraph.AddVertex(20, 1, 1);
+    repGraph.AddVertex(30, 1, 1);
     repGraph.add_edge(0, 1);
     repGraph.add_edge(1, 2);
     std::vector<VertexIdxT<GraphT>> repMap = {100, 101, 102};
 
     // Current: 2 -> 0 -> 1 (isomorphic, but different local IDs)
     ConstrGraphT currentGraph;
-    currentGraph.add_vertex(20, 1, 1);    // local 0 (work 20)
-    currentGraph.add_vertex(30, 1, 1);    // local 1 (work 30)
-    currentGraph.add_vertex(10, 1, 1);    // local 2 (work 10)
+    currentGraph.AddVertex(20, 1, 1);    // local 0 (work 20)
+    currentGraph.AddVertex(30, 1, 1);    // local 1 (work 30)
+    currentGraph.AddVertex(10, 1, 1);    // local 2 (work 10)
     currentGraph.add_edge(2, 0);
     currentGraph.add_edge(0, 1);
     std::vector<VertexIdxT<GraphT>> currentMap = {201, 202, 200};
@@ -74,10 +74,10 @@ BOOST_AUTO_TEST_CASE(MapperSimpleChain) {
 BOOST_AUTO_TEST_CASE(MapperForkJoin) {
     // Rep: 0 -> {1,2} -> 3
     ConstrGraphT repGraph;
-    repGraph.add_vertex(10, 1, 1);
-    repGraph.add_vertex(20, 1, 1);
-    repGraph.add_vertex(20, 1, 1);
-    repGraph.add_vertex(30, 1, 1);
+    repGraph.AddVertex(10, 1, 1);
+    repGraph.AddVertex(20, 1, 1);
+    repGraph.AddVertex(20, 1, 1);
+    repGraph.AddVertex(30, 1, 1);
     repGraph.add_edge(0, 1);
     repGraph.add_edge(0, 2);
     repGraph.add_edge(1, 3);
@@ -86,10 +86,10 @@ BOOST_AUTO_TEST_CASE(MapperForkJoin) {
 
     // Current: 3 -> {0,2} -> 1
     ConstrGraphT currentGraph;
-    currentGraph.add_vertex(20, 1, 1);    // local 0
-    currentGraph.add_vertex(30, 1, 1);    // local 1
-    currentGraph.add_vertex(20, 1, 1);    // local 2
-    currentGraph.add_vertex(10, 1, 1);    // local 3
+    currentGraph.AddVertex(20, 1, 1);    // local 0
+    currentGraph.AddVertex(30, 1, 1);    // local 1
+    currentGraph.AddVertex(20, 1, 1);    // local 2
+    currentGraph.AddVertex(10, 1, 1);    // local 3
     currentGraph.add_edge(3, 0);
     currentGraph.add_edge(3, 2);
     currentGraph.add_edge(0, 1);
@@ -121,20 +121,20 @@ BOOST_AUTO_TEST_CASE(MapperForkJoin) {
 BOOST_AUTO_TEST_CASE(MapperDisconnectedComponents) {
     // Rep: {0->1}, {2->3}. Two identical but disconnected components.
     ConstrGraphT repGraph;
-    repGraph.add_vertex(10, 1, 1);
-    repGraph.add_vertex(20, 1, 1);    // 0, 1
-    repGraph.add_vertex(10, 1, 1);
-    repGraph.add_vertex(20, 1, 1);    // 2, 3
+    repGraph.AddVertex(10, 1, 1);
+    repGraph.AddVertex(20, 1, 1);    // 0, 1
+    repGraph.AddVertex(10, 1, 1);
+    repGraph.AddVertex(20, 1, 1);    // 2, 3
     repGraph.add_edge(0, 1);
     repGraph.add_edge(2, 3);
     std::vector<VertexIdxT<GraphT>> repMap = {10, 11, 12, 13};
 
     // Current: {2->3}, {0->1}. Same components, but different local IDs.
     ConstrGraphT currentGraph;
-    currentGraph.add_vertex(10, 1, 1);
-    currentGraph.add_vertex(20, 1, 1);    // 0, 1
-    currentGraph.add_vertex(10, 1, 1);
-    currentGraph.add_vertex(20, 1, 1);    // 2, 3
+    currentGraph.AddVertex(10, 1, 1);
+    currentGraph.AddVertex(20, 1, 1);    // 0, 1
+    currentGraph.AddVertex(10, 1, 1);
+    currentGraph.AddVertex(20, 1, 1);    // 2, 3
     currentGraph.add_edge(2, 3);
     currentGraph.add_edge(0, 1);
     std::vector<VertexIdxT<GraphT>> currentMap = {22, 23, 20, 21};
@@ -178,12 +178,12 @@ BOOST_AUTO_TEST_CASE(MapperMultiPipeline) {
     // Pipeline 1 (local IDs 0,1,2) corresponds to rep pipeline 2 (global 20,21,22)
     // Pipeline 2 (local IDs 3,4,5) corresponds to rep pipeline 1 (global 10,11,12)
     ConstrGraphT currentGraph;
-    currentGraph.add_vertex(10, 1, 1);    // local 0, stage 0
-    currentGraph.add_vertex(20, 1, 1);    // local 1, stage 1
-    currentGraph.add_vertex(30, 1, 1);    // local 2, stage 2
-    currentGraph.add_vertex(10, 1, 1);    // local 3, stage 0
-    currentGraph.add_vertex(20, 1, 1);    // local 4, stage 1
-    currentGraph.add_vertex(30, 1, 1);    // local 5, stage 2
+    currentGraph.AddVertex(10, 1, 1);    // local 0, stage 0
+    currentGraph.AddVertex(20, 1, 1);    // local 1, stage 1
+    currentGraph.AddVertex(30, 1, 1);    // local 2, stage 2
+    currentGraph.AddVertex(10, 1, 1);    // local 3, stage 0
+    currentGraph.AddVertex(20, 1, 1);    // local 4, stage 1
+    currentGraph.AddVertex(30, 1, 1);    // local 5, stage 2
     currentGraph.add_edge(0, 1);
     currentGraph.add_edge(1, 2);    // First pipeline
     currentGraph.add_edge(3, 4);
@@ -229,12 +229,12 @@ BOOST_AUTO_TEST_CASE(MapperShuffledSymmetric) {
     // A naive mapping of local IDs (0->0, 1->1, etc.) would be incorrect
     // because the work weights would not match.
     ConstrGraphT currentGraph;
-    currentGraph.add_vertex(20, 1, 1);    // local 0 (work 20, right)
-    currentGraph.add_vertex(10, 1, 1);    // local 1 (work 10, left)
-    currentGraph.add_vertex(20, 1, 1);    // local 2 (work 20, right)
-    currentGraph.add_vertex(10, 1, 1);    // local 3 (work 10, left)
-    currentGraph.add_vertex(20, 1, 1);    // local 4 (work 20, right)
-    currentGraph.add_vertex(10, 1, 1);    // local 5 (work 10, left)
+    currentGraph.AddVertex(20, 1, 1);    // local 0 (work 20, right)
+    currentGraph.AddVertex(10, 1, 1);    // local 1 (work 10, left)
+    currentGraph.AddVertex(20, 1, 1);    // local 2 (work 20, right)
+    currentGraph.AddVertex(10, 1, 1);    // local 3 (work 10, left)
+    currentGraph.AddVertex(20, 1, 1);    // local 4 (work 20, right)
+    currentGraph.AddVertex(10, 1, 1);    // local 5 (work 10, left)
     // Edges for {5,0} -> {3,2} -> {1,4}
     currentGraph.add_edge(5, 3);
     currentGraph.add_edge(5, 2);    // Rung 1

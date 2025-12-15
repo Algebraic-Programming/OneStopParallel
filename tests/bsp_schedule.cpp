@@ -316,10 +316,10 @@ BOOST_AUTO_TEST_CASE(TestMaxBspSchedule) {
     instance.setSynchronisationCosts(100);    // l=100 (not used in MaxBspSchedule cost model)
 
     auto &dag = instance.GetComputationalDag();
-    dag.add_vertex(10, 1, 0);    // Node 0
-    dag.add_vertex(5, 2, 0);     // Node 1
-    dag.add_vertex(5, 3, 0);     // Node 2
-    dag.add_vertex(10, 4, 0);    // Node 3
+    dag.AddVertex(10, 1, 0);    // Node 0
+    dag.AddVertex(5, 2, 0);     // Node 1
+    dag.AddVertex(5, 3, 0);     // Node 2
+    dag.AddVertex(10, 4, 0);    // Node 3
     dag.add_edge(0, 1);
     dag.add_edge(0, 2);
     dag.add_edge(1, 3);
@@ -397,10 +397,10 @@ BOOST_AUTO_TEST_CASE(TestMaxBspScheduleCs) {
     instance.setSynchronisationCosts(100);    // l=100
 
     auto &dag = instance.GetComputationalDag();
-    dag.add_vertex(10, 1, 0);    // Node 0
-    dag.add_vertex(5, 2, 0);     // Node 1
-    dag.add_vertex(5, 3, 0);     // Node 2
-    dag.add_vertex(10, 4, 0);    // Node 3
+    dag.AddVertex(10, 1, 0);    // Node 0
+    dag.AddVertex(5, 2, 0);     // Node 1
+    dag.AddVertex(5, 3, 0);     // Node 2
+    dag.AddVertex(10, 4, 0);    // Node 3
     dag.add_edge(0, 1);
     dag.add_edge(0, 2);
     dag.add_edge(1, 3);

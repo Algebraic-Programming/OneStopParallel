@@ -36,9 +36,9 @@ BOOST_AUTO_TEST_CASE(TestRecomputer) {
     instance1.setCommunicationCosts(1);
     instance1.setSynchronisationCosts(1);
 
-    instance1.GetComputationalDag().add_vertex(10, 1, 0);
-    instance1.GetComputationalDag().add_vertex(10, 1, 0);
-    instance1.GetComputationalDag().add_vertex(10, 1, 0);
+    instance1.GetComputationalDag().AddVertex(10, 1, 0);
+    instance1.GetComputationalDag().AddVertex(10, 1, 0);
+    instance1.GetComputationalDag().AddVertex(10, 1, 0);
     instance1.GetComputationalDag().add_edge(0, 1);
     instance1.GetComputationalDag().add_edge(0, 2);
 

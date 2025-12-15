@@ -35,14 +35,14 @@ BOOST_AUTO_TEST_CASE(ConnectedComponentPartTest) {
     BOOST_CHECK_EQUAL(dag.NumVertices(), 0);
     BOOST_CHECK_EQUAL(dag.NumEdges(), 0);
 
-    VertexType v1 = dag.add_vertex(2, 1, 2);
-    VertexType v2 = dag.add_vertex(3, 1, 2);
-    VertexType v3 = dag.add_vertex(4, 1, 2);
-    VertexType v4 = dag.add_vertex(5, 1, 2);
-    VertexType v5 = dag.add_vertex(6, 1, 2);
-    VertexType v6 = dag.add_vertex(7, 1, 2);
-    VertexType v7 = dag.add_vertex(8, 1, 2);
-    VertexType v8 = dag.add_vertex(9, 1, 2);
+    VertexType v1 = dag.AddVertex(2, 1, 2);
+    VertexType v2 = dag.AddVertex(3, 1, 2);
+    VertexType v3 = dag.AddVertex(4, 1, 2);
+    VertexType v4 = dag.AddVertex(5, 1, 2);
+    VertexType v5 = dag.AddVertex(6, 1, 2);
+    VertexType v6 = dag.AddVertex(7, 1, 2);
+    VertexType v7 = dag.AddVertex(8, 1, 2);
+    VertexType v8 = dag.AddVertex(9, 1, 2);
 
     BOOST_CHECK_EQUAL(dag.NumVertices(), 8);
     BOOST_CHECK_EQUAL(dag.NumEdges(), 0);
@@ -83,10 +83,10 @@ BOOST_AUTO_TEST_CASE(ConnectedComponentPartTest) {
         BOOST_CHECK(partitioner.get_vertex_mapping()[0].at(i) <= 1 + i);
     }
 
-    VertexType v9 = dag.add_vertex(2, 1, 4);
-    VertexType v10 = dag.add_vertex(3, 1, 6);
-    VertexType v11 = dag.add_vertex(4, 1, 6);
-    VertexType v12 = dag.add_vertex(5, 1, 6);
+    VertexType v9 = dag.AddVertex(2, 1, 4);
+    VertexType v10 = dag.AddVertex(3, 1, 6);
+    VertexType v11 = dag.AddVertex(4, 1, 6);
+    VertexType v12 = dag.AddVertex(5, 1, 6);
 
     dag.add_edge(v9, v10);
     dag.add_edge(v9, v11);

@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(SubGraphDagVectorImpl) {
 
     unsigned cntr = 0;
     for (std::size_t i = 0U; i < numVert; ++i) {
-        graph.add_vertex(cntr, cntr + 1U, cntr + 2U, cntr + 3U);
+        graph.AddVertex(cntr, cntr + 1U, cntr + 2U, cntr + 3U);
         cntr += 4U;
     }
     for (const auto &[src, tgt] : edges) {

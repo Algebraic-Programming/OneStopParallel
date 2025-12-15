@@ -33,9 +33,9 @@ BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerSimpleChain) {
     auto &dag = instance.GetComputationalDag();
 
     // Create a simple coarse-grained DAG: 0 -> 1 -> 2
-    dag.add_vertex(100, 1, 0);    // node 0
-    dag.add_vertex(200, 1, 0);    // node 1
-    dag.add_vertex(300, 1, 0);    // node 2
+    dag.AddVertex(100, 1, 0);    // node 0
+    dag.AddVertex(200, 1, 0);    // node 1
+    dag.AddVertex(300, 1, 0);    // node 2
     dag.add_edge(0, 1);
     dag.add_edge(1, 2);
 
@@ -82,10 +82,10 @@ BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerForkJoin) {
     auto &dag = instance.GetComputationalDag();
 
     // Create a fork-join DAG: 0 -> {1,2} -> 3
-    dag.add_vertex(100, 1, 0);    // node 0
-    dag.add_vertex(200, 1, 0);    // node 1
-    dag.add_vertex(300, 1, 0);    // node 2
-    dag.add_vertex(100, 1, 0);    // node 3
+    dag.AddVertex(100, 1, 0);    // node 0
+    dag.AddVertex(200, 1, 0);    // node 1
+    dag.AddVertex(300, 1, 0);    // node 2
+    dag.AddVertex(100, 1, 0);    // node 3
     dag.add_edge(0, 1);
     dag.add_edge(0, 2);
     dag.add_edge(1, 3);
@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerDeadlock) {
     auto &dag = instance.GetComputationalDag();
 
     // Create a single-node DAG
-    dag.add_vertex(100, 1, 0);    // node 0
+    dag.AddVertex(100, 1, 0);    // node 0
 
     // Setup Architecture: 1 processor of type 0
     instance.GetArchitecture().setProcessorsWithTypes({0});
@@ -175,12 +175,12 @@ BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerComplexDag) {
     BspInstance<GraphT> instance;
     auto &dag = instance.GetComputationalDag();
 
-    dag.add_vertex(50, 1, 0);     // 0
-    dag.add_vertex(100, 1, 0);    // 1
-    dag.add_vertex(150, 1, 0);    // 2
-    dag.add_vertex(80, 1, 0);     // 3
-    dag.add_vertex(120, 1, 0);    // 4
-    dag.add_vertex(60, 1, 0);     // 5
+    dag.AddVertex(50, 1, 0);     // 0
+    dag.AddVertex(100, 1, 0);    // 1
+    dag.AddVertex(150, 1, 0);    // 2
+    dag.AddVertex(80, 1, 0);     // 3
+    dag.AddVertex(120, 1, 0);    // 4
+    dag.AddVertex(60, 1, 0);     // 5
     dag.add_edge(0, 1);
     dag.add_edge(0, 2);
     dag.add_edge(1, 3);
@@ -229,11 +229,11 @@ BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerResourceContention) {
     auto &dag = instance.GetComputationalDag();
 
     // Create a fork-join DAG: 0 -> {1,2,3} -> 4
-    dag.add_vertex(10, 1, 0);     // 0
-    dag.add_vertex(100, 1, 0);    // 1 (high rank)
-    dag.add_vertex(50, 1, 0);     // 2 (mid rank)
-    dag.add_vertex(20, 1, 0);     // 3 (low rank)
-    dag.add_vertex(10, 1, 0);     // 4
+    dag.AddVertex(10, 1, 0);     // 0
+    dag.AddVertex(100, 1, 0);    // 1 (high rank)
+    dag.AddVertex(50, 1, 0);     // 2 (mid rank)
+    dag.AddVertex(20, 1, 0);     // 3 (low rank)
+    dag.AddVertex(10, 1, 0);     // 4
     dag.add_edge(0, 1);
     dag.add_edge(0, 2);
     dag.add_edge(0, 3);
@@ -289,9 +289,9 @@ BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerProportionalAllocation) {
     auto &dag = instance.GetComputationalDag();
 
     // Create a fork DAG: 0 -> {1,2}
-    dag.add_vertex(10, 1, 0);     // 0
-    dag.add_vertex(300, 1, 0);    // 1 (high rank)
-    dag.add_vertex(100, 1, 0);    // 2 (low rank)
+    dag.AddVertex(10, 1, 0);     // 0
+    dag.AddVertex(300, 1, 0);    // 1 (high rank)
+    dag.AddVertex(100, 1, 0);    // 2 (low rank)
     dag.add_edge(0, 1);
     dag.add_edge(0, 2);
 

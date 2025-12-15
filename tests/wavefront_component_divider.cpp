@@ -126,14 +126,14 @@ using VertexType = Graph::VertexIdx;
 
 BOOST_AUTO_TEST_CASE(ForwardAndBackwardPassTest) {
     Graph dag;
-    const auto v1 = dag.add_vertex(2, 1, 9);
-    const auto v2 = dag.add_vertex(3, 1, 8);
-    const auto v3 = dag.add_vertex(4, 1, 7);
-    const auto v4 = dag.add_vertex(5, 1, 6);
-    const auto v5 = dag.add_vertex(6, 1, 5);
-    const auto v6 = dag.add_vertex(7, 1, 4);
-    const auto v7 = dag.add_vertex(8, 1, 3);    // Note: v7 is not connected in the example
-    const auto v8 = dag.add_vertex(9, 1, 2);
+    const auto v1 = dag.AddVertex(2, 1, 9);
+    const auto v2 = dag.AddVertex(3, 1, 8);
+    const auto v3 = dag.AddVertex(4, 1, 7);
+    const auto v4 = dag.AddVertex(5, 1, 6);
+    const auto v5 = dag.AddVertex(6, 1, 5);
+    const auto v6 = dag.AddVertex(7, 1, 4);
+    const auto v7 = dag.AddVertex(8, 1, 3);    // Note: v7 is not connected in the example
+    const auto v8 = dag.AddVertex(9, 1, 2);
 
     dag.add_edge(v1, v2);
     dag.add_edge(v1, v3);
@@ -208,14 +208,14 @@ BOOST_AUTO_TEST_CASE(ForwardAndBackwardPassTest) {
 BOOST_AUTO_TEST_CASE(SequenceGenerationTest) {
     // --- Test Setup ---
     Graph dag;
-    const auto v1 = dag.add_vertex(2, 1, 9);
-    const auto v2 = dag.add_vertex(3, 1, 8);
-    const auto v3 = dag.add_vertex(4, 1, 7);
-    const auto v4 = dag.add_vertex(5, 1, 6);
-    const auto v5 = dag.add_vertex(6, 1, 5);
-    const auto v6 = dag.add_vertex(7, 1, 4);
-    const auto v7 = dag.add_vertex(8, 1, 3);    // Isolated vertex
-    const auto v8 = dag.add_vertex(9, 1, 2);
+    const auto v1 = dag.AddVertex(2, 1, 9);
+    const auto v2 = dag.AddVertex(3, 1, 8);
+    const auto v3 = dag.AddVertex(4, 1, 7);
+    const auto v4 = dag.AddVertex(5, 1, 6);
+    const auto v5 = dag.AddVertex(6, 1, 5);
+    const auto v6 = dag.AddVertex(7, 1, 4);
+    const auto v7 = dag.AddVertex(8, 1, 3);    // Isolated vertex
+    const auto v8 = dag.AddVertex(9, 1, 2);
 
     dag.add_edge(v1, v2);
     dag.add_edge(v1, v3);
@@ -271,14 +271,14 @@ struct TestFixture {
         // Level 1: {v2, v3, v4}
         // Level 2: {v5, v6}
         // Level 3: {v8}
-        const auto v1 = dag_.add_vertex(2, 1, 9);
-        const auto v2 = dag_.add_vertex(3, 1, 8);
-        const auto v3 = dag_.add_vertex(4, 1, 7);
-        const auto v4 = dag_.add_vertex(5, 1, 6);
-        const auto v5 = dag_.add_vertex(6, 1, 5);
-        const auto v6 = dag_.add_vertex(7, 1, 4);
-        const auto v7 = dag_.add_vertex(8, 1, 3);    // Isolated vertex
-        const auto v8 = dag_.add_vertex(9, 1, 2);
+        const auto v1 = dag_.AddVertex(2, 1, 9);
+        const auto v2 = dag_.AddVertex(3, 1, 8);
+        const auto v3 = dag_.AddVertex(4, 1, 7);
+        const auto v4 = dag_.AddVertex(5, 1, 6);
+        const auto v5 = dag_.AddVertex(6, 1, 5);
+        const auto v6 = dag_.AddVertex(7, 1, 4);
+        const auto v7 = dag_.AddVertex(8, 1, 3);    // Isolated vertex
+        const auto v8 = dag_.AddVertex(9, 1, 2);
 
         vertices_ = {v1, v2, v3, v4, v5, v6, v7, v8};
 
@@ -364,13 +364,13 @@ struct TestFixture2 {
         // This graph is designed to have a component count sequence of {2, 2, 2, 1}
         // to properly test the recursive divider's splitting logic.
         // Levels: {v1,v2}, {v3,v4}, {v5,v6}, {v7}
-        const auto v1 = dag_.add_vertex(1, 1, 1);
-        const auto v2 = dag_.add_vertex(1, 1, 1);
-        const auto v3 = dag_.add_vertex(1, 1, 1);
-        const auto v4 = dag_.add_vertex(1, 1, 1);
-        const auto v5 = dag_.add_vertex(1, 1, 1);
-        const auto v6 = dag_.add_vertex(1, 1, 1);
-        const auto v7 = dag_.add_vertex(1, 1, 1);
+        const auto v1 = dag_.AddVertex(1, 1, 1);
+        const auto v2 = dag_.AddVertex(1, 1, 1);
+        const auto v3 = dag_.AddVertex(1, 1, 1);
+        const auto v4 = dag_.AddVertex(, 1, 1);
+        const auto v5 = dag_.AddVertex(1, 1, 1);
+        const auto v6 = dag_.AddVertex(1, 1, 1);
+        const auto v7 = dag_.AddVertex(1, 1, 1);
 
         vertices_ = {v1, v2, v3, v4, v5, v6, v7};
 
@@ -392,13 +392,13 @@ struct TestFixtureSimpleMerge {
     TestFixtureSimpleMerge() {
         // This graph is designed to have a component count sequence of {2, 2, 2, 1}
         // Levels: {v0,v1}, {v2,v3}, {v4,v5}, {v6}
-        const auto v0 = dag_.add_vertex(1, 1, 1);
-        const auto v1 = dag_.add_vertex(1, 1, 1);
-        const auto v2 = dag_.add_vertex(1, 1, 1);
-        const auto v3 = dag_.add_vertex(1, 1, 1);
-        const auto v4 = dag_.add_vertex(1, 1, 1);
-        const auto v5 = dag_.add_vertex(1, 1, 1);
-        const auto v6 = dag_.add_vertex(1, 1, 1);
+        const auto v0 = dag_.AddVertex(1, 1, 1);
+        const auto v1 = dag_.AddVertex(1, 1, 1);
+        const auto v2 = dag_.AddVertex(1, 1, 1);
+        const auto v3 = dag_.AddVertex(1, 1, 1);
+        const auto v4 = dag_.AddVertex(1, 1, 1);
+        const auto v5 = dag_.AddVertex(1, 1, 1);
+        const auto v6 = dag_.AddVertex(1, 1, 1);
 
         dag_.add_edge(v0, v2);
         dag_.add_edge(v1, v3);
@@ -476,14 +476,14 @@ struct TestFixtureMultiMerge {
         // Sequence: {4, 4, 2, 2, 1, 1}. Two significant drops.
         // L0: 4 comp -> L2: 2 comp (drop of 2)
         // L2: 2 comp -> L4: 1 comp (drop of 1)
-        const auto vL01 = dag_.add_vertex(1, 1, 1), vL02 = dag_.add_vertex(1, 1, 1), vL03 = dag_.add_vertex(1, 1, 1),
-                   vL04 = dag_.add_vertex(1, 1, 1);
-        const auto vL11 = dag_.add_vertex(1, 1, 1), vL12 = dag_.add_vertex(1, 1, 1), vL13 = dag_.add_vertex(1, 1, 1),
-                   vL14 = dag_.add_vertex(1, 1, 1);
-        const auto vL21 = dag_.add_vertex(1, 1, 1), vL22 = dag_.add_vertex(1, 1, 1);
-        const auto vL31 = dag_.add_vertex(1, 1, 1), vL32 = dag_.add_vertex(1, 1, 1);
-        const auto vL41 = dag_.add_vertex(1, 1, 1);
-        const auto vL51 = dag_.add_vertex(1, 1, 1);
+        const auto vL01 = dag_.AddVertex(1, 1, 1), vL02 = dag_.AddVertex(1, 1, 1), vL03 = dag_.AddVertex(1, 1, 1),
+                   vL04 = dag_.AddVertex(1, 1, 1);
+        const auto vL11 = dag_.AddVertex(1, 1, 1), vL12 = dag_.AddVertex(1, 1, 1), vL13 = dag_.AddVertex(1, 1, 1),
+                   vL14 = dag_.AddVertex(1, 1, 1);
+        const auto vL21 = dag_.AddVertex(1, 1, 1), vL22 = dag_.AddVertex(1, 1, 1);
+        const auto vL31 = dag_.AddVertex(1, 1, 1), vL32 = dag_.AddVertex(1, 1, 1);
+        const auto vL41 = dag_.AddVertex(1, 1, 1);
+        const auto vL51 = dag_.AddVertex(1, 1, 1);
 
         dag_.add_edge(vL01, vL11);
         dag_.add_edge(vL02, vL12);

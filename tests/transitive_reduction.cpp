@@ -33,9 +33,9 @@ BOOST_AUTO_TEST_SUITE(transitive_reduction)
 // Test with a simple chain graph that has a transitive edge
 BOOST_AUTO_TEST_CASE(SimpleTransitiveEdge) {
     graph_t dag;
-    dag.add_vertex(1, 1, 1);    // 0
-    dag.add_vertex(1, 1, 1);    // 1
-    dag.add_vertex(1, 1, 1);    // 2
+    dag.AddVertex(1, 1, 1);    // 0
+    dag.AddVertex(1, 1, 1);    // 1
+    dag.AddVertex(1, 1, 1);    // 2
     dag.add_edge(0, 1);
     dag.add_edge(1, 2);
     dag.add_edge(0, 2);    // Transitive edge
@@ -79,11 +79,11 @@ BOOST_AUTO_TEST_CASE(ComplexGraph) {
     // 2 -> 3
     // 3 -> 4
     // 0 -> 4 (transitive)
-    dag.add_vertex(1, 1, 1);    // 0
-    dag.add_vertex(1, 1, 1);    // 1
-    dag.add_vertex(1, 1, 1);    // 2
-    dag.add_vertex(1, 1, 1);    // 3
-    dag.add_vertex(1, 1, 1);    // 4
+    dag.AddVertex(1, 1, 1);    // 0
+    dag.AddVertex(1, 1, 1);    // 1
+    dag.AddVertex(1, 1, 1);    // 2
+    dag.AddVertex(1, 1, 1);    // 3
+    dag.AddVertex(1, 1, 1);    // 4
 
     dag.add_edge(0, 1);
     dag.add_edge(0, 2);

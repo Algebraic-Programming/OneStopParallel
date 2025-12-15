@@ -93,16 +93,16 @@ using VertexType = VertexIdxT<GraphType>;
 
 BOOST_AUTO_TEST_CASE(MerkleIsomorphismTestIdenticalGraphsAreIsomorphic) {
     GraphType dag1;
-    const auto v1 = dag1.add_vertex(0, 10, 1);
-    const auto v2 = dag1.add_vertex(1, 20, 1);
-    const auto v3 = dag1.add_vertex(0, 30, 1);
+    const auto v1 = dag1.AddVertex(0, 10, 1);
+    const auto v2 = dag1.AddVertex(1, 20, 1);
+    const auto v3 = dag1.AddVertex(0, 30, 1);
     dag1.add_edge(v1, v2);
     dag1.add_edge(v2, v3);
 
     GraphType dag2;
-    const auto vA = dag2.add_vertex(0, 10, 1);
-    const auto vB = dag2.add_vertex(1, 20, 1);
-    const auto vC = dag2.add_vertex(0, 30, 1);
+    const auto vA = dag2.AddVertex(0, 10, 1);
+    const auto vB = dag2.AddVertex(1, 20, 1);
+    const auto vC = dag2.AddVertex(0, 30, 1);
     dag2.add_edge(vA, vB);
     dag2.add_edge(vB, vC);
 
@@ -115,11 +115,11 @@ BOOST_AUTO_TEST_CASE(MerkleIsomorphismTestIdenticalGraphsAreIsomorphic) {
 // Test case 2: Graphs with different numbers of vertices should not be isomorphic.
 BOOST_AUTO_TEST_CASE(MerkleIsomorphismTestDifferentVertexCount) {
     GraphType dag1;
-    dag1.add_vertex(0, 10, 1);
-    dag1.add_vertex(1, 20, 1);
+    dag1.AddVertex(0, 10, 1);
+    dag1.AddVertex(1, 20, 1);
 
     GraphType dag2;
-    dag2.add_vertex(0, 10, 1);
+    dag2.AddVertex(0, 10, 1);
 
     BOOST_CHECK_EQUAL(are_isomorphic_by_merkle_hash(dag1, dag2), false);
 }
@@ -127,16 +127,16 @@ BOOST_AUTO_TEST_CASE(MerkleIsomorphismTestDifferentVertexCount) {
 // Test case 3: Graphs with the same size but different structures should not be isomorphic.
 BOOST_AUTO_TEST_CASE(MerkleIsomorphismTestSameSizeDifferentStructure) {
     GraphType dag1;    // A -> B -> C
-    const auto v11 = dag1.add_vertex(0, 1, 1);
-    const auto v12 = dag1.add_vertex(0, 1, 1);
-    const auto v13 = dag1.add_vertex(0, 1, 1);
+    const auto v11 = dag1.AddVertex(0, 1, 1);
+    const auto v12 = dag1.AddVertex(0, 1, 1);
+    const auto v13 = dag1.AddVertex(0, 1, 1);
     dag1.add_edge(v11, v12);
     dag1.add_edge(v12, v13);
 
     GraphType dag2;    // A -> B, A -> C
-    const auto v21 = dag2.add_vertex(0, 1, 1);
-    const auto v22 = dag2.add_vertex(0, 1, 1);
-    const auto v23 = dag2.add_vertex(0, 1, 1);
+    const auto v21 = dag2.AddVertex(0, 1, 1);
+    const auto v22 = dag2.AddVertex(0, 1, 1);
+    const auto v23 = dag2.AddVertex(0, 1, 1);
     dag2.add_edge(v21, v22);
     dag2.add_edge(v21, v23);
 
@@ -146,17 +146,17 @@ BOOST_AUTO_TEST_CASE(MerkleIsomorphismTestSameSizeDifferentStructure) {
 // Test case 4: Structurally identical graphs with different vertex labeling should be isomorphic.
 BOOST_AUTO_TEST_CASE(MerkleIsomorphismTestIsomorphicWithDifferentLabels) {
     GraphType dag1;
-    const auto v11 = dag1.add_vertex(0, 1, 1);    // Source
-    const auto v12 = dag1.add_vertex(0, 1, 1);
-    const auto v13 = dag1.add_vertex(0, 1, 1);    // Sink
+    const auto v11 = dag1.AddVertex(0, 1, 1);    // Source
+    const auto v12 = dag1.AddVertex(0, 1, 1);
+    const auto v13 = dag1.AddVertex(0, 1, 1);    // Sink
     dag1.add_edge(v11, v12);
     dag1.add_edge(v12, v13);
 
     GraphType dag2;
     // Same structure as dag1, but vertices are added in a different order.
-    const auto v23 = dag2.add_vertex(0, 1, 1);    // Sink
-    const auto v21 = dag2.add_vertex(0, 1, 1);    // Source
-    const auto v22 = dag2.add_vertex(0, 1, 1);
+    const auto v23 = dag2.AddVertex(0, 1, 1);    // Sink
+    const auto v21 = dag2.AddVertex(0, 1, 1);    // Source
+    const auto v22 = dag2.AddVertex(0, 1, 1);
     dag2.add_edge(v21, v22);
     dag2.add_edge(v22, v23);
 
@@ -167,14 +167,14 @@ BOOST_AUTO_TEST_CASE(MerkleIsomorphismTestIsomorphicWithDifferentLabels) {
 BOOST_AUTO_TEST_CASE(MerkleIsomorphismTestComplexIsomorphicGraphs) {
     GraphType dag1;
     {
-        const auto v1 = dag1.add_vertex(2, 9, 2);
-        const auto v2 = dag1.add_vertex(3, 8, 4);
-        const auto v3 = dag1.add_vertex(4, 7, 3);
-        const auto v4 = dag1.add_vertex(5, 6, 2);
-        const auto v5 = dag1.add_vertex(6, 5, 6);
-        const auto v6 = dag1.add_vertex(7, 4, 2);
-        dag1.add_vertex(8, 3, 4);
-        const auto v8 = dag1.add_vertex(9, 2, 1);
+        const auto v1 = dag1.AddVertex(2, 9, 2);
+        const auto v2 = dag1.AddVertex(3, 8, 4);
+        const auto v3 = dag1.AddVertex(4, 7, 3);
+        const auto v4 = dag1.AddVertex(5, 6, 2);
+        const auto v5 = dag1.AddVertex(6, 5, 6);
+        const auto v6 = dag1.AddVertex(7, 4, 2);
+        dag1.AddVertex(8, 3, 4);
+        const auto v8 = dag1.AddVertex(9, 2, 1);
         dag1.add_edge(v1, v2);
         dag1.add_edge(v1, v3);
         dag1.add_edge(v1, v4);
@@ -192,14 +192,14 @@ BOOST_AUTO_TEST_CASE(MerkleIsomorphismTestComplexIsomorphicGraphs) {
     GraphType dag2;
     {
         // Same structure, different vertex variable names and creation order.
-        const auto n8 = dag2.add_vertex(9, 2, 1);
-        dag2.add_vertex(8, 3, 4);
-        const auto n6 = dag2.add_vertex(7, 4, 2);
-        const auto n5 = dag2.add_vertex(6, 5, 6);
-        const auto n4 = dag2.add_vertex(5, 6, 2);
-        const auto n3 = dag2.add_vertex(4, 7, 3);
-        const auto n2 = dag2.add_vertex(3, 8, 4);
-        const auto n1 = dag2.add_vertex(2, 9, 2);
+        const auto n8 = dag2.AddVertex(9, 2, 1);
+        dag2.AddVertex(8, 3, 4);
+        const auto n6 = dag2.AddVertex(7, 4, 2);
+        const auto n5 = dag2.AddVertex(6, 5, 6);
+        const auto n4 = dag2.AddVertex(5, 6, 2);
+        const auto n3 = dag2.AddVertex(4, 7, 3);
+        const auto n2 = dag2.AddVertex(3, 8, 4);
+        const auto n1 = dag2.AddVertex(2, 9, 2);
         dag2.add_edge(n1, n2);
         dag2.add_edge(n1, n3);
         dag2.add_edge(n1, n4);
