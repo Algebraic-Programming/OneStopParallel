@@ -40,11 +40,11 @@ BOOST_AUTO_TEST_CASE(EmptyGraphKeepOrder) {
         BOOST_CHECK(false);
         BOOST_CHECK_EQUAL(vert, 100);
 
-        for (const auto &edge : graph.in_edges(vert)) {
+        for (const auto &edge : graph.InEdges(vert)) {
             BOOST_CHECK(false);
             BOOST_CHECK_EQUAL(edge, 100);
         }
-        for (const auto &edge : graph.out_edges(vert)) {
+        for (const auto &edge : graph.OutEdges(vert)) {
             BOOST_CHECK(false);
             BOOST_CHECK_EQUAL(edge, 100);
         }
@@ -68,11 +68,11 @@ BOOST_AUTO_TEST_CASE(EmptyGraphReorder) {
         BOOST_CHECK(false);
         BOOST_CHECK_EQUAL(vert, 100);
 
-        for (const auto &edge : graph.in_edges(vert)) {
+        for (const auto &edge : graph.InEdges(vert)) {
             BOOST_CHECK(false);
             BOOST_CHECK_EQUAL(edge, 100);
         }
-        for (const auto &edge : graph.out_edges(vert)) {
+        for (const auto &edge : graph.OutEdges(vert)) {
             BOOST_CHECK(false);
             BOOST_CHECK_EQUAL(edge, 100);
         }
@@ -98,11 +98,11 @@ BOOST_AUTO_TEST_CASE(NoEdgesGraphKeepOrder) {
     for (const auto &vert : graph.Vertices()) {
         vertCounter++;
 
-        for (const auto &edge : graph.in_edges(vert)) {
+        for (const auto &edge : graph.InEdges(vert)) {
             BOOST_CHECK(false);
             BOOST_CHECK_EQUAL(edge, 100);
         }
-        for (const auto &edge : graph.out_edges(vert)) {
+        for (const auto &edge : graph.OutEdges(vert)) {
             BOOST_CHECK(false);
             BOOST_CHECK_EQUAL(edge, 100);
         }
@@ -123,11 +123,11 @@ BOOST_AUTO_TEST_CASE(NoEdgesGraphReorder) {
     for (const auto &vert : graph.Vertices()) {
         vertCounter++;
 
-        for (const auto &edge : graph.in_edges(vert)) {
+        for (const auto &edge : graph.InEdges(vert)) {
             BOOST_CHECK(false);
             BOOST_CHECK_EQUAL(edge, 100);
         }
-        for (const auto &edge : graph.out_edges(vert)) {
+        for (const auto &edge : graph.OutEdges(vert)) {
             BOOST_CHECK(false);
             BOOST_CHECK_EQUAL(edge, 100);
         }
@@ -252,7 +252,7 @@ BOOST_AUTO_TEST_CASE(LineGraphKeepOrder) {
 
     std::size_t vertCounter = 0;
     for (const auto &vert : graph.Vertices()) {
-        for (const auto &edge : graph.in_edges(vert)) {
+        for (const auto &edge : graph.InEdges(vert)) {
             BOOST_CHECK_EQUAL(graph.Source(edge), vert - 1);
             BOOST_CHECK_EQUAL(graph.Target(edge), vert);
         }
@@ -262,7 +262,7 @@ BOOST_AUTO_TEST_CASE(LineGraphKeepOrder) {
             BOOST_CHECK_EQUAL(Target(edge, graph), vert);
         }
 
-        for (const auto &edge : graph.out_edges(vert)) {
+        for (const auto &edge : graph.OutEdges(vert)) {
             BOOST_CHECK_EQUAL(graph.Source(edge), vert);
             BOOST_CHECK_EQUAL(graph.Target(edge), vert + 1);
         }
@@ -385,11 +385,11 @@ BOOST_AUTO_TEST_CASE(LineGraphReorder) {
 
     std::size_t vertCounter = 0;
     for (const auto &vert : graph.Vertices()) {
-        for (const auto &edge : graph.in_edges(vert)) {
+        for (const auto &edge : graph.InEdges(vert)) {
             BOOST_CHECK_EQUAL(graph.Source(edge), vert - 1);
             BOOST_CHECK_EQUAL(graph.Target(edge), vert);
         }
-        for (const auto &edge : graph.out_edges(vert)) {
+        for (const auto &edge : graph.OutEdges(vert)) {
             BOOST_CHECK_EQUAL(graph.Source(edge), vert);
             BOOST_CHECK_EQUAL(graph.Target(edge), vert + 1);
         }
@@ -457,7 +457,7 @@ BOOST_AUTO_TEST_CASE(Graph1KeepOrder) {
 
     for (const auto &vert : graph.Vertices()) {
         std::size_t cntr = 0;
-        for (const auto &edge : graph.out_edges(vert)) {
+        for (const auto &edge : graph.OutEdges(vert)) {
             BOOST_CHECK_EQUAL(graph.Source(edge), vert);
             BOOST_CHECK_EQUAL(graph.Target(edge), outEdges[vert][cntr]);
             ++cntr;
@@ -496,7 +496,7 @@ BOOST_AUTO_TEST_CASE(Graph1KeepOrder) {
 
     for (const auto &vert : graph.Vertices()) {
         std::size_t cntr = 0;
-        for (const auto &edge : graph.in_edges(vert)) {
+        for (const auto &edge : graph.InEdges(vert)) {
             BOOST_CHECK_EQUAL(graph.Source(edge), inEdges[vert][cntr]);
             BOOST_CHECK_EQUAL(graph.Target(edge), vert);
             ++cntr;
@@ -516,7 +516,7 @@ BOOST_AUTO_TEST_CASE(Graph1KeepOrder) {
 
     edgeCntr = 0;
     for (const auto &vert : graph.Vertices()) {
-        for (const auto &edge : graph.out_edges(vert)) {
+        for (const auto &edge : graph.OutEdges(vert)) {
             BOOST_CHECK_EQUAL(edge, edgeCntr);
             ++edgeCntr;
         }
@@ -612,7 +612,7 @@ BOOST_AUTO_TEST_CASE(Graph1Reorder) {
 
     for (const auto &vert : graph.Vertices()) {
         std::size_t cntr = 0;
-        for (const auto &edge : graph.out_edges(vert)) {
+        for (const auto &edge : graph.OutEdges(vert)) {
             BOOST_CHECK_EQUAL(graph.Source(edge), vert);
             ++cntr;
         }
@@ -665,7 +665,7 @@ BOOST_AUTO_TEST_CASE(Graph1Reorder) {
 
     for (const auto &vert : graph.Vertices()) {
         std::size_t cntr = 0;
-        for (const auto &edge : graph.in_edges(vert)) {
+        for (const auto &edge : graph.InEdges(vert)) {
             BOOST_CHECK_EQUAL(graph.Target(edge), vert);
             ++cntr;
         }
@@ -692,7 +692,7 @@ BOOST_AUTO_TEST_CASE(Graph1Reorder) {
 
     edgeCntr = 0;
     for (const auto &vert : graph.Vertices()) {
-        for (const auto &edge : graph.out_edges(vert)) {
+        for (const auto &edge : graph.OutEdges(vert)) {
             BOOST_CHECK_EQUAL(edge, edgeCntr);
             ++edgeCntr;
         }

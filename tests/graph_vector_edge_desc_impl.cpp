@@ -161,17 +161,17 @@ BOOST_AUTO_TEST_CASE(TestDagEdgeIdx) {
         }
 
         i = 0;
-        for (const auto &e : graph.out_edges(v)) {
+        for (const auto &e : graph.OutEdges(v)) {
             BOOST_CHECK_EQUAL(e.target, outNeighbors[v][i++]);
         }
 
         i = 0;
-        for (const auto &e : graph.out_edges(v)) {
+        for (const auto &e : graph.OutEdges(v)) {
             BOOST_CHECK_EQUAL(Target(e, graph), outNeighbors[v][i++]);
         }
 
         i = 0;
-        for (const auto &e : graph.out_edges(v)) {
+        for (const auto &e : graph.OutEdges(v)) {
             BOOST_CHECK_EQUAL(graph.Target(e), outNeighbors[v][i++]);
         }
 
@@ -181,17 +181,17 @@ BOOST_AUTO_TEST_CASE(TestDagEdgeIdx) {
         }
 
         i = 0;
-        for (const auto &e : graph.in_edges(v)) {
+        for (const auto &e : graph.InEdges(v)) {
             BOOST_CHECK_EQUAL(e.source, inNeighbors[v][i++]);
         }
 
         i = 0;
-        for (const auto &e : graph.in_edges(v)) {
+        for (const auto &e : graph.InEdges(v)) {
             BOOST_CHECK_EQUAL(Source(e, graph), inNeighbors[v][i++]);
         }
 
         i = 0;
-        for (const auto &e : graph.in_edges(v)) {
+        for (const auto &e : graph.InEdges(v)) {
             BOOST_CHECK_EQUAL(graph.Source(e), inNeighbors[v][i++]);
         }
 

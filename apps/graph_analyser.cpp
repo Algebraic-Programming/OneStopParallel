@@ -88,16 +88,16 @@ void AddGraphStats(const ComputationalDag &graph, std::ofstream &outfile) {
     //     std::set<int> neighbour_src;
     //     std::set<int> neighbour_tgt;
 
-    //     for (const auto& in_edge : graph.in_edges(edge.m_source)) {
+    //     for (const auto& in_edge : graph.InEdges(edge.m_source)) {
     //         neighbour_src.emplace(in_edge.m_source);
     //     }
-    //     for (const auto& in_edge : graph.out_edges(edge.m_source)) {
+    //     for (const auto& in_edge : graph.OutEdges(edge.m_source)) {
     //         neighbour_src.emplace(in_edge.m_target);
     //     }
-    //     for (const auto& in_edge : graph.in_edges(edge.m_target)) {
+    //     for (const auto& in_edge : graph.InEdges(edge.m_target)) {
     //         neighbour_tgt.emplace(in_edge.m_source);
     //     }
-    //     for (const auto& in_edge : graph.out_edges(edge.m_target)) {
+    //     for (const auto& in_edge : graph.OutEdges(edge.m_target)) {
     //         neighbour_tgt.emplace(in_edge.m_target);
     //     }
 

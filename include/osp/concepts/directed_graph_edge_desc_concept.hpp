@@ -106,7 +106,7 @@ inline InEdgeView<GraphT> InEdges(VertexIdxT<GraphT> v, const GraphT &graph) {
  * Checks if a type `T` satisfies the requirements of a directed graph that also
  * supports edge descriptors, including:
  * - Validity of `directed_graph_edge_desc_traits`.
- * - Existence of `edges()`, `out_edges()`, and `in_edges()` functions returning input ranges of edge descriptors.
+ * - Existence of `edges()`, `OutEdges()`, and `InEdges()` functions returning input ranges of edge descriptors.
  * - Existence of `source()` and `target()` functions mapping edge descriptors to vertex indices.
  * - Default and copy constructibility of the edge descriptor type.
  *

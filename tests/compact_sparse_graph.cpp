@@ -302,7 +302,7 @@ BOOST_AUTO_TEST_CASE(Graph1KeepOrder) {
         }
 
         cntr = 0;
-        for (const auto &e : osp::out_edges(vert, graph)) {
+        for (const auto &e : osp::OutEdges(vert, graph)) {
             BOOST_CHECK_EQUAL(Target(e, graph), outEdges[vert][cntr++]);
         }
     }
@@ -336,7 +336,7 @@ BOOST_AUTO_TEST_CASE(Graph1KeepOrder) {
         }
 
         cntr = 0;
-        for (const auto &e : osp::in_edges(vert, graph)) {
+        for (const auto &e : osp::InEdges(vert, graph)) {
             BOOST_CHECK_EQUAL(Source(e, graph), inEdges[vert][cntr++]);
         }
     }

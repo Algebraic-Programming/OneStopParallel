@@ -433,7 +433,7 @@ inline auto OutEdges(VertexIdxT<Compact_Sparse_Graph_EdgeDesc<keep_vertex_order,
                                                       MemWeightType,
                                                       ECommWeightType,
                                                       VertexTypeTemplateType> &graph) {
-    return graph.out_edges(v);
+    return graph.OutEdges(v);
 }
 
 template <bool keepVertexOrder,
@@ -475,7 +475,7 @@ inline auto InEdges(VertexIdxT<Compact_Sparse_Graph_EdgeDesc<keep_vertex_order,
                                                      MemWeightType,
                                                      ECommWeightType,
                                                      VertexTypeTemplateType> &graph) {
-    return graph.in_edges(v);
+    return graph.InEdges(v);
 }
 
 template <bool keepVertexOrder,
