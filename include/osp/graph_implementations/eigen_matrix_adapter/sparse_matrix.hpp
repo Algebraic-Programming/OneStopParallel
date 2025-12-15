@@ -65,9 +65,9 @@ class SparseMatrixImp {
     void SetCsc(MatrixCSC *mat) { lCscP_ = mat; }
 
     // Getters for internal matrices (used by EigenSparseRange)
-    const MatrixCSR *GetCsr() const { return lCsrP_; }
+    const MatrixCSR *GetCSR() const { return lCsrP_; }
 
-    const MatrixCSC *GetCsc() const { return lCscP_; }
+    const MatrixCSC *GetCSC() const { return lCscP_; }
 
     /// @brief Number of vertices = number of rows in the matrix
     size_t NumVertices() const noexcept { return static_cast<size_t>(lCsrP_->rows()); }
