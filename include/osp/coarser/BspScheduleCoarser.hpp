@@ -48,7 +48,7 @@ class BspScheduleCoarser : public CoarserGenContractionMap<GraphTIn, GraphTOut> 
      * @brief Get the name of the coarsening algorithm.
      * @return The name of the coarsening algorithm.
      */
-    virtual std::string getCoarserName() const override { return "BspScheduleCoarser"; }
+    virtual std::string GetCoarserName() const override { return "BspScheduleCoarser"; }
 
     // virtual bool coarseDag(const GraphTIn &dag_in, GraphTOut &dag_out,
     //                        std::vector<std::vector<VertexIdxT<GraphTIn>>> &vertex_map,

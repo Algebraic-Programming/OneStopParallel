@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(CoarserHdaggTest) {
 
         hdagg_coarser<GraphT, GraphT> coarser;
 
-        BOOST_CHECK_EQUAL(coarser.getCoarserName(), "hdagg_coarser");
+        BOOST_CHECK_EQUAL(coarser.GetCoarserName(), "hdagg_coarser");
 
         coarser.coarsenDag(instance.GetComputationalDag(), coarseInstance.GetComputationalDag(), reverseVertexMap);
 
