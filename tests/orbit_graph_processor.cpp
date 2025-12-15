@@ -78,7 +78,7 @@ void CheckPartitioning(const GraphT &dag, const OrbitGraphProcessor<GraphT, Grap
 //     DotFileWriter writer;
 //     // Color by initial orbits
 //     writer.write_colored_graph("orbit_graph_orbits_colored.dot", dag, processor.get_contraction_map());
-//     writer.writeGraph("orbit_graph_coarse_graph.dot", coarse_graph);
+//     writer.WriteGraph("orbit_graph_coarse_graph.dot", coarse_graph);
 
 //     // Color by final merged groups
 //     writer.write_colored_graph("orbit_graph_groups_colored.dot", dag, final_contraction_map);
@@ -95,7 +95,7 @@ void CheckPartitioning(const GraphT &dag, const OrbitGraphProcessor<GraphT, Grap
 //         }
 //     }
 //     writer.write_colored_graph("orbit_graph_subgraphs_colored.dot", dag, subgraph_colors);
-//     writer.writeGraph("orbit_graph_final_coarse_graph.dot", final_coarse_graph);
+//     writer.WriteGraph("orbit_graph_final_coarse_graph.dot", final_coarse_graph);
 
 //     BOOST_CHECK_GT(coarse_graph.NumVertices(), 0);
 //     BOOST_CHECK_LT(coarse_graph.NumVertices(), dag.NumVertices());

@@ -155,10 +155,10 @@ BOOST_AUTO_TEST_CASE(TestScheduleWriter) {
     DotFileWriter schedWriter;
 
     std::cout << "Writing Graph" << std::endl;
-    schedWriter.writeGraph(std::cout, instance.GetComputationalDag());
+    schedWriter.WriteGraph(std::cout, instance.GetComputationalDag());
 
     std::cout << "Writing schedule_t1" << std::endl;
-    schedWriter.writeSchedule(std::cout, schedule);
+    schedWriter.WriteSchedule(std::cout, schedule);
 
     BspInstance<GraphT2> instanceT2(instance);
     BspSchedule<GraphT2> scheduleT2(instanceT2);
@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE(TestScheduleWriter) {
 
     std::cout << "Writing schedule_t2" << std::endl;
 
-    schedWriter.writeSchedule(std::cout, scheduleT2);
+    schedWriter.WriteSchedule(std::cout, scheduleT2);
 
     BspScheduleRecomp<GraphT2> scheduleRecomp(scheduleT2);
 
