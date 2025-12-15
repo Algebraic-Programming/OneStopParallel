@@ -129,10 +129,10 @@ int main(int argc, char *argv[]) {
         partitioner.SetTimeLimitSeconds(600);
         partitioner.SetTimeLimitSeconds(600);
         if (replicate == 2) {
-            partitioner.SetReplicationModel(HypergraphPartitioningILPWithReplication<HypergraphImpl>::ReplicationModelInIlp::GENERAL);
+            partitioner.SetReplicationModel(
+                HypergraphPartitioningILPWithReplication<HypergraphDefT>::ReplicationModelInIlp::GENERAL);
         }
 
-        auto solveStatus = partitioner.ComputePartitioning(partition);
         auto solveStatus = partitioner.ComputePartitioning(partition);
 
         if (solveStatus == ReturnStatus::OSP_SUCCESS || solveStatus == ReturnStatus::BEST_FOUND) {

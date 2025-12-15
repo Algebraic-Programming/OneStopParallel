@@ -119,7 +119,7 @@ class DagVectorAdapter {
     /**
      * @brief Returns a range of all vertex indices.
      */
-    [[nodiscard]] auto Vertices() const { return integral_range<VertexIdx>(static_cast<VertexIdx>(vertices_.size())); }
+    [[nodiscard]] auto Vertices() const { return IntegralRange<VertexIdx>(static_cast<VertexIdx>(vertices_.size())); }
 
     /**
      * @brief Returns the total number of vertices.
