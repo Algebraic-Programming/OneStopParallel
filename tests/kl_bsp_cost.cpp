@@ -30,7 +30,7 @@ limitations under the License.
 
 using namespace osp;
 using Graph = ComputationalDagEdgeIdxVectorImplDefIntT;
-using KlActiveScheduleT = kl_active_schedule<Graph, double, no_local_search_memory_constraint>;
+using KlActiveScheduleT = KlActiveSchedule<Graph, double, NoLocalSearchMemoryConstraint>;
 
 BOOST_AUTO_TEST_CASE(TestArrangeSuperstepCommData) {
     Graph dag;
@@ -54,114 +54,114 @@ BOOST_AUTO_TEST_CASE(TestArrangeSuperstepCommData) {
     schedule.UpdateNumberOfSupersteps();
 
     KlActiveScheduleT klSched;
-    klSched.initialize(schedule);
+    klSched.Initialize(schedule);
 
-    max_comm_datastructure<Graph, double, KlActiveScheduleT> commDs;
-    commDs.initialize(klSched);
+    MaxCommDatastructure<Graph, double, KlActiveScheduleT> commDs;
+    commDs.Initialize(klSched);
 
     unsigned step = 0;
 
     // Case 1: Unique Max
-    commDs.step_proc_send(step, 0) = 10;
-    commDs.step_proc_send(step, 1) = 5;
-    commDs.step_proc_send(step, 2) = 2;
-    commDs.step_proc_send(step, 3) = 1;
+    commDs.StepProcSend(step, 0) = 10;
+    commDs.StepProcSend(step, 1) = 5;
+    commDs.StepProcSend(step, 2) = 2;
+    commDs.StepProcSend(step, 3) = 1;
 
-    commDs.step_proc_receive(step, 0) = 8;
-    commDs.step_proc_receive(step, 1) = 8;
-    commDs.step_proc_receive(step, 2) = 2;
-    commDs.step_proc_receive(step, 3) = 1;
+    commDs.StepProcReceive(step, 0) = 8;
+    commDs.StepProcReceive(step, 1) = 8;
+    commDs.StepProcReceive(step, 2) = 2;
+    commDs.StepProcReceive(step, 3) = 1;
 
-    commDs.arrange_superstep_comm_data(step);
+    commDs.ArrangeSuperstepCommData(step);
 
-    BOOST_CHECK_EQUAL(commDs.step_max_comm(step), 10);
-    BOOST_CHECK_EQUAL(commDs.step_max_comm_count(step), 1);     // Only proc 0 has 10
-    BOOST_CHECK_EQUAL(commDs.step_second_max_comm(step), 8);    // Next highest is 8 (from recv)
+    BOOST_CHECK_EQUAL(commDs.StepMaxComm(step), 10);
+    BOOST_CHECK_EQUAL(commDs.StepMaxCommCount(step), 1);     // Only proc 0 has 10
+    BOOST_CHECK_EQUAL(commDs.StepSecondMaxComm(step), 8);    // Next highest is 8 (from recv)
 
     // Case 2: Shared Max
-    commDs.reset_superstep(step);
-    commDs.step_proc_send(step, 0) = 10;    // Need to re-set this as reset clears it
-    commDs.step_proc_send(step, 1) = 10;
-    commDs.step_proc_send(step, 2) = 2;
-    commDs.step_proc_send(step, 3) = 1;
+    commDs.ResetSuperstep(step);
+    commDs.StepProcSend(step, 0) = 10;    // Need to re-set this as reset clears it
+    commDs.StepProcSend(step, 1) = 10;
+    commDs.StepProcSend(step, 2) = 2;
+    commDs.StepProcSend(step, 3) = 1;
 
-    commDs.step_proc_receive(step, 0) = 5;
-    commDs.step_proc_receive(step, 1) = 5;
-    commDs.step_proc_receive(step, 2) = 2;
-    commDs.step_proc_receive(step, 3) = 1;
-    commDs.arrange_superstep_comm_data(step);
+    commDs.StepProcReceive(step, 0) = 5;
+    commDs.StepProcReceive(step, 1) = 5;
+    commDs.StepProcReceive(step, 2) = 2;
+    commDs.StepProcReceive(step, 3) = 1;
+    commDs.ArrangeSuperstepCommData(step);
 
-    BOOST_CHECK_EQUAL(commDs.step_max_comm(step), 10);
-    BOOST_CHECK_EQUAL(commDs.step_max_comm_count(step), 2);     // Proc 0 and 1
-    BOOST_CHECK_EQUAL(commDs.step_second_max_comm(step), 5);    // Next highest is 5 (from recv)
+    BOOST_CHECK_EQUAL(commDs.StepMaxComm(step), 10);
+    BOOST_CHECK_EQUAL(commDs.StepMaxCommCount(step), 2);     // Proc 0 and 1
+    BOOST_CHECK_EQUAL(commDs.StepSecondMaxComm(step), 5);    // Next highest is 5 (from recv)
 
     // Case 3: Max in Recv
-    commDs.reset_superstep(step);
+    commDs.ResetSuperstep(step);
 
-    commDs.step_proc_send(step, 0) = 5;
-    commDs.step_proc_send(step, 1) = 5;
-    commDs.step_proc_send(step, 2) = 2;
-    commDs.step_proc_send(step, 3) = 1;
+    commDs.StepProcSend(step, 0) = 5;
+    commDs.StepProcSend(step, 1) = 5;
+    commDs.StepProcSend(step, 2) = 2;
+    commDs.StepProcSend(step, 3) = 1;
 
-    commDs.step_proc_receive(step, 0) = 12;
-    commDs.step_proc_receive(step, 1) = 8;
-    commDs.step_proc_receive(step, 2) = 2;
-    commDs.step_proc_receive(step, 3) = 1;
-    commDs.arrange_superstep_comm_data(step);
+    commDs.StepProcReceive(step, 0) = 12;
+    commDs.StepProcReceive(step, 1) = 8;
+    commDs.StepProcReceive(step, 2) = 2;
+    commDs.StepProcReceive(step, 3) = 1;
+    commDs.ArrangeSuperstepCommData(step);
 
-    BOOST_CHECK_EQUAL(commDs.step_max_comm(step), 12);
-    BOOST_CHECK_EQUAL(commDs.step_max_comm_count(step), 1);
-    BOOST_CHECK_EQUAL(commDs.step_second_max_comm(step), 8);
+    BOOST_CHECK_EQUAL(commDs.StepMaxComm(step), 12);
+    BOOST_CHECK_EQUAL(commDs.StepMaxCommCount(step), 1);
+    BOOST_CHECK_EQUAL(commDs.StepSecondMaxComm(step), 8);
 
     // Case 4: All same
-    commDs.reset_superstep(step);
+    commDs.ResetSuperstep(step);
     // Send: 10, 10, 10, 10
     // Recv: 10, 10, 10, 10
     for (unsigned i = 0; i < 4; ++i) {
-        commDs.step_proc_send(step, i) = 10;
-        commDs.step_proc_receive(step, i) = 10;
+        commDs.StepProcSend(step, i) = 10;
+        commDs.StepProcReceive(step, i) = 10;
     }
-    commDs.arrange_superstep_comm_data(step);
+    commDs.ArrangeSuperstepCommData(step);
 
-    BOOST_CHECK_EQUAL(commDs.step_max_comm(step), 10);
-    BOOST_CHECK_EQUAL(commDs.step_max_comm_count(step), 8);     // 4 sends + 4 recvs
-    BOOST_CHECK_EQUAL(commDs.step_second_max_comm(step), 0);    // If all removed, 0.
+    BOOST_CHECK_EQUAL(commDs.StepMaxComm(step), 10);
+    BOOST_CHECK_EQUAL(commDs.StepMaxCommCount(step), 8);     // 4 sends + 4 recvs
+    BOOST_CHECK_EQUAL(commDs.StepSecondMaxComm(step), 0);    // If all removed, 0.
 
     // Case 5: Max removed, second max is from same type (Send)
-    commDs.reset_superstep(step);
-    commDs.step_proc_send(step, 0) = 10;
-    commDs.step_proc_send(step, 1) = 8;
-    commDs.step_proc_send(step, 2) = 2;
-    commDs.step_proc_send(step, 3) = 1;
+    commDs.ResetSuperstep(step);
+    commDs.StepProcSend(step, 0) = 10;
+    commDs.StepProcSend(step, 1) = 8;
+    commDs.StepProcSend(step, 2) = 2;
+    commDs.StepProcSend(step, 3) = 1;
 
     for (unsigned i = 0; i < 4; ++i) {
-        commDs.step_proc_receive(step, i) = 5;
+        commDs.StepProcReceive(step, i) = 5;
     }
 
-    commDs.arrange_superstep_comm_data(step);
+    commDs.ArrangeSuperstepCommData(step);
 
-    BOOST_CHECK_EQUAL(commDs.step_max_comm(step), 10);
-    BOOST_CHECK_EQUAL(commDs.step_max_comm_count(step), 1);
-    BOOST_CHECK_EQUAL(commDs.step_second_max_comm(step), 8);
+    BOOST_CHECK_EQUAL(commDs.StepMaxComm(step), 10);
+    BOOST_CHECK_EQUAL(commDs.StepMaxCommCount(step), 1);
+    BOOST_CHECK_EQUAL(commDs.StepSecondMaxComm(step), 8);
 
     // Case 6: Max removed, second max is from other type (Recv)
-    commDs.reset_superstep(step);
+    commDs.ResetSuperstep(step);
 
-    commDs.step_proc_send(step, 0) = 10;
-    commDs.step_proc_send(step, 1) = 4;
-    commDs.step_proc_send(step, 2) = 2;
-    commDs.step_proc_send(step, 3) = 1;
+    commDs.StepProcSend(step, 0) = 10;
+    commDs.StepProcSend(step, 1) = 4;
+    commDs.StepProcSend(step, 2) = 2;
+    commDs.StepProcSend(step, 3) = 1;
 
-    commDs.step_proc_receive(step, 0) = 8;
-    commDs.step_proc_receive(step, 1) = 5;
-    commDs.step_proc_receive(step, 2) = 2;
-    commDs.step_proc_receive(step, 3) = 1;
+    commDs.StepProcReceive(step, 0) = 8;
+    commDs.StepProcReceive(step, 1) = 5;
+    commDs.StepProcReceive(step, 2) = 2;
+    commDs.StepProcReceive(step, 3) = 1;
 
-    commDs.arrange_superstep_comm_data(step);
+    commDs.ArrangeSuperstepCommData(step);
 
-    BOOST_CHECK_EQUAL(commDs.step_max_comm(step), 10);
-    BOOST_CHECK_EQUAL(commDs.step_max_comm_count(step), 1);
-    BOOST_CHECK_EQUAL(commDs.step_second_max_comm(step), 8);
+    BOOST_CHECK_EQUAL(commDs.StepMaxComm(step), 10);
+    BOOST_CHECK_EQUAL(commDs.StepMaxCommCount(step), 1);
+    BOOST_CHECK_EQUAL(commDs.StepSecondMaxComm(step), 8);
 }
 
 BOOST_AUTO_TEST_CASE(TestComputeCommDatastructures) {
@@ -206,13 +206,13 @@ BOOST_AUTO_TEST_CASE(TestComputeCommDatastructures) {
     schedule.UpdateNumberOfSupersteps();
 
     KlActiveScheduleT klSched;
-    klSched.initialize(schedule);
+    klSched.Initialize(schedule);
 
-    max_comm_datastructure<Graph, double, KlActiveScheduleT> commDs;
-    commDs.initialize(klSched);
+    MaxCommDatastructure<Graph, double, KlActiveScheduleT> commDs;
+    commDs.Initialize(klSched);
 
     // Compute for steps 0 and 1
-    commDs.compute_comm_datastructures(0, 1);
+    commDs.ComputeCommDatastructures(0, 1);
 
     unsigned step = 0;
 
@@ -224,13 +224,13 @@ BOOST_AUTO_TEST_CASE(TestComputeCommDatastructures) {
     // Proc 2 sends: 0
     // Proc 0 receives: 0
 
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(step, 0), 10);
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(step, 1), 5);
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(step, 2), 0);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(step, 0), 10);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(step, 1), 5);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(step, 2), 0);
 
-    BOOST_CHECK_EQUAL(commDs.step_proc_receive(step, 0), 0);
-    BOOST_CHECK_EQUAL(commDs.step_proc_receive(step, 1), 10);
-    BOOST_CHECK_EQUAL(commDs.step_proc_receive(step, 2), 5);
+    BOOST_CHECK_EQUAL(commDs.StepProcReceive(step, 0), 0);
+    BOOST_CHECK_EQUAL(commDs.StepProcReceive(step, 1), 10);
+    BOOST_CHECK_EQUAL(commDs.StepProcReceive(step, 2), 5);
 
     // Max Comm Calculation Step 0
     // Send Max: 10 (P0)
@@ -239,28 +239,28 @@ BOOST_AUTO_TEST_CASE(TestComputeCommDatastructures) {
     // Count: 2 (P0 send, P1 recv)
     // Second Max: 5 (P1 send, P2 recv)
 
-    BOOST_CHECK_EQUAL(commDs.step_max_comm(step), 10);
-    BOOST_CHECK_EQUAL(commDs.step_max_comm_count(step), 2);
-    BOOST_CHECK_EQUAL(commDs.step_second_max_comm(step), 5);
+    BOOST_CHECK_EQUAL(commDs.StepMaxComm(step), 10);
+    BOOST_CHECK_EQUAL(commDs.StepMaxCommCount(step), 2);
+    BOOST_CHECK_EQUAL(commDs.StepSecondMaxComm(step), 5);
 
     // Verify Step 1 (Should be empty as Nodes 1 and 3 are leaves)
     step = 1;
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(step, 0), 0);
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(step, 1), 0);
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(step, 2), 0);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(step, 0), 0);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(step, 1), 0);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(step, 2), 0);
 
-    BOOST_CHECK_EQUAL(commDs.step_proc_receive(step, 0), 0);
-    BOOST_CHECK_EQUAL(commDs.step_proc_receive(step, 1), 0);
-    BOOST_CHECK_EQUAL(commDs.step_proc_receive(step, 2), 0);
+    BOOST_CHECK_EQUAL(commDs.StepProcReceive(step, 0), 0);
+    BOOST_CHECK_EQUAL(commDs.StepProcReceive(step, 1), 0);
+    BOOST_CHECK_EQUAL(commDs.StepProcReceive(step, 2), 0);
 
-    BOOST_CHECK_EQUAL(commDs.step_max_comm(step), 0);
+    BOOST_CHECK_EQUAL(commDs.StepMaxComm(step), 0);
 }
 
 /**
  * Helper to validate comm datastructures by comparing with freshly computed ones
  */
 template <typename Graph>
-bool ValidateCommDatastructures(const max_comm_datastructure<Graph, double, KlActiveScheduleT> &commDsIncremental,
+bool ValidateCommDatastructures(const MaxCommDatastructure<Graph, double, KlActiveScheduleT> &commDsIncremental,
                                 KlActiveScheduleT &activeSched,
                                 const BspInstance<Graph> &instance,
                                 const std::string &context) {
@@ -270,14 +270,14 @@ bool ValidateCommDatastructures(const max_comm_datastructure<Graph, double, KlAc
 
     // 2. Fresh Computation
     KlActiveScheduleT klSchedFresh;
-    klSchedFresh.initialize(currentSchedule);
+    klSchedFresh.Initialize(currentSchedule);
 
-    max_comm_datastructure<Graph, double, KlActiveScheduleT> commDsFresh;
-    commDsFresh.initialize(klSchedFresh);
+    MaxCommDatastructure<Graph, double, KlActiveScheduleT> commDsFresh;
+    commDsFresh.Initialize(klSchedFresh);
 
     // Compute for all steps
     unsigned maxStep = currentSchedule.NumberOfSupersteps();
-    commDsFresh.compute_comm_datastructures(0, maxStep > 0 ? maxStep - 1 : 0);
+    commDsFresh.ComputeCommDatastructures(0, maxStep > 0 ? maxStep - 1 : 0);
 
     bool allMatch = true;
     // std::cout << "\nValidating comm datastructures " << context << ":" << std::endl;
@@ -285,10 +285,10 @@ bool ValidateCommDatastructures(const max_comm_datastructure<Graph, double, KlAc
     // 3. Validate Comm Costs
     for (unsigned step = 0; step < maxStep; ++step) {
         for (unsigned p = 0; p < instance.NumberOfProcessors(); ++p) {
-            auto sendInc = commDsIncremental.step_proc_send(step, p);
-            auto sendFresh = commDsFresh.step_proc_send(step, p);
-            auto recvInc = commDsIncremental.step_proc_receive(step, p);
-            auto recvFresh = commDsFresh.step_proc_receive(step, p);
+            auto sendInc = commDsIncremental.StepProcSend(step, p);
+            auto sendFresh = commDsFresh.StepProcSend(step, p);
+            auto recvInc = commDsIncremental.StepProcReceive(step, p);
+            auto recvFresh = commDsFresh.StepProcReceive(step, p);
 
             if (std::abs(sendInc - sendFresh) > 1e-6 || std::abs(recvInc - recvFresh) > 1e-6) {
                 allMatch = false;
@@ -303,13 +303,13 @@ bool ValidateCommDatastructures(const max_comm_datastructure<Graph, double, KlAc
     for (const auto v : instance.Vertices()) {
         for (unsigned p = 0; p < instance.NumberOfProcessors(); ++p) {
             unsigned countInc = 0;
-            if (commDsIncremental.node_lambda_map.has_proc_entry(v, p)) {
-                countInc = commDsIncremental.node_lambda_map.get_proc_entry(v, p);
+            if (commDsIncremental.nodeLambdaMap_.HasProcEntry(v, p)) {
+                countInc = commDsIncremental.nodeLambdaMap_.GetProcEntry(v, p);
             }
 
             unsigned countFresh = 0;
-            if (commDsFresh.node_lambda_map.has_proc_entry(v, p)) {
-                countFresh = commDsFresh.node_lambda_map.get_proc_entry(v, p);
+            if (commDsFresh.nodeLambdaMap_.HasProcEntry(v, p)) {
+                countFresh = commDsFresh.nodeLambdaMap_.GetProcEntry(v, p);
             }
 
             if (countInc != countFresh) {
@@ -358,24 +358,24 @@ BOOST_AUTO_TEST_CASE(TestUpdateDatastructureAfterMove) {
     schedule.UpdateNumberOfSupersteps();
 
     KlActiveScheduleT klSched;
-    klSched.initialize(schedule);
+    klSched.Initialize(schedule);
 
-    max_comm_datastructure<Graph, double, KlActiveScheduleT> commDs;
-    commDs.initialize(klSched);
-    commDs.compute_comm_datastructures(0, 1);
+    MaxCommDatastructure<Graph, double, KlActiveScheduleT> commDs;
+    commDs.Initialize(klSched);
+    commDs.ComputeCommDatastructures(0, 1);
 
     // Move Node 0 from Proc 0 (Step 0) to Proc 2 (Step 0)
     // kl_move_struct(node, gain, from_proc, from_step, to_proc, to_step)
-    using KlMove = kl_move_struct<double, Graph::VertexIdx>;
+    using KlMove = KlMoveStruct<double, Graph::VertexIdx>;
     KlMove move(0, 0.0, 0, 0, 2, 0);
 
     // Apply the move to the schedule first
-    thread_local_active_schedule_data<Graph, double> activeScheduleData;
-    activeScheduleData.initialize_cost(0.0);
-    klSched.apply_move(move, activeScheduleData);
+    ThreadLocalActiveScheduleData<Graph, double> activeScheduleData;
+    activeScheduleData.InitializeCost(0.0);
+    klSched.ApplyMove(move, activeScheduleData);
 
     // Then update the communication datastructures
-    commDs.update_datastructure_after_move(move, 0, 1);
+    commDs.UpdateDatastructureAfterMove(move, 0, 1);
     BOOST_CHECK(ValidateCommDatastructures(commDs, klSched, instance, "test_update_datastructure_after_move"));
 
     unsigned step = 0;
@@ -390,13 +390,13 @@ BOOST_AUTO_TEST_CASE(TestUpdateDatastructureAfterMove) {
     // P1 Send: 5
     // P2 Recv: 5
 
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(step, 0), 0);
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(step, 1), 5);
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(step, 2), 10);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(step, 0), 0);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(step, 1), 5);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(step, 2), 10);
 
-    BOOST_CHECK_EQUAL(commDs.step_proc_receive(step, 0), 0);
-    BOOST_CHECK_EQUAL(commDs.step_proc_receive(step, 1), 10);
-    BOOST_CHECK_EQUAL(commDs.step_proc_receive(step, 2), 5);
+    BOOST_CHECK_EQUAL(commDs.StepProcReceive(step, 0), 0);
+    BOOST_CHECK_EQUAL(commDs.StepProcReceive(step, 1), 10);
+    BOOST_CHECK_EQUAL(commDs.StepProcReceive(step, 2), 5);
 
     // Max Comm:
     // Send Max: 10 (P2)
@@ -405,9 +405,9 @@ BOOST_AUTO_TEST_CASE(TestUpdateDatastructureAfterMove) {
     // Count: 2 (P2 send, P1 recv)
     // Second Max: 5 (P1 send, P2 recv)
 
-    BOOST_CHECK_EQUAL(commDs.step_max_comm(step), 10);
-    BOOST_CHECK_EQUAL(commDs.step_max_comm_count(step), 2);
-    BOOST_CHECK_EQUAL(commDs.step_second_max_comm(step), 5);
+    BOOST_CHECK_EQUAL(commDs.StepMaxComm(step), 10);
+    BOOST_CHECK_EQUAL(commDs.StepMaxCommCount(step), 2);
+    BOOST_CHECK_EQUAL(commDs.StepSecondMaxComm(step), 5);
 }
 
 BOOST_AUTO_TEST_CASE(TestMultipleSequentialMoves) {
@@ -438,53 +438,53 @@ BOOST_AUTO_TEST_CASE(TestMultipleSequentialMoves) {
     schedule.UpdateNumberOfSupersteps();
 
     KlActiveScheduleT klSched;
-    klSched.initialize(schedule);
+    klSched.Initialize(schedule);
 
-    max_comm_datastructure<Graph, double, KlActiveScheduleT> commDs;
-    commDs.initialize(klSched);
-    commDs.compute_comm_datastructures(0, 0);
+    MaxCommDatastructure<Graph, double, KlActiveScheduleT> commDs;
+    commDs.Initialize(klSched);
+    commDs.ComputeCommDatastructures(0, 0);
 
     // Initial state:
     // P0 sends to P1 (10), P1 sends to P2 (8), P2 sends to P3 (6)
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(0, 0), 10);
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(0, 1), 8);
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(0, 2), 6);
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(0, 3), 0);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(0, 0), 10);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(0, 1), 8);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(0, 2), 6);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(0, 3), 0);
 
-    using KlMove = kl_move_struct<double, Graph::VertexIdx>;
-    thread_local_active_schedule_data<Graph, double> activeScheduleData;
-    activeScheduleData.initialize_cost(0.0);
+    using KlMove = KlMoveStruct<double, Graph::VertexIdx>;
+    ThreadLocalActiveScheduleData<Graph, double> activeScheduleData;
+    activeScheduleData.InitializeCost(0.0);
 
     // Move 1: Move node 1 from P1 to P0 (make 0->1 local)
     KlMove move1(1, 0.0, 1, 0, 0, 0);
-    klSched.apply_move(move1, activeScheduleData);
-    commDs.update_datastructure_after_move(move1, 0, 0);
+    klSched.ApplyMove(move1, activeScheduleData);
+    commDs.UpdateDatastructureAfterMove(move1, 0, 0);
     BOOST_CHECK(ValidateCommDatastructures(commDs, klSched, instance, "test_multiple_sequential_moves_1"));
 
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(0, 0), 8);       // Node 1 sends
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(0, 1), 0);       // Node was moved away
-    BOOST_CHECK_EQUAL(commDs.step_proc_receive(0, 0), 0);    // No receives at P0
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(0, 0), 8);       // Node 1 sends
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(0, 1), 0);       // Node was moved away
+    BOOST_CHECK_EQUAL(commDs.StepProcReceive(0, 0), 0);    // No receives at P0
 
     // Move 2: Move node 2 from P2 to P0 (chain more local)
     KlMove move2(2, 0.0, 2, 0, 0, 0);
-    klSched.apply_move(move2, activeScheduleData);
-    commDs.update_datastructure_after_move(move2, 0, 0);
+    klSched.ApplyMove(move2, activeScheduleData);
+    commDs.UpdateDatastructureAfterMove(move2, 0, 0);
     BOOST_CHECK(ValidateCommDatastructures(commDs, klSched, instance, "test_multiple_sequential_moves_2"));
 
     // After move2: Nodes 0,1,2 all at P0, only 3 at P3
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(0, 0), 6);       // Only node 2 sends off-proc
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(0, 2), 0);       // Node moved away
-    BOOST_CHECK_EQUAL(commDs.step_proc_receive(0, 3), 6);    // P3 receives from node 2
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(0, 0), 6);       // Only node 2 sends off-proc
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(0, 2), 0);       // Node moved away
+    BOOST_CHECK_EQUAL(commDs.StepProcReceive(0, 3), 6);    // P3 receives from node 2
 
     // Move 3: Move node 3 to P0 (everything local)
     KlMove move3(3, 0.0, 3, 0, 0, 0);
-    klSched.apply_move(move3, activeScheduleData);
-    commDs.update_datastructure_after_move(move3, 0, 0);
+    klSched.ApplyMove(move3, activeScheduleData);
+    commDs.UpdateDatastructureAfterMove(move3, 0, 0);
     BOOST_CHECK(ValidateCommDatastructures(commDs, klSched, instance, "test_multiple_sequential_moves_3"));
 
     // After move3: All nodes at P0, all communication is local
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(0, 0), 0);    // All local
-    BOOST_CHECK_EQUAL(commDs.step_max_comm(0), 0);        // No communication cost
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(0, 0), 0);    // All local
+    BOOST_CHECK_EQUAL(commDs.StepMaxComm(0), 0);        // No communication cost
 }
 
 BOOST_AUTO_TEST_CASE(TestNodeWithMultipleChildren) {
@@ -513,57 +513,57 @@ BOOST_AUTO_TEST_CASE(TestNodeWithMultipleChildren) {
     schedule.UpdateNumberOfSupersteps();
 
     KlActiveScheduleT klSched;
-    klSched.initialize(schedule);
+    klSched.Initialize(schedule);
 
-    max_comm_datastructure<Graph, double, KlActiveScheduleT> commDs;
-    commDs.initialize(klSched);
-    commDs.compute_comm_datastructures(0, 0);
+    MaxCommDatastructure<Graph, double, KlActiveScheduleT> commDs;
+    commDs.Initialize(klSched);
+    commDs.ComputeCommDatastructures(0, 0);
 
     // Initial: Node 0 has 3 children on P1, P2, P3 (3 unique off-proc)
     // Send cost = 10 * 3 = 30
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(0, 0), 30);
-    BOOST_CHECK_EQUAL(commDs.step_proc_receive(0, 1), 10);
-    BOOST_CHECK_EQUAL(commDs.step_proc_receive(0, 2), 10);
-    BOOST_CHECK_EQUAL(commDs.step_proc_receive(0, 3), 10);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(0, 0), 30);
+    BOOST_CHECK_EQUAL(commDs.StepProcReceive(0, 1), 10);
+    BOOST_CHECK_EQUAL(commDs.StepProcReceive(0, 2), 10);
+    BOOST_CHECK_EQUAL(commDs.StepProcReceive(0, 3), 10);
 
-    using KlMove = kl_move_struct<double, Graph::VertexIdx>;
-    thread_local_active_schedule_data<Graph, double> activeScheduleData;
-    activeScheduleData.initialize_cost(0.0);
+    using KlMove = KlMoveStruct<double, Graph::VertexIdx>;
+    ThreadLocalActiveScheduleData<Graph, double> activeScheduleData;
+    activeScheduleData.InitializeCost(0.0);
 
     // Move child 1 to P0 (same as parent)
     KlMove move1(1, 0.0, 1, 0, 0, 0);
-    klSched.apply_move(move1, activeScheduleData);
-    commDs.update_datastructure_after_move(move1, 0, 0);
+    klSched.ApplyMove(move1, activeScheduleData);
+    commDs.UpdateDatastructureAfterMove(move1, 0, 0);
     BOOST_CHECK(ValidateCommDatastructures(commDs, klSched, instance, "test_node_with_multiple_children"));
 
     // After: Node 0 has 1 local child, 2 off-proc (P2, P3)
     // Send cost = 10 * 2 = 20
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(0, 0), 20);
-    BOOST_CHECK_EQUAL(commDs.step_proc_receive(0, 1), 0);    // No longer receives
-    BOOST_CHECK_EQUAL(commDs.step_proc_receive(0, 2), 10);
-    BOOST_CHECK_EQUAL(commDs.step_proc_receive(0, 3), 10);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(0, 0), 20);
+    BOOST_CHECK_EQUAL(commDs.StepProcReceive(0, 1), 0);    // No longer receives
+    BOOST_CHECK_EQUAL(commDs.StepProcReceive(0, 2), 10);
+    BOOST_CHECK_EQUAL(commDs.StepProcReceive(0, 3), 10);
 
     KlMove move2(2, 0.0, 2, 0, 0, 0);
-    klSched.apply_move(move2, activeScheduleData);
-    commDs.update_datastructure_after_move(move2, 0, 0);
+    klSched.ApplyMove(move2, activeScheduleData);
+    commDs.UpdateDatastructureAfterMove(move2, 0, 0);
     BOOST_CHECK(ValidateCommDatastructures(commDs, klSched, instance, "test_node_with_multiple_children_2"));
 
     // After: Node 0 has 2 local children, 1 off-proc (P3)
     // Send cost = 10 * 1 = 10
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(0, 0), 10);
-    BOOST_CHECK_EQUAL(commDs.step_proc_receive(0, 2), 0);    // No longer receives
-    BOOST_CHECK_EQUAL(commDs.step_proc_receive(0, 3), 10);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(0, 0), 10);
+    BOOST_CHECK_EQUAL(commDs.StepProcReceive(0, 2), 0);    // No longer receives
+    BOOST_CHECK_EQUAL(commDs.StepProcReceive(0, 3), 10);
 
     // Move child 3 to P0 (all local)
     KlMove move3(3, 0.0, 3, 0, 0, 0);
-    klSched.apply_move(move3, activeScheduleData);
-    commDs.update_datastructure_after_move(move3, 0, 0);
+    klSched.ApplyMove(move3, activeScheduleData);
+    commDs.UpdateDatastructureAfterMove(move3, 0, 0);
     BOOST_CHECK(ValidateCommDatastructures(commDs, klSched, instance, "test_node_with_multiple_children_3"));
 
     // After: Node 0 has 3 local children
     // Send cost = 10 * 0 = 0 (all local)
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(0, 0), 0);
-    BOOST_CHECK_EQUAL(commDs.step_proc_receive(0, 3), 0);    // No longer receives
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(0, 0), 0);
+    BOOST_CHECK_EQUAL(commDs.StepProcReceive(0, 3), 0);    // No longer receives
 }
 
 BOOST_AUTO_TEST_CASE(TestCrossStepMoves) {
@@ -590,38 +590,38 @@ BOOST_AUTO_TEST_CASE(TestCrossStepMoves) {
     schedule.UpdateNumberOfSupersteps();
 
     KlActiveScheduleT klSched;
-    klSched.initialize(schedule);
+    klSched.Initialize(schedule);
 
-    max_comm_datastructure<Graph, double, KlActiveScheduleT> commDs;
-    commDs.initialize(klSched);
-    commDs.compute_comm_datastructures(0, 2);
+    MaxCommDatastructure<Graph, double, KlActiveScheduleT> commDs;
+    commDs.Initialize(klSched);
+    commDs.ComputeCommDatastructures(0, 2);
 
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(0, 0), 10);
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(1, 1), 8);
-    BOOST_CHECK_EQUAL(commDs.step_proc_receive(0, 1), 10);
-    BOOST_CHECK_EQUAL(commDs.step_proc_receive(1, 0), 8);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(0, 0), 10);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(1, 1), 8);
+    BOOST_CHECK_EQUAL(commDs.StepProcReceive(0, 1), 10);
+    BOOST_CHECK_EQUAL(commDs.StepProcReceive(1, 0), 8);
 
-    using KlMove = kl_move_struct<double, Graph::VertexIdx>;
-    thread_local_active_schedule_data<Graph, double> activeScheduleData;
-    activeScheduleData.initialize_cost(0.0);
+    using KlMove = KlMoveStruct<double, Graph::VertexIdx>;
+    ThreadLocalActiveScheduleData<Graph, double> activeScheduleData;
+    activeScheduleData.InitializeCost(0.0);
 
     // Move node 1 from (P1, step1) to (P0, step1)
     // This makes 0->1 edge stay cross-step but changes processor
     KlMove move1(1, 0.0, 1, 1, 0, 1);
-    klSched.apply_move(move1, activeScheduleData);
-    commDs.update_datastructure_after_move(move1, 0, 2);
+    klSched.ApplyMove(move1, activeScheduleData);
+    commDs.UpdateDatastructureAfterMove(move1, 0, 2);
 
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(0, 0), 0);       // Local (same processor)
-    BOOST_CHECK_EQUAL(commDs.step_proc_receive(0, 0), 0);    // No receive needed
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(0, 0), 0);       // Local (same processor)
+    BOOST_CHECK_EQUAL(commDs.StepProcReceive(0, 0), 0);    // No receive needed
 
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(1, 0), 0);    // Local (same processor)
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(1, 1), 0);    // Node moved away
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(1, 0), 0);    // Local (same processor)
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(1, 1), 0);    // Node moved away
 
     KlMove move2(1, 0.0, 0, 1, 0, 0);
-    klSched.apply_move(move2, activeScheduleData);
-    commDs.update_datastructure_after_move(move2, 0, 2);
+    klSched.ApplyMove(move2, activeScheduleData);
+    commDs.UpdateDatastructureAfterMove(move2, 0, 2);
 
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(0, 0), 0);    // All local at P0
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(0, 0), 0);    // All local at P0
 }
 
 BOOST_AUTO_TEST_CASE(TestComplexScenarioUserProvided) {
@@ -665,60 +665,60 @@ BOOST_AUTO_TEST_CASE(TestComplexScenarioUserProvided) {
     schedule.UpdateNumberOfSupersteps();
 
     KlActiveScheduleT klSched;
-    klSched.initialize(schedule);
+    klSched.Initialize(schedule);
 
-    max_comm_datastructure<Graph, double, KlActiveScheduleT> commDs;
-    commDs.initialize(klSched);
-    commDs.compute_comm_datastructures(0, 3);
+    MaxCommDatastructure<Graph, double, KlActiveScheduleT> commDs;
+    commDs.Initialize(klSched);
+    commDs.ComputeCommDatastructures(0, 3);
 
     // === Initial State Verification ===
     // ... (Same as before) ...
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(0, 1), 9);
-    BOOST_CHECK_EQUAL(commDs.step_proc_receive(0, 0), 9);
-    BOOST_CHECK_EQUAL(commDs.step_max_comm(0), 9);
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(1, 0), 13);
-    BOOST_CHECK_EQUAL(commDs.step_proc_receive(1, 1), 13);
-    BOOST_CHECK_EQUAL(commDs.step_max_comm(1), 13);
-    BOOST_CHECK_EQUAL(commDs.step_max_comm(2), 0);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(0, 1), 9);
+    BOOST_CHECK_EQUAL(commDs.StepProcReceive(0, 0), 9);
+    BOOST_CHECK_EQUAL(commDs.StepMaxComm(0), 9);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(1, 0), 13);
+    BOOST_CHECK_EQUAL(commDs.StepProcReceive(1, 1), 13);
+    BOOST_CHECK_EQUAL(commDs.StepMaxComm(1), 13);
+    BOOST_CHECK_EQUAL(commDs.StepMaxComm(2), 0);
 
-    using KlMove = kl_move_struct<double, Graph::VertexIdx>;
-    thread_local_active_schedule_data<Graph, double> activeScheduleData;
-    activeScheduleData.initialize_cost(0.0);
+    using KlMove = KlMoveStruct<double, Graph::VertexIdx>;
+    ThreadLocalActiveScheduleData<Graph, double> activeScheduleData;
+    activeScheduleData.InitializeCost(0.0);
 
     // === Move 1: Move v3 from P0 to P1 (at Step 1) ===
     KlMove move1(v3, 0.0, 0, 1, 1, 1);
-    klSched.apply_move(move1, activeScheduleData);
-    commDs.update_datastructure_after_move(move1, 0, 3);
+    klSched.ApplyMove(move1, activeScheduleData);
+    commDs.UpdateDatastructureAfterMove(move1, 0, 3);
     BOOST_CHECK(ValidateCommDatastructures(commDs, klSched, instance, "complex_move1"));
 
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(0, 1), 9);
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(1, 0), 6);
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(1, 1), 7);
-    BOOST_CHECK_EQUAL(commDs.step_max_comm(1), 7);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(0, 1), 9);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(1, 0), 6);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(1, 1), 7);
+    BOOST_CHECK_EQUAL(commDs.StepMaxComm(1), 7);
 
     // === Move 2: Move v4 from P0 to P1 (at Step 1) ===
     KlMove move2(v4, 0.0, 0, 1, 1, 1);
-    klSched.apply_move(move2, activeScheduleData);
-    commDs.update_datastructure_after_move(move2, 0, 3);
+    klSched.ApplyMove(move2, activeScheduleData);
+    commDs.UpdateDatastructureAfterMove(move2, 0, 3);
     BOOST_CHECK(ValidateCommDatastructures(commDs, klSched, instance, "complex_move2"));
 
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(0, 1), 0);
-    BOOST_CHECK_EQUAL(commDs.step_max_comm(0), 0);
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(1, 0), 0);
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(1, 1), 7);
-    BOOST_CHECK_EQUAL(commDs.step_max_comm(1), 7);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(0, 1), 0);
+    BOOST_CHECK_EQUAL(commDs.StepMaxComm(0), 0);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(1, 0), 0);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(1, 1), 7);
+    BOOST_CHECK_EQUAL(commDs.StepMaxComm(1), 7);
 
     // === Move 3: Move v5 from P1 to P0 (at Step 2) ===
     KlMove move3(v5, 0.0, 1, 2, 0, 2);
-    klSched.apply_move(move3, activeScheduleData);
-    commDs.update_datastructure_after_move(move3, 0, 3);
+    klSched.ApplyMove(move3, activeScheduleData);
+    commDs.UpdateDatastructureAfterMove(move3, 0, 3);
     BOOST_CHECK(ValidateCommDatastructures(commDs, klSched, instance, "complex_move3"));
 
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(0, 1), 8);
-    BOOST_CHECK_EQUAL(commDs.step_max_comm(0), 8);
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(1, 1), 7);
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(2, 0), 5);
-    BOOST_CHECK_EQUAL(commDs.step_max_comm(2), 5);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(0, 1), 8);
+    BOOST_CHECK_EQUAL(commDs.StepMaxComm(0), 8);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(1, 1), 7);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(2, 0), 5);
+    BOOST_CHECK_EQUAL(commDs.StepMaxComm(2), 5);
 
     // === Move 4: Move v6 from P0 to P1 (at Step 2) ===
     // v6 is child of v3 (P1, S1).
@@ -728,23 +728,23 @@ BOOST_AUTO_TEST_CASE(TestComplexScenarioUserProvided) {
     // So v3 targets: {P0}. Count = 1.
     // Send Cost v3 = 7. Unchanged.
     KlMove move4(v6, 0.0, 0, 2, 1, 2);
-    klSched.apply_move(move4, activeScheduleData);
-    commDs.update_datastructure_after_move(move4, 0, 3);
+    klSched.ApplyMove(move4, activeScheduleData);
+    commDs.UpdateDatastructureAfterMove(move4, 0, 3);
     BOOST_CHECK(ValidateCommDatastructures(commDs, klSched, instance, "complex_move4"));
 
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(1, 1), 7);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(1, 1), 7);
 
     // === Move 5: Move v5 from P0 to P1 (at Step 2) ===
     // v5 moves back to P1.
     // v3(P1) -> v5(P1), v6(P1). All local.
     // Send Cost v3 = 0.
     KlMove move5(v5, 0.0, 0, 2, 1, 2);
-    klSched.apply_move(move5, activeScheduleData);
-    commDs.update_datastructure_after_move(move5, 0, 3);
+    klSched.ApplyMove(move5, activeScheduleData);
+    commDs.UpdateDatastructureAfterMove(move5, 0, 3);
     BOOST_CHECK(ValidateCommDatastructures(commDs, klSched, instance, "complex_move5"));
 
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(1, 1), 0);
-    BOOST_CHECK_EQUAL(commDs.step_max_comm(1), 0);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(1, 1), 0);
+    BOOST_CHECK_EQUAL(commDs.StepMaxComm(1), 0);
 }
 
 /**
@@ -754,7 +754,7 @@ BOOST_AUTO_TEST_CASE(TestComplexScenarioUserProvided) {
  */
 BOOST_AUTO_TEST_CASE(TestGridGraphComplexMoves) {
     // Construct 5x5 Grid Graph (25 nodes, indices 0-24)
-    Graph dag = osp::construct_grid_dag<Graph>(5, 5);
+    Graph dag = osp::ConstructGridDag<Graph>(5, 5);
 
     BspArchitecture<Graph> arch;
     arch.SetNumberOfProcessors(4);    // P0..P3
@@ -793,50 +793,50 @@ BOOST_AUTO_TEST_CASE(TestGridGraphComplexMoves) {
     schedule.UpdateNumberOfSupersteps();
 
     KlActiveScheduleT klSched;
-    klSched.initialize(schedule);
+    klSched.Initialize(schedule);
 
-    max_comm_datastructure<Graph, double, KlActiveScheduleT> commDs;
-    commDs.initialize(klSched);
-    commDs.compute_comm_datastructures(0, 5);
+    MaxCommDatastructure<Graph, double, KlActiveScheduleT> commDs;
+    commDs.Initialize(klSched);
+    commDs.ComputeCommDatastructures(0, 5);
 
     // Initial check
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(1, 3), 2);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(1, 3), 2);
 
-    using KlMove = kl_move_struct<double, Graph::VertexIdx>;
-    thread_local_active_schedule_data<Graph, double> activeScheduleData;
-    activeScheduleData.initialize_cost(0.0);
+    using KlMove = KlMoveStruct<double, Graph::VertexIdx>;
+    ThreadLocalActiveScheduleData<Graph, double> activeScheduleData;
+    activeScheduleData.InitializeCost(0.0);
 
     // === Move 1: Node 12 (P1->P0) ===
     KlMove move1(12, 0.0, 1, 2, 0, 2);
-    klSched.apply_move(move1, activeScheduleData);
-    commDs.update_datastructure_after_move(move1, 0, 5);
+    klSched.ApplyMove(move1, activeScheduleData);
+    commDs.UpdateDatastructureAfterMove(move1, 0, 5);
     BOOST_CHECK(ValidateCommDatastructures(commDs, klSched, instance, "grid_move1"));
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(1, 3), 1);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(1, 3), 1);
 
     // === Move 2: Node 8 (P0->P3) ===
     KlMove move2(8, 0.0, 0, 1, 3, 1);
-    klSched.apply_move(move2, activeScheduleData);
-    commDs.update_datastructure_after_move(move2, 0, 5);
+    klSched.ApplyMove(move2, activeScheduleData);
+    commDs.UpdateDatastructureAfterMove(move2, 0, 5);
     BOOST_CHECK(ValidateCommDatastructures(commDs, klSched, instance, "grid_move2"));
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(1, 3), 3);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(1, 3), 3);
 
     // === Move 3: Node 12 (P0->P3) ===
     KlMove move3(12, 0.0, 0, 2, 3, 2);
-    klSched.apply_move(move3, activeScheduleData);
-    commDs.update_datastructure_after_move(move3, 0, 5);
+    klSched.ApplyMove(move3, activeScheduleData);
+    commDs.UpdateDatastructureAfterMove(move3, 0, 5);
     BOOST_CHECK(ValidateCommDatastructures(commDs, klSched, instance, "grid_move3"));
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(1, 3), 2);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(1, 3), 2);
 
     // === Move 4: Node 7 (P3->P0) ===
     KlMove move4(7, 0.0, 3, 1, 0, 1);
-    klSched.apply_move(move4, activeScheduleData);
-    commDs.update_datastructure_after_move(move4, 0, 5);
+    klSched.ApplyMove(move4, activeScheduleData);
+    commDs.UpdateDatastructureAfterMove(move4, 0, 5);
     BOOST_CHECK(ValidateCommDatastructures(commDs, klSched, instance, "grid_move4"));
 
     // Check P0 send contribution from Node 7.
     // Node 7 contributes 10.
     // We can check if P0 send >= 10.
-    BOOST_CHECK_GE(commDs.step_proc_send(1, 0), 1);
+    BOOST_CHECK_GE(commDs.StepProcSend(1, 0), 1);
 }
 
 /**
@@ -881,11 +881,11 @@ BOOST_AUTO_TEST_CASE(TestButterflyGraphMoves) {
     schedule.UpdateNumberOfSupersteps();
 
     KlActiveScheduleT klSched;
-    klSched.initialize(schedule);
+    klSched.Initialize(schedule);
 
-    max_comm_datastructure<Graph, double, KlActiveScheduleT> commDs;
-    commDs.initialize(klSched);
-    commDs.compute_comm_datastructures(0, 2);
+    MaxCommDatastructure<Graph, double, KlActiveScheduleT> commDs;
+    commDs.Initialize(klSched);
+    commDs.ComputeCommDatastructures(0, 2);
 
     // Initial State:
     // Step 0 (P0): Nodes 0-3 send to Level 1 (P1).
@@ -893,15 +893,15 @@ BOOST_AUTO_TEST_CASE(TestButterflyGraphMoves) {
     // 0 -> 4, 6. (Both P1). Count=1. Cost=10.
     // 1 -> 5, 7. (Both P1). Count=1. Cost=10.
     // ... All 4 nodes send to P1. Total P0 Send = 40.
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(0, 0), 4);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(0, 0), 4);
 
     // Step 1 (P1): Nodes 4-7 send to Level 2 (P0).
     // All 4 nodes send to P0. Total P1 Send = 40.
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(1, 1), 4);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(1, 1), 4);
 
-    using KlMove = kl_move_struct<double, Graph::VertexIdx>;
-    thread_local_active_schedule_data<Graph, double> activeScheduleData;
-    activeScheduleData.initialize_cost(0.0);
+    using KlMove = KlMoveStruct<double, Graph::VertexIdx>;
+    ThreadLocalActiveScheduleData<Graph, double> activeScheduleData;
+    activeScheduleData.InitializeCost(0.0);
 
     // === Move 1: Move Node 4 (Level 1) P1 -> P0 ===
     // Node 4 moves to P0.
@@ -910,19 +910,19 @@ BOOST_AUTO_TEST_CASE(TestButterflyGraphMoves) {
     // Node 1 -> 5(P1), 7(P1). Targets {P1}. Count=1.
     // Step 0 Send Cost unchanged (still 40).
     KlMove move1(4, 0.0, 1, 1, 0, 1);
-    klSched.apply_move(move1, activeScheduleData);
-    commDs.update_datastructure_after_move(move1, 0, 2);
+    klSched.ApplyMove(move1, activeScheduleData);
+    commDs.UpdateDatastructureAfterMove(move1, 0, 2);
     BOOST_CHECK(ValidateCommDatastructures(commDs, klSched, instance, "butterfly_move1"));
 
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(0, 0), 4);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(0, 0), 4);
 
     // Impact on Step 1 (Node 4):
     // Node 4 (P0) -> 8(P0), 10(P0). All local.
     // Node 4 stops sending. (Was 10).
     // P1 Send decreases by 10 -> 30.
     // P0 Send increases by 0 (all local).
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(1, 1), 3);
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(1, 0), 0);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(1, 1), 3);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(1, 0), 0);
 
     // === Move 2: Move Node 6 (Level 1) P1 -> P0 ===
     // Node 6 moves to P0.
@@ -931,16 +931,16 @@ BOOST_AUTO_TEST_CASE(TestButterflyGraphMoves) {
     // Node 0 stops sending. (Was 10).
     // P0 Send decreases by 10 -> 30.
     KlMove move2(6, 0.0, 1, 1, 0, 1);
-    klSched.apply_move(move2, activeScheduleData);
-    commDs.update_datastructure_after_move(move2, 0, 2);
+    klSched.ApplyMove(move2, activeScheduleData);
+    commDs.UpdateDatastructureAfterMove(move2, 0, 2);
     BOOST_CHECK(ValidateCommDatastructures(commDs, klSched, instance, "butterfly_move2"));
 
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(0, 0), 2);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(0, 0), 2);
 
     // Impact on Step 1 (Node 6):
     // Node 6 (P0) -> 8(P0), 10(P0). All local.
     // P1 Send decreases by 10 -> 20.
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(1, 1), 2);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(1, 1), 2);
 
     // === Move 3: Move Node 0 (Level 0) P0 -> P1 ===
     // Node 0 moves to P1.
@@ -950,8 +950,8 @@ BOOST_AUTO_TEST_CASE(TestButterflyGraphMoves) {
     // P0 Send: 10 (from Node 1).
     // P1 Send: 10 (from Node 0).
     KlMove move3(0, 0.0, 0, 0, 1, 0);
-    klSched.apply_move(move3, activeScheduleData);
-    commDs.update_datastructure_after_move(move3, 0, 2);
+    klSched.ApplyMove(move3, activeScheduleData);
+    commDs.UpdateDatastructureAfterMove(move3, 0, 2);
     BOOST_CHECK(ValidateCommDatastructures(commDs, klSched, instance, "butterfly_move3"));
 
     // === Move 4: Move Node 8 (Level 2) P0 -> P1 ===
@@ -961,8 +961,8 @@ BOOST_AUTO_TEST_CASE(TestButterflyGraphMoves) {
     // Node 6 (P0) -> 8(P1), 10(P0). Targets {P1}. Count=1. Cost=10.
     // P0 Send increases.
     KlMove move4(8, 0.0, 0, 2, 1, 2);
-    klSched.apply_move(move4, activeScheduleData);
-    commDs.update_datastructure_after_move(move4, 0, 2);
+    klSched.ApplyMove(move4, activeScheduleData);
+    commDs.UpdateDatastructureAfterMove(move4, 0, 2);
     BOOST_CHECK(ValidateCommDatastructures(commDs, klSched, instance, "butterfly_move4"));
 }
 
@@ -1002,11 +1002,11 @@ BOOST_AUTO_TEST_CASE(TestLadderGraphMoves) {
     schedule.UpdateNumberOfSupersteps();
 
     KlActiveScheduleT klSched;
-    klSched.initialize(schedule);
+    klSched.Initialize(schedule);
 
-    max_comm_datastructure<Graph, double, KlActiveScheduleT> commDs;
-    commDs.initialize(klSched);
-    commDs.compute_comm_datastructures(0, 5);
+    MaxCommDatastructure<Graph, double, KlActiveScheduleT> commDs;
+    commDs.Initialize(klSched);
+    commDs.ComputeCommDatastructures(0, 5);
 
     // Initial State:
     // Rung i (u1, v1) connects to Rung i+1 (u2, v2).
@@ -1015,13 +1015,13 @@ BOOST_AUTO_TEST_CASE(TestLadderGraphMoves) {
     // This applies for Steps 0 to 4.
 
     for (unsigned s = 0; s < 5; ++s) {
-        BOOST_CHECK_EQUAL(commDs.step_proc_send(s, 0), 1);
-        BOOST_CHECK_EQUAL(commDs.step_proc_send(s, 1), 1);
+        BOOST_CHECK_EQUAL(commDs.StepProcSend(s, 0), 1);
+        BOOST_CHECK_EQUAL(commDs.StepProcSend(s, 1), 1);
     }
 
-    using KlMove = kl_move_struct<double, Graph::VertexIdx>;
-    thread_local_active_schedule_data<Graph, double> activeScheduleData;
-    activeScheduleData.initialize_cost(0.0);
+    using KlMove = KlMoveStruct<double, Graph::VertexIdx>;
+    ThreadLocalActiveScheduleData<Graph, double> activeScheduleData;
+    activeScheduleData.InitializeCost(0.0);
 
     // === Move 1: Move Node 1 (Rung 0, Right) P1 -> P0 ===
     // Node 1 moves to P0.
@@ -1032,12 +1032,12 @@ BOOST_AUTO_TEST_CASE(TestLadderGraphMoves) {
     // P0 Send = 10 + 10 = 20.
     // P1 Send = 0.
     KlMove move1(1, 0.0, 1, 0, 0, 0);
-    klSched.apply_move(move1, activeScheduleData);
-    commDs.update_datastructure_after_move(move1, 0, 5);
+    klSched.ApplyMove(move1, activeScheduleData);
+    commDs.UpdateDatastructureAfterMove(move1, 0, 5);
     BOOST_CHECK(ValidateCommDatastructures(commDs, klSched, instance, "ladder_move1"));
 
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(0, 0), 2);
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(0, 1), 0);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(0, 0), 2);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(0, 1), 0);
 
     // === Move 2: Move Node 3 (Rung 1, Right) P1 -> P0 ===
     // Node 3 moves to P0.
@@ -1047,17 +1047,17 @@ BOOST_AUTO_TEST_CASE(TestLadderGraphMoves) {
     // v1(1) -> u2(2, P0), v2(3, P0). All local. Cost=0.
     // P0 Send at Step 0 = 0.
     KlMove move2(3, 0.0, 1, 1, 0, 1);
-    klSched.apply_move(move2, activeScheduleData);
-    commDs.update_datastructure_after_move(move2, 0, 5);
+    klSched.ApplyMove(move2, activeScheduleData);
+    commDs.UpdateDatastructureAfterMove(move2, 0, 5);
     BOOST_CHECK(ValidateCommDatastructures(commDs, klSched, instance, "ladder_move2"));
 
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(0, 0), 0);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(0, 0), 0);
 
     // Impact on Step 1 (Nodes 2, 3):
     // u2(2, P0) -> u3(4, P0), v3(5, P1). Targets {P1}. Cost=10.
     // v2(3, P0) -> u3(4, P0), v3(5, P1). Targets {P1}. Cost=10.
     // P0 Send at Step 1 = 20.
-    BOOST_CHECK_EQUAL(commDs.step_proc_send(1, 0), 2);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(1, 0), 2);
 
     // === Move 3: Move Node 0 (Rung 0, Left) P0 -> P1 ===
     // Node 0 moves to P1.
@@ -1068,8 +1068,8 @@ BOOST_AUTO_TEST_CASE(TestLadderGraphMoves) {
     // P0 Send: 0.
     // P1 Send: 10.
     KlMove move3(0, 0.0, 0, 0, 1, 0);
-    klSched.apply_move(move3, activeScheduleData);
-    commDs.update_datastructure_after_move(move3, 0, 5);
+    klSched.ApplyMove(move3, activeScheduleData);
+    commDs.UpdateDatastructureAfterMove(move3, 0, 5);
     BOOST_CHECK(ValidateCommDatastructures(commDs, klSched, instance, "ladder_move3"));
 
     // === Move 4: Move Node 2 (Rung 1, Left) P0 -> P1 ===
@@ -1081,8 +1081,8 @@ BOOST_AUTO_TEST_CASE(TestLadderGraphMoves) {
     // P0 Send: 10.
     // P1 Send: 10.
     KlMove move4(2, 0.0, 0, 1, 1, 1);
-    klSched.apply_move(move4, activeScheduleData);
-    commDs.update_datastructure_after_move(move4, 0, 5);
+    klSched.ApplyMove(move4, activeScheduleData);
+    commDs.UpdateDatastructureAfterMove(move4, 0, 5);
     BOOST_CHECK(ValidateCommDatastructures(commDs, klSched, instance, "ladder_move4"));
 }
 
@@ -1119,10 +1119,10 @@ BOOST_AUTO_TEST_CASE(TestLazyAndBufferedModes) {
 
     std::cout << "Setup KL Sched" << std::endl;
     KlActiveScheduleT klSched;
-    klSched.initialize(schedule);
+    klSched.Initialize(schedule);
 
-    thread_local_active_schedule_data<Graph, double> activeScheduleData;
-    activeScheduleData.initialize_cost(0.0);
+    ThreadLocalActiveScheduleData<Graph, double> activeScheduleData;
+    activeScheduleData.InitializeCost(0.0);
 
     std::cout << "Setup Complete" << std::endl;
     std::cout << "Num Vertices: " << instance.NumVertices() << std::endl;
@@ -1131,18 +1131,18 @@ BOOST_AUTO_TEST_CASE(TestLazyAndBufferedModes) {
     std::cout << "Start Eager Test" << std::endl;
     {
         using CommPolicy = osp::EagerCommCostPolicy;
-        osp::max_comm_datastructure<Graph, double, KlActiveScheduleT, CommPolicy> commDs;
+        MaxCommDatastructure<Graph, double, KlActiveScheduleT, CommPolicy> commDs;
         std::cout << "Initialize Eager Comm DS" << std::endl;
-        commDs.initialize(klSched);
+        commDs.Initialize(klSched);
 
         std::cout << "Checking node_lambda_map" << std::endl;
-        std::cout << "node_lambda_vec size: " << commDs.node_lambda_map.node_lambda_vec.size() << std::endl;
-        if (commDs.node_lambda_map.node_lambda_vec.size() > 0) {
-            std::cout << "node_lambda_vec[0] size: " << commDs.node_lambda_map.node_lambda_vec[0].size() << std::endl;
+        std::cout << "node_lambda_vec size: " << commDs.nodeLambdaMap_.nodeLambdaVec_.size() << std::endl;
+        if (commDs.nodeLambdaMap_.nodeLambdaVec_.size() > 0) {
+            std::cout << "node_lambda_vec[0] size: " << commDs.nodeLambdaMap_.nodeLambdaVec_[0].size() << std::endl;
         }
 
         std::cout << "Compute Eager Comm DS" << std::endl;
-        commDs.compute_comm_datastructures(0, 4);
+        commDs.ComputeCommDatastructures(0, 4);
         std::cout << "Eager Done" << std::endl;
     }
 
@@ -1150,11 +1150,11 @@ BOOST_AUTO_TEST_CASE(TestLazyAndBufferedModes) {
     // --- Test Lazy Policy ---
     {
         using CommPolicy = osp::LazyCommCostPolicy;
-        osp::max_comm_datastructure<Graph, double, KlActiveScheduleT, CommPolicy> commDs;
+        MaxCommDatastructure<Graph, double, KlActiveScheduleT, CommPolicy> commDs;
         std::cout << "Initialize Comm DS" << std::endl;
-        commDs.initialize(klSched);
+        commDs.Initialize(klSched);
         std::cout << "Compute Comm DS" << std::endl;
-        commDs.compute_comm_datastructures(0, 4);
+        commDs.ComputeCommDatastructures(0, 4);
 
         // Expected Behavior for Lazy:
         // Node 0 (P0) sends to P1.
@@ -1163,113 +1163,113 @@ BOOST_AUTO_TEST_CASE(TestLazyAndBufferedModes) {
         // Cost = 10 * 1.0 = 10.
 
         // Lazy: Send and Recv at min(2, 4) - 1 = Step 1.
-        BOOST_CHECK_EQUAL(commDs.step_proc_send(0, 0), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_send(1, 0), 10);
-        BOOST_CHECK_EQUAL(commDs.step_proc_send(2, 0), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_send(3, 0), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_send(4, 0), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcSend(0, 0), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcSend(1, 0), 10);
+        BOOST_CHECK_EQUAL(commDs.StepProcSend(2, 0), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcSend(3, 0), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcSend(4, 0), 0);
 
-        BOOST_CHECK_EQUAL(commDs.step_proc_send(0, 1), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_send(1, 1), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_send(2, 1), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_send(3, 1), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_send(4, 1), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcSend(0, 1), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcSend(1, 1), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcSend(2, 1), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcSend(3, 1), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcSend(4, 1), 0);
 
-        BOOST_CHECK_EQUAL(commDs.step_proc_receive(0, 0), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_receive(1, 0), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_receive(2, 0), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_receive(3, 0), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_receive(4, 0), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcReceive(0, 0), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcReceive(1, 0), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcReceive(2, 0), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcReceive(3, 0), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcReceive(4, 0), 0);
 
-        BOOST_CHECK_EQUAL(commDs.step_proc_receive(0, 1), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_receive(1, 1), 10);
-        BOOST_CHECK_EQUAL(commDs.step_proc_receive(2, 1), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_receive(3, 1), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_receive(4, 1), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcReceive(0, 1), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcReceive(1, 1), 10);
+        BOOST_CHECK_EQUAL(commDs.StepProcReceive(2, 1), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcReceive(3, 1), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcReceive(4, 1), 0);
 
-        using KlMove = osp::kl_move_struct<double, Graph::VertexIdx>;
+        using KlMove = osp::KlMoveStruct<double, Graph::VertexIdx>;
         KlMove move(1, 0.0, 1, 2, 1, 3);    // Node 1, Step 2->3, Proc 1->1
-        klSched.apply_move(move, activeScheduleData);
-        commDs.update_datastructure_after_move(move, 0, 4);
+        klSched.ApplyMove(move, activeScheduleData);
+        commDs.UpdateDatastructureAfterMove(move, 0, 4);
 
         // After move: Children at {3, 4}. Min = 3. Send/Recv at Step 2.
-        BOOST_CHECK_EQUAL(commDs.step_proc_send(0, 0), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_send(1, 0), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_send(2, 0), 10);
-        BOOST_CHECK_EQUAL(commDs.step_proc_send(3, 0), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_send(4, 0), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcSend(0, 0), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcSend(1, 0), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcSend(2, 0), 10);
+        BOOST_CHECK_EQUAL(commDs.StepProcSend(3, 0), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcSend(4, 0), 0);
 
-        BOOST_CHECK_EQUAL(commDs.step_proc_send(0, 1), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_send(1, 1), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_send(2, 1), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_send(3, 1), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_send(4, 1), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcSend(0, 1), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcSend(1, 1), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcSend(2, 1), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcSend(3, 1), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcSend(4, 1), 0);
 
-        BOOST_CHECK_EQUAL(commDs.step_proc_receive(0, 0), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_receive(1, 0), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_receive(2, 0), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_receive(3, 0), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_receive(4, 0), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcReceive(0, 0), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcReceive(1, 0), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcReceive(2, 0), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcReceive(3, 0), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcReceive(4, 0), 0);
 
-        BOOST_CHECK_EQUAL(commDs.step_proc_receive(0, 1), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_receive(1, 1), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_receive(2, 1), 10);
-        BOOST_CHECK_EQUAL(commDs.step_proc_receive(3, 1), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_receive(4, 1), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcReceive(0, 1), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcReceive(1, 1), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcReceive(2, 1), 10);
+        BOOST_CHECK_EQUAL(commDs.StepProcReceive(3, 1), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcReceive(4, 1), 0);
 
         // Reset Node 1 to Step 2 for next test
         KlMove moveBack(1, 0.0, 1, 3, 1, 2);
-        klSched.apply_move(moveBack, activeScheduleData);
+        klSched.ApplyMove(moveBack, activeScheduleData);
     }
 
     // --- Test Buffered Policy ---
     {
         using CommPolicy = osp::BufferedCommCostPolicy;
-        osp::max_comm_datastructure<Graph, double, KlActiveScheduleT, CommPolicy> commDs;
-        commDs.initialize(klSched);
-        commDs.compute_comm_datastructures(0, 4);
+        osp::MaxCommDatastructure<Graph, double, KlActiveScheduleT, CommPolicy> commDs;
+        commDs.Initialize(klSched);
+        commDs.ComputeCommDatastructures(0, 4);
 
         // Buffered: Send at Step 0. Recv at min(2, 4) - 1 = Step 1.
-        BOOST_CHECK_EQUAL(commDs.step_proc_send(0, 0), 10);
-        BOOST_CHECK_EQUAL(commDs.step_proc_send(1, 0), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_send(2, 0), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_send(3, 0), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_send(4, 0), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcSend(0, 0), 10);
+        BOOST_CHECK_EQUAL(commDs.StepProcSend(1, 0), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcSend(2, 0), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcSend(3, 0), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcSend(4, 0), 0);
 
-        BOOST_CHECK_EQUAL(commDs.step_proc_send(0, 1), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_send(1, 1), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_send(2, 1), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_send(3, 1), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_send(4, 1), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcSend(0, 1), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcSend(1, 1), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcSend(2, 1), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcSend(3, 1), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcSend(4, 1), 0);
 
-        BOOST_CHECK_EQUAL(commDs.step_proc_receive(0, 0), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_receive(1, 0), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_receive(2, 0), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_receive(3, 0), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_receive(4, 0), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcReceive(0, 0), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcReceive(1, 0), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcReceive(2, 0), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcReceive(3, 0), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcReceive(4, 0), 0);
 
-        BOOST_CHECK_EQUAL(commDs.step_proc_receive(0, 1), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_receive(1, 1), 10);
-        BOOST_CHECK_EQUAL(commDs.step_proc_receive(2, 1), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_receive(3, 1), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_receive(4, 1), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcReceive(0, 1), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcReceive(1, 1), 10);
+        BOOST_CHECK_EQUAL(commDs.StepProcReceive(2, 1), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcReceive(3, 1), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcReceive(4, 1), 0);
 
-        using KlMove = osp::kl_move_struct<double, Graph::VertexIdx>;
+        using KlMove = osp::KlMoveStruct<double, Graph::VertexIdx>;
         KlMove move(1, 0.0, 1, 2, 1, 3);    // Node 1, Step 2->3, Proc 1->1
-        klSched.apply_move(move, activeScheduleData);
-        commDs.update_datastructure_after_move(move, 0, 4);
+        klSched.ApplyMove(move, activeScheduleData);
+        commDs.UpdateDatastructureAfterMove(move, 0, 4);
 
         // After move: Children at {3, 4}. Min = 3. Recv at Step 2. Send still at Step 0.
-        BOOST_CHECK_EQUAL(commDs.step_proc_send(0, 0), 10);
-        BOOST_CHECK_EQUAL(commDs.step_proc_send(1, 0), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_send(2, 0), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_send(3, 0), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_send(4, 0), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcSend(0, 0), 10);
+        BOOST_CHECK_EQUAL(commDs.StepProcSend(1, 0), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcSend(2, 0), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcSend(3, 0), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcSend(4, 0), 0);
 
-        BOOST_CHECK_EQUAL(commDs.step_proc_receive(0, 1), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_receive(1, 1), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_receive(2, 1), 10);
-        BOOST_CHECK_EQUAL(commDs.step_proc_receive(3, 1), 0);
-        BOOST_CHECK_EQUAL(commDs.step_proc_receive(4, 1), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcReceive(0, 1), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcReceive(1, 1), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcReceive(2, 1), 10);
+        BOOST_CHECK_EQUAL(commDs.StepProcReceive(3, 1), 0);
+        BOOST_CHECK_EQUAL(commDs.StepProcReceive(4, 1), 0);
     }
 }

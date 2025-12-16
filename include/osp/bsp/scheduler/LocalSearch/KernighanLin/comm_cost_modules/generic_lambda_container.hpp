@@ -63,7 +63,7 @@ struct GenericLambdaVectorContainer {
 
           public:
             LambdaVectorIterator(const std::vector<ValueType> &vec) : vec_(vec), index_(0) {
-                while (index_ < vec_.size() && !HasEntry::has_entry(vec_[index_])) {
+                while (index_ < vec_.size() && !HasEntry::HasEntry(vec_[index_])) {
                     ++index_;
                 }
             }
@@ -72,7 +72,7 @@ struct GenericLambdaVectorContainer {
 
             LambdaVectorIterator &operator++() {
                 ++index_;
-                while (index_ < vec_.size() && !HasEntry::has_entry(vec_[index_])) {
+                while (index_ < vec_.size() && !HasEntry::HasEntry(vec_[index_])) {
                     ++index_;
                 }
                 return *this;
@@ -108,7 +108,7 @@ struct GenericLambdaVectorContainer {
     inline void Clear() { nodeLambdaVec_.clear(); }
 
     inline bool HasProcEntry(const VertexIdxT node, const unsigned proc) const {
-        return HasEntry::has_entry(nodeLambdaVec_[node][proc]);
+        return HasEntry::HasEntry(nodeLambdaVec_[node][proc]);
     }
 
     inline ValueType &GetProcEntry(const VertexIdxT node, const unsigned proc) { return nodeLambdaVec_[node][proc]; }
