@@ -346,8 +346,8 @@ struct KlBspCommCostFunction {
 
         for (const unsigned pTo : procRange_->CompatibleProcessorsVertex(node)) {
             // --- Part A: Incoming Edges (Parents -> pTo) ---
-            // These updates are specific to pTo but independent of s_to.
-            // We apply them, run the s_to loop, then revert them.
+            // These updates are specific to pTo but independent of sTo.
+            // We apply them, run the sTo loop, then revert them.
 
             for (const auto &u : graph_->Parents(node)) {
                 const unsigned uProc = activeSchedule_->AssignedProcessor(u);
@@ -393,17 +393,17 @@ struct KlBspCommCostFunction {
                 }
             }
 
-            // Iterate Window (s_to)
+            // Iterate Window (sTo)
             for (unsigned sToIdx = nodeStartIdx; sToIdx < windowBound; ++sToIdx) {
-                unsigned s_to = nodeStep + sToIdx - windowSize;
+                unsigned sTo = nodeStep + sToIdx - windowSize;
 
-                // Apply Outgoing Deltas for this specific step s_to
+                // Apply Outgoing Deltas for this specific step sTo
                 for (const auto &[v_proc, cost] : scratch.childCostBuffer_) {
-                    AddDelta(true, s_to, v_proc, cost);
+                    AddDelta(true, sTo, v_proc, cost);
                 }
 
                 if (totalSendCostAdded > 0) {
-                    AddDelta(false, s_to, pTo, totalSendCostAdded);
+                    AddDelta(false, sTo, pTo, totalSendCostAdded);
                 }
 
                 CostT totalChange = 0;
@@ -419,12 +419,12 @@ struct KlBspCommCostFunction {
 
                 affinityTableNode[pTo][sToIdx] += totalChange * instance_->CommunicationCosts();
 
-                // Revert Outgoing Deltas for s_to (Inverse of Apply)
+                // Revert Outgoing Deltas for sTo (Inverse of Apply)
                 for (const auto &[v_proc, cost] : scratch.childCostBuffer_) {
-                    AddDelta(true, s_to, v_proc, -cost);
+                    AddDelta(true, sTo, v_proc, -cost);
                 }
                 if (totalSendCostAdded > 0) {
-                    AddDelta(false, s_to, pTo, -totalSendCostAdded);
+                    AddDelta(false, sTo, pTo, -totalSendCostAdded);
                 }
             }
 
