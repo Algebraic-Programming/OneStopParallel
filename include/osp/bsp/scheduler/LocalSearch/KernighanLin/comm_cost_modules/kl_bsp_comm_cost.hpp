@@ -129,7 +129,7 @@ struct KlBspCommCostFunction {
         instance_ = &sched.GetInstance();
         graph_ = &instance_->GetComputationalDag();
 
-        const unsigned numSteps = activeSchedule_->num_steps();
+        const unsigned numSteps = activeSchedule_->NumSteps();
         commDs_.initialize(*activeSchedule_);
     }
 
@@ -137,7 +137,7 @@ struct KlBspCommCostFunction {
 
     inline PreMoveCommData<comm_weight_t> GetPreMoveCommData(const kl_move &move) { return commDs_.get_pre_move_comm_data(move); }
 
-    void ComputeSendReceiveDatastructures() { commDs_.compute_comm_datastructures(0, activeSchedule_->num_steps() - 1); }
+    void ComputeSendReceiveDatastructures() { commDs_.compute_comm_datastructures(0, activeSchedule_->NumSteps() - 1); }
 
     template <bool computeDatastructures = true>
     CostT ComputeScheduleCost() {
@@ -146,13 +146,13 @@ struct KlBspCommCostFunction {
         }
 
         CostT totalCost = 0;
-        for (unsigned step = 0; step < activeSchedule_->num_steps(); step++) {
+        for (unsigned step = 0; step < activeSchedule_->NumSteps(); step++) {
             totalCost += activeSchedule_->get_step_max_work(step);
             totalCost += commDs_.step_max_comm(step) * instance_->CommunicationCosts();
         }
 
-        if (activeSchedule_->num_steps() > 1) {
-            totalCost += static_cast<CostT>(activeSchedule_->num_steps() - 1) * instance_->SynchronisationCosts();
+        if (activeSchedule_->NumSteps() > 1) {
+            totalCost += static_cast<CostT>(activeSchedule_->NumSteps() - 1) * instance_->SynchronisationCosts();
         }
 
         return totalCost;
@@ -219,7 +219,7 @@ struct KlBspCommCostFunction {
                              const unsigned endStep) {
         // Use static thread_local scratchpad to avoid allocation in hot loop
         static thread_local ScratchData scratch;
-        scratch.Init(activeSchedule_->num_steps(), instance_->NumberOfProcessors());
+        scratch.Init(activeSchedule_->NumSteps(), instance_->NumberOfProcessors());
         scratch.ClearAll();
 
         const unsigned nodeStep = activeSchedule_->assigned_superstep(node);
@@ -295,7 +295,7 @@ struct KlBspCommCostFunction {
             if (val == 0) {
                 return;
             }
-            if (step < activeSchedule_->num_steps()) {
+            if (step < activeSchedule_->NumSteps()) {
                 scratch.MarkActive(step);
                 if (isRecv) {
                     scratch.recvDeltas_[step].add(proc, val);

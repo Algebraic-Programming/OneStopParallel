@@ -49,8 +49,8 @@ BOOST_AUTO_TEST_CASE(TestArrangeSuperstepCommData) {
     BspSchedule<Graph> schedule(instance);
 
     // Initialize schedule with 1 step
-    schedule.setAssignedProcessors({0, 1, 2, 3});
-    schedule.setAssignedSupersteps({0, 0, 0, 0});
+    schedule.SetAssignedProcessors({0, 1, 2, 3});
+    schedule.SetAssignedSupersteps({0, 0, 0, 0});
     schedule.UpdateNumberOfSupersteps();
 
     KlActiveScheduleT klSched;
@@ -201,8 +201,8 @@ BOOST_AUTO_TEST_CASE(TestComputeCommDatastructures) {
     // Proc 0: Node 0, 4, 5
     // Proc 1: Node 1, 2
     // Proc 2: Node 3
-    schedule.setAssignedProcessors({0, 1, 1, 2, 0, 0});
-    schedule.setAssignedSupersteps({0, 1, 0, 1, 0, 0});
+    schedule.SetAssignedProcessors({0, 1, 1, 2, 0, 0});
+    schedule.SetAssignedSupersteps({0, 1, 0, 1, 0, 0});
     schedule.UpdateNumberOfSupersteps();
 
     KlActiveScheduleT klSched;
@@ -352,9 +352,9 @@ BOOST_AUTO_TEST_CASE(TestUpdateDatastructureAfterMove) {
     // Proc 0: Node 0, 4, 5
     // Proc 1: Node 1, 2
     // Proc 2: Node 3
-    schedule.setAssignedProcessors({0, 1, 1, 2, 0, 0});
+    schedule.SetAssignedProcessors({0, 1, 1, 2, 0, 0});
     // Steps: 0, 1, 0, 1, 0, 0
-    schedule.setAssignedSupersteps({0, 1, 0, 1, 0, 0});
+    schedule.SetAssignedSupersteps({0, 1, 0, 1, 0, 0});
     schedule.UpdateNumberOfSupersteps();
 
     KlActiveScheduleT klSched;
@@ -433,8 +433,8 @@ BOOST_AUTO_TEST_CASE(TestMultipleSequentialMoves) {
 
     // Initial: All at step 0, on different processors
     // 0@P0, 1@P1, 2@P2, 3@P3
-    schedule.setAssignedProcessors({0, 1, 2, 3});
-    schedule.setAssignedSupersteps({0, 0, 0, 0});
+    schedule.SetAssignedProcessors({0, 1, 2, 3});
+    schedule.SetAssignedSupersteps({0, 0, 0, 0});
     schedule.UpdateNumberOfSupersteps();
 
     KlActiveScheduleT klSched;
@@ -508,8 +508,8 @@ BOOST_AUTO_TEST_CASE(TestNodeWithMultipleChildren) {
     BspInstance<Graph> instance(dag, arch);
     BspSchedule<Graph> schedule(instance);
 
-    schedule.setAssignedProcessors({0, 1, 2, 3});
-    schedule.setAssignedSupersteps({0, 0, 0, 0});
+    schedule.SetAssignedProcessors({0, 1, 2, 3});
+    schedule.SetAssignedSupersteps({0, 0, 0, 0});
     schedule.UpdateNumberOfSupersteps();
 
     KlActiveScheduleT klSched;
@@ -585,8 +585,8 @@ BOOST_AUTO_TEST_CASE(TestCrossStepMoves) {
     BspInstance<Graph> instance(dag, arch);
     BspSchedule<Graph> schedule(instance);
 
-    schedule.setAssignedProcessors({0, 1, 0});
-    schedule.setAssignedSupersteps({0, 1, 2});
+    schedule.SetAssignedProcessors({0, 1, 0});
+    schedule.SetAssignedSupersteps({0, 1, 2});
     schedule.UpdateNumberOfSupersteps();
 
     KlActiveScheduleT klSched;
@@ -658,10 +658,10 @@ BOOST_AUTO_TEST_CASE(TestComplexScenarioUserProvided) {
 
     // Schedule: {1, 1, 0, 0, 1, 0, 0, 1}
     // v1@P1, v2@P1, v3@P0, v4@P0, v5@P1, v6@P0, v7@P0, v8@P1
-    schedule.setAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
+    schedule.SetAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
 
     // Supersteps: {0, 0, 1, 1, 2, 2, 3, 3}
-    schedule.setAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
+    schedule.SetAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
     schedule.UpdateNumberOfSupersteps();
 
     KlActiveScheduleT klSched;
@@ -788,8 +788,8 @@ BOOST_AUTO_TEST_CASE(TestGridGraphComplexMoves) {
     procs[7] = 3;
     steps[7] = 1;
 
-    schedule.setAssignedProcessors(procs);
-    schedule.setAssignedSupersteps(steps);
+    schedule.SetAssignedProcessors(procs);
+    schedule.SetAssignedSupersteps(steps);
     schedule.UpdateNumberOfSupersteps();
 
     KlActiveScheduleT klSched;
@@ -876,8 +876,8 @@ BOOST_AUTO_TEST_CASE(TestButterflyGraphMoves) {
         }
     }
 
-    schedule.setAssignedProcessors(procs);
-    schedule.setAssignedSupersteps(steps);
+    schedule.SetAssignedProcessors(procs);
+    schedule.SetAssignedSupersteps(steps);
     schedule.UpdateNumberOfSupersteps();
 
     KlActiveScheduleT klSched;
@@ -997,8 +997,8 @@ BOOST_AUTO_TEST_CASE(TestLadderGraphMoves) {
         steps[2 * i + 1] = i;
     }
 
-    schedule.setAssignedProcessors(procs);
-    schedule.setAssignedSupersteps(steps);
+    schedule.SetAssignedProcessors(procs);
+    schedule.SetAssignedSupersteps(steps);
     schedule.UpdateNumberOfSupersteps();
 
     KlActiveScheduleT klSched;

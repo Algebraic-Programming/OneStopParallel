@@ -28,25 +28,25 @@ BOOST_AUTO_TEST_CASE(SimpleParentChildTest) {
     instance.SetSynchronisationCosts(5);
 
     BspSchedule schedule(instance);
-    schedule.setAssignedProcessors({0, 1});    // v0 on p0, v1 on p1
-    schedule.setAssignedSupersteps({0, 1});    // v0 in step 0, v1 in step 1
+    schedule.SetAssignedProcessors({0, 1});    // v0 on p0, v1 on p1
+    schedule.SetAssignedSupersteps({0, 1});    // v0 in step 0, v1 in step 1
     schedule.UpdateNumberOfSupersteps();
 
     using CommCostT = kl_bsp_comm_cost_function<Graph, double, no_local_search_memory_constraint>;
     using KlImproverTest = kl_improver_test<Graph, CommCostT>;
 
     KlImproverTest kl;
-    kl.setup_schedule(schedule);
+    kl.SetupSchedule(schedule);
 
     // Insert only v0 into gain heap to control which node moves
     auto nodeSelection = kl.insert_gain_heap_test({0});
 
     // Run one iteration - this will move v0 to its best position
-    auto recomputeMaxGain = kl.run_inner_iteration_test();
+    auto recomputeMaxGain = kl.RunInnerIterationTest();
 
     // Compare costs after move
-    double afterRecomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
-    double afterTracked = kl.get_current_cost();
+    double afterRecomputed = kl.GetCommCostF().ComputeScheduleCostTest();
+    double afterTracked = kl.GetCurrentCost();
 
     BOOST_CHECK_CLOSE(afterRecomputed, afterTracked, 0.00001);
 }
@@ -132,14 +132,14 @@ bool ValidateAffinityTables(KlImproverTest<GraphT, CommCostFunctionT, MemoryCons
 
     // 2. Create fresh kl_improver and compute all affinities from scratch
     KlImproverTest<GraphT, CommCostFunctionT, MemoryConstraintT, windowSize, CostT> klFresh;
-    klFresh.setup_schedule(currentSchedule);
+    klFresh.SetupSchedule(currentSchedule);
 
     // Get selected nodes from incremental
     std::vector<VertexIdxT<GraphT>> selectedNodes;
 
-    const size_t activeCount = klIncremental.get_affinity_table().size();
+    const size_t activeCount = klIncremental.GetAffinityTable().size();
     for (size_t i = 0; i < activeCount; ++i) {
-        selectedNodes.push_back(klIncremental.get_affinity_table().get_selected_nodes()[i]);
+        selectedNodes.push_back(klIncremental.GetAffinityTable().get_selected_nodes()[i]);
     }
 
     std::cout << "\n  [" << context << "] Validating " << selectedNodes.size() << " selected nodes: { ";
@@ -153,15 +153,15 @@ bool ValidateAffinityTables(KlImproverTest<GraphT, CommCostFunctionT, MemoryCons
 
     bool allMatch = true;
     const unsigned numProcs = instance.NumberOfProcessors();
-    const unsigned numSteps = klIncremental.get_active_schedule().num_steps();
+    const unsigned numSteps = klIncremental.GetActiveSchedule().NumSteps();
 
     // 3. Compare affinity tables for each selected node
 
     for (const auto &node : selectedNodes) {
-        const auto &affinityInc = klIncremental.get_affinity_table().get_affinity_table(node);
-        const auto &affinityFresh = klFresh.get_affinity_table().get_affinity_table(node);
+        const auto &affinityInc = klIncremental.GetAffinityTable().GetAffinityTable(node);
+        const auto &affinityFresh = klFresh.GetAffinityTable().GetAffinityTable(node);
 
-        unsigned nodeStep = klIncremental.get_active_schedule().assigned_superstep(node);
+        unsigned nodeStep = klIncremental.GetActiveSchedule().assigned_superstep(node);
 
         for (unsigned p = 0; p < numProcs; ++p) {
             if (p >= affinityInc.size() || p >= affinityFresh.size()) {
@@ -224,25 +224,25 @@ BOOST_AUTO_TEST_CASE(TestUpdateDatastructureAfterMove) {
     // Proc 0: Node 0, 4, 5
     // Proc 1: Node 1, 2
     // Proc 2: Node 3
-    schedule.setAssignedProcessors({0, 1, 1, 2, 0, 0});
+    schedule.SetAssignedProcessors({0, 1, 1, 2, 0, 0});
     // Steps: 0, 1, 0, 1, 0, 0
-    schedule.setAssignedSupersteps({0, 1, 0, 1, 0, 0});
+    schedule.SetAssignedSupersteps({0, 1, 0, 1, 0, 0});
     schedule.UpdateNumberOfSupersteps();
 
     using CommCostT = kl_bsp_comm_cost_function<Graph, double, no_local_search_memory_constraint>;
     using KlImproverTest = kl_improver_test<Graph, CommCostT>;
 
     KlImproverTest kl;
-    kl.setup_schedule(schedule);
+    kl.SetupSchedule(schedule);
 
     kl.insert_gain_heap_test({0});
-    kl.run_inner_iteration_test();
+    kl.RunInnerIterationTest();
 
-    double afterRecomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
-    double afterTracked = kl.get_current_cost();
+    double afterRecomputed = kl.GetCommCostF().ComputeScheduleCostTest();
+    double afterTracked = kl.GetCurrentCost();
 
     BOOST_CHECK(ValidateCommDatastructures(
-        kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "test_update_datastructure_after_move"));
+        kl.GetCommCostF().comm_ds, kl.GetActiveSchedule(), instance, "test_update_datastructure_after_move"));
     BOOST_CHECK_CLOSE(afterRecomputed, afterTracked, 0.00001);
 }
 
@@ -267,39 +267,39 @@ BOOST_AUTO_TEST_CASE(TestMultipleSequentialMoves) {
     BspInstance<Graph> instance(dag, arch);
     BspSchedule<Graph> schedule(instance);
 
-    schedule.setAssignedProcessors({0, 1, 2, 3});
-    schedule.setAssignedSupersteps({0, 0, 0, 0});
+    schedule.SetAssignedProcessors({0, 1, 2, 3});
+    schedule.SetAssignedSupersteps({0, 0, 0, 0});
     schedule.UpdateNumberOfSupersteps();
 
     using CommCostT = kl_bsp_comm_cost_function<Graph, double, no_local_search_memory_constraint>;
     using KlImproverTest = kl_improver_test<Graph, CommCostT>;
 
     KlImproverTest kl;
-    kl.setup_schedule(schedule);
+    kl.SetupSchedule(schedule);
 
     kl.insert_gain_heap_test({1});
-    kl.run_inner_iteration_test();
+    kl.RunInnerIterationTest();
 
-    double afterMove1Recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
-    double afterMove1Tracked = kl.get_current_cost();
+    double afterMove1Recomputed = kl.GetCommCostF().ComputeScheduleCostTest();
+    double afterMove1Tracked = kl.GetCurrentCost();
     BOOST_CHECK(ValidateCommDatastructures(
-        kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "test_multiple_sequential_moves_1"));
+        kl.GetCommCostF().comm_ds, kl.GetActiveSchedule(), instance, "test_multiple_sequential_moves_1"));
     BOOST_CHECK_CLOSE(afterMove1Recomputed, afterMove1Tracked, 0.00001);
 
-    kl.run_inner_iteration_test();
+    kl.RunInnerIterationTest();
 
-    double afterMove2Recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
-    double afterMove2Tracked = kl.get_current_cost();
+    double afterMove2Recomputed = kl.GetCommCostF().ComputeScheduleCostTest();
+    double afterMove2Tracked = kl.GetCurrentCost();
     BOOST_CHECK(ValidateCommDatastructures(
-        kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "test_multiple_sequential_moves_2"));
+        kl.GetCommCostF().comm_ds, kl.GetActiveSchedule(), instance, "test_multiple_sequential_moves_2"));
     BOOST_CHECK_CLOSE(afterMove2Recomputed, afterMove2Tracked, 0.00001);
 
-    kl.run_inner_iteration_test();
+    kl.RunInnerIterationTest();
 
-    double afterMove3Recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
-    double afterMove3Tracked = kl.get_current_cost();
+    double afterMove3Recomputed = kl.GetCommCostF().ComputeScheduleCostTest();
+    double afterMove3Tracked = kl.GetCurrentCost();
     BOOST_CHECK(ValidateCommDatastructures(
-        kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "test_multiple_sequential_moves_3"));
+        kl.GetCommCostF().comm_ds, kl.GetActiveSchedule(), instance, "test_multiple_sequential_moves_3"));
     BOOST_CHECK_CLOSE(afterMove3Recomputed, afterMove3Tracked, 0.00001);
 
     // After: Node 0 has 3 local children
@@ -329,40 +329,40 @@ BOOST_AUTO_TEST_CASE(TestNodeWithMultipleChildren) {
     BspInstance<Graph> instance(dag, arch);
     BspSchedule<Graph> schedule(instance);
 
-    schedule.setAssignedProcessors({0, 1, 2, 3});
-    schedule.setAssignedSupersteps({0, 0, 0, 0});
+    schedule.SetAssignedProcessors({0, 1, 2, 3});
+    schedule.SetAssignedSupersteps({0, 0, 0, 0});
     schedule.UpdateNumberOfSupersteps();
 
     using CommCostT = kl_bsp_comm_cost_function<Graph, double, no_local_search_memory_constraint>;
     using KlImproverTest = kl_improver_test<Graph, CommCostT>;
 
     KlImproverTest kl;
-    kl.setup_schedule(schedule);
+    kl.SetupSchedule(schedule);
 
     kl.insert_gain_heap_test({1});
-    kl.get_comm_cost_f().compute_schedule_cost();
-    kl.run_inner_iteration_test();
+    kl.GetCommCostF().compute_schedule_cost();
+    kl.RunInnerIterationTest();
 
-    double afterMove1Recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
-    double afterMove1Tracked = kl.get_current_cost();
+    double afterMove1Recomputed = kl.GetCommCostF().ComputeScheduleCostTest();
+    double afterMove1Tracked = kl.GetCurrentCost();
     BOOST_CHECK(ValidateCommDatastructures(
-        kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "test_node_with_multiple_children"));
+        kl.GetCommCostF().comm_ds, kl.GetActiveSchedule(), instance, "test_node_with_multiple_children"));
     BOOST_CHECK_CLOSE(afterMove1Recomputed, afterMove1Tracked, 0.00001);
 
-    kl.run_inner_iteration_test();
+    kl.RunInnerIterationTest();
 
-    double afterMove2Recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
-    double afterMove2Tracked = kl.get_current_cost();
+    double afterMove2Recomputed = kl.GetCommCostF().ComputeScheduleCostTest();
+    double afterMove2Tracked = kl.GetCurrentCost();
     BOOST_CHECK(ValidateCommDatastructures(
-        kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "test_node_with_multiple_children_2"));
+        kl.GetCommCostF().comm_ds, kl.GetActiveSchedule(), instance, "test_node_with_multiple_children_2"));
     BOOST_CHECK_CLOSE(afterMove2Recomputed, afterMove2Tracked, 0.00001);
 
-    kl.run_inner_iteration_test();
+    kl.RunInnerIterationTest();
 
-    double afterMove3Recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
-    double afterMove3Tracked = kl.get_current_cost();
+    double afterMove3Recomputed = kl.GetCommCostF().ComputeScheduleCostTest();
+    double afterMove3Tracked = kl.GetCurrentCost();
     BOOST_CHECK(ValidateCommDatastructures(
-        kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "test_node_with_multiple_children_3"));
+        kl.GetCommCostF().comm_ds, kl.GetActiveSchedule(), instance, "test_node_with_multiple_children_3"));
     BOOST_CHECK_CLOSE(afterMove3Recomputed, afterMove3Tracked, 0.00001);
 
     // After: Node 0 has 3 local children
@@ -390,23 +390,23 @@ BOOST_AUTO_TEST_CASE(TestCrossStepMoves) {
     BspInstance<Graph> instance(dag, arch);
     BspSchedule<Graph> schedule(instance);
 
-    schedule.setAssignedProcessors({0, 1, 0});
-    schedule.setAssignedSupersteps({0, 1, 2});
+    schedule.SetAssignedProcessors({0, 1, 0});
+    schedule.SetAssignedSupersteps({0, 1, 2});
     schedule.UpdateNumberOfSupersteps();
 
     using CommCostT = kl_bsp_comm_cost_function<Graph, double, no_local_search_memory_constraint>;
     using KlImproverTest = kl_improver_test<Graph, CommCostT>;
 
     KlImproverTest kl;
-    kl.setup_schedule(schedule);
+    kl.SetupSchedule(schedule);
 
     kl.insert_gain_heap_test({1});
-    kl.run_inner_iteration_test();
+    kl.RunInnerIterationTest();
 
-    double afterMove1Recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
-    double afterMove1Tracked = kl.get_current_cost();
+    double afterMove1Recomputed = kl.GetCommCostF().ComputeScheduleCostTest();
+    double afterMove1Tracked = kl.GetCurrentCost();
     BOOST_CHECK(
-        ValidateCommDatastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "test_cross_step_moves_1"));
+        ValidateCommDatastructures(kl.GetCommCostF().comm_ds, kl.GetActiveSchedule(), instance, "test_cross_step_moves_1"));
     BOOST_CHECK_CLOSE(afterMove1Recomputed, afterMove1Tracked, 0.00001);
 }
 
@@ -440,51 +440,51 @@ BOOST_AUTO_TEST_CASE(TestComplexScenario) {
     BspInstance<Graph> instance(dag, arch);
     BspSchedule<Graph> schedule(instance);
 
-    schedule.setAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
-    schedule.setAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
+    schedule.SetAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
+    schedule.SetAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
     schedule.UpdateNumberOfSupersteps();
 
     using CommCostT = kl_bsp_comm_cost_function<Graph, double, no_local_search_memory_constraint>;
     using KlImproverTest = kl_improver_test<Graph, CommCostT>;
 
     KlImproverTest kl;
-    kl.setup_schedule(schedule);
+    kl.SetupSchedule(schedule);
 
     kl.insert_gain_heap_test({v3, v1});
-    kl.run_inner_iteration_test();
+    kl.RunInnerIterationTest();
 
-    double afterMove1Recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
-    double afterMove1Tracked = kl.get_current_cost();
-    BOOST_CHECK(ValidateCommDatastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "complex_move1"));
+    double afterMove1Recomputed = kl.GetCommCostF().ComputeScheduleCostTest();
+    double afterMove1Tracked = kl.GetCurrentCost();
+    BOOST_CHECK(ValidateCommDatastructures(kl.GetCommCostF().comm_ds, kl.GetActiveSchedule(), instance, "complex_move1"));
     BOOST_CHECK_CLOSE(afterMove1Recomputed, afterMove1Tracked, 0.00001);
 
-    kl.run_inner_iteration_test();
+    kl.RunInnerIterationTest();
 
-    double afterMove2Recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
-    double afterMove2Tracked = kl.get_current_cost();
-    BOOST_CHECK(ValidateCommDatastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "complex_move2"));
+    double afterMove2Recomputed = kl.GetCommCostF().ComputeScheduleCostTest();
+    double afterMove2Tracked = kl.GetCurrentCost();
+    BOOST_CHECK(ValidateCommDatastructures(kl.GetCommCostF().comm_ds, kl.GetActiveSchedule(), instance, "complex_move2"));
     BOOST_CHECK(ValidateAffinityTables(kl, instance, "complex_move2"));
     BOOST_CHECK_CLOSE(afterMove2Recomputed, afterMove2Tracked, 0.00001);
 
-    kl.run_inner_iteration_test();
+    kl.RunInnerIterationTest();
 
-    double afterMove3Recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
-    double afterMove3Tracked = kl.get_current_cost();
-    BOOST_CHECK(ValidateCommDatastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "complex_move3"));
+    double afterMove3Recomputed = kl.GetCommCostF().ComputeScheduleCostTest();
+    double afterMove3Tracked = kl.GetCurrentCost();
+    BOOST_CHECK(ValidateCommDatastructures(kl.GetCommCostF().comm_ds, kl.GetActiveSchedule(), instance, "complex_move3"));
     BOOST_CHECK_CLOSE(afterMove3Recomputed, afterMove3Tracked, 0.00001);
 
-    kl.run_inner_iteration_test();
+    kl.RunInnerIterationTest();
 
-    double afterMove4Recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
-    double afterMove4Tracked = kl.get_current_cost();
-    BOOST_CHECK(ValidateCommDatastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "complex_move4"));
+    double afterMove4Recomputed = kl.GetCommCostF().ComputeScheduleCostTest();
+    double afterMove4Tracked = kl.GetCurrentCost();
+    BOOST_CHECK(ValidateCommDatastructures(kl.GetCommCostF().comm_ds, kl.GetActiveSchedule(), instance, "complex_move4"));
     BOOST_CHECK_CLOSE(afterMove4Recomputed, afterMove4Tracked, 0.00001);
 
-    kl.run_inner_iteration_test();
+    kl.RunInnerIterationTest();
 
-    double afterMove5Recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
-    double afterMove5Tracked = kl.get_current_cost();
-    BOOST_CHECK(ValidateCommDatastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "complex_move5"));
+    double afterMove5Recomputed = kl.GetCommCostF().ComputeScheduleCostTest();
+    double afterMove5Tracked = kl.GetCurrentCost();
+    BOOST_CHECK(ValidateCommDatastructures(kl.GetCommCostF().comm_ds, kl.GetActiveSchedule(), instance, "complex_move5"));
     BOOST_CHECK_CLOSE(afterMove5Recomputed, afterMove5Tracked, 0.00001);
 }
 
@@ -517,84 +517,84 @@ BOOST_AUTO_TEST_CASE(TestComplexScenarioOnlyCompute) {
     BspInstance<Graph> instance(dag, arch);
     BspSchedule<Graph> schedule(instance);
 
-    schedule.setAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
-    schedule.setAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
+    schedule.SetAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
+    schedule.SetAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
     schedule.UpdateNumberOfSupersteps();
 
     using CommCostT = kl_bsp_comm_cost_function<Graph, double, no_local_search_memory_constraint>;
     using KlImproverTest = kl_improver_test<Graph, CommCostT>;
 
     KlImproverTest kl;
-    kl.setup_schedule(schedule);
+    kl.SetupSchedule(schedule);
 
     kl.insert_gain_heap_test({v1});
-    kl.run_inner_iteration_test();
+    kl.RunInnerIterationTest();
 
-    BOOST_CHECK(ValidateCommDatastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "complex_move1"));
-    BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
+    BOOST_CHECK(ValidateCommDatastructures(kl.GetCommCostF().comm_ds, kl.GetActiveSchedule(), instance, "complex_move1"));
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
 
     KlImproverTest kl2;
-    kl2.setup_schedule(schedule);
+    kl2.SetupSchedule(schedule);
 
     kl2.insert_gain_heap_test({v2});
-    kl2.run_inner_iteration_test();
+    kl2.RunInnerIterationTest();
 
-    BOOST_CHECK(ValidateCommDatastructures(kl2.get_comm_cost_f().comm_ds, kl2.get_active_schedule(), instance, "complex_move2"));
-    BOOST_CHECK_CLOSE(kl2.get_comm_cost_f().compute_schedule_cost_test(), kl2.get_current_cost(), 0.00001);
+    BOOST_CHECK(ValidateCommDatastructures(kl2.GetCommCostF().comm_ds, kl2.GetActiveSchedule(), instance, "complex_move2"));
+    BOOST_CHECK_CLOSE(kl2.GetCommCostF().ComputeScheduleCostTest(), kl2.GetCurrentCost(), 0.00001);
 
     KlImproverTest kl3;
-    kl3.setup_schedule(schedule);
+    kl3.SetupSchedule(schedule);
 
     kl3.insert_gain_heap_test({v3});
-    kl3.run_inner_iteration_test();
+    kl3.RunInnerIterationTest();
 
-    BOOST_CHECK(ValidateCommDatastructures(kl3.get_comm_cost_f().comm_ds, kl3.get_active_schedule(), instance, "complex_move3"));
-    BOOST_CHECK_CLOSE(kl3.get_comm_cost_f().compute_schedule_cost_test(), kl3.get_current_cost(), 0.00001);
+    BOOST_CHECK(ValidateCommDatastructures(kl3.GetCommCostF().comm_ds, kl3.GetActiveSchedule(), instance, "complex_move3"));
+    BOOST_CHECK_CLOSE(kl3.GetCommCostF().ComputeScheduleCostTest(), kl3.GetCurrentCost(), 0.00001);
 
     KlImproverTest kl4;
-    kl4.setup_schedule(schedule);
+    kl4.SetupSchedule(schedule);
 
     kl4.insert_gain_heap_test({v4});
-    kl4.run_inner_iteration_test();
+    kl4.RunInnerIterationTest();
 
-    BOOST_CHECK(ValidateCommDatastructures(kl4.get_comm_cost_f().comm_ds, kl4.get_active_schedule(), instance, "complex_move4"));
-    BOOST_CHECK_CLOSE(kl4.get_comm_cost_f().compute_schedule_cost_test(), kl4.get_current_cost(), 0.00001);
+    BOOST_CHECK(ValidateCommDatastructures(kl4.GetCommCostF().comm_ds, kl4.GetActiveSchedule(), instance, "complex_move4"));
+    BOOST_CHECK_CLOSE(kl4.GetCommCostF().ComputeScheduleCostTest(), kl4.GetCurrentCost(), 0.00001);
 
     KlImproverTest kl5;
-    kl5.setup_schedule(schedule);
+    kl5.SetupSchedule(schedule);
 
     kl5.insert_gain_heap_test({v5});
-    kl5.run_inner_iteration_test();
+    kl5.RunInnerIterationTest();
 
-    BOOST_CHECK(ValidateCommDatastructures(kl5.get_comm_cost_f().comm_ds, kl5.get_active_schedule(), instance, "complex_move5"));
-    BOOST_CHECK_CLOSE(kl5.get_comm_cost_f().compute_schedule_cost_test(), kl5.get_current_cost(), 0.00001);
+    BOOST_CHECK(ValidateCommDatastructures(kl5.GetCommCostF().comm_ds, kl5.GetActiveSchedule(), instance, "complex_move5"));
+    BOOST_CHECK_CLOSE(kl5.GetCommCostF().ComputeScheduleCostTest(), kl5.GetCurrentCost(), 0.00001);
 
     KlImproverTest kl6;
-    kl6.setup_schedule(schedule);
+    kl6.SetupSchedule(schedule);
 
     kl6.insert_gain_heap_test({v6});
-    kl6.run_inner_iteration_test();
+    kl6.RunInnerIterationTest();
 
-    BOOST_CHECK(ValidateCommDatastructures(kl6.get_comm_cost_f().comm_ds, kl6.get_active_schedule(), instance, "complex_move6"));
-    BOOST_CHECK_CLOSE(kl6.get_comm_cost_f().compute_schedule_cost_test(), kl6.get_current_cost(), 0.00001);
+    BOOST_CHECK(ValidateCommDatastructures(kl6.GetCommCostF().comm_ds, kl6.GetActiveSchedule(), instance, "complex_move6"));
+    BOOST_CHECK_CLOSE(kl6.GetCommCostF().ComputeScheduleCostTest(), kl6.GetCurrentCost(), 0.00001);
 
     KlImproverTest kl7;
-    kl7.setup_schedule(schedule);
+    kl7.SetupSchedule(schedule);
 
     kl7.insert_gain_heap_test({v7});
-    kl7.run_inner_iteration_test();
+    kl7.RunInnerIterationTest();
 
-    BOOST_CHECK(ValidateCommDatastructures(kl7.get_comm_cost_f().comm_ds, kl7.get_active_schedule(), instance, "complex_move7"));
-    BOOST_CHECK_CLOSE(kl7.get_comm_cost_f().compute_schedule_cost_test(), kl7.get_current_cost(), 0.00001);
+    BOOST_CHECK(ValidateCommDatastructures(kl7.GetCommCostF().comm_ds, kl7.GetActiveSchedule(), instance, "complex_move7"));
+    BOOST_CHECK_CLOSE(kl7.GetCommCostF().ComputeScheduleCostTest(), kl7.GetCurrentCost(), 0.00001);
 
     KlImproverTest kl8;
-    kl8.setup_schedule(schedule);
+    kl8.SetupSchedule(schedule);
 
     kl8.insert_gain_heap_test({v8});
-    kl8.run_inner_iteration_test();
+    kl8.RunInnerIterationTest();
 
-    BOOST_CHECK(ValidateCommDatastructures(kl8.get_comm_cost_f().comm_ds, kl8.get_active_schedule(), instance, "complex_move8"));
-    BOOST_CHECK_CLOSE(kl8.get_comm_cost_f().compute_schedule_cost_test(), kl8.get_current_cost(), 0.00001);
+    BOOST_CHECK(ValidateCommDatastructures(kl8.GetCommCostF().comm_ds, kl8.GetActiveSchedule(), instance, "complex_move8"));
+    BOOST_CHECK_CLOSE(kl8.GetCommCostF().ComputeScheduleCostTest(), kl8.GetCurrentCost(), 0.00001);
 }
 
 BOOST_AUTO_TEST_CASE(TestComplexScenarioOnlyCompute2) {
@@ -636,84 +636,84 @@ BOOST_AUTO_TEST_CASE(TestComplexScenarioOnlyCompute2) {
     BspInstance<Graph> instance(dag, arch);
     BspSchedule<Graph> schedule(instance);
 
-    schedule.setAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
-    schedule.setAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
+    schedule.SetAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
+    schedule.SetAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
     schedule.UpdateNumberOfSupersteps();
 
     using CommCostT = kl_bsp_comm_cost_function<Graph, double, no_local_search_memory_constraint>;
     using KlImproverTest = kl_improver_test<Graph, CommCostT>;
 
     KlImproverTest kl;
-    kl.setup_schedule(schedule);
+    kl.SetupSchedule(schedule);
 
     kl.insert_gain_heap_test({v1});
-    kl.run_inner_iteration_test();
+    kl.RunInnerIterationTest();
 
-    BOOST_CHECK(ValidateCommDatastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "complex_move1"));
-    BOOST_CHECK_CLOSE(kl.get_comm_cost_f().compute_schedule_cost_test(), kl.get_current_cost(), 0.00001);
+    BOOST_CHECK(ValidateCommDatastructures(kl.GetCommCostF().comm_ds, kl.GetActiveSchedule(), instance, "complex_move1"));
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
 
     KlImproverTest kl2;
-    kl2.setup_schedule(schedule);
+    kl2.SetupSchedule(schedule);
 
     kl2.insert_gain_heap_test({v2});
-    kl2.run_inner_iteration_test();
+    kl2.RunInnerIterationTest();
 
-    BOOST_CHECK(ValidateCommDatastructures(kl2.get_comm_cost_f().comm_ds, kl2.get_active_schedule(), instance, "complex_move2"));
-    BOOST_CHECK_CLOSE(kl2.get_comm_cost_f().compute_schedule_cost_test(), kl2.get_current_cost(), 0.00001);
+    BOOST_CHECK(ValidateCommDatastructures(kl2.GetCommCostF().comm_ds, kl2.GetActiveSchedule(), instance, "complex_move2"));
+    BOOST_CHECK_CLOSE(kl2.GetCommCostF().ComputeScheduleCostTest(), kl2.GetCurrentCost(), 0.00001);
 
     KlImproverTest kl3;
-    kl3.setup_schedule(schedule);
+    kl3.SetupSchedule(schedule);
 
     kl3.insert_gain_heap_test({v3});
-    kl3.run_inner_iteration_test();
+    kl3.RunInnerIterationTest();
 
-    BOOST_CHECK(ValidateCommDatastructures(kl3.get_comm_cost_f().comm_ds, kl3.get_active_schedule(), instance, "complex_move3"));
-    BOOST_CHECK_CLOSE(kl3.get_comm_cost_f().compute_schedule_cost_test(), kl3.get_current_cost(), 0.00001);
+    BOOST_CHECK(ValidateCommDatastructures(kl3.GetCommCostF().comm_ds, kl3.GetActiveSchedule(), instance, "complex_move3"));
+    BOOST_CHECK_CLOSE(kl3.GetCommCostF().ComputeScheduleCostTest(), kl3.GetCurrentCost(), 0.00001);
 
     KlImproverTest kl4;
-    kl4.setup_schedule(schedule);
+    kl4.SetupSchedule(schedule);
 
     kl4.insert_gain_heap_test({v4});
-    kl4.run_inner_iteration_test();
+    kl4.RunInnerIterationTest();
 
-    BOOST_CHECK(ValidateCommDatastructures(kl4.get_comm_cost_f().comm_ds, kl4.get_active_schedule(), instance, "complex_move4"));
-    BOOST_CHECK_CLOSE(kl4.get_comm_cost_f().compute_schedule_cost_test(), kl4.get_current_cost(), 0.00001);
+    BOOST_CHECK(ValidateCommDatastructures(kl4.GetCommCostF().comm_ds, kl4.GetActiveSchedule(), instance, "complex_move4"));
+    BOOST_CHECK_CLOSE(kl4.GetCommCostF().ComputeScheduleCostTest(), kl4.GetCurrentCost(), 0.00001);
 
     KlImproverTest kl5;
-    kl5.setup_schedule(schedule);
+    kl5.SetupSchedule(schedule);
 
     kl5.insert_gain_heap_test({v5});
-    kl5.run_inner_iteration_test();
+    kl5.RunInnerIterationTest();
 
-    BOOST_CHECK(ValidateCommDatastructures(kl5.get_comm_cost_f().comm_ds, kl5.get_active_schedule(), instance, "complex_move5"));
-    BOOST_CHECK_CLOSE(kl5.get_comm_cost_f().compute_schedule_cost_test(), kl5.get_current_cost(), 0.00001);
+    BOOST_CHECK(ValidateCommDatastructures(kl5.GetCommCostF().comm_ds, kl5.GetActiveSchedule(), instance, "complex_move5"));
+    BOOST_CHECK_CLOSE(kl5.GetCommCostF().ComputeScheduleCostTest(), kl5.GetCurrentCost(), 0.00001);
 
     KlImproverTest kl6;
-    kl6.setup_schedule(schedule);
+    kl6.SetupSchedule(schedule);
 
     kl6.insert_gain_heap_test({v6});
-    kl6.run_inner_iteration_test();
+    kl6.RunInnerIterationTest();
 
-    BOOST_CHECK(ValidateCommDatastructures(kl6.get_comm_cost_f().comm_ds, kl6.get_active_schedule(), instance, "complex_move6"));
-    BOOST_CHECK_CLOSE(kl6.get_comm_cost_f().compute_schedule_cost_test(), kl6.get_current_cost(), 0.00001);
+    BOOST_CHECK(ValidateCommDatastructures(kl6.GetCommCostF().comm_ds, kl6.GetActiveSchedule(), instance, "complex_move6"));
+    BOOST_CHECK_CLOSE(kl6.GetCommCostF().ComputeScheduleCostTest(), kl6.GetCurrentCost(), 0.00001);
 
     KlImproverTest kl7;
-    kl7.setup_schedule(schedule);
+    kl7.SetupSchedule(schedule);
 
     kl7.insert_gain_heap_test({v7});
-    kl7.run_inner_iteration_test();
+    kl7.RunInnerIterationTest();
 
-    BOOST_CHECK(ValidateCommDatastructures(kl7.get_comm_cost_f().comm_ds, kl7.get_active_schedule(), instance, "complex_move7"));
-    BOOST_CHECK_CLOSE(kl7.get_comm_cost_f().compute_schedule_cost_test(), kl7.get_current_cost(), 0.00001);
+    BOOST_CHECK(ValidateCommDatastructures(kl7.GetCommCostF().comm_ds, kl7.GetActiveSchedule(), instance, "complex_move7"));
+    BOOST_CHECK_CLOSE(kl7.GetCommCostF().ComputeScheduleCostTest(), kl7.GetCurrentCost(), 0.00001);
 
     KlImproverTest kl8;
-    kl8.setup_schedule(schedule);
+    kl8.SetupSchedule(schedule);
 
     kl8.insert_gain_heap_test({v8});
-    kl8.run_inner_iteration_test();
+    kl8.RunInnerIterationTest();
 
-    BOOST_CHECK(ValidateCommDatastructures(kl8.get_comm_cost_f().comm_ds, kl8.get_active_schedule(), instance, "complex_move8"));
-    BOOST_CHECK_CLOSE(kl8.get_comm_cost_f().compute_schedule_cost_test(), kl8.get_current_cost(), 0.00001);
+    BOOST_CHECK(ValidateCommDatastructures(kl8.GetCommCostF().comm_ds, kl8.GetActiveSchedule(), instance, "complex_move8"));
+    BOOST_CHECK_CLOSE(kl8.GetCommCostF().ComputeScheduleCostTest(), kl8.GetCurrentCost(), 0.00001);
 }
 
 BOOST_AUTO_TEST_CASE(TestGridGraphComplexMoves) {
@@ -752,43 +752,43 @@ BOOST_AUTO_TEST_CASE(TestGridGraphComplexMoves) {
     procs[7] = 3;
     steps[7] = 1;
 
-    schedule.setAssignedProcessors(procs);
-    schedule.setAssignedSupersteps(steps);
+    schedule.SetAssignedProcessors(procs);
+    schedule.SetAssignedSupersteps(steps);
     schedule.UpdateNumberOfSupersteps();
 
     using CommCostT = kl_bsp_comm_cost_function<Graph, double, no_local_search_memory_constraint>;
     using KlImproverTest = kl_improver_test<Graph, CommCostT>;
 
     KlImproverTest kl;
-    kl.setup_schedule(schedule);
+    kl.SetupSchedule(schedule);
 
     kl.insert_gain_heap_test({12, 8, 7});
-    kl.run_inner_iteration_test();
+    kl.RunInnerIterationTest();
 
-    double afterMove1Recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
-    double afterMove1Tracked = kl.get_current_cost();
-    BOOST_CHECK(ValidateCommDatastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "grid_move1"));
+    double afterMove1Recomputed = kl.GetCommCostF().ComputeScheduleCostTest();
+    double afterMove1Tracked = kl.GetCurrentCost();
+    BOOST_CHECK(ValidateCommDatastructures(kl.GetCommCostF().comm_ds, kl.GetActiveSchedule(), instance, "grid_move1"));
     BOOST_CHECK_CLOSE(afterMove1Recomputed, afterMove1Tracked, 0.00001);
 
-    kl.run_inner_iteration_test();
+    kl.RunInnerIterationTest();
 
-    double afterMove2Recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
-    double afterMove2Tracked = kl.get_current_cost();
-    BOOST_CHECK(ValidateCommDatastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "grid_move2"));
+    double afterMove2Recomputed = kl.GetCommCostF().ComputeScheduleCostTest();
+    double afterMove2Tracked = kl.GetCurrentCost();
+    BOOST_CHECK(ValidateCommDatastructures(kl.GetCommCostF().comm_ds, kl.GetActiveSchedule(), instance, "grid_move2"));
     BOOST_CHECK_CLOSE(afterMove2Recomputed, afterMove2Tracked, 0.00001);
 
-    kl.run_inner_iteration_test();
+    kl.RunInnerIterationTest();
 
-    double afterMove3Recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
-    double afterMove3Tracked = kl.get_current_cost();
-    BOOST_CHECK(ValidateCommDatastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "grid_move3"));
+    double afterMove3Recomputed = kl.GetCommCostF().ComputeScheduleCostTest();
+    double afterMove3Tracked = kl.GetCurrentCost();
+    BOOST_CHECK(ValidateCommDatastructures(kl.GetCommCostF().comm_ds, kl.GetActiveSchedule(), instance, "grid_move3"));
     BOOST_CHECK_CLOSE(afterMove3Recomputed, afterMove3Tracked, 0.00001);
 
-    kl.run_inner_iteration_test();
+    kl.RunInnerIterationTest();
 
-    double afterMove4Recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
-    double afterMove4Tracked = kl.get_current_cost();
-    BOOST_CHECK(ValidateCommDatastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "grid_move4"));
+    double afterMove4Recomputed = kl.GetCommCostF().ComputeScheduleCostTest();
+    double afterMove4Tracked = kl.GetCurrentCost();
+    BOOST_CHECK(ValidateCommDatastructures(kl.GetCommCostF().comm_ds, kl.GetActiveSchedule(), instance, "grid_move4"));
     BOOST_CHECK_CLOSE(afterMove4Recomputed, afterMove4Tracked, 0.00001);
 }
 
@@ -824,43 +824,43 @@ BOOST_AUTO_TEST_CASE(TestButterflyGraphMoves) {
         }
     }
 
-    schedule.setAssignedProcessors(procs);
-    schedule.setAssignedSupersteps(steps);
+    schedule.SetAssignedProcessors(procs);
+    schedule.SetAssignedSupersteps(steps);
     schedule.UpdateNumberOfSupersteps();
 
     using CommCostT = kl_bsp_comm_cost_function<Graph, double, no_local_search_memory_constraint>;
     using KlImproverTest = kl_improver_test<Graph, CommCostT>;
 
     KlImproverTest kl;
-    kl.setup_schedule(schedule);
+    kl.SetupSchedule(schedule);
 
     kl.insert_gain_heap_test({4, 6, 0});
-    kl.run_inner_iteration_test();
+    kl.RunInnerIterationTest();
 
-    double afterMove1Recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
-    double afterMove1Tracked = kl.get_current_cost();
-    BOOST_CHECK(ValidateCommDatastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "butterfly_move1"));
+    double afterMove1Recomputed = kl.GetCommCostF().ComputeScheduleCostTest();
+    double afterMove1Tracked = kl.GetCurrentCost();
+    BOOST_CHECK(ValidateCommDatastructures(kl.GetCommCostF().comm_ds, kl.GetActiveSchedule(), instance, "butterfly_move1"));
     BOOST_CHECK_CLOSE(afterMove1Recomputed, afterMove1Tracked, 0.00001);
 
-    kl.run_inner_iteration_test();
+    kl.RunInnerIterationTest();
 
-    double afterMove2Recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
-    double afterMove2Tracked = kl.get_current_cost();
-    BOOST_CHECK(ValidateCommDatastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "butterfly_move2"));
+    double afterMove2Recomputed = kl.GetCommCostF().ComputeScheduleCostTest();
+    double afterMove2Tracked = kl.GetCurrentCost();
+    BOOST_CHECK(ValidateCommDatastructures(kl.GetCommCostF().comm_ds, kl.GetActiveSchedule(), instance, "butterfly_move2"));
     BOOST_CHECK_CLOSE(afterMove2Recomputed, afterMove2Tracked, 0.00001);
 
-    kl.run_inner_iteration_test();
+    kl.RunInnerIterationTest();
 
-    double afterMove3Recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
-    double afterMove3Tracked = kl.get_current_cost();
-    BOOST_CHECK(ValidateCommDatastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "butterfly_move3"));
+    double afterMove3Recomputed = kl.GetCommCostF().ComputeScheduleCostTest();
+    double afterMove3Tracked = kl.GetCurrentCost();
+    BOOST_CHECK(ValidateCommDatastructures(kl.GetCommCostF().comm_ds, kl.GetActiveSchedule(), instance, "butterfly_move3"));
     BOOST_CHECK_CLOSE(afterMove3Recomputed, afterMove3Tracked, 0.00001);
 
-    kl.run_inner_iteration_test();
+    kl.RunInnerIterationTest();
 
-    double afterMove4Recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
-    double afterMove4Tracked = kl.get_current_cost();
-    BOOST_CHECK(ValidateCommDatastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "butterfly_move4"));
+    double afterMove4Recomputed = kl.GetCommCostF().ComputeScheduleCostTest();
+    double afterMove4Tracked = kl.GetCurrentCost();
+    BOOST_CHECK(ValidateCommDatastructures(kl.GetCommCostF().comm_ds, kl.GetActiveSchedule(), instance, "butterfly_move4"));
     BOOST_CHECK_CLOSE(afterMove4Recomputed, afterMove4Tracked, 0.00001);
 }
 
@@ -890,42 +890,42 @@ BOOST_AUTO_TEST_CASE(TestLadderGraphMoves) {
         steps[2 * i + 1] = i;
     }
 
-    schedule.setAssignedProcessors(procs);
-    schedule.setAssignedSupersteps(steps);
+    schedule.SetAssignedProcessors(procs);
+    schedule.SetAssignedSupersteps(steps);
     schedule.UpdateNumberOfSupersteps();
 
     using CommCostT = kl_bsp_comm_cost_function<Graph, double, no_local_search_memory_constraint>;
     using KlImproverTest = kl_improver_test<Graph, CommCostT>;
 
     KlImproverTest kl;
-    kl.setup_schedule(schedule);
+    kl.SetupSchedule(schedule);
 
     kl.insert_gain_heap_test({1, 3, 0, 2});
-    kl.run_inner_iteration_test();
+    kl.RunInnerIterationTest();
 
-    double afterMove1Recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
-    double afterMove1Tracked = kl.get_current_cost();
-    BOOST_CHECK(ValidateCommDatastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "ladder_move1"));
+    double afterMove1Recomputed = kl.GetCommCostF().ComputeScheduleCostTest();
+    double afterMove1Tracked = kl.GetCurrentCost();
+    BOOST_CHECK(ValidateCommDatastructures(kl.GetCommCostF().comm_ds, kl.GetActiveSchedule(), instance, "ladder_move1"));
     BOOST_CHECK_CLOSE(afterMove1Recomputed, afterMove1Tracked, 0.00001);
 
-    kl.run_inner_iteration_test();
+    kl.RunInnerIterationTest();
 
-    double afterMove2Recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
-    double afterMove2Tracked = kl.get_current_cost();
-    BOOST_CHECK(ValidateCommDatastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "ladder_move2"));
+    double afterMove2Recomputed = kl.GetCommCostF().ComputeScheduleCostTest();
+    double afterMove2Tracked = kl.GetCurrentCost();
+    BOOST_CHECK(ValidateCommDatastructures(kl.GetCommCostF().comm_ds, kl.GetActiveSchedule(), instance, "ladder_move2"));
     BOOST_CHECK_CLOSE(afterMove2Recomputed, afterMove2Tracked, 0.00001);
 
-    kl.run_inner_iteration_test();
+    kl.RunInnerIterationTest();
 
-    double afterMove3Recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
-    double afterMove3Tracked = kl.get_current_cost();
-    BOOST_CHECK(ValidateCommDatastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "ladder_move3"));
+    double afterMove3Recomputed = kl.GetCommCostF().ComputeScheduleCostTest();
+    double afterMove3Tracked = kl.GetCurrentCost();
+    BOOST_CHECK(ValidateCommDatastructures(kl.GetCommCostF().comm_ds, kl.GetActiveSchedule(), instance, "ladder_move3"));
     BOOST_CHECK_CLOSE(afterMove3Recomputed, afterMove3Tracked, 0.00001);
 
-    kl.run_inner_iteration_test();
+    kl.RunInnerIterationTest();
 
-    double afterMove4Recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
-    double afterMove4Tracked = kl.get_current_cost();
-    BOOST_CHECK(ValidateCommDatastructures(kl.get_comm_cost_f().comm_ds, kl.get_active_schedule(), instance, "ladder_move4"));
+    double afterMove4Recomputed = kl.GetCommCostF().ComputeScheduleCostTest();
+    double afterMove4Tracked = kl.GetCurrentCost();
+    BOOST_CHECK(ValidateCommDatastructures(kl.GetCommCostF().comm_ds, kl.GetActiveSchedule(), instance, "ladder_move4"));
     BOOST_CHECK_CLOSE(afterMove4Recomputed, afterMove4Tracked, 0.00001);
 }

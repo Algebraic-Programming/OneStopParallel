@@ -59,8 +59,8 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
 
     BspSchedule schedule(instance);
 
-    schedule.setAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
-    schedule.setAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
+    schedule.SetAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
+    schedule.SetAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
 
     schedule.UpdateNumberOfSupersteps();
 
@@ -69,9 +69,9 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
 
     KlImproverTest kl;
 
-    kl.setup_schedule(schedule);
+    kl.SetupSchedule(schedule);
 
-    auto &klActiveSchedule = kl.get_active_schedule();
+    auto &klActiveSchedule = kl.GetActiveSchedule();
 
     // Verify work datastructures are set up correctly
     BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(0), 5.0);
@@ -83,46 +83,46 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
     BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(3), 9.0);
     BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(3), 8.0);
 
-    BOOST_CHECK_EQUAL(klActiveSchedule.num_steps(), 4);
-    BOOST_CHECK_EQUAL(klActiveSchedule.is_feasible(), true);
+    BOOST_CHECK_EQUAL(klActiveSchedule.NumSteps(), 4);
+    BOOST_CHECK_EQUAL(klActiveSchedule.IsFeasible(), true);
 
     // Check initial cost consistency
-    double initialRecomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
-    double initialTracked = kl.get_current_cost();
+    double initialRecomputed = kl.GetCommCostF().ComputeScheduleCostTest();
+    double initialTracked = kl.GetCurrentCost();
     BOOST_CHECK_CLOSE(initialRecomputed, initialTracked, 0.00001);
 
     // Insert nodes into gain heap
-    auto nodeSelection = kl.insert_gain_heap_test_penalty({2, 3});
+    auto nodeSelection = kl.InsertGainHeapTestPenalty({2, 3});
 
     // Run first iteration and check cost consistency
-    auto recomputeMaxGain = kl.run_inner_iteration_test();
+    auto recomputeMaxGain = kl.RunInnerIterationTest();
 
-    double iter1Recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
-    double iter1Tracked = kl.get_current_cost();
+    double iter1Recomputed = kl.GetCommCostF().ComputeScheduleCostTest();
+    double iter1Tracked = kl.GetCurrentCost();
     BOOST_CHECK_CLOSE(iter1Recomputed, iter1Tracked, 0.00001);
 
     // Run second iteration
-    auto &node3Affinity = kl.get_affinity_table()[3];
+    auto &node3Affinity = kl.GetAffinityTable()[3];
 
-    recomputeMaxGain = kl.run_inner_iteration_test();
+    recomputeMaxGain = kl.RunInnerIterationTest();
 
-    double iter2Recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
-    double iter2Tracked = kl.get_current_cost();
+    double iter2Recomputed = kl.GetCommCostF().ComputeScheduleCostTest();
+    double iter2Tracked = kl.GetCurrentCost();
 
     BOOST_CHECK_CLOSE(iter2Recomputed, iter2Tracked, 0.00001);
 
     // Run third iteration
-    recomputeMaxGain = kl.run_inner_iteration_test();
+    recomputeMaxGain = kl.RunInnerIterationTest();
 
-    double iter3Recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
-    double iter3Tracked = kl.get_current_cost();
+    double iter3Recomputed = kl.GetCommCostF().ComputeScheduleCostTest();
+    double iter3Tracked = kl.GetCurrentCost();
     BOOST_CHECK_CLOSE(iter3Recomputed, iter3Tracked, 0.00001);
 
     // Run fourth iteration
-    recomputeMaxGain = kl.run_inner_iteration_test();
+    recomputeMaxGain = kl.RunInnerIterationTest();
 
-    double iter4Recomputed = kl.get_comm_cost_f().compute_schedule_cost_test();
-    double iter4Tracked = kl.get_current_cost();
+    double iter4Recomputed = kl.GetCommCostF().ComputeScheduleCostTest();
+    double iter4Tracked = kl.GetCurrentCost();
     BOOST_CHECK_CLOSE(iter4Recomputed, iter4Tracked, 0.00001);
 }
 
