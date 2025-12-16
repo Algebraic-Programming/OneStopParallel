@@ -344,9 +344,9 @@ struct KlBspCommCostFunction {
 
         // 2. Add Node to Target (Iterate candidates)
 
-        for (const unsigned p_to : procRange_->CompatibleProcessorsVertex(node)) {
-            // --- Part A: Incoming Edges (Parents -> p_to) ---
-            // These updates are specific to p_to but independent of s_to.
+        for (const unsigned pTo : procRange_->CompatibleProcessorsVertex(node)) {
+            // --- Part A: Incoming Edges (Parents -> pTo) ---
+            // These updates are specific to pTo but independent of s_to.
             // We apply them, run the s_to loop, then revert them.
 
             for (const auto &u : graph_->Parents(node)) {
@@ -354,24 +354,24 @@ struct KlBspCommCostFunction {
                 const unsigned uStep = currentVecSchedule.AssignedSuperstep(u);
                 const CommWeightT commWU = graph_->VertexCommWeight(u);
 
-                if (uProc != p_to) {
-                    bool already_sending_to_p_to = false;
-                    unsigned count_on_p_to = commDs_.nodeLambdaMap_.GetProcEntry(u, p_to);
+                if (uProc != pTo) {
+                    bool alreadySendingToPTo = false;
+                    unsigned countOnPTo = commDs_.nodeLambdaMap_.GetProcEntry(u, pTo);
 
-                    if (p_to == nodeProc) {
-                        if (count_on_p_to > 0) {
-                            count_on_p_to--;
+                    if (pTo == nodeProc) {
+                        if (countOnPTo > 0) {
+                            countOnPTo--;
                         }
                     }
 
-                    if (count_on_p_to > 0) {
-                        already_sending_to_p_to = true;
+                    if (countOnPTo > 0) {
+                        alreadySendingToPTo = true;
                     }
 
-                    if (!already_sending_to_p_to) {
-                        const CommWeightT cost = commWU * instance_->SendCosts(uProc, p_to);
+                    if (!alreadySendingToPTo) {
+                        const CommWeightT cost = commWU * instance_->SendCosts(uProc, pTo);
                         if (cost > 0) {
-                            AddDelta(true, uStep, p_to, cost);
+                            AddDelta(true, uStep, pTo, cost);
                             AddDelta(false, uStep, uProc, cost);
                         }
                     }
@@ -384,8 +384,8 @@ struct KlBspCommCostFunction {
             CommWeightT totalSendCostAdded = 0;
 
             for (const auto [v_proc, count] : commDs_.nodeLambdaMap_.IterateProcEntries(node)) {
-                if (v_proc != p_to) {
-                    const CommWeightT cost = commWNode * instance_->SendCosts(p_to, v_proc);
+                if (v_proc != pTo) {
+                    const CommWeightT cost = commWNode * instance_->SendCosts(pTo, v_proc);
                     if (cost > 0) {
                         scratch.childCostBuffer_.push_back({v_proc, cost});
                         totalSendCostAdded += cost;
@@ -394,8 +394,8 @@ struct KlBspCommCostFunction {
             }
 
             // Iterate Window (s_to)
-            for (unsigned s_to_idx = nodeStartIdx; s_to_idx < windowBound; ++s_to_idx) {
-                unsigned s_to = nodeStep + s_to_idx - windowSize;
+            for (unsigned sToIdx = nodeStartIdx; sToIdx < windowBound; ++sToIdx) {
+                unsigned s_to = nodeStep + sToIdx - windowSize;
 
                 // Apply Outgoing Deltas for this specific step s_to
                 for (const auto &[v_proc, cost] : scratch.childCostBuffer_) {
@@ -403,7 +403,7 @@ struct KlBspCommCostFunction {
                 }
 
                 if (totalSendCostAdded > 0) {
-                    AddDelta(false, s_to, p_to, totalSendCostAdded);
+                    AddDelta(false, s_to, pTo, totalSendCostAdded);
                 }
 
                 CostT totalChange = 0;
@@ -417,14 +417,14 @@ struct KlBspCommCostFunction {
                     }
                 }
 
-                affinityTableNode[p_to][s_to_idx] += totalChange * instance_->CommunicationCosts();
+                affinityTableNode[pTo][sToIdx] += totalChange * instance_->CommunicationCosts();
 
                 // Revert Outgoing Deltas for s_to (Inverse of Apply)
                 for (const auto &[v_proc, cost] : scratch.childCostBuffer_) {
                     AddDelta(true, s_to, v_proc, -cost);
                 }
                 if (totalSendCostAdded > 0) {
-                    AddDelta(false, s_to, p_to, -totalSendCostAdded);
+                    AddDelta(false, s_to, pTo, -totalSendCostAdded);
                 }
             }
 
@@ -434,22 +434,22 @@ struct KlBspCommCostFunction {
                 const unsigned uStep = currentVecSchedule.AssignedSuperstep(u);
                 const CommWeightT commWU = graph_->VertexCommWeight(u);
 
-                if (uProc != p_to) {
-                    bool already_sending_to_p_to = false;
-                    unsigned count_on_p_to = commDs_.nodeLambdaMap_.GetProcEntry(u, p_to);
-                    if (p_to == nodeProc) {
-                        if (count_on_p_to > 0) {
-                            count_on_p_to--;
+                if (uProc != pTo) {
+                    bool alreadySendingToPTo = false;
+                    unsigned countOnPTo = commDs_.nodeLambdaMap_.GetProcEntry(u, pTo);
+                    if (pTo == nodeProc) {
+                        if (countOnPTo > 0) {
+                            countOnPTo--;
                         }
                     }
-                    if (count_on_p_to > 0) {
-                        already_sending_to_p_to = true;
+                    if (countOnPTo > 0) {
+                        alreadySendingToPTo = true;
                     }
 
-                    if (!already_sending_to_p_to) {
-                        const CommWeightT cost = commWU * instance_->SendCosts(uProc, p_to);
+                    if (!alreadySendingToPTo) {
+                        const CommWeightT cost = commWU * instance_->SendCosts(uProc, pTo);
                         if (cost > 0) {
-                            AddDelta(true, uStep, p_to, -cost);
+                            AddDelta(true, uStep, pTo, -cost);
                             AddDelta(false, uStep, uProc, -cost);
                         }
                     }
