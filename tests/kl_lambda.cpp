@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverOnTestGraphs) {
 
 //     using graph = ComputationalDagEdgeIdxVectorImplDefIntT;
 //     using VertexType = graph::VertexIdx;
-//     using kl_move = KlMoveStruct<double, VertexType>;
+//     using KlMove = KlMoveStruct<double, VertexType>;
 
 //     graph dag;
 
@@ -269,7 +269,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverOnTestGraphs) {
 //     auto& affinity = kl.GetAffinityTable();
 //     auto& lambda_map = kl.GetCommCostF().node_lambda_map;
 
-//     kl_move move_1(v7, 0.0, 0, 3, 0, 2);
+//     KlMove move_1(v7, 0.0, 0, 3, 0, 2);
 //     kl.UpdateAffinityTableTest(move_1, node_selection);
 
 //     BspSchedule<graph> test_sched_1(instance);
@@ -283,7 +283,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverOnTestGraphs) {
 //     CheckEqualLambdaMap(lambda_map, kl_1.GetCommCostF().node_lambda_map);
 //     CheckEqualAffinityTable(affinity, kl_1.GetAffinityTable(), nodes_to_check);
 
-//     kl_move move_2(v4, 0.0, 0, 1 , 0, 2);
+//     KlMove move_2(v4, 0.0, 0, 1 , 0, 2);
 //     kl.UpdateAffinityTableTest(move_2, node_selection);
 
 //     BspSchedule<graph> test_sched_2(instance);
@@ -297,7 +297,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverOnTestGraphs) {
 //     CheckEqualLambdaMap(lambda_map, kl_2.GetCommCostF().node_lambda_map);
 //     CheckEqualAffinityTable(affinity, kl_2.GetAffinityTable(), nodes_to_check);
 
-//     kl_move move_3(v2, 0.0, 1, 0 , 0, 0);
+//     KlMove move_3(v2, 0.0, 1, 0 , 0, 0);
 //     kl.UpdateAffinityTableTest(move_3, node_selection);
 
 //     BspSchedule<graph> test_sched_3(instance);
@@ -311,7 +311,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverOnTestGraphs) {
 //     CheckEqualLambdaMap(lambda_map, kl_3.GetCommCostF().node_lambda_map);
 //     CheckEqualAffinityTable(affinity, kl_3.GetAffinityTable(), nodes_to_check);
 
-//     kl_move move_4(v6, 0.0, 0, 2 , 1, 3);
+//     KlMove move_4(v6, 0.0, 0, 2 , 1, 3);
 //     kl.UpdateAffinityTableTest(move_4, node_selection);
 
 //     BspSchedule<graph> test_sched_4(instance);
@@ -325,7 +325,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverOnTestGraphs) {
 //     CheckEqualLambdaMap(lambda_map, kl_4.GetCommCostF().node_lambda_map);
 //     CheckEqualAffinityTable(affinity, kl_4.GetAffinityTable(), nodes_to_check);
 
-//     kl_move move_5(v8, 0.0, 1, 3 , 0, 2);
+//     KlMove move_5(v8, 0.0, 1, 3 , 0, 2);
 //     kl.UpdateAffinityTableTest(move_5, node_selection);
 
 //     BspSchedule<graph> test_sched_5(instance);
@@ -339,7 +339,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverOnTestGraphs) {
 //     CheckEqualLambdaMap(lambda_map, kl_5.GetCommCostF().node_lambda_map);
 //     CheckEqualAffinityTable(affinity, kl_5.GetAffinityTable(), nodes_to_check);
 
-//     kl_move move_6(v3, 0.0, 0, 1 , 1, 1);
+//     KlMove move_6(v3, 0.0, 0, 1 , 1, 1);
 //     kl.UpdateAffinityTableTest(move_6, node_selection);
 
 //     BspSchedule<graph> test_sched_6(instance);
@@ -358,7 +358,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverOnTestGraphs) {
 // BOOST_AUTO_TEST_CASE(kl_lambda_improver_inner_loop_test) {
 //     using graph = ComputationalDagEdgeIdxVectorImplDefIntT;
 //     using VertexType = graph::VertexIdx;
-//     using kl_move = KlMoveStruct<double, VertexType>;
+//     using KlMove = KlMoveStruct<double, VertexType>;
 
 //     graph dag;
 
@@ -414,7 +414,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverOnTestGraphs) {
 //     auto& affinity = kl.GetAffinityTable();
 //     auto& lambda_map = kl.GetCommCostF().node_lambda_map;
 
-//     kl_move move_2(v4, 0.0, 0, 1 , 1, 2);
+//     KlMove move_2(v4, 0.0, 0, 1 , 1, 2);
 //     kl.UpdateAffinityTableTest(move_2, node_selection);
 
 //     BspSchedule<graph> test_sched_2(instance);
@@ -428,7 +428,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverOnTestGraphs) {
 //     CheckEqualLambdaMap(lambda_map, kl_2.GetCommCostF().node_lambda_map);
 //     CheckEqualAffinityTable(affinity, kl_2.GetAffinityTable(), nodes_to_check);
 
-//     kl_move move_3(v2, 0.0, 1, 0 , 0, 1);
+//     KlMove move_3(v2, 0.0, 1, 0 , 0, 1);
 //     kl.UpdateAffinityTableTest(move_3, node_selection);
 
 //     BspSchedule<graph> test_sched_3(instance);
@@ -442,7 +442,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverOnTestGraphs) {
 //     CheckEqualLambdaMap(lambda_map, kl_3.GetCommCostF().node_lambda_map);
 //     CheckEqualAffinityTable(affinity, kl_3.GetAffinityTable(), nodes_to_check);
 
-//     kl_move move_4(v6, 0.0, 0, 2 , 1, 3);
+//     KlMove move_4(v6, 0.0, 0, 2 , 1, 3);
 //     kl.UpdateAffinityTableTest(move_4, node_selection);
 
 //     BspSchedule<graph> test_sched_4(instance);
@@ -456,7 +456,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverOnTestGraphs) {
 //     CheckEqualLambdaMap(lambda_map, kl_4.GetCommCostF().node_lambda_map);
 //     CheckEqualAffinityTable(affinity, kl_4.GetAffinityTable(), nodes_to_check);
 
-//     kl_move move_5(v8, 0.0, 1, 3 , 0, 3);
+//     KlMove move_5(v8, 0.0, 1, 3 , 0, 3);
 //     kl.UpdateAffinityTableTest(move_5, node_selection);
 
 //     BspSchedule<graph> test_sched_5(instance);
@@ -470,7 +470,7 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverOnTestGraphs) {
 //     CheckEqualLambdaMap(lambda_map, kl_5.GetCommCostF().node_lambda_map);
 //     CheckEqualAffinityTable(affinity, kl_5.GetAffinityTable(), nodes_to_check);
 
-//     kl_move move_6(v3, 0.0, 0, 1 , 1, 1);
+//     KlMove move_6(v3, 0.0, 0, 1 , 1, 1);
 //     kl.UpdateAffinityTableTest(move_6, node_selection);
 
 //     BspSchedule<graph> test_sched_6(instance);

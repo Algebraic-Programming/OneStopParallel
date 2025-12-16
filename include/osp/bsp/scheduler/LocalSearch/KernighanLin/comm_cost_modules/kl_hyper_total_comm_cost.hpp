@@ -27,7 +27,7 @@ namespace osp {
 template <typename GraphT, typename CostT, typename MemoryConstraintT, unsigned windowSize = 1>
 struct KlHyperTotalCommCostFunction {
     using VertexType = VertexIdxT<GraphT>;
-    using kl_move = KlMoveStruct<CostT, VertexType>;
+    using KlMove = KlMoveStruct<CostT, VertexType>;
     using KlGainUpdateInfo = KlUpdateInfo<VertexType>;
 
     constexpr static unsigned windowRange_ = 2 * windowSize + 1;
@@ -68,7 +68,7 @@ struct KlHyperTotalCommCostFunction {
 
     using PreMoveCommDataT = EmptyStruct;
 
-    inline EmptyStruct GetPreMoveCommData(const kl_move &) { return EmptyStruct(); }
+    inline EmptyStruct GetPreMoveCommData(const KlMove &) { return EmptyStruct(); }
 
     CostT ComputeScheduleCost() {
         CostT workCosts = 0;
@@ -118,7 +118,7 @@ struct KlHyperTotalCommCostFunction {
                + static_cast<VCommwT<GraphT>>(activeSchedule_->NumSteps() - 1) * instance_->SynchronisationCosts();
     }
 
-    inline void UpdateDatastructureAfterMove(const kl_move &move, const unsigned startStep, const unsigned endStep) {
+    inline void UpdateDatastructureAfterMove(const KlMove &move, const unsigned startStep, const unsigned endStep) {
         if (move.toProc_ != move.fromProc_) {
             for (const auto &source : instance_->GetComputationalDag().Parents(move.node_)) {
                 const unsigned sourceStep = activeSchedule_->AssignedSuperstep(source);
@@ -130,13 +130,13 @@ struct KlHyperTotalCommCostFunction {
         }
     }
 
-    inline void UpdateSourceAfterMove(const kl_move &move, VertexType source) {
+    inline void UpdateSourceAfterMove(const KlMove &move, VertexType source) {
         nodeLambdaMap_.DecreaseProcCount(source, move.fromProc_);
         nodeLambdaMap_.IncreaseProcCount(source, move.toProc_);
     }
 
     template <typename ThreadDataT>
-    void UpdateNodeCommAffinity(const kl_move &move,
+    void UpdateNodeCommAffinity(const KlMove &move,
                                 ThreadDataT &threadData,
                                 const CostT &penalty,
                                 const CostT &reward,

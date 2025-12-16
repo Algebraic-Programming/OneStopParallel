@@ -26,7 +26,7 @@ namespace osp {
 template <typename GraphT, typename CostT, typename MemoryConstraintT, unsigned windowSize = 1, bool useNodeCommunicationCostsArg = true>
 struct KlTotalCommCostFunction {
     using VertexType = VertexIdxT<GraphT>;
-    using kl_move = KlMoveStruct<CostT, VertexType>;
+    using KlMove = KlMoveStruct<CostT, VertexType>;
     using KlGainUpdateInfo = KlUpdateInfo<VertexType>;
 
     constexpr static bool isMaxCommCostFunction_ = false;
@@ -66,11 +66,11 @@ struct KlTotalCommCostFunction {
 
     using PreMoveCommDataT = EmptyStruct;
 
-    inline EmptyStruct GetPreMoveCommData(const kl_move &) { return EmptyStruct(); }
+    inline EmptyStruct GetPreMoveCommData(const KlMove &) { return EmptyStruct(); }
 
     CostT ComputeScheduleCostTest() { return ComputeScheduleCost(); }
 
-    void UpdateDatastructureAfterMove(const kl_move &, const unsigned, const unsigned) {}
+    void UpdateDatastructureAfterMove(const KlMove &, const unsigned, const unsigned) {}
 
     CostT ComputeScheduleCost() {
         CostT workCosts = 0;
@@ -104,7 +104,7 @@ struct KlTotalCommCostFunction {
     }
 
     template <typename ThreadDataT>
-    void UpdateNodeCommAffinity(const kl_move &move,
+    void UpdateNodeCommAffinity(const KlMove &move,
                                 ThreadDataT &threadData,
                                 const CostT &penalty,
                                 const CostT &reward,
