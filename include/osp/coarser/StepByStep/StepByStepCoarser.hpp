@@ -182,7 +182,7 @@ std::vector<VertexIdxT<GraphT>> StepByStepCoarser<GraphT>::GenerateVertexContrac
         InitializeContractableEdges();
     }
 
-    for (unsigned NrOfNodes = n; NrOfNodes > targetNrOfNodes_;) {
+    for (unsigned nrOfNodes = n; nrOfNodes > targetNrOfNodes_;) {
         // Single contraction step
 
         std::vector<std::pair<VertexIdx, VertexIdx>> edgesToContract;
@@ -245,8 +245,8 @@ std::vector<VertexIdxT<GraphT>> StepByStepCoarser<GraphT>::GenerateVertexContrac
                     }
                 }
             }
-            --NrOfNodes;
-            if (NrOfNodes == targetNrOfNodes_) {
+            --nrOfNodes;
+            if (nrOfNodes == targetNrOfNodes_) {
                 break;
             }
         }
