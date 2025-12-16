@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(MapperSimpleChain) {
     std::vector<VertexIdxT<GraphT>> currentMap = {201, 202, 200};
 
     IsomorphismMapper<GraphT, ConstrGraphT> mapper(repGraph);
-    auto resultMapLocal = mapper.find_mapping(currentGraph);
+    auto resultMapLocal = mapper.FindMapping(currentGraph);
 
     // Translate local map to global map for the test
     std::unordered_map<VertexIdxT<GraphT>, VertexIdxT<GraphT>> resultMap;
@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(MapperForkJoin) {
     std::vector<VertexIdxT<GraphT>> currentMap = {21, 23, 22, 20};
 
     IsomorphismMapper<GraphT, ConstrGraphT> mapper(repGraph);
-    auto resultMapLocal = mapper.find_mapping(currentGraph);
+    auto resultMapLocal = mapper.FindMapping(currentGraph);
 
     std::unordered_map<VertexIdxT<GraphT>, VertexIdxT<GraphT>> resultMap;
     for (const auto &[curr_local, rep_local] : resultMapLocal) {
@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(MapperDisconnectedComponents) {
     std::vector<VertexIdxT<GraphT>> currentMap = {22, 23, 20, 21};
 
     IsomorphismMapper<GraphT, ConstrGraphT> mapper(repGraph);
-    auto resultMapLocal = mapper.find_mapping(currentGraph);
+    auto resultMapLocal = mapper.FindMapping(currentGraph);
 
     std::unordered_map<VertexIdxT<GraphT>, VertexIdxT<GraphT>> resultMap;
     for (const auto &[curr_local, rep_local] : resultMapLocal) {
@@ -191,7 +191,7 @@ BOOST_AUTO_TEST_CASE(MapperMultiPipeline) {
     std::vector<VertexIdxT<GraphT>> currentMap = {120, 121, 122, 110, 111, 112};
 
     IsomorphismMapper<GraphT, ConstrGraphT> mapper(repGraph);
-    auto resultMapLocal = mapper.find_mapping(currentGraph);
+    auto resultMapLocal = mapper.FindMapping(currentGraph);
 
     std::unordered_map<VertexIdxT<GraphT>, VertexIdxT<GraphT>> resultMap;
     for (const auto &[curr_local, rep_local] : resultMapLocal) {
@@ -249,7 +249,7 @@ BOOST_AUTO_TEST_CASE(MapperShuffledSymmetric) {
     std::vector<VertexIdxT<GraphT>> currentMap = {111, 114, 113, 112, 115, 110};
 
     IsomorphismMapper<GraphT, ConstrGraphT> mapper(repGraph);
-    auto resultMapLocal = mapper.find_mapping(currentGraph);
+    auto resultMapLocal = mapper.FindMapping(currentGraph);
 
     std::unordered_map<VertexIdxT<GraphT>, VertexIdxT<GraphT>> resultMap;
     for (const auto &[curr_local, rep_local] : resultMapLocal) {

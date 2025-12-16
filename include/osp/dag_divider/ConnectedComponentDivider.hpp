@@ -30,10 +30,10 @@ namespace osp {
 template <typename GraphT, typename ConstrGraphT>
 class ConnectedComponentDivider : public IDagDivider<GraphT> {
     static_assert(IsComputationalDagV<GraphT>, "Graph must be a computational DAG");
-    static_assert(IsComputationalDagV<ConstrGraphT>, "Constr_Graph_t must be a computational DAG");
-    static_assert(IsConstructableCdagV<ConstrGraphT>, "Constr_Graph_t must satisfy the constructable_cdag_vertex concept");
+    static_assert(IsComputationalDagV<ConstrGraphT>, "ConstrGraphT must be a computational DAG");
+    static_assert(IsConstructableCdagV<ConstrGraphT>, "ConstrGraphT must satisfy the constructable_cdag_vertex concept");
     static_assert(std::is_same_v<VertexIdxT<GraphT>, VertexIdxT<ConstrGraphT>>,
-                  "Graph_t and Constr_Graph_t must have the same VertexIdx types");
+                  "Graph_t and ConstrGraphT must have the same VertexIdx types");
 
   private:
     using VertexIdx = VertexIdxT<GraphT>;

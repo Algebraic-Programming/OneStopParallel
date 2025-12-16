@@ -36,15 +36,15 @@ namespace osp {
  * efficiently find the vertex-to-vertex mapping.
  *
  * @tparam Graph_t The original graph type (for global vertex IDs).
- * @tparam Constr_Graph_t The subgraph/contracted graph type.
+ * @tparam ConstrGraphT The subgraph/contracted graph type.
  */
 template <typename GraphT, typename ConstrGraphT>
 class IsomorphismMapper {
-    using VertexC = VertexIdxT<Constr_Graph_t>;    // Local vertex ID
+    using VertexC = VertexIdxT<ConstrGraphT>;    // Local vertex ID
     using VertexG = VertexIdxT<GraphT>;            // Global vertex ID
 
     const ConstrGraphT &repGraph_;
-    const MerkleHashComputer<Constr_Graph_t> repHasher_;
+    const MerkleHashComputer<ConstrGraphT> repHasher_;
 
   public:
     /**
@@ -52,7 +52,7 @@ class IsomorphismMapper {
      * @param representative_graph The subgraph to use as the "pattern".
      */
     IsomorphismMapper(const ConstrGraphT &representativeGraph)
-        : repGraph_(representativeGraph), rep_hasher(representative_graph), numVertices_(representativeGraph.NumVertices()) {}
+        : repGraph_(representativeGraph), repHasher_(representativeGraph), numVertices_(representativeGraph.NumVertices()) {}
 
     virtual ~IsomorphismMapper() = default;
 
@@ -73,9 +73,9 @@ class IsomorphismMapper {
         }
 
         // 1. Compute hashes and orbits for the current graph.
-        MerkleHashComputer<Constr_Graph_t> currentHasher(currentGraph);
-        const auto &repOrbits = rep_hasher.GetOrbits();
-        const auto &currentOrbits = current_hasher.GetOrbits();
+        MerkleHashComputer<ConstrGraphT> currentHasher(currentGraph);
+        const auto &repOrbits = repHasher_.GetOrbits();
+        const auto &currentOrbits = currentHasher.GetOrbits();
 
         // 2. Verify that the orbit structures are identical.
         if (repOrbits.size() != currentOrbits.size()) {
@@ -111,7 +111,7 @@ class IsomorphismMapper {
             }
 
             // Find a corresponding unmapped vertex in the current graph's orbit.
-            const auto &candidates = currentOrbits.at(repHasher.GetVertexHash(repSeed));
+            const auto &candidates = currentOrbits.at(repHasher_.GetVertexHash(repSeed));
             VertexC currentSeed = std::numeric_limits<VertexC>::max();    // Should always be found
             for (const auto &candidate : candidates) {
                 if (!currentIsMapped[candidate]) {
@@ -159,7 +159,7 @@ class IsomorphismMapper {
     const size_t numVertices_;
 
     void MatchNeighbors(const ConstrGraphT &currentGraph,
-                        const MerkleHashComputer<Constr_Graph_t> &currentHasher,
+                        const MerkleHashComputer<ConstrGraphT> &currentHasher,
                         VertexC uRep,
                         VertexC uCurr,
                         std::vector<VertexC> &mapCurrentToRep,
@@ -181,7 +181,7 @@ class IsomorphismMapper {
                     continue;
                 }
 
-                if (repHasher.GetVertexHash(vRep) == currentHasher.GetVertexHash(vCurr)) {
+                if (repHasher_.GetVertexHash(vRep) == currentHasher.GetVertexHash(vCurr)) {
                     mapCurrentToRep[vRep] = vCurr;
                     repIsMapped[vRep] = true;
                     currentIsMapped[vCurr] = true;
