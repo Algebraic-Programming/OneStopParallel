@@ -64,8 +64,8 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
 
     schedule.UpdateNumberOfSupersteps();
 
-    using CommCostT = kl_bsp_comm_cost_function<Graph, double, no_local_search_memory_constraint>;
-    using KlImproverTest = kl_improver_test<Graph, CommCostT>;
+    using CommCostT = KlBspCommCostFunction<Graph, double, NoLocalSearchMemoryConstraint>;
+    using KlImproverTest = KlImproverTest<Graph, CommCostT>;
 
     KlImproverTest kl;
 
@@ -74,14 +74,14 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
     auto &klActiveSchedule = kl.GetActiveSchedule();
 
     // Verify work datastructures are set up correctly
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(0), 5.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(0), 0.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(1), 9.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(1), 0.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(2), 7.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(2), 6.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_max_work(3), 9.0);
-    BOOST_CHECK_EQUAL(klActiveSchedule.work_datastructures.step_second_max_work(3), 8.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepMaxWork(0), 5.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepSecondMaxWork(0), 0.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepMaxWork(1), 9.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepSecondMaxWork(1), 0.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepMaxWork(2), 7.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepSecondMaxWork(2), 6.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepMaxWork(3), 9.0);
+    BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepSecondMaxWork(3), 8.0);
 
     BOOST_CHECK_EQUAL(klActiveSchedule.NumSteps(), 4);
     BOOST_CHECK_EQUAL(klActiveSchedule.IsFeasible(), true);
