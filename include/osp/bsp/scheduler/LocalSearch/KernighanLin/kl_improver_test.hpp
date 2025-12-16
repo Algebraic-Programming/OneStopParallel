@@ -38,7 +38,7 @@ class KlImproverTest : public KlImprover<GraphT, CommCostFunctionT, MemoryConstr
   public:
     KlImproverTest() : KlImprover<GraphT, CommCostFunctionT, MemoryConstraintT, WindowSize, CostT>() {
         this->threadDataVec_.resize(1);
-        this->threadFinishedVec.assign(1, true);
+        this->threadFinishedVec_.assign(1, true);
     }
 
     virtual ~KlImproverTest() = default;
@@ -61,7 +61,7 @@ class KlImproverTest : public KlImprover<GraphT, CommCostFunctionT, MemoryConstr
 
     auto &GetMaxGainHeap() { return this->threadDataVec_[0].maxGainHeap_; }
 
-    auto GetCurrentCost() { return this->threadDataVec_[0].activeScheduleData_.cost; }
+    auto GetCurrentCost() { return this->threadDataVec_[0].activeScheduleData_.cost_; }
 
     bool IsFeasible() { return this->threadDataVec_[0].activeScheduleData_.feasible; }
 
@@ -86,7 +86,7 @@ class KlImproverTest : public KlImprover<GraphT, CommCostFunctionT, MemoryConstr
         for (const auto &node : n) {
             this->threadDataVec_[0].affinityTable_.Insert(node);
         }
-        this->threadDataVec_[0].rewardPenaltyStrat_.penalty = 5.5;
+        this->threadDataVec_[0].rewardPenaltyStrat_.penalty_ = 5.5;
         this->threadDataVec_[0].rewardPenaltyStrat_.reward_ = 0.0;
 
         this->InsertGainHeap(this->threadDataVec_[0]);

@@ -491,7 +491,7 @@ BOOST_AUTO_TEST_CASE(KlBase1) {
     BOOST_CHECK_EQUAL(klActiveSchedule.NumSteps(), 1);
     BOOST_CHECK_CLOSE(kl.GetCurrentCost(), 44.0, 0.00001);
     BOOST_CHECK_EQUAL(kl.IsFeasible(), true);
-    BOOST_CHECK_CLOSE(kl.GetCommCostF().compute_schedule_cost(), 44.0, 0.00001);
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCost(), 44.0, 0.00001);
 
     using KlMove = KlMoveStruct<double, VertexType>;
 
@@ -503,7 +503,7 @@ BOOST_AUTO_TEST_CASE(KlBase1) {
     BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepSecondMaxWork(0), 2.0);
     BOOST_CHECK_EQUAL(klActiveSchedule.NumSteps(), 1);
     BOOST_CHECK_EQUAL(kl.IsFeasible(), false);
-    BOOST_CHECK_CLOSE(kl.GetCurrentCost(), kl.GetCommCostF().compute_schedule_cost(), 0.00001);
+    BOOST_CHECK_CLOSE(kl.GetCurrentCost(), kl.GetCommCostF().ComputeScheduleCost(), 0.00001);
 
     KlMove move2(v2, 3.0 + 4.5 - 4.0, 0, 0, 1, 0);
 
@@ -513,7 +513,7 @@ BOOST_AUTO_TEST_CASE(KlBase1) {
     BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepSecondMaxWork(0), 5.0);    // 2+3
     BOOST_CHECK_EQUAL(klActiveSchedule.NumSteps(), 1);
     BOOST_CHECK_EQUAL(kl.IsFeasible(), false);
-    BOOST_CHECK_CLOSE(kl.GetCurrentCost(), kl.GetCommCostF().compute_schedule_cost(), 0.00001);
+    BOOST_CHECK_CLOSE(kl.GetCurrentCost(), kl.GetCommCostF().ComputeScheduleCost(), 0.00001);
 
     kl.InsertGainHeapTest({0, 1, 2, 3, 4, 5, 6, 7});
 
@@ -590,7 +590,7 @@ BOOST_AUTO_TEST_CASE(KlBase2) {
     BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepSecondMaxWork(3), 8.0);
 
     BOOST_CHECK_EQUAL(klActiveSchedule.NumSteps(), 4);
-    BOOST_CHECK_CLOSE(kl.GetCurrentCost(), kl.GetCommCostF().compute_schedule_cost(), 0.00001);
+    BOOST_CHECK_CLOSE(kl.GetCurrentCost(), kl.GetCommCostF().ComputeScheduleCost(), 0.00001);
     BOOST_CHECK_EQUAL(kl.IsFeasible(), true);
 
     using KlMove = KlMoveStruct<double, VertexType>;
@@ -608,7 +608,7 @@ BOOST_AUTO_TEST_CASE(KlBase2) {
     BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepMaxWork(3), 9.0);
     BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepSecondMaxWork(3), 8.0);
     BOOST_CHECK_EQUAL(kl.IsFeasible(), true);
-    BOOST_CHECK_CLOSE(kl.GetCurrentCost(), kl.GetCommCostF().compute_schedule_cost(), 0.00001);
+    BOOST_CHECK_CLOSE(kl.GetCurrentCost(), kl.GetCommCostF().ComputeScheduleCost(), 0.00001);
 
     KlMove move2(v2, -1.0 - 8.5, 1, 1, 0, 0);
 
@@ -624,7 +624,7 @@ BOOST_AUTO_TEST_CASE(KlBase2) {
     BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepSecondMaxWork(3), 8.0);
     BOOST_CHECK_EQUAL(klActiveSchedule.NumSteps(), 4);
     BOOST_CHECK_EQUAL(kl.IsFeasible(), false);
-    BOOST_CHECK_CLOSE(kl.GetCurrentCost(), kl.GetCommCostF().compute_schedule_cost(), 0.00001);
+    BOOST_CHECK_CLOSE(kl.GetCurrentCost(), kl.GetCommCostF().ComputeScheduleCost(), 0.00001);
 
     KlMove moveX(v2, -2.0 + 8.5, 0, 0, 1, 0);
 
@@ -640,7 +640,7 @@ BOOST_AUTO_TEST_CASE(KlBase2) {
     BOOST_CHECK_EQUAL(klActiveSchedule.workDatastructures_.StepSecondMaxWork(3), 8.0);
     BOOST_CHECK_EQUAL(klActiveSchedule.NumSteps(), 4);
     BOOST_CHECK_EQUAL(kl.IsFeasible(), true);
-    BOOST_CHECK_CLOSE(kl.GetCurrentCost(), kl.GetCommCostF().compute_schedule_cost(), 0.00001);
+    BOOST_CHECK_CLOSE(kl.GetCurrentCost(), kl.GetCommCostF().ComputeScheduleCost(), 0.00001);
 
     kl.InsertGainHeapTest({0, 1, 2, 3, 4, 5, 6, 7});
 

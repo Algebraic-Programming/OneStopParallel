@@ -115,7 +115,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
         unsigned endStep_ = 0;
         unsigned originalEndStep_ = 0;
 
-        VectorVertexLockManger<VertexType> lockManager_;
+        VectorVertexLockManager<VertexType> lockManager_;
         HeapDatastructure maxGainHeap_;
         NodeSelectionContainerT affinityTable_;
         std::vector<std::vector<CostT>> localAffinityTable_;
@@ -188,7 +188,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
     }
 
     KlMove GetBestMove(NodeSelectionContainerT &affinityTable,
-                       VectorVertexLockManger<VertexType> &lockManager,
+                       VectorVertexLockManager<VertexType> &lockManager,
                        HeapDatastructure &maxGainHeap) {
         // To introduce non-determinism and help escape local optima, if there are multiple moves with the same
         // top gain, we randomly select one. We check up to `local_max` ties.

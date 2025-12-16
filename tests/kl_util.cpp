@@ -230,15 +230,15 @@ BOOST_AUTO_TEST_CASE(VertexSelectionStrategyTest) {
 
     strategy.SelectNodesPermutationThreshold(5, table);
     BOOST_CHECK_EQUAL(table.size(), 5);
-    BOOST_CHECK_EQUAL(strategy.permutation_Idx_, 5);
+    BOOST_CHECK_EQUAL(strategy.permutationIdx_, 5);
 
     strategy.SelectNodesPermutationThreshold(5, table);
     BOOST_CHECK_EQUAL(table.size(), 10);
-    BOOST_CHECK_EQUAL(strategy.permutation_Idx_, 10);
+    BOOST_CHECK_EQUAL(strategy.permutationIdx_, 10);
 
     strategy.SelectNodesPermutationThreshold(15, table);
     BOOST_CHECK_EQUAL(table.size(), 20);
-    BOOST_CHECK_EQUAL(strategy.permutation_Idx_, 0);    // should wrap around and reshuffle
+    BOOST_CHECK_EQUAL(strategy.permutationIdx_, 0);    // should wrap around and reshuffle
 
     table.ResetNodeSelection();
     strategy.maxWorkCounter_ = 0;
@@ -261,21 +261,21 @@ BOOST_FIXTURE_TEST_SUITE(KlActiveSchedule_tests, ScheduleFixture)
 using VertexType = Graph::VertexIdx;
 
 BOOST_AUTO_TEST_CASE(KlMoveStructTest) {
-    using KlMove = kl_move_struct<double, VertexType>;
+    using KlMove = KlMoveStruct<double, VertexType>;
     KlMove move(5, 10.0, 1, 2, 3, 4);
 
     KlMove reversed = move.ReverseMove();
 
-    BOOST_CHECK_EQUAL(reversed.node, 5);
-    BOOST_CHECK_EQUAL(reversed.gain, -10.0);
-    BOOST_CHECK_EQUAL(reversed.from_proc, 3);
-    BOOST_CHECK_EQUAL(reversed.from_step, 4);
-    BOOST_CHECK_EQUAL(reversed.to_proc, 1);
-    BOOST_CHECK_EQUAL(reversed.to_step, 2);
+    BOOST_CHECK_EQUAL(reversed.node_, 5);
+    BOOST_CHECK_EQUAL(reversed.gain_, -10.0);
+    BOOST_CHECK_EQUAL(reversed.fromProc_, 3);
+    BOOST_CHECK_EQUAL(reversed.fromStep_, 4);
+    BOOST_CHECK_EQUAL(reversed.toProc_, 1);
+    BOOST_CHECK_EQUAL(reversed.toStep_, 2);
 }
 
 BOOST_AUTO_TEST_CASE(WorkDatastructuresInitializationTest) {
-    auto &wd = activeSchedule_.work_datastructures;
+    auto &wd = activeSchedule_.workDatastructures_;
 
     // Step 0: node 0 on proc 0, work 1. Other procs have 0 work.
     BOOST_CHECK_EQUAL(wd.StepProcWork(0, 0), 1);
@@ -297,8 +297,8 @@ BOOST_AUTO_TEST_CASE(WorkDatastructuresInitializationTest) {
 }
 
 BOOST_AUTO_TEST_CASE(WorkDatastructuresApplyMoveTest) {
-    auto &wd = activeSchedule_.work_datastructures;
-    using KlMove = kl_move_struct<double, VertexType>;
+    auto &wd = activeSchedule_.workDatastructures_;
+    using KlMove = KlMoveStruct<double, VertexType>;
 
     // Move within same superstep
     // Move node 0 (work 1) from proc 0 to proc 3 in step 0
@@ -350,10 +350,10 @@ BOOST_AUTO_TEST_CASE(ActiveScheduleInitializationTest) {
 }
 
 BOOST_AUTO_TEST_CASE(ActiveScheduleApplyMoveTest) {
-    using KlMove = kl_move_struct<double, VertexType>;
+    using KlMove = KlMoveStruct<double, VertexType>;
     using ThreadDataT = ThreadLocalActiveScheduleData<Graph, double>;
     ThreadDataT threadData;
-    threadData.initialize_cost(0);
+    threadData.InitializeCost(0);
 
     // Move node 1 (step 1) to step 0. This should create a violation with node 0 (step 0).
     // Edge 0 -> 1.
@@ -364,10 +364,10 @@ BOOST_AUTO_TEST_CASE(ActiveScheduleApplyMoveTest) {
     BOOST_CHECK_EQUAL(activeSchedule_.GetSetSchedule().stepProcessorVertices_[1][1].count(1), 0);
     BOOST_CHECK_EQUAL(activeSchedule_.GetSetSchedule().stepProcessorVertices_[0][1].count(1), 1);
 
-    BOOST_CHECK(!threadData.feasible);
-    BOOST_CHECK_EQUAL(threadData.current_violations.size(), 1);
-    BOOST_CHECK_EQUAL(threadData.new_violations.size(), 1);
-    BOOST_CHECK(threadData.new_violations.count(0));
+    BOOST_CHECK(!threadData.feasible_);
+    BOOST_CHECK_EQUAL(threadData.currentViolations_.size(), 1);
+    BOOST_CHECK_EQUAL(threadData.newViolations_.size(), 1);
+    BOOST_CHECK(threadData.newViolations_.count(0));
 }
 
 BOOST_AUTO_TEST_CASE(ActiveScheduleComputeViolationsTest) {
@@ -382,19 +382,19 @@ BOOST_AUTO_TEST_CASE(ActiveScheduleComputeViolationsTest) {
 
     activeSchedule_.ComputeViolations(threadData);
 
-    BOOST_CHECK(!threadData.feasible);
-    BOOST_CHECK_EQUAL(threadData.current_violations.size(), 1);
+    BOOST_CHECK(!threadData.feasible_);
+    BOOST_CHECK_EQUAL(threadData.currentViolations_.size(), 1);
 }
 
 BOOST_AUTO_TEST_CASE(ActiveScheduleRevertMovesTest) {
-    using KlMove = kl_move_struct<double, VertexType>;
+    using KlMove = KlMoveStruct<double, VertexType>;
     using ThreadDataT = ThreadLocalActiveScheduleData<Graph, double>;
 
     KlActiveScheduleT originalSchedule;
     originalSchedule.Initialize(schedule_);
 
     ThreadDataT threadData;
-    threadData.initialize_cost(0);
+    threadData.InitializeCost(0);
 
     KlMove move1(0, 0.0, 0, 0, 1, 0);
     KlMove move2(1, 0.0, 1, 1, 2, 1);
@@ -418,27 +418,27 @@ BOOST_AUTO_TEST_CASE(ActiveScheduleRevertMovesTest) {
 }
 
 BOOST_AUTO_TEST_CASE(ActiveScheduleRevertToBestScheduleTest) {
-    using KlMove = kl_move_struct<double, VertexType>;
+    using KlMove = KlMoveStruct<double, VertexType>;
     using ThreadDataT = ThreadLocalActiveScheduleData<Graph, double>;
 
     ThreadDataT threadData;
-    threadData.initialize_cost(100);
+    threadData.InitializeCost(100);
 
     // Apply 3 moves
     KlMove move1(0, 0.0, 0, 0, 1, 0);    // node 0 from (p0,s0) to (p1,s0)
     activeSchedule_.ApplyMove(move1, threadData);
-    threadData.update_cost(-10);    // cost 90
+    threadData.UpdateCost(-10);    // cost 90
 
     KlMove move2(1, 0.0, 1, 1, 2, 1);    // node 1 from (p1,s1) to (p2,s1)
     activeSchedule_.ApplyMove(move2, threadData);
-    threadData.update_cost(-10);    // cost 80, best is here
+    threadData.UpdateCost(-10);    // cost 80, best is here
 
     KlMove move3(2, 0.0, 2, 2, 3, 2);    // node 2 from (p2,s2) to (p3,s2)
     activeSchedule_.ApplyMove(move3, threadData);
-    threadData.update_cost(+5);    // cost 85
+    threadData.UpdateCost(+5);    // cost 85
 
-    BOOST_CHECK_EQUAL(threadData.best_schedule_idx, 2);
-    BOOST_CHECK_EQUAL(threadData.applied_moves.size(), 3);
+    BOOST_CHECK_EQUAL(threadData.bestScheduleIdx_, 2);
+    BOOST_CHECK_EQUAL(threadData.appliedMoves_.size(), 3);
 
     struct DummyCommDs {
         void UpdateDatastructureAfterMove(const KlMove &, unsigned, unsigned) {}
@@ -448,9 +448,9 @@ BOOST_AUTO_TEST_CASE(ActiveScheduleRevertToBestScheduleTest) {
     // Revert to best. start_move=0 means no step removal logic is triggered.
     activeSchedule_.RevertToBestSchedule(0, 0, commDs, threadData, 0, endStep);
 
-    BOOST_CHECK_EQUAL(threadData.cost, 80.0);    // Check cost is reverted to best
-    BOOST_CHECK_EQUAL(threadData.applied_moves.size(), 0);
-    BOOST_CHECK_EQUAL(threadData.best_schedule_idx, 0);    // Reset for next iteration
+    BOOST_CHECK_EQUAL(threadData.cost_, 80.0);    // Check cost is reverted to best
+    BOOST_CHECK_EQUAL(threadData.appliedMoves_.size(), 0);
+    BOOST_CHECK_EQUAL(threadData.bestScheduleIdx_, 0);    // Reset for next iteration
 
     // Check schedule state is after move2
     BOOST_CHECK_EQUAL(activeSchedule_.AssignedProcessor(0), 1);    // from move1

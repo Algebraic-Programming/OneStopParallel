@@ -634,24 +634,24 @@ BOOST_AUTO_TEST_CASE(KlLambdaImproverInnerLoopLambdaMapTest) {
 
     BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
 
-    auto &lambdaMap = kl.GetCommCostF().node_lambda_map;
+    auto &lambdaMap = kl.GetCommCostF().nodeLambdaMap_;
 
-    BOOST_CHECK(lambdaMap.get_proc_entry(v1, 0) == 2);
-    BOOST_CHECK(lambdaMap.get_proc_entry(v1, 1) == 1);
-    BOOST_CHECK(lambdaMap.has_no_proc_entry(v2, 0));
-    BOOST_CHECK(lambdaMap.get_proc_entry(v2, 1) == 1);
-    BOOST_CHECK(lambdaMap.get_proc_entry(v3, 0) == 1);
-    BOOST_CHECK(lambdaMap.get_proc_entry(v3, 1) == 1);
-    BOOST_CHECK(lambdaMap.has_no_proc_entry(v4, 0));
-    BOOST_CHECK(lambdaMap.get_proc_entry(v4, 1) == 1);
-    BOOST_CHECK(lambdaMap.has_no_proc_entry(v5, 0));
-    BOOST_CHECK(lambdaMap.get_proc_entry(v5, 1) == 1);
-    BOOST_CHECK(lambdaMap.has_no_proc_entry(v6, 0));
-    BOOST_CHECK(lambdaMap.has_no_proc_entry(v6, 0));
-    BOOST_CHECK(lambdaMap.has_no_proc_entry(v7, 0));
-    BOOST_CHECK(lambdaMap.has_no_proc_entry(v7, 0));
-    BOOST_CHECK(lambdaMap.has_no_proc_entry(v8, 0));
-    BOOST_CHECK(lambdaMap.has_no_proc_entry(v8, 0));
+    BOOST_CHECK(lambdaMap.GetProcEntry(v1, 0) == 2);
+    BOOST_CHECK(lambdaMap.GetProcEntry(v1, 1) == 1);
+    BOOST_CHECK(lambdaMap.HasNoProcEntry(v2, 0));
+    BOOST_CHECK(lambdaMap.GetProcEntry(v2, 1) == 1);
+    BOOST_CHECK(lambdaMap.GetProcEntry(v3, 0) == 1);
+    BOOST_CHECK(lambdaMap.GetProcEntry(v3, 1) == 1);
+    BOOST_CHECK(lambdaMap.HasNoProcEntry(v4, 0));
+    BOOST_CHECK(lambdaMap.GetProcEntry(v4, 1) == 1);
+    BOOST_CHECK(lambdaMap.HasNoProcEntry(v5, 0));
+    BOOST_CHECK(lambdaMap.GetProcEntry(v5, 1) == 1);
+    BOOST_CHECK(lambdaMap.HasNoProcEntry(v6, 0));
+    BOOST_CHECK(lambdaMap.HasNoProcEntry(v6, 0));
+    BOOST_CHECK(lambdaMap.HasNoProcEntry(v7, 0));
+    BOOST_CHECK(lambdaMap.HasNoProcEntry(v7, 0));
+    BOOST_CHECK(lambdaMap.HasNoProcEntry(v8, 0));
+    BOOST_CHECK(lambdaMap.HasNoProcEntry(v8, 0));
 
     recomputeMaxGain = kl.RunInnerIterationTest();
     std::cout << "recompute max_gain: { ";
