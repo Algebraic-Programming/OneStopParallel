@@ -179,7 +179,7 @@ struct TestFixture {
         // Two components that will be in the same wavefront set.
         dag_.AddVertex(10, 1, 1);    // v0
         dag_.AddVertex(20, 1, 1);    // v1
-        dag_.AddVertex(0, 1, 1);    // v2
+        dag_.AddVertex(30, 1, 1);    // v2
         dag_.AddVertex(40, 1, 1);    // v3
         dag_.AddEdge(0, 1);
         dag_.AddEdge(2, 3);
