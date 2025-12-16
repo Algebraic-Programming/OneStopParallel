@@ -451,7 +451,7 @@ class BspScheduleCS : public BspSchedule<GraphT> {
                     commSchedule_[std::make_tuple(source,
                                                   BspSchedule<GraphT>::nodeToProcessorAssignment_[source],
                                                   BspSchedule<GraphT>::nodeToProcessorAssignment_[target])]
-                        = BspSchedule<GraphT>::nodeToSuperstepAssignment_[target];
+                        = BspSchedule<GraphT>::nodeToSuperstepAssignment_[source];
                 }
             }
         }
