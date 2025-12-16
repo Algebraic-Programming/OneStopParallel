@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(TestFull) {
 
     BOOST_CHECK(status);
 
-    HypergraphImpl hgraph = convert_from_cdag_as_hyperdag<HypergraphImpl, graph>(DAG);
+    HypergraphImpl hgraph = ConvertFromCdagAsHyperdag<HypergraphImpl, graph>(DAG);
     BOOST_CHECK_EQUAL(DAG.NumVertices(), Hgraph.NumVertices());
 
     PartitioningProblem instance(hgraph, 3, 35);

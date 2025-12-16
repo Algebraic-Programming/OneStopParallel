@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(HypergraphAndPartitionTest) {
         }
     }
 
-    hgraph = convert_from_cdag_as_hyperdag<HypergraphImpl, Graph>(dag);
+    hgraph = ConvertFromCdagAsHyperdag<HypergraphImpl, Graph>(dag);
     BOOST_CHECK_EQUAL(dag.NumVertices(), hgraph.NumVertices());
     BOOST_CHECK_EQUAL(nrOfNonSinks, hgraph.NumHyperedges());
     BOOST_CHECK_EQUAL(dag.NumEdges() + nrOfNonSinks, hgraph.NumPins());
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(HypergraphAndPartitionTest) {
 
     // Dummy partitioning with replication
 
-    instance.setHypergraph(convert_from_cdag_as_hyperdag<HypergraphImpl, Graph>(dag));
+    instance.SetHypergraph(ConvertFromCdagAsHyperdag<HypergraphImpl, Graph>(dag));
     instance.SetNumberOfPartitions(3);
     instance.SetMaxWorkWeightExplicitly(30);
     PartitioningWithReplication partitionWithRep(instance);
@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(HypergraphAndPartitionTest) {
     Graph largerDag;
     file_reader::ReadComputationalDagHyperdagFormatDB((cwd / "data/spaa/large/instance_CG_N24_K22_nzP0d2.hdag").string(),
                                                       largerDag);
-    instance.setHypergraph(convert_from_cdag_as_hyperdag<HypergraphImpl, Graph>(largerDag));
+    instance.SetHypergraph(ConvertFromCdagAsHyperdag<HypergraphImpl, Graph>(largerDag));
 
     instance.SetMaxWorkWeightExplicitly(4000);
     for (unsigned node = 0; node < instance.GetHypergraph().NumVertices(); ++node) {
