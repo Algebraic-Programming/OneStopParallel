@@ -109,6 +109,8 @@ BOOST_AUTO_TEST_CASE(HillClimbingForCommSchedule) {
     BspSchedule<Graph> schedule = initial;
     BspScheduleCS<Graph> initialCs(std::move(initial));
     // initial_cs.SetAutoCommunicationSchedule();
+    BOOST_CHECK(initialCs.SatisfiesPrecedenceConstraints());
+    initialCs.UpdateNumberOfSupersteps();
     initialCs.SetEagerCommunicationSchedule();
     BOOST_CHECK_EQUAL(initialCs.HasValidCommSchedule(), true);
 
