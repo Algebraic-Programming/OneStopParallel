@@ -62,24 +62,24 @@ class StepByStepCoarser : public CoarserGenContractionMap<GraphT, GraphT> {
     };
 
   private:
-    std::vector<std::pair<VertexIdx, VertexIdx>> contractionHistory;
+    std::vector<std::pair<VertexIdx, VertexIdx>> contractionHistory_;
 
     CoarseningStrategy coarseningStrategy_ = CoarseningStrategy::EDGE_BY_EDGE;
     ProblemType problemType_ = ProblemType::SCHEDULING;
 
-    unsigned target_nr_of_nodes = 0;
+    unsigned targetNrOfNodes_ = 0;
 
-    GraphT G_full;
-    BoostGraphT G_coarse;
+    GraphT gFull_;
+    BoostGraphT gCoarse_;
 
-    std::vector<std::set<VertexIdx>> contains;
+    std::vector<std::set<VertexIdx>> contains_;
 
-    std::map<std::pair<VertexIdx, VertexIdx>, VCommwT<GraphT>> edgeWeights;
-    std::map<std::pair<VertexIdx, VertexIdx>, VCommwT<GraphT>> contractable;
-    std::vector<bool> node_valid;
-    std::vector<VertexIdx> top_order_idx;
+    std::map<std::pair<VertexIdx, VertexIdx>, VCommwT<GraphT>> edgeWeights_;
+    std::map<std::pair<VertexIdx, VertexIdx>, VCommwT<GraphT>> contractable_;
+    std::vector<bool> nodeValid_;
+    std::vector<VertexIdx> topOrderIdx_;
 
-    VMemwT<GraphT> fast_mem_capacity = std::numeric_limits<VMemwT<GraphT>>::max();    // for pebbling
+    VMemwT<GraphT> fastMemCapacity_ = std::numeric_limits<VMemwT<GraphT>>::max();    // for pebbling
 
     // Utility functions for coarsening in general
     void ContractSingleEdge(std::pair<VertexIdx, VertexIdx> edge);
@@ -103,8 +103,8 @@ class StepByStepCoarser : public CoarserGenContractionMap<GraphT, GraphT> {
     void MergeSourcesInPebbling();
 
     // Utility for contracting into final format
-    void SetIdVector(std::vector<VertexIdxT<GraphT>> &new_vertex_id) const;
-    static std::vector<VertexIdx> GetFilteredTopOrderIdx(const GraphT &G, const std::vector<bool> &is_valid);
+    void SetIdVector(std::vector<VertexIdxT<GraphT>> &newVertexId) const;
+    static std::vector<VertexIdx> GetFilteredTopOrderIdx(const GraphT &g, const std::vector<bool> &isValid);
 
   public:
     virtual ~StepByStepCoarser() = default;
@@ -112,23 +112,23 @@ class StepByStepCoarser : public CoarserGenContractionMap<GraphT, GraphT> {
     virtual std::string GetCoarserName() const override { return "StepByStepCoarsening"; }
 
     // DAG coarsening
-    virtual std::vector<VertexIdxT<GraphT>> GenerateVertexContractionMap(const GraphT &dag_in) override;
+    virtual std::vector<VertexIdxT<GraphT>> GenerateVertexContractionMap(const GraphT &dagIn) override;
 
     // Coarsening for pebbling problems - leaves source nodes intact, considers memory bound
-    void CoarsenForPebbling(const GraphT &dag_in, GraphT &coarsened_dag, std::vector<VertexIdxT<GraphT>> &new_vertex_id);
+    void CoarsenForPebbling(const GraphT &dagIn, GraphT &coarsenedDag, std::vector<VertexIdxT<GraphT>> &newVertexId);
 
     void SetCoarseningStrategy(CoarseningStrategy strategy) { coarseningStrategy_ = strategy; }
 
-    void SetTargetNumberOfNodes(const unsigned nr_nodes_) { target_nr_of_nodes = nr_nodes_; }
+    void SetTargetNumberOfNodes(const unsigned nrNodes) { targetNrOfNodes_ = nrNodes; }
 
-    void SetFastMemCapacity(const VMemwT<GraphT> capacity_) { fast_mem_capacity = capacity_; }
+    void SetFastMemCapacity(const VMemwT<GraphT> capacity) { fastMemCapacity_ = capacity; }
 
-    std::vector<std::pair<VertexIdx, VertexIdx>> GetContractionHistory() const { return contractionHistory; }
+    std::vector<std::pair<VertexIdx, VertexIdx>> GetContractionHistory() const { return contractionHistory_; }
 
-    std::vector<VertexIdx> GetIntermediateIDs(VertexIdx until_which_step) const;
-    GraphT Contract(const std::vector<VertexIdxT<GraphT>> &new_vertex_id) const;
+    std::vector<VertexIdx> GetIntermediateIDs(VertexIdx untilWhichStep) const;
+    GraphT Contract(const std::vector<VertexIdxT<GraphT>> &newVertexId) const;
 
-    const GraphT &GetOriginalDag() const { return G_full; }
+    const GraphT &GetOriginalDag() const { return gFull_; }
 };
 
 // template<typename GraphT>
@@ -137,44 +137,44 @@ class StepByStepCoarser : public CoarserGenContractionMap<GraphT, GraphT> {
 //                         std::vector<VertexIdxT<GraphT>> &new_vertex_id)
 
 template <typename GraphT>
-std::vector<VertexIdxT<GraphT>> StepByStepCoarser<GraphT>::GenerateVertexContractionMap(const GraphT &dag_in) {
-    const unsigned N = static_cast<unsigned>(dag_in.NumVertices());
+std::vector<VertexIdxT<GraphT>> StepByStepCoarser<GraphT>::GenerateVertexContractionMap(const GraphT &dagIn) {
+    const unsigned n = static_cast<unsigned>(dagIn.NumVertices());
 
-    G_full = dag_in;
-    for (VertexIdx node = G_coarse.NumVertices(); node > 0;) {
+    gFull_ = dagIn;
+    for (VertexIdx node = gCoarse_.NumVertices(); node > 0;) {
         --node;
-        G_coarse.RemoveVertex(node);
+        gCoarse_.RemoveVertex(node);
     }
 
-    ConstructComputationalDag(G_full, G_coarse);
+    ConstructComputationalDag(gFull_, gCoarse_);
 
-    contractionHistory.clear();
+    contractionHistory_.clear();
 
     // target nr of nodes must be reasonable
-    if (target_nr_of_nodes == 0 || target_nr_of_nodes > N) {
-        target_nr_of_nodes = std::max(N / 2, 1U);
+    if (targetNrOfNodes_ == 0 || targetNrOfNodes_ > n) {
+        targetNrOfNodes_ = std::max(n / 2, 1U);
     }
 
     // list of original node indices contained in each contracted node
-    contains.clear();
-    contains.resize(N);
+    contains_.clear();
+    contains_.resize(n);
 
-    node_valid.clear();
-    node_valid.resize(N, true);
+    nodeValid_.clear();
+    nodeValid_.resize(n, true);
 
-    for (VertexIdx node = 0; node < N; ++node) {
-        contains[node].insert(node);
+    for (VertexIdx node = 0; node < n; ++node) {
+        contains_[node].insert(node);
     }
 
     // used for original, slow coarsening
-    edgeWeights.clear();
-    contractable.clear();
+    edgeWeights_.clear();
+    contractable_.clear();
 
     if (coarseningStrategy_ == CoarseningStrategy::EDGE_BY_EDGE) {
         // Init edge weights
-        for (VertexIdx node = 0; node < N; ++node) {
-            for (VertexIdx succ : G_full.Children(node)) {
-                edgeWeights[std::make_pair(node, succ)] = G_full.VertexCommWeight(node);
+        for (VertexIdx node = 0; node < n; ++node) {
+            for (VertexIdx succ : gFull_.Children(node)) {
+                edgeWeights_[std::make_pair(node, succ)] = gFull_.VertexCommWeight(node);
             }
         }
 
@@ -182,19 +182,19 @@ std::vector<VertexIdxT<GraphT>> StepByStepCoarser<GraphT>::GenerateVertexContrac
         InitializeContractableEdges();
     }
 
-    for (unsigned NrOfNodes = N; NrOfNodes > target_nr_of_nodes;) {
+    for (unsigned NrOfNodes = n; NrOfNodes > targetNrOfNodes_;) {
         // Single contraction step
 
         std::vector<std::pair<VertexIdx, VertexIdx>> edgesToContract;
 
         // choose edges to contract in this step
         if (coarseningStrategy_ == CoarseningStrategy::EDGE_BY_EDGE) {
-            std::vector<EdgeToContract> candidates = CreateEdgeCandidateList();
-            if (candidates.empty()) {
+            std::vector<EdgeToContract> candidates_ = CreateEdgeCandidateList();
+            if (candidates_.empty()) {
                 std::cout << "Error: no more edges to contract" << std::endl;
                 break;
             }
-            std::pair<VertexIdx, VertexIdx> chosenEdge = PickEdgeToContract(candidates);
+            std::pair<VertexIdx, VertexIdx> chosenEdge = PickEdgeToContract(candidates_);
             edgesToContract.push_back(chosenEdge);
 
             // Update far-away edges that become uncontractable now
@@ -211,42 +211,42 @@ std::vector<VertexIdxT<GraphT>> StepByStepCoarser<GraphT>::GenerateVertexContrac
         for (const std::pair<VertexIdx, VertexIdx> &edge : edgesToContract) {
             if (coarseningStrategy_ == CoarseningStrategy::EDGE_BY_EDGE) {
                 // Update contractable edges - edge.b
-                for (VertexIdx pred : G_coarse.Parents(edge.second)) {
-                    contractable.erase(std::make_pair(pred, edge.second));
+                for (VertexIdx pred : gCoarse_.Parents(edge.second)) {
+                    contractable_.erase(std::make_pair(pred, edge.second));
                 }
 
-                for (VertexIdx succ : G_coarse.Children(edge.second)) {
-                    contractable.erase(std::make_pair(edge.second, succ));
+                for (VertexIdx succ : gCoarse_.Children(edge.second)) {
+                    contractable_.erase(std::make_pair(edge.second, succ));
                 }
             }
 
             ContractSingleEdge(edge);
-            node_valid[edge.second] = false;
+            nodeValid_[edge.second] = false;
 
             if (coarseningStrategy_ == CoarseningStrategy::EDGE_BY_EDGE) {
                 ComputeFilteredTopOrderIdx();
 
                 // Update contractable edges - edge.a
                 std::set<VertexIdx> contractableParents = GetContractableParents(edge.first);
-                for (VertexIdx pred : G_coarse.Parents(edge.first)) {
+                for (VertexIdx pred : gCoarse_.Parents(edge.first)) {
                     if (contractableParents.find(pred) != contractableParents.end()) {
-                        contractable[std::make_pair(pred, edge.first)] = edgeWeights[std::make_pair(pred, edge.first)];
+                        contractable_[std::make_pair(pred, edge.first)] = edgeWeights_[std::make_pair(pred, edge.first)];
                     } else {
-                        contractable.erase(std::make_pair(pred, edge.first));
+                        contractable_.erase(std::make_pair(pred, edge.first));
                     }
                 }
 
                 std::set<VertexIdx> contractableChildren = GetContractableChildren(edge.first);
-                for (VertexIdx succ : G_coarse.Children(edge.first)) {
+                for (VertexIdx succ : gCoarse_.Children(edge.first)) {
                     if (contractableChildren.find(succ) != contractableChildren.end()) {
-                        contractable[std::make_pair(edge.first, succ)] = edgeWeights[std::make_pair(edge.first, succ)];
+                        contractable_[std::make_pair(edge.first, succ)] = edgeWeights_[std::make_pair(edge.first, succ)];
                     } else {
-                        contractable.erase(std::make_pair(edge.first, succ));
+                        contractable_.erase(std::make_pair(edge.first, succ));
                     }
                 }
             }
             --NrOfNodes;
-            if (NrOfNodes == target_nr_of_nodes) {
+            if (NrOfNodes == targetNrOfNodes_) {
                 break;
             }
         }
@@ -256,102 +256,102 @@ std::vector<VertexIdxT<GraphT>> StepByStepCoarser<GraphT>::GenerateVertexContrac
         MergeSourcesInPebbling();
     }
 
-    std::vector<VertexIdxT<GraphT>> new_vertex_id;
-    SetIdVector(new_vertex_id);
+    std::vector<VertexIdxT<GraphT>> newVertexId;
+    SetIdVector(newVertexId);
 
-    return new_vertex_id;
+    return newVertexId;
 }
 
 template <typename GraphT>
 void StepByStepCoarser<GraphT>::ContractSingleEdge(std::pair<VertexIdx, VertexIdx> edge) {
-    G_coarse.SetVertexWorkWeight(edge.first, G_coarse.VertexWorkWeight(edge.first) + G_coarse.VertexWorkWeight(edge.second));
-    G_coarse.SetVertexWorkWeight(edge.second, 0);
+    gCoarse_.SetVertexWorkWeight(edge.first, gCoarse_.VertexWorkWeight(edge.first) + gCoarse_.VertexWorkWeight(edge.second));
+    gCoarse_.SetVertexWorkWeight(edge.second, 0);
 
-    G_coarse.SetVertexCommWeight(edge.first, G_coarse.VertexCommWeight(edge.first) + G_coarse.VertexCommWeight(edge.second));
-    G_coarse.SetVertexCommWeight(edge.second, 0);
+    gCoarse_.SetVertexCommWeight(edge.first, gCoarse_.VertexCommWeight(edge.first) + gCoarse_.VertexCommWeight(edge.second));
+    gCoarse_.SetVertexCommWeight(edge.second, 0);
 
-    G_coarse.SetVertexMemWeight(edge.first, G_coarse.VertexMemWeight(edge.first) + G_coarse.VertexMemWeight(edge.second));
-    G_coarse.SetVertexMemWeight(edge.second, 0);
+    gCoarse_.SetVertexMemWeight(edge.first, gCoarse_.VertexMemWeight(edge.first) + gCoarse_.VertexMemWeight(edge.second));
+    gCoarse_.SetVertexMemWeight(edge.second, 0);
 
-    contractionHistory.emplace_back(edge.first, edge.second);
+    contractionHistory_.emplace_back(edge.first, edge.second);
 
     // process incoming edges
-    std::set<VertexIdx> parents_of_source;
-    for (VertexIdx pred : G_coarse.Parents(edge.first)) {
-        parents_of_source.insert(pred);
+    std::set<VertexIdx> parentsOfSource;
+    for (VertexIdx pred : gCoarse_.Parents(edge.first)) {
+        parentsOfSource.insert(pred);
     }
 
-    for (VertexIdx pred : G_coarse.Parents(edge.second)) {
+    for (VertexIdx pred : gCoarse_.Parents(edge.second)) {
         if (pred == edge.first) {
             continue;
         }
-        if (parents_of_source.find(pred) != parents_of_source.end())    // combine edges
+        if (parentsOfSource.find(pred) != parentsOfSource.end())    // combine edges
         {
-            edgeWeights[std::make_pair(pred, edge.first)] = 0;
-            for (VertexIdx node : contains[pred]) {
-                for (VertexIdx succ : G_coarse.Children(node)) {
+            edgeWeights_[std::make_pair(pred, edge.first)] = 0;
+            for (VertexIdx node : contains_[pred]) {
+                for (VertexIdx succ : gCoarse_.Children(node)) {
                     if (succ == edge.first || succ == edge.second) {
-                        edgeWeights[std::make_pair(pred, edge.first)] += G_full.VertexCommWeight(node);
+                        edgeWeights_[std::make_pair(pred, edge.first)] += gFull_.VertexCommWeight(node);
                     }
                 }
             }
 
-            edgeWeights.erase(std::make_pair(pred, edge.second));
+            edgeWeights_.erase(std::make_pair(pred, edge.second));
         } else    // add incoming edge
         {
-            G_coarse.AddEdge(pred, edge.first);
-            edgeWeights[std::make_pair(pred, edge.first)] = edgeWeights[std::make_pair(pred, edge.second)];
+            gCoarse_.AddEdge(pred, edge.first);
+            edgeWeights_[std::make_pair(pred, edge.first)] = edgeWeights_[std::make_pair(pred, edge.second)];
         }
     }
 
     // process outgoing edges
-    std::set<VertexIdx> children_of_source;
-    for (VertexIdx succ : G_coarse.Children(edge.first)) {
-        children_of_source.insert(succ);
+    std::set<VertexIdx> childrenOfSource;
+    for (VertexIdx succ : gCoarse_.Children(edge.first)) {
+        childrenOfSource.insert(succ);
     }
 
-    for (VertexIdx succ : G_coarse.Children(edge.second)) {
-        if (children_of_source.find(succ) != children_of_source.end())    // combine edges
+    for (VertexIdx succ : gCoarse_.Children(edge.second)) {
+        if (childrenOfSource.find(succ) != childrenOfSource.end())    // combine edges
         {
-            edgeWeights[std::make_pair(edge.first, succ)] += edgeWeights[std::make_pair(edge.second, succ)];
-            edgeWeights.erase(std::make_pair(edge.second, succ));
+            edgeWeights_[std::make_pair(edge.first, succ)] += edgeWeights_[std::make_pair(edge.second, succ)];
+            edgeWeights_.erase(std::make_pair(edge.second, succ));
         } else    // add outgoing edge
         {
-            G_coarse.AddEdge(edge.first, succ);
-            edgeWeights[std::make_pair(edge.first, succ)] = edgeWeights[std::make_pair(edge.second, succ)];
+            gCoarse_.AddEdge(edge.first, succ);
+            edgeWeights_[std::make_pair(edge.first, succ)] = edgeWeights_[std::make_pair(edge.second, succ)];
         }
     }
 
-    G_coarse.ClearVertex(edge.second);
+    gCoarse_.ClearVertex(edge.second);
 
-    for (VertexIdx node : contains[edge.second]) {
-        contains[edge.first].insert(node);
+    for (VertexIdx node : contains_[edge.second]) {
+        contains_[edge.first].insert(node);
     }
 
-    contains[edge.second].clear();
+    contains_[edge.second].clear();
 }
 
 template <typename GraphT>
 bool StepByStepCoarser<GraphT>::IsContractable(std::pair<VertexIdx, VertexIdx> edge) const {
-    std::deque<VertexIdx> Queue;
+    std::deque<VertexIdx> queue;
     std::set<VertexIdx> visited;
-    for (VertexIdx succ : G_coarse.Children(edge.first)) {
-        if (node_valid[succ] && top_order_idx[succ] < top_order_idx[edge.second]) {
-            Queue.push_back(succ);
+    for (VertexIdx succ : gCoarse_.Children(edge.first)) {
+        if (nodeValid_[succ] && topOrderIdx_[succ] < topOrderIdx_[edge.second]) {
+            queue.push_back(succ);
             visited.insert(succ);
         }
     }
 
-    while (!Queue.empty()) {
-        const VertexIdx node = Queue.front();
-        Queue.pop_front();
-        for (VertexIdx succ : G_coarse.Children(node)) {
+    while (!queue.empty()) {
+        const VertexIdx node = queue.front();
+        queue.pop_front();
+        for (VertexIdx succ : gCoarse_.Children(node)) {
             if (succ == edge.second) {
                 return false;
             }
 
-            if (node_valid[succ] && top_order_idx[succ] < top_order_idx[edge.second] && visited.count(succ) == 0) {
-                Queue.push_back(succ);
+            if (nodeValid_[succ] && topOrderIdx_[succ] < topOrderIdx_[edge.second] && visited.count(succ) == 0) {
+                queue.push_back(succ);
                 visited.insert(succ);
             }
         }
@@ -361,88 +361,88 @@ bool StepByStepCoarser<GraphT>::IsContractable(std::pair<VertexIdx, VertexIdx> e
 
 template <typename GraphT>
 std::set<VertexIdxT<GraphT>> StepByStepCoarser<GraphT>::GetContractableChildren(const VertexIdx node) const {
-    std::deque<VertexIdx> Queue;
+    std::deque<VertexIdx> queue;
     std::set<VertexIdx> visited;
-    std::set<VertexIdx> succ_contractable;
-    VertexIdx topOrderMax = top_order_idx[node];
+    std::set<VertexIdx> succContractable;
+    VertexIdx topOrderMax = topOrderIdx_[node];
 
-    for (VertexIdx succ : G_coarse.Children(node)) {
-        if (node_valid[succ]) {
-            succ_contractable.insert(succ);
+    for (VertexIdx succ : gCoarse_.Children(node)) {
+        if (nodeValid_[succ]) {
+            succContractable.insert(succ);
         }
 
-        if (top_order_idx[succ] > topOrderMax) {
-            topOrderMax = top_order_idx[succ];
+        if (topOrderIdx_[succ] > topOrderMax) {
+            topOrderMax = topOrderIdx_[succ];
         }
 
-        if (node_valid[succ]) {
-            Queue.push_back(succ);
+        if (nodeValid_[succ]) {
+            queue.push_back(succ);
             visited.insert(succ);
         }
     }
 
-    while (!Queue.empty()) {
-        const VertexIdx node_local = Queue.front();
-        Queue.pop_front();
-        for (VertexIdx succ : G_coarse.Children(node_local)) {
-            succ_contractable.erase(succ);
+    while (!queue.empty()) {
+        const VertexIdx nodeLocal = queue.front();
+        queue.pop_front();
+        for (VertexIdx succ : gCoarse_.Children(nodeLocal)) {
+            succContractable.erase(succ);
 
-            if (node_valid[succ] && top_order_idx[succ] < topOrderMax && visited.count(succ) == 0) {
-                Queue.push_back(succ);
+            if (nodeValid_[succ] && topOrderIdx_[succ] < topOrderMax && visited.count(succ) == 0) {
+                queue.push_back(succ);
                 visited.insert(succ);
             }
         }
     }
 
-    return succ_contractable;
+    return succContractable;
 }
 
 template <typename GraphT>
 std::set<VertexIdxT<GraphT>> StepByStepCoarser<GraphT>::GetContractableParents(const VertexIdx node) const {
-    std::deque<VertexIdx> Queue;
+    std::deque<VertexIdx> queue;
     std::set<VertexIdx> visited;
-    std::set<VertexIdx> pred_contractable;
-    VertexIdx topOrderMin = top_order_idx[node];
+    std::set<VertexIdx> predContractable;
+    VertexIdx topOrderMin = topOrderIdx_[node];
 
-    for (VertexIdx pred : G_coarse.Parents(node)) {
-        if (node_valid[pred]) {
-            pred_contractable.insert(pred);
+    for (VertexIdx pred : gCoarse_.Parents(node)) {
+        if (nodeValid_[pred]) {
+            predContractable.insert(pred);
         }
 
-        if (top_order_idx[pred] < topOrderMin) {
-            topOrderMin = top_order_idx[pred];
+        if (topOrderIdx_[pred] < topOrderMin) {
+            topOrderMin = topOrderIdx_[pred];
         }
 
-        if (node_valid[pred]) {
-            Queue.push_back(pred);
+        if (nodeValid_[pred]) {
+            queue.push_back(pred);
             visited.insert(pred);
         }
     }
 
-    while (!Queue.empty()) {
-        const VertexIdx node_local = Queue.front();
-        Queue.pop_front();
-        for (VertexIdx pred : G_coarse.Parents(node_local)) {
-            pred_contractable.erase(pred);
+    while (!queue.empty()) {
+        const VertexIdx nodeLocal = queue.front();
+        queue.pop_front();
+        for (VertexIdx pred : gCoarse_.Parents(nodeLocal)) {
+            predContractable.erase(pred);
 
-            if (node_valid[pred] && top_order_idx[pred] > topOrderMin && visited.count(pred) == 0) {
-                Queue.push_back(pred);
+            if (nodeValid_[pred] && topOrderIdx_[pred] > topOrderMin && visited.count(pred) == 0) {
+                queue.push_back(pred);
                 visited.insert(pred);
             }
         }
     }
 
-    return pred_contractable;
+    return predContractable;
 }
 
 template <typename GraphT>
 void StepByStepCoarser<GraphT>::InitializeContractableEdges() {
     ComputeFilteredTopOrderIdx();
 
-    for (VertexIdx node = 0; node < G_full.NumVertices(); ++node) {
-        std::set<VertexIdx> succ_contractable = GetContractableChildren(node);
-        for (VertexIdx succ : succ_contractable) {
-            contractable[std::make_pair(node, succ)] = G_full.VertexCommWeight(node);
+    for (VertexIdx node = 0; node < gFull_.NumVertices(); ++node) {
+        std::set<VertexIdx> succContractable = GetContractableChildren(node);
+        for (VertexIdx succ : succContractable) {
+            contractable_[std::make_pair(node, succ)] = gFull_.VertexCommWeight(node);
         }
     }
 }
@@ -450,45 +450,45 @@ void StepByStepCoarser<GraphT>::InitializeContractableEdges() {
 template <typename GraphT>
 void StepByStepCoarser<GraphT>::UpdateDistantEdgeContractibility(std::pair<VertexIdx, VertexIdx> edge) {
     std::unordered_set<VertexIdx> ancestors, descendant;
-    std::deque<VertexIdx> Queue;
-    for (VertexIdx succ : G_coarse.Children(edge.first)) {
+    std::deque<VertexIdx> queue;
+    for (VertexIdx succ : gCoarse_.Children(edge.first)) {
         if (succ != edge.second) {
-            Queue.push_back(succ);
+            queue.push_back(succ);
             descendant.insert(succ);
         }
     }
-    while (!Queue.empty()) {
-        const VertexIdx node = Queue.front();
-        Queue.pop_front();
-        for (VertexIdx succ : G_coarse.Children(node)) {
+    while (!queue.empty()) {
+        const VertexIdx node = queue.front();
+        queue.pop_front();
+        for (VertexIdx succ : gCoarse_.Children(node)) {
             if (descendant.count(succ) == 0) {
-                Queue.push_back(succ);
+                queue.push_back(succ);
                 descendant.insert(succ);
             }
         }
     }
 
-    for (VertexIdx pred : G_coarse.Parents(edge.second)) {
+    for (VertexIdx pred : gCoarse_.Parents(edge.second)) {
         if (pred != edge.first) {
-            Queue.push_back(pred);
+            queue.push_back(pred);
             ancestors.insert(pred);
         }
     }
-    while (!Queue.empty()) {
-        const VertexIdx node = Queue.front();
-        Queue.pop_front();
-        for (VertexIdx pred : G_coarse.Parents(node)) {
+    while (!queue.empty()) {
+        const VertexIdx node = queue.front();
+        queue.pop_front();
+        for (VertexIdx pred : gCoarse_.Parents(node)) {
             if (ancestors.count(pred) == 0) {
-                Queue.push_back(pred);
+                queue.push_back(pred);
                 ancestors.insert(pred);
             }
         }
     }
 
     for (const VertexIdx node : ancestors) {
-        for (const VertexIdx succ : G_coarse.Children(node)) {
+        for (const VertexIdx succ : gCoarse_.Children(node)) {
             if (descendant.count(succ) > 0) {
-                contractable.erase(std::make_pair(node, succ));
+                contractable_.erase(std::make_pair(node, succ));
             }
         }
     }
@@ -498,13 +498,13 @@ template <typename GraphT>
 std::vector<typename StepByStepCoarser<GraphT>::EdgeToContract> StepByStepCoarser<GraphT>::CreateEdgeCandidateList() const {
     std::vector<EdgeToContract> candidates;
 
-    for (auto it = contractable.cbegin(); it != contractable.cend(); ++it) {
+    for (auto it = contractable_.cbegin(); it != contractable_.cend(); ++it) {
         if (problemType_ == ProblemType::PEBBLING && IncontractableForPebbling(it->first)) {
             continue;
         }
 
         candidates.emplace_back(
-            it->first.first, it->first.second, contains[it->first.first].size() + contains[it->first.second].size(), it->second);
+            it->first.first, it->first.second, contains_[it->first.first].size() + contains_[it->first.second].size(), it->second);
     }
 
     std::sort(candidates.begin(), candidates.end());
@@ -545,22 +545,22 @@ std::pair<VertexIdxT<GraphT>, VertexIdxT<GraphT>> StepByStepCoarser<GraphT>::Pic
  */
 template <typename GraphT>
 std::vector<std::pair<VertexIdxT<GraphT>, VertexIdxT<GraphT>>> StepByStepCoarser<GraphT>::ClusterCoarsen() const {
-    std::vector<bool> singleton(G_full.NumVertices(), true);
-    std::vector<VertexIdx> leader(G_full.NumVertices());
-    std::vector<unsigned> weight(G_full.NumVertices());
-    std::vector<unsigned> nrBadNeighbors(G_full.NumVertices());
-    std::vector<VertexIdx> leaderBadNeighbors(G_full.NumVertices());
+    std::vector<bool> singleton(gFull_.NumVertices(), true);
+    std::vector<VertexIdx> leader(gFull_.NumVertices());
+    std::vector<unsigned> weight(gFull_.NumVertices());
+    std::vector<unsigned> nrBadNeighbors(gFull_.NumVertices());
+    std::vector<VertexIdx> leaderBadNeighbors(gFull_.NumVertices());
 
-    std::vector<unsigned> minTopLevel(G_full.NumVertices());
-    std::vector<unsigned> maxTopLevel(G_full.NumVertices());
-    std::vector<VertexIdx> clusterNewID(G_full.NumVertices());
+    std::vector<unsigned> minTopLevel(gFull_.NumVertices());
+    std::vector<unsigned> maxTopLevel(gFull_.NumVertices());
+    std::vector<VertexIdx> clusterNewID(gFull_.NumVertices());
 
     std::vector<std::pair<VertexIdx, VertexIdx>> contractionSteps;
     std::vector<unsigned> topLevel = ComputeFilteredTopLevel();
-    for (VertexIdx node = 0; node < G_full.NumVertices(); ++node) {
-        if (node_valid[node]) {
+    for (VertexIdx node = 0; node < gFull_.NumVertices(); ++node) {
+        if (nodeValid_[node]) {
             leader[node] = node;
-            weight[node] = 1 /*G_coarse.vertex_work_weight(node)*/;
+            weight[node] = 1 /*gCoarse_.vertex_work_weight(node)*/;
             nrBadNeighbors[node] = 0;
             leaderBadNeighbors[node] = UINT_MAX;
             clusterNewID[node] = node;
@@ -569,8 +569,8 @@ std::vector<std::pair<VertexIdxT<GraphT>, VertexIdxT<GraphT>>> StepByStepCoarser
         }
     }
 
-    for (VertexIdx node = 0; node < G_full.NumVertices(); ++node) {
-        if (!node_valid[node] || !singleton[node]) {
+    for (VertexIdx node = 0; node < gFull_.NumVertices(); ++node) {
+        if (!nodeValid_[node] || !singleton[node]) {
             continue;
         }
 
@@ -579,7 +579,7 @@ std::vector<std::pair<VertexIdxT<GraphT>, VertexIdxT<GraphT>>> StepByStepCoarser
         }
 
         std::vector<VertexIdx> validNeighbors;
-        for (VertexIdx pred : G_coarse.Parents(node)) {
+        for (VertexIdx pred : gCoarse_.Parents(node)) {
             // direct check of condition 1
             if (topLevel[node] < maxTopLevel[leader[pred]] - 1 || topLevel[node] > minTopLevel[leader[pred]] + 1) {
                 continue;
@@ -600,7 +600,7 @@ std::vector<std::pair<VertexIdxT<GraphT>, VertexIdxT<GraphT>>> StepByStepCoarser
 
             validNeighbors.push_back(pred);
         }
-        for (VertexIdx succ : G_coarse.Children(node)) {
+        for (VertexIdx succ : gCoarse_.Children(node)) {
             // direct check of condition 1
             if (topLevel[node] < maxTopLevel[leader[succ]] - 1 || topLevel[node] > minTopLevel[leader[succ]] + 1) {
                 continue;
@@ -637,14 +637,14 @@ std::vector<std::pair<VertexIdxT<GraphT>, VertexIdxT<GraphT>>> StepByStepCoarser
         leader[node] = newLead;
         weight[newLead] += weight[node];
 
-        bool is_parent = false;
-        for (VertexIdx pred : G_coarse.Parents(node)) {
+        bool isParent = false;
+        for (VertexIdx pred : gCoarse_.Parents(node)) {
             if (pred == bestNeighbor) {
-                is_parent = true;
+                isParent = true;
             }
         }
 
-        if (is_parent) {
+        if (isParent) {
             contractionSteps.emplace_back(clusterNewID[newLead], node);
         } else {
             contractionSteps.emplace_back(node, clusterNewID[newLead]);
@@ -654,7 +654,7 @@ std::vector<std::pair<VertexIdxT<GraphT>, VertexIdxT<GraphT>>> StepByStepCoarser
         minTopLevel[newLead] = std::min(minTopLevel[newLead], topLevel[node]);
         maxTopLevel[newLead] = std::max(maxTopLevel[newLead], topLevel[node]);
 
-        for (VertexIdx pred : G_coarse.Parents(node)) {
+        for (VertexIdx pred : gCoarse_.Parents(node)) {
             if (std::abs(static_cast<int>(topLevel[pred]) - static_cast<int>(maxTopLevel[newLead])) != 1
                 && std::abs(static_cast<int>(topLevel[pred]) - static_cast<int>(minTopLevel[newLead])) != 1) {
                 continue;
@@ -667,7 +667,7 @@ std::vector<std::pair<VertexIdxT<GraphT>, VertexIdxT<GraphT>>> StepByStepCoarser
                 ++nrBadNeighbors[pred];
             }
         }
-        for (VertexIdx succ : G_coarse.Children(node)) {
+        for (VertexIdx succ : gCoarse_.Children(node)) {
             if (std::abs(static_cast<int>(topLevel[succ]) - static_cast<int>(maxTopLevel[newLead])) != 1
                 && std::abs(static_cast<int>(topLevel[succ]) - static_cast<int>(minTopLevel[newLead])) != 1) {
                 continue;
@@ -682,7 +682,7 @@ std::vector<std::pair<VertexIdxT<GraphT>, VertexIdxT<GraphT>>> StepByStepCoarser
         }
 
         if (singleton[bestNeighbor]) {
-            for (VertexIdx pred : G_coarse.Parents(bestNeighbor)) {
+            for (VertexIdx pred : gCoarse_.Parents(bestNeighbor)) {
                 if (std::abs(static_cast<int>(topLevel[pred]) - static_cast<int>(maxTopLevel[newLead])) != 1
                     && std::abs(static_cast<int>(topLevel[pred]) - static_cast<int>(minTopLevel[newLead])) != 1) {
                     continue;
@@ -695,7 +695,7 @@ std::vector<std::pair<VertexIdxT<GraphT>, VertexIdxT<GraphT>>> StepByStepCoarser
                     ++nrBadNeighbors[pred];
                 }
             }
-            for (VertexIdx succ : G_coarse.Children(bestNeighbor)) {
+            for (VertexIdx succ : gCoarse_.Children(bestNeighbor)) {
                 if (std::abs(static_cast<int>(topLevel[succ]) - static_cast<int>(maxTopLevel[newLead])) != 1
                     && std::abs(static_cast<int>(topLevel[succ]) - static_cast<int>(minTopLevel[newLead])) != 1) {
                     continue;
@@ -718,98 +718,98 @@ std::vector<std::pair<VertexIdxT<GraphT>, VertexIdxT<GraphT>>> StepByStepCoarser
 
 template <typename GraphT>
 std::vector<unsigned> StepByStepCoarser<GraphT>::ComputeFilteredTopLevel() const {
-    std::vector<unsigned> TopLevel(G_full.NumVertices());
-    for (const VertexIdx node : TopSortView(G_coarse)) {
-        if (!node_valid[node]) {
+    std::vector<unsigned> topLevel(gFull_.NumVertices());
+    for (const VertexIdx node : TopSortView(gCoarse_)) {
+        if (!nodeValid_[node]) {
             continue;
         }
 
-        TopLevel[node] = 0;
-        for (const VertexIdx pred : G_coarse.Parents(node)) {
-            TopLevel[node] = std::max(TopLevel[node], TopLevel[pred] + 1);
+        topLevel[node] = 0;
+        for (const VertexIdx pred : gCoarse_.Parents(node)) {
+            topLevel[node] = std::max(topLevel[node], topLevel[pred] + 1);
         }
     }
-    return TopLevel;
+    return topLevel;
 }
 
 template <typename GraphT>
 void StepByStepCoarser<GraphT>::ComputeFilteredTopOrderIdx() {
-    top_order_idx = GetFilteredTopOrderIdx(G_coarse, node_valid);
+    topOrderIdx_ = GetFilteredTopOrderIdx(gCoarse_, nodeValid_);
 }
 
 template <typename GraphT>
-std::vector<VertexIdxT<GraphT>> StepByStepCoarser<GraphT>::GetFilteredTopOrderIdx(const GraphT &G,
-                                                                                  const std::vector<bool> &is_valid) {
-    std::vector<VertexIdx> top_order = GetFilteredTopOrder(is_valid, G);
-    std::vector<VertexIdx> idx(G.NumVertices());
-    for (VertexIdx node = 0; node < top_order.size(); ++node) {
-        idx[top_order[node]] = node;
+std::vector<VertexIdxT<GraphT>> StepByStepCoarser<GraphT>::GetFilteredTopOrderIdx(const GraphT &g,
+                                                                                  const std::vector<bool> &isValid) {
+    std::vector<VertexIdx> topOrder = GetFilteredTopOrder(isValid, g);
+    std::vector<VertexIdx> idx(g.NumVertices());
+    for (VertexIdx node = 0; node < topOrder.size(); ++node) {
+        idx[topOrder[node]] = node;
     }
     return idx;
 }
 
 template <typename GraphT>
-void StepByStepCoarser<GraphT>::CoarsenForPebbling(const GraphT &dag_in,
-                                                   GraphT &coarsened_dag,
-                                                   std::vector<VertexIdxT<GraphT>> &new_vertex_id) {
+void StepByStepCoarser<GraphT>::CoarsenForPebbling(const GraphT &dagIn,
+                                                   GraphT &coarsenedDag,
+                                                   std::vector<VertexIdxT<GraphT>> &newVertexId) {
     problemType_ = ProblemType::PEBBLING;
     coarseningStrategy_ = CoarseningStrategy::EDGE_BY_EDGE;
 
-    unsigned nr_sources = 0;
-    for (VertexIdx node = 0; node < dag_in.NumVertices(); ++node) {
-        if (dag_in.InDegree(node) == 0) {
-            ++nr_sources;
+    unsigned nrSources = 0;
+    for (VertexIdx node = 0; node < dagIn.NumVertices(); ++node) {
+        if (dagIn.InDegree(node) == 0) {
+            ++nrSources;
         }
     }
 
-    target_nr_of_nodes = std::max(target_nr_of_nodes, nr_sources + 1);
+    targetNrOfNodes_ = std::max(targetNrOfNodes_, nrSources + 1);
 
-    CoarserGenContractionMap<GraphT, GraphT>::CoarsenDag(dag_in, coarsened_dag, new_vertex_id);
+    CoarserGenContractionMap<GraphT, GraphT>::CoarsenDag(dagIn, coarsenedDag, newVertexId);
 }
 
 template <typename GraphT>
 bool StepByStepCoarser<GraphT>::IncontractableForPebbling(const std::pair<VertexIdx, VertexIdx> &edge) const {
-    if (G_coarse.InDegree(edge.first) == 0) {
+    if (gCoarse_.InDegree(edge.first) == 0) {
         return true;
     }
 
-    VMemwT<GraphT> sum_weight = G_coarse.VertexMemWeight(edge.first) + G_coarse.VertexMemWeight(edge.second);
+    VMemwT<GraphT> sumWeight = gCoarse_.VertexMemWeight(edge.first) + gCoarse_.VertexMemWeight(edge.second);
     std::set<VertexIdx> parents;
-    for (VertexIdx pred : G_coarse.Parents(edge.first)) {
+    for (VertexIdx pred : gCoarse_.Parents(edge.first)) {
         parents.insert(pred);
     }
-    for (VertexIdx pred : G_coarse.Parents(edge.second)) {
+    for (VertexIdx pred : gCoarse_.Parents(edge.second)) {
         if (pred != edge.first) {
             parents.insert(pred);
         }
     }
     for (VertexIdx node : parents) {
-        sum_weight += G_coarse.VertexMemWeight(node);
+        sumWeight += gCoarse_.VertexMemWeight(node);
     }
 
-    if (sum_weight > fast_mem_capacity) {
+    if (sumWeight > fastMemCapacity_) {
         return true;
     }
 
     std::set<VertexIdx> children;
-    for (VertexIdx succ : G_coarse.Children(edge.second)) {
+    for (VertexIdx succ : gCoarse_.Children(edge.second)) {
         children.insert(succ);
     }
-    for (VertexIdx succ : G_coarse.Children(edge.first)) {
+    for (VertexIdx succ : gCoarse_.Children(edge.first)) {
         if (succ != edge.second) {
             children.insert(succ);
         }
     }
 
     for (VertexIdx child : children) {
-        sum_weight = G_coarse.VertexMemWeight(edge.first) + G_coarse.VertexMemWeight(edge.second) + G_coarse.VertexMemWeight(child);
-        for (VertexIdx pred : G_coarse.Parents(child)) {
+        sumWeight = gCoarse_.VertexMemWeight(edge.first) + gCoarse_.VertexMemWeight(edge.second) + gCoarse_.VertexMemWeight(child);
+        for (VertexIdx pred : gCoarse_.Parents(child)) {
             if (pred != edge.first && pred != edge.second) {
-                sum_weight += G_coarse.VertexMemWeight(pred);
+                sumWeight += gCoarse_.VertexMemWeight(pred);
             }
         }
 
-        if (sum_weight > fast_mem_capacity) {
+        if (sumWeight > fastMemCapacity_) {
             return true;
         }
     }
@@ -819,93 +819,93 @@ bool StepByStepCoarser<GraphT>::IncontractableForPebbling(const std::pair<Vertex
 template <typename GraphT>
 void StepByStepCoarser<GraphT>::MergeSourcesInPebbling() {
     // initialize memory requirement sums to check viability later
-    std::vector<VMemwT<GraphT>> memory_sum(G_coarse.NumVertices(), 0);
+    std::vector<VMemwT<GraphT>> memorySum(gCoarse_.NumVertices(), 0);
     std::vector<VertexIdx> sources;
-    for (VertexIdx node = 0; node < G_coarse.NumVertices(); ++node) {
-        if (!node_valid[node]) {
+    for (VertexIdx node = 0; node < gCoarse_.NumVertices(); ++node) {
+        if (!nodeValid_[node]) {
             continue;
         }
 
-        if (G_coarse.InDegree(node) > 0) {
-            memory_sum[node] = G_coarse.VertexMemWeight(node);
-            for (VertexIdx pred : G_coarse.Parents(node)) {
-                memory_sum[node] += G_coarse.VertexMemWeight(pred);
+        if (gCoarse_.InDegree(node) > 0) {
+            memorySum[node] = gCoarse_.VertexMemWeight(node);
+            for (VertexIdx pred : gCoarse_.Parents(node)) {
+                memorySum[node] += gCoarse_.VertexMemWeight(pred);
             }
         } else {
             sources.push_back(node);
         }
     }
 
-    std::set<VertexIdx> invalidated_sources;
-    bool could_merge = true;
-    while (could_merge) {
-        could_merge = false;
+    std::set<VertexIdx> invalidatedSources;
+    bool couldMerge = true;
+    while (couldMerge) {
+        couldMerge = false;
         for (unsigned idx1 = 0; idx1 < sources.size(); ++idx1) {
-            VertexIdx source_a = sources[idx1];
-            if (invalidated_sources.find(source_a) != invalidated_sources.end()) {
+            VertexIdx sourceA = sources[idx1];
+            if (invalidatedSources.find(sourceA) != invalidatedSources.end()) {
                 continue;
             }
 
             for (unsigned idx2 = idx1 + 1; idx2 < sources.size(); ++idx2) {
-                VertexIdx source_b = sources[idx2];
-                if (invalidated_sources.find(source_b) != invalidated_sources.end()) {
+                VertexIdx sourceB = sources[idx2];
+                if (invalidatedSources.find(sourceB) != invalidatedSources.end()) {
                     continue;
                 }
 
-                // check if we can merge source_a and source_b
-                std::set<VertexIdx> a_children, b_children;
-                for (VertexIdx succ : G_coarse.Children(source_a)) {
-                    a_children.insert(succ);
+                // check if we can merge sourceA and sourceB
+                std::set<VertexIdx> aChildren, bChildren;
+                for (VertexIdx succ : gCoarse_.Children(sourceA)) {
+                    aChildren.insert(succ);
                 }
-                for (VertexIdx succ : G_coarse.Children(source_b)) {
-                    b_children.insert(succ);
+                for (VertexIdx succ : gCoarse_.Children(sourceB)) {
+                    bChildren.insert(succ);
                 }
 
-                std::set<VertexIdx> only_a, only_b, both;
-                for (VertexIdx succ : G_coarse.Children(source_a)) {
-                    if (b_children.find(succ) == b_children.end()) {
-                        only_a.insert(succ);
+                std::set<VertexIdx> onlyA, onlyB, both;
+                for (VertexIdx succ : gCoarse_.Children(sourceA)) {
+                    if (bChildren.find(succ) == bChildren.end()) {
+                        onlyA.insert(succ);
                     } else {
                         both.insert(succ);
                     }
                 }
-                for (VertexIdx succ : G_coarse.Children(source_b)) {
-                    if (a_children.find(succ) == a_children.end()) {
-                        only_b.insert(succ);
+                for (VertexIdx succ : gCoarse_.Children(sourceB)) {
+                    if (aChildren.find(succ) == aChildren.end()) {
+                        onlyB.insert(succ);
                     }
                 }
 
-                bool violates_constraint = false;
-                for (VertexIdx node : only_a) {
-                    if (memory_sum[node] + G_coarse.VertexMemWeight(source_b) > fast_mem_capacity) {
-                        violates_constraint = true;
+                bool violatesConstraint = false;
+                for (VertexIdx node : onlyA) {
+                    if (memorySum[node] + gCoarse_.VertexMemWeight(sourceB) > fastMemCapacity_) {
+                        violatesConstraint = true;
                     }
                 }
-                for (VertexIdx node : only_b) {
-                    if (memory_sum[node] + G_coarse.VertexMemWeight(source_a) > fast_mem_capacity) {
-                        violates_constraint = true;
+                for (VertexIdx node : onlyB) {
+                    if (memorySum[node] + gCoarse_.VertexMemWeight(sourceA) > fastMemCapacity_) {
+                        violatesConstraint = true;
                     }
                 }
 
-                if (violates_constraint) {
+                if (violatesConstraint) {
                     continue;
                 }
 
-                // check if we want to merge source_a and source_b
-                double sim_diff = (only_a.size() + only_b.size() == 0) ? 0.0001
-                                                                       : static_cast<double>(only_a.size() + only_b.size());
-                double ratio = static_cast<double>(both.size()) / sim_diff;
+                // check if we want to merge sourceA and sourceB
+                double simDiff = (onlyA.size() + onlyB.size() == 0) ? 0.0001
+                                                                       : static_cast<double>(onlyA.size() + onlyB.size());
+                double ratio = static_cast<double>(both.size()) / simDiff;
 
                 if (ratio > 2) {
-                    ContractSingleEdge(std::make_pair(source_a, source_b));
-                    invalidated_sources.insert(source_b);
-                    could_merge = true;
+                    ContractSingleEdge(std::make_pair(sourceA, sourceB));
+                    invalidatedSources.insert(sourceB);
+                    couldMerge = true;
 
-                    for (VertexIdx node : only_a) {
-                        memory_sum[node] += G_coarse.VertexMemWeight(source_b);
+                    for (VertexIdx node : onlyA) {
+                        memorySum[node] += gCoarse_.VertexMemWeight(sourceB);
                     }
-                    for (VertexIdx node : only_b) {
-                        memory_sum[node] += G_coarse.VertexMemWeight(source_a);
+                    for (VertexIdx node : onlyB) {
+                        memorySum[node] += gCoarse_.VertexMemWeight(sourceA);
                     }
                 }
             }
@@ -914,110 +914,110 @@ void StepByStepCoarser<GraphT>::MergeSourcesInPebbling() {
 }
 
 template <typename GraphT>
-GraphT StepByStepCoarser<GraphT>::Contract(const std::vector<VertexIdxT<GraphT>> &new_vertex_id) const {
-    GraphT G_contracted;
-    std::vector<bool> is_valid(G_full.NumVertices(), false);
-    for (VertexIdx node = 0; node < G_full.NumVertices(); ++node) {
-        is_valid[new_vertex_id[node]] = true;
+GraphT StepByStepCoarser<GraphT>::Contract(const std::vector<VertexIdxT<GraphT>> &newVertexId) const {
+    GraphT gContracted;
+    std::vector<bool> isValid(gFull_.NumVertices(), false);
+    for (VertexIdx node = 0; node < gFull_.NumVertices(); ++node) {
+        isValid[newVertexId[node]] = true;
     }
 
-    for (VertexIdx node = 0; node < G_full.NumVertices(); ++node) {
-        if (is_valid[node]) {
-            G_contracted.AddVertex(0, 0, 0, 0);
+    for (VertexIdx node = 0; node < gFull_.NumVertices(); ++node) {
+        if (isValid[node]) {
+            gContracted.AddVertex(0, 0, 0, 0);
         }
     }
 
-    for (VertexIdx node = 0; node < G_full.NumVertices(); ++node) {
-        G_contracted.SetVertexWorkWeight(new_vertex_id[node],
-                                         G_contracted.VertexWorkWeight(new_vertex_id[node]) + G_full.VertexWorkWeight(node));
-        G_contracted.SetVertexCommWeight(new_vertex_id[node],
-                                         G_contracted.VertexCommWeight(new_vertex_id[node]) + G_full.VertexCommWeight(node));
-        G_contracted.SetVertexMemWeight(new_vertex_id[node],
-                                        G_contracted.VertexMemWeight(new_vertex_id[node]) + G_full.VertexMemWeight(node));
-        G_contracted.SetVertexType(new_vertex_id[node], G_full.VertexType(node));
+    for (VertexIdx node = 0; node < gFull_.NumVertices(); ++node) {
+        gContracted.SetVertexWorkWeight(newVertexId[node],
+                                         gContracted.VertexWorkWeight(newVertexId[node]) + gFull_.VertexWorkWeight(node));
+        gContracted.SetVertexCommWeight(newVertexId[node],
+                                         gContracted.VertexCommWeight(newVertexId[node]) + gFull_.VertexCommWeight(node));
+        gContracted.SetVertexMemWeight(newVertexId[node],
+                                        gContracted.VertexMemWeight(newVertexId[node]) + gFull_.VertexMemWeight(node));
+        gContracted.SetVertexType(newVertexId[node], gFull_.VertexType(node));
     }
 
-    for (VertexIdx node = 0; node < G_full.NumVertices(); ++node) {
-        for (const auto &out_edge : OutEdges(node, G_full)) {
-            const VertexIdx succ = Target(out_edge, G_full);
+    for (VertexIdx node = 0; node < gFull_.NumVertices(); ++node) {
+        for (const auto &outEdge : OutEdges(node, gFull_)) {
+            const VertexIdx succ = Target(outEdge, gFull_);
 
-            if (new_vertex_id[node] == new_vertex_id[succ]) {
+            if (newVertexId[node] == newVertexId[succ]) {
                 continue;
             }
 
             if constexpr (HasEdgeWeightsV<GraphT>) {
-                const auto pair = EdgeDesc(new_vertex_id[node], new_vertex_id[succ], G_contracted);
+                const auto pair = EdgeDesc(newVertexId[node], newVertexId[succ], gContracted);
 
                 if (pair.second) {
-                    G_contracted.SetEdgeCommWeight(pair.first,
-                                                   G_contracted.EdgeCommWeight(pair.first) + G_full.EdgeCommWeight(out_edge));
+                    gContracted.SetEdgeCommWeight(pair.first,
+                                                   gContracted.EdgeCommWeight(pair.first) + gFull_.EdgeCommWeight(outEdge));
                 } else {
-                    G_contracted.AddEdge(new_vertex_id[node], new_vertex_id[succ], G_full.EdgeCommWeight(out_edge));
+                    gContracted.AddEdge(newVertexId[node], newVertexId[succ], gFull_.EdgeCommWeight(outEdge));
                 }
 
             } else {
-                if (not Edge(new_vertex_id[node], new_vertex_id[succ], G_contracted)) {
-                    G_contracted.AddEdge(new_vertex_id[node], new_vertex_id[succ]);
+                if (not Edge(newVertexId[node], newVertexId[succ], gContracted)) {
+                    gContracted.AddEdge(newVertexId[node], newVertexId[succ]);
                 }
             }
         }
     }
 
-    return G_contracted;
+    return gContracted;
 }
 
 template <typename GraphT>
-void StepByStepCoarser<GraphT>::SetIdVector(std::vector<VertexIdxT<GraphT>> &new_vertex_id) const {
-    new_vertex_id.clear();
-    new_vertex_id.resize(G_full.NumVertices());
+void StepByStepCoarser<GraphT>::SetIdVector(std::vector<VertexIdxT<GraphT>> &newVertexId) const {
+    newVertexId.clear();
+    newVertexId.resize(gFull_.NumVertices());
 
-    new_vertex_id = GetIntermediateIDs(contractionHistory.size());
+    newVertexId = GetIntermediateIDs(contractionHistory_.size());
 }
 
 template <typename GraphT>
-std::vector<VertexIdxT<GraphT>> StepByStepCoarser<GraphT>::GetIntermediateIDs(VertexIdx until_which_step) const {
-    std::vector<VertexIdx> target(G_full.NumVertices()), pointsTo(G_full.NumVertices(), std::numeric_limits<VertexIdx>::max());
+std::vector<VertexIdxT<GraphT>> StepByStepCoarser<GraphT>::GetIntermediateIDs(VertexIdx untilWhichStep) const {
+    std::vector<VertexIdx> target(gFull_.NumVertices()), pointsTo(gFull_.NumVertices(), std::numeric_limits<VertexIdx>::max());
 
-    for (VertexIdx iterate = 0; iterate < contractionHistory.size() && iterate < until_which_step; ++iterate) {
-        const std::pair<VertexIdx, VertexIdx> &contractionStep = contractionHistory[iterate];
+    for (VertexIdx iterate = 0; iterate < contractionHistory_.size() && iterate < untilWhichStep; ++iterate) {
+        const std::pair<VertexIdx, VertexIdx> &contractionStep = contractionHistory_[iterate];
         pointsTo[contractionStep.second] = contractionStep.first;
     }
 
-    for (VertexIdx node = 0; node < G_full.NumVertices(); ++node) {
+    for (VertexIdx node = 0; node < gFull_.NumVertices(); ++node) {
         target[node] = node;
         while (pointsTo[target[node]] != std::numeric_limits<VertexIdx>::max()) {
             target[node] = pointsTo[target[node]];
         }
     }
 
-    if (contractionHistory.empty() || until_which_step == 0) {
+    if (contractionHistory_.empty() || untilWhichStep == 0) {
         return target;
     }
 
-    std::vector<bool> is_valid(G_full.NumVertices(), false);
-    for (VertexIdx node = 0; node < G_full.NumVertices(); ++node) {
-        is_valid[target[node]] = true;
+    std::vector<bool> isValid(gFull_.NumVertices(), false);
+    for (VertexIdx node = 0; node < gFull_.NumVertices(); ++node) {
+        isValid[target[node]] = true;
     }
 
-    std::vector<VertexIdx> new_id(G_full.NumVertices());
-    VertexIdx current_index = 0;
-    for (VertexIdx node = 0; node < G_full.NumVertices(); ++node) {
-        if (is_valid[node]) {
-            new_id[node] = current_index++;
+    std::vector<VertexIdx> newId(gFull_.NumVertices());
+    VertexIdx currentIndex = 0;
+    for (VertexIdx node = 0; node < gFull_.NumVertices(); ++node) {
+        if (isValid[node]) {
+            newId[node] = currentIndex++;
         }
     }
 
-    for (VertexIdx node = 0; node < G_full.NumVertices(); ++node) {
-        target[node] = new_id[target[node]];
+    for (VertexIdx node = 0; node < gFull_.NumVertices(); ++node) {
+        target[node] = newId[target[node]];
     }
 
-    BoostGraphT temp_dag;
-    temp_dag = Contract(target);
-    std::vector<bool> all_valid(temp_dag.NumVertices(), true);
-    std::vector<VertexIdx> top_idx = GetFilteredTopOrderIdx(temp_dag, all_valid);
+    BoostGraphT tempDag;
+    tempDag = Contract(target);
+    std::vector<bool> allValid(tempDag.NumVertices(), true);
+    std::vector<VertexIdx> topIdx = GetFilteredTopOrderIdx(tempDag, allValid);
 
-    for (VertexIdx node = 0; node < G_full.NumVertices(); ++node) {
-        target[node] = top_idx[target[node]];
+    for (VertexIdx node = 0; node < gFull_.NumVertices(); ++node) {
+        target[node] = topIdx[target[node]];
     }
 
     return target;
