@@ -133,7 +133,7 @@ struct IsDirectedGraphEdgeDesc<T,
                        std::is_same<decltype(Target(std::declval<EdgeDescT<T>>(), std::declval<T>())), VertexIdxT<T>>> {};
 
 template <typename T>
-inline constexpr bool IsDirectedGraphEdgeDescV = IsDirectedGraphEdgeDesc<T>::value;
+inline constexpr bool isDirectedGraphEdgeDescV = IsDirectedGraphEdgeDesc<T>::value;
 
 /**
  * @brief Specialization for graphs that define a directed_edge_descriptor that can be used as a key in a hash table.
@@ -155,6 +155,6 @@ struct HasHashableEdgeDesc<T,
                        std::is_copy_constructible<EdgeDescT<T>>> {};
 
 template <typename T>
-inline constexpr bool HasHashableEdgeDescV = HasHashableEdgeDesc<T>::value;
+inline constexpr bool hasHashableEdgeDescV = HasHashableEdgeDesc<T>::value;
 
 }    // namespace osp

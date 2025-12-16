@@ -56,7 +56,7 @@ struct IsForwardIterator<T,
     : std::conjunction<std::is_base_of<std::forward_iterator_tag, typename std::iterator_traits<T>::iterator_category>> {};
 
 template <typename T>
-inline constexpr bool IsForwardIteratorV = IsForwardIterator<T>::value;
+inline constexpr bool isForwardIteratorV = IsForwardIterator<T>::value;
 
 /**
  * @brief Checks if a type is a range of forward iterators with a specific value type.
@@ -79,7 +79,7 @@ struct IsForwardRangeOf<T, ValueType, std::void_t<decltype(std::begin(std::declv
 };
 
 template <typename T, typename ValueType>
-inline constexpr bool IsForwardRangeOfV = IsForwardRangeOf<T, ValueType>::value;
+inline constexpr bool isForwardRangeOfV = IsForwardRangeOf<T, ValueType>::value;
 
 /**
  * @brief Checks if a type is a container (sized forward range).
@@ -100,7 +100,7 @@ struct IsContainerOf<T, ValueType, std::void_t<decltype(std::size(std::declval<T
     : std::conjunction<IsForwardRangeOf<T, ValueType>> {};
 
 template <typename T, typename ValueType>
-inline constexpr bool IsContainerOfV = IsContainerOf<T, ValueType>::value;
+inline constexpr bool isContainerOfV = IsContainerOf<T, ValueType>::value;
 
 /**
  * @brief Checks if a type is an input iterator.
@@ -126,7 +126,7 @@ struct IsInputIterator<T,
     : std::conjunction<std::is_base_of<std::input_iterator_tag, typename std::iterator_traits<T>::iterator_category>> {};
 
 template <typename T>
-inline constexpr bool IsInputIteratorV = IsInputIterator<T>::value;
+inline constexpr bool isInputIteratorV = IsInputIterator<T>::value;
 
 /**
  * @brief Checks if a type is a range of input iterators with a specific value type.
@@ -149,6 +149,6 @@ struct IsInputRangeOf<T, ValueType, std::void_t<decltype(std::begin(std::declval
 };
 
 template <typename T, typename ValueType>
-inline constexpr bool IsInputRangeOfV = IsInputRangeOf<T, ValueType>::value;
+inline constexpr bool isInputRangeOfV = IsInputRangeOf<T, ValueType>::value;
 
 }    // namespace osp

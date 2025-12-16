@@ -39,7 +39,7 @@ namespace osp {
  */
 template <typename GraphT>
 std::vector<std::vector<VertexIdxT<GraphT>>> StronglyConnectedComponents(const GraphT &graph) {
-    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
     using VertexType = VertexIdxT<GraphT>;
     const auto numVertices = graph.NumVertices();

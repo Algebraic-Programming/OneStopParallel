@@ -265,13 +265,13 @@ using ComputationalDagVectorImplDefUnsignedT = ComputationalDagVectorImpl<CDagVe
  */
 using ComputationalDagVectorImplDefIntT = ComputationalDagVectorImpl<CDagVertexImplInt>;
 
-static_assert(IsDirectedGraphEdgeDescV<ComputationalDagVectorImplDefUnsignedT>,
+static_assert(isDirectedGraphEdgeDescV<ComputationalDagVectorImplDefUnsignedT>,
               "ComputationalDagVectorImpl must satisfy the directed_graph_edge_desc concept");
 
 static_assert(hasVertexWeightsV<ComputationalDagVectorImplDefUnsignedT>,
               "ComputationalDagVectorImpl must satisfy the has_vertex_weights concept");
 
-static_assert(IsDirectedGraphV<ComputationalDagVectorImplDefUnsignedT>,
+static_assert(isDirectedGraphV<ComputationalDagVectorImplDefUnsignedT>,
               "ComputationalDagVectorImpl must satisfy the directed_graph concept");
 
 static_assert(isComputationalDagTypedVerticesV<ComputationalDagVectorImplDefUnsignedT>,

@@ -157,7 +157,7 @@ std::unique_ptr<Scheduler<GraphT>> GetBaseBspSchedulerByName(const ConfigParser 
         return scheduler;
     }
 
-    if constexpr (isConstructableCdagV<GraphT> || IsDirectConstructableCdagV<GraphT>) {
+    if constexpr (isConstructableCdagV<GraphT> || isDirectConstructableCdagV<GraphT>) {
         if (id == "MultiHC") {
             auto scheduler = std::make_unique<MultiLevelHillClimbingScheduler<GraphT>>();
             const unsigned timeLimit = parser.globalParams_.get_child("timeLimit").get_value<unsigned>();

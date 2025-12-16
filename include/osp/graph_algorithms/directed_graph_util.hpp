@@ -48,7 +48,7 @@ namespace osp {
  */
 template <typename GraphT>
 bool Edge(const VertexIdxT<GraphT> &src, const VertexIdxT<GraphT> &dest, const GraphT &graph) {
-    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
     for (const auto &child : graph.Children(src)) {
         if (child == dest) {
             return true;
@@ -67,7 +67,7 @@ bool Edge(const VertexIdxT<GraphT> &src, const VertexIdxT<GraphT> &dest, const G
  */
 template <typename GraphT>
 bool IsSink(const VertexIdxT<GraphT> &v, const GraphT &graph) {
-    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
     return graph.OutDegree(v) == 0u;
 }
 
@@ -81,7 +81,7 @@ bool IsSink(const VertexIdxT<GraphT> &v, const GraphT &graph) {
  */
 template <typename GraphT>
 bool IsSource(const VertexIdxT<GraphT> &v, const GraphT &graph) {
-    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
     return graph.InDegree(v) == 0u;
 }
 
@@ -94,7 +94,7 @@ bool IsSource(const VertexIdxT<GraphT> &v, const GraphT &graph) {
  */
 template <typename CondEval, typename GraphT, typename IteratorT>
 struct VertexCondIterator {
-    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
     // TODO static_assert(is_callabl_v<cond_eval>;
 
     const GraphT &graph_;
@@ -154,7 +154,7 @@ struct VertexCondIterator {
  */
 template <typename GraphT>
 class SourceVerticesView {
-    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
     const GraphT &graph_;
 
@@ -183,7 +183,7 @@ class SourceVerticesView {
  */
 template <typename GraphT>
 class SinkVerticesView {
-    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
     const GraphT &graph_;
 
@@ -213,7 +213,7 @@ class SinkVerticesView {
  */
 template <typename GraphT>
 std::vector<VertexIdxT<GraphT>> SourceVertices(const GraphT &graph) {
-    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
     std::vector<VertexIdxT<GraphT>> vec;
     for (const auto &source : SourceVerticesView(graph)) {
         vec.push_back(source);
@@ -230,7 +230,7 @@ std::vector<VertexIdxT<GraphT>> SourceVertices(const GraphT &graph) {
  */
 template <typename GraphT>
 std::vector<VertexIdxT<GraphT>> SinkVertices(const GraphT &graph) {
-    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
     std::vector<VertexIdxT<GraphT>> vec;
 
     for (const auto &sink : SinkVerticesView(graph)) {
@@ -248,7 +248,7 @@ std::vector<VertexIdxT<GraphT>> SinkVertices(const GraphT &graph) {
  */
 template <typename GraphT, typename ContainerWrapper, typename AdjIterator>
 struct TraversalIterator {
-    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
     const GraphT &graph_;
 
@@ -345,7 +345,7 @@ struct BfsQueueWrapper {
  */
 template <typename GraphT>
 class BfsView {
-    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
     const GraphT &graph_;
     VertexIdxT<GraphT> startVertex_;
@@ -385,7 +385,7 @@ struct DfsStackWrapper {
  */
 template <typename GraphT>
 class DfsView {
-    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
     const GraphT &graph_;
     VertexIdxT<GraphT> startVertex_;
@@ -419,7 +419,7 @@ struct ParentsIterator {
  */
 template <typename GraphT>
 class BfsReverseView {
-    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
     const GraphT &graph_;
     VertexIdxT<GraphT> startVertex_;
@@ -446,7 +446,7 @@ class BfsReverseView {
  */
 template <typename GraphT>
 std::vector<VertexIdxT<GraphT>> Successors(const VertexIdxT<GraphT> &v, const GraphT &graph) {
-    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
     std::vector<VertexIdxT<GraphT>> vec;
     for (const auto &suc : BfsView(graph, v)) {
         vec.push_back(suc);
@@ -464,7 +464,7 @@ std::vector<VertexIdxT<GraphT>> Successors(const VertexIdxT<GraphT> &v, const Gr
  */
 template <typename GraphT>
 std::vector<VertexIdxT<GraphT>> Ancestors(const VertexIdxT<GraphT> &v, const GraphT &graph) {
-    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
     std::vector<VertexIdxT<GraphT>> vec;
     for (const auto &anc : BfsReverseView(graph, v)) {
         vec.push_back(anc);
@@ -474,7 +474,7 @@ std::vector<VertexIdxT<GraphT>> Ancestors(const VertexIdxT<GraphT> &v, const Gra
 
 template <typename GraphT>
 bool IsAcyclic(const GraphT &graph) {
-    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
     using VertexType = VertexIdxT<GraphT>;
 
@@ -510,7 +510,7 @@ bool IsAcyclic(const GraphT &graph) {
 
 template <typename GraphT>
 bool IsConnected(const GraphT &graph) {
-    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
     using VertexType = VertexIdxT<GraphT>;
 
@@ -543,7 +543,7 @@ bool IsConnected(const GraphT &graph) {
 
 template <typename GraphT>
 std::size_t NumCommonParents(const GraphT &graph, VertexIdxT<GraphT> v1, VertexIdxT<GraphT> v2) {
-    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
     std::unordered_set<VertexIdxT<GraphT>> parents;
     parents.reserve(graph.InDegree(v1));
@@ -563,7 +563,7 @@ std::size_t NumCommonParents(const GraphT &graph, VertexIdxT<GraphT> v1, VertexI
 
 template <typename GraphT>
 std::size_t NumCommonChildren(const GraphT &graph, VertexIdxT<GraphT> v1, VertexIdxT<GraphT> v2) {
-    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
     std::unordered_set<VertexIdxT<GraphT>> childrn;
     childrn.reserve(graph.OutDegree(v1));
@@ -595,7 +595,7 @@ std::size_t NumCommonChildren(const GraphT &graph, VertexIdxT<GraphT> v1, Vertex
  */
 template <typename GraphT>
 std::size_t ComputeWeaklyConnectedComponents(const GraphT &graph, std::vector<VertexIdxT<GraphT>> &components) {
-    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
     using VertexType = VertexIdxT<GraphT>;
 
     if (graph.NumVertices() == 0) {

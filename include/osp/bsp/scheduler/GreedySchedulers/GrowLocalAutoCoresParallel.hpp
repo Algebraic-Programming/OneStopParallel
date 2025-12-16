@@ -62,7 +62,7 @@ struct GrowLocalAutoCoresParallelParams {
  */
 template <typename GraphT>
 class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
-    static_assert(IsDirectedGraphV<GraphT>);
+    static_assert(isDirectedGraphV<GraphT>);
     static_assert(hasVertexWeightsV<GraphT>);
 
   private:
@@ -108,8 +108,8 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
 
         std::vector<VertexType> predec(n, 0);
 
-        if constexpr (HasVerticesInTopOrderV<GraphT>) {
-            if constexpr (HasChildrenInVertexOrderV<GraphT>) {
+        if constexpr (hasVerticesInTopOrderV<GraphT>) {
+            if constexpr (hasChildrenInVertexOrderV<GraphT>) {
                 for (VertexType vert = startNode; vert < endNode; ++vert) {
                     for (const VertexType &chld : graph.Children(vert)) {
                         if (chld >= endNode) {
@@ -142,7 +142,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
         for (VertexType nodePos = startNode; nodePos < endNode; nodePos++) {
             VertexType index = nodePos - startNode;
             if (predec[index] == 0) {
-                if constexpr (HasVerticesInTopOrderV<GraphT>) {
+                if constexpr (hasVerticesInTopOrderV<GraphT>) {
                     ready.insert(nodePos);
                 } else {
                     ready.insert(topOrder[nodePos]);
@@ -206,8 +206,8 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                     weightLimit += graph.VertexWorkWeight(chosenNode);
 
                     for (const VertexType &succ : graph.Children(chosenNode)) {
-                        if constexpr (HasVerticesInTopOrderV<GraphT>) {
-                            if constexpr (HasChildrenInVertexOrderV<GraphT>) {
+                        if constexpr (hasVerticesInTopOrderV<GraphT>) {
+                            if constexpr (hasChildrenInVertexOrderV<GraphT>) {
                                 if (succ >= endNode) {
                                     break;
                                 }
@@ -229,7 +229,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                         }
 
                         VertexType succIndex;
-                        if constexpr (HasVerticesInTopOrderV<GraphT>) {
+                        if constexpr (hasVerticesInTopOrderV<GraphT>) {
                             succIndex = succ - startNode;
                         } else {
                             succIndex = posInTopOrder[succ] - startNode;
@@ -269,8 +269,8 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                         currentWeightAssigned += graph.VertexWorkWeight(chosenNode);
 
                         for (const VertexType &succ : graph.Children(chosenNode)) {
-                            if constexpr (HasVerticesInTopOrderV<GraphT>) {
-                                if constexpr (HasChildrenInVertexOrderV<GraphT>) {
+                            if constexpr (hasVerticesInTopOrderV<GraphT>) {
+                                if constexpr (hasChildrenInVertexOrderV<GraphT>) {
                                     if (succ >= endNode) {
                                         break;
                                     }
@@ -292,7 +292,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                             }
 
                             VertexType succIndex;
-                            if constexpr (HasVerticesInTopOrderV<GraphT>) {
+                            if constexpr (hasVerticesInTopOrderV<GraphT>) {
                                 succIndex = succ - startNode;
                             } else {
                                 succIndex = posInTopOrder[succ] - startNode;
@@ -359,8 +359,8 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                 for (unsigned proc = 0; proc < p; ++proc) {
                     for (const VertexType &node : newAssignments[proc]) {
                         for (const VertexType &succ : graph.Children(node)) {
-                            if constexpr (HasVerticesInTopOrderV<GraphT>) {
-                                if constexpr (HasChildrenInVertexOrderV<GraphT>) {
+                            if constexpr (hasVerticesInTopOrderV<GraphT>) {
+                                if constexpr (hasChildrenInVertexOrderV<GraphT>) {
                                     if (succ >= endNode) {
                                         break;
                                     }
@@ -376,7 +376,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                             }
 
                             VertexType succIndex;
-                            if constexpr (HasVerticesInTopOrderV<GraphT>) {
+                            if constexpr (hasVerticesInTopOrderV<GraphT>) {
                                 succIndex = succ - startNode;
                             } else {
                                 succIndex = posInTopOrder[succ] - startNode;
@@ -390,8 +390,8 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                 for (unsigned proc = 0; proc < p; ++proc) {
                     for (const VertexType &node : newAssignments[proc]) {
                         for (const VertexType &succ : graph.Children(node)) {
-                            if constexpr (HasVerticesInTopOrderV<GraphT>) {
-                                if constexpr (HasChildrenInVertexOrderV<GraphT>) {
+                            if constexpr (hasVerticesInTopOrderV<GraphT>) {
+                                if constexpr (hasChildrenInVertexOrderV<GraphT>) {
                                     if (succ >= endNode) {
                                         break;
                                     }
@@ -436,8 +436,8 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                     ++totalAssigned;
 
                     for (const VertexType &succ : graph.Children(node)) {
-                        if constexpr (HasVerticesInTopOrderV<GraphT>) {
-                            if constexpr (HasChildrenInVertexOrderV<GraphT>) {
+                        if constexpr (hasVerticesInTopOrderV<GraphT>) {
+                            if constexpr (hasChildrenInVertexOrderV<GraphT>) {
                                 if (succ >= endNode) {
                                     break;
                                 }
@@ -453,7 +453,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                         }
 
                         VertexType succIndex;
-                        if constexpr (HasVerticesInTopOrderV<GraphT>) {
+                        if constexpr (hasVerticesInTopOrderV<GraphT>) {
                             succIndex = succ - startNode;
                         } else {
                             succIndex = posInTopOrder[succ] - startNode;
@@ -528,12 +528,12 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
         unsigned incr = 0;
 
         std::vector<VertexType> topOrder;
-        if constexpr (not HasVerticesInTopOrderV<GraphT>) {
+        if constexpr (not hasVerticesInTopOrderV<GraphT>) {
             topOrder = GetTopOrder(graph);
         }
 
         std::vector<VertexType> posInTopOrder;
-        if constexpr (not HasVerticesInTopOrderV<GraphT>) {
+        if constexpr (not hasVerticesInTopOrderV<GraphT>) {
             posInTopOrder = std::vector<VertexType>(graph.NumVertices());
             for (VertexType ind = 0; ind < static_cast<VertexType>(topOrder.size()); ++ind) {
                 posInTopOrder[topOrder[ind]] = ind;
@@ -562,7 +562,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
 
 #pragma omp for schedule(static, 1)
             for (unsigned thr = 0; thr < numThreads; thr++) {
-                if constexpr (HasVerticesInTopOrderV<GraphT>) {
+                if constexpr (hasVerticesInTopOrderV<GraphT>) {
                     IncrementScheduleSupersteps(schedule, startNodes[thr], startNodes[thr + 1], supstepIncr[thr]);
                 } else {
                     IncrementScheduleSuperstepsTopOrder(

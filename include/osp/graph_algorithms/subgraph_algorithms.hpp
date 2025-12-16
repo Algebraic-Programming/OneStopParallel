@@ -98,7 +98,7 @@ void CreateInducedSubgraph(const GraphTIn &dag, GraphTOut &dagOut, const std::ve
 
 template <typename GraphT>
 bool CheckOrderedIsomorphism(const GraphT &first, const GraphT &second) {
-    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
     if (first.NumVertices() != second.NumVertices() || first.NumEdges() != second.NumEdges()) {
         return false;

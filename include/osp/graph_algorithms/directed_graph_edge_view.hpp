@@ -35,7 +35,7 @@ namespace osp {
 template <typename GraphT>
 class EdgeView {
   private:
-    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
     const GraphT &graph_;
 
@@ -171,7 +171,7 @@ class EdgeView {
 template <typename GraphT, bool isOutgoing>
 class IncidentEdgeView {
   private:
-    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
 
     const GraphT &graph_;
     VertexIdxT<GraphT> anchorVertex_;

@@ -116,12 +116,12 @@ class SparseMatrixImp {
 using SparseMatrixGraphInt32T = SparseMatrixImp<int32_t>;
 using SparseMatrixGraphInt64T = SparseMatrixImp<int64_t>;
 
-static_assert(IsDirectedGraphEdgeDescV<SparseMatrixImp<int32_t>>, "SparseMatrix must satisfy the directed_graph_edge_desc concept");
+static_assert(isDirectedGraphEdgeDescV<SparseMatrixImp<int32_t>>, "SparseMatrix must satisfy the directed_graph_edge_desc concept");
 
 // Verify that SparseMatrixImp satisfies the directed graph concept
-static_assert(IsDirectedGraphV<SparseMatrixImp<int32_t>>, "SparseMatrix must satisfy directed_graph_concept");
+static_assert(isDirectedGraphV<SparseMatrixImp<int32_t>>, "SparseMatrix must satisfy directed_graph_concept");
 
-static_assert(IsDirectedGraphV<SparseMatrixImp<int64_t>>, "SparseMatrix must satisfy directed_graph_concept");
+static_assert(isDirectedGraphV<SparseMatrixImp<int64_t>>, "SparseMatrix must satisfy directed_graph_concept");
 
 static_assert(hasVertexWeightsV<SparseMatrixImp<int32_t>>, "CompactSparseGraph must satisfy the has_vertex_weights concept");
 

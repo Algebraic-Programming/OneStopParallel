@@ -654,16 +654,16 @@ static_assert(hasVertexWeightsV<CompactSparseGraphEdgeDesc<true, true>>,
 static_assert(hasVertexWeightsV<CompactSparseGraphEdgeDesc<false, true>>,
               "CompactSparseGraphEdgeDesc must satisfy the has_vertex_weights concept");
 
-static_assert(IsDirectedGraphV<CompactSparseGraphEdgeDesc<false, false, false, false, false>>,
+static_assert(isDirectedGraphV<CompactSparseGraphEdgeDesc<false, false, false, false, false>>,
               "CompactSparseGraphEdgeDesc must satisfy the directed_graph concept");
 
-static_assert(IsDirectedGraphV<CompactSparseGraphEdgeDesc<false, true, true, true, true>>,
+static_assert(isDirectedGraphV<CompactSparseGraphEdgeDesc<false, true, true, true, true>>,
               "CompactSparseGraphEdgeDesc must satisfy the directed_graph concept");
 
-static_assert(IsDirectedGraphV<CompactSparseGraphEdgeDesc<true, false, false, false, false>>,
+static_assert(isDirectedGraphV<CompactSparseGraphEdgeDesc<true, false, false, false, false>>,
               "CompactSparseGraphEdgeDesc must satisfy the directed_graph concept");
 
-static_assert(IsDirectedGraphV<CompactSparseGraphEdgeDesc<true, true, true, true, true>>,
+static_assert(isDirectedGraphV<CompactSparseGraphEdgeDesc<true, true, true, true, true>>,
               "CompactSparseGraphEdgeDesc must satisfy the directed_graph concept");
 
 static_assert(isComputationalDagV<CompactSparseGraphEdgeDesc<false, true, true, true, false>>,
@@ -678,10 +678,10 @@ static_assert(isComputationalDagTypedVerticesV<CompactSparseGraphEdgeDesc<false,
 static_assert(isComputationalDagTypedVerticesV<CompactSparseGraphEdgeDesc<true, true, true, true, true, true>>,
               "CompactSparseGraphEdgeDesc must satisfy the is_computation_dag with types concept");
 
-static_assert(IsDirectedGraphEdgeDescV<CompactSparseGraphEdgeDesc<true>>,
+static_assert(isDirectedGraphEdgeDescV<CompactSparseGraphEdgeDesc<true>>,
               "CompactSparseGraphEdgeDesc must satisfy the directed graph edge descriptor concept.");
 
-static_assert(IsDirectedGraphEdgeDescV<CompactSparseGraphEdgeDesc<false>>,
+static_assert(isDirectedGraphEdgeDescV<CompactSparseGraphEdgeDesc<false>>,
               "CompactSparseGraphEdgeDesc must satisfy the directed graph edge descriptor concept.");
 
 static_assert(isComputationalDagTypedVerticesEdgeDescV<CompactSparseGraphEdgeDesc<false, true, true, true, true, true>>,
@@ -696,10 +696,10 @@ static_assert(hasEdgeWeightsV<CompactSparseGraphEdgeDesc<false, true, true, true
 static_assert(hasEdgeWeightsV<CompactSparseGraphEdgeDesc<true, true, true, true, true, true>>,
               "CompactSparseGraphEdgeDesc must satisfy the has_edge_weights concept");
 
-static_assert(HasHashableEdgeDescV<CompactSparseGraphEdgeDesc<true, true>>,
+static_assert(hasHashableEdgeDescV<CompactSparseGraphEdgeDesc<true, true>>,
               "CompactSparseGraphEdgeDesc must satisfy the HasHashableEdgeDesc concept");
 
-static_assert(HasHashableEdgeDescV<CompactSparseGraphEdgeDesc<false, true>>,
+static_assert(hasHashableEdgeDescV<CompactSparseGraphEdgeDesc<false, true>>,
               "CompactSparseGraphEdgeDesc must satisfy the HasHashableEdgeDesc concept");
 
 using CSGE

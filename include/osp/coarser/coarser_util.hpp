@@ -67,10 +67,10 @@ template <typename GraphTIn, class GraphTOut, typename VWorkAccMethod, typename 
 bool ConstructCoarseDag(const GraphTIn &dagIn,
                         GraphTOut &coarsenedDag,
                         const std::vector<VertexIdxT<GraphTOut>> &vertexContractionMap) {
-    static_assert(IsDirectedGraphV<GraphTIn> && IsDirectedGraphV<GraphTOut>,
+    static_assert(isDirectedGraphV<GraphTIn> && isDirectedGraphV<GraphTOut>,
                   "Graph types need to satisfy the is_directed_graph concept.");
     static_assert(isComputationalDagV<GraphTIn>, "GraphTIn must be a computational DAG");
-    static_assert(isConstructableCdagV<GraphTOut> || IsDirectConstructableCdagV<GraphTOut>,
+    static_assert(isConstructableCdagV<GraphTOut> || isDirectConstructableCdagV<GraphTOut>,
                   "GraphTOut must be a (direct) constructable computational DAG");
 
     assert(CheckValidContractionMap<GraphTOut>(vertexContractionMap));
@@ -80,7 +80,7 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
         return true;
     }
 
-    if constexpr (IsDirectConstructableCdagV<GraphTOut>) {
+    if constexpr (isDirectConstructableCdagV<GraphTOut>) {
         const VertexIdxT<GraphTOut> numVertQuotient
             = (*std::max_element(vertexContractionMap.cbegin(), vertexContractionMap.cend())) + 1;
 
@@ -231,10 +231,10 @@ template <typename GraphTIn,
           typename ECommAccMethod = AccSum<ECommwT<GraphTIn>>>
 bool ConstructCoarseDag(const GraphTIn &dagIn, GraphTOut &coarsenedDag, std::vector<VertexIdxT<GraphTOut>> &vertexContractionMap) {
     if constexpr (IsCompactSparseGraphReorderV<GraphTOut>) {
-        static_assert(IsDirectedGraphV<GraphTIn> && IsDirectedGraphV<GraphTOut>,
+        static_assert(isDirectedGraphV<GraphTIn> && isDirectedGraphV<GraphTOut>,
                       "Graph types need to satisfy the is_directed_graph concept.");
         static_assert(isComputationalDagV<GraphTIn>, "GraphTIn must be a computational DAG");
-        static_assert(isConstructableCdagV<GraphTOut> || IsDirectConstructableCdagV<GraphTOut>,
+        static_assert(isConstructableCdagV<GraphTOut> || isDirectConstructableCdagV<GraphTOut>,
                       "GraphTOut must be a (direct) constructable computational DAG");
 
         assert(CheckValidContractionMap<GraphTOut>(vertexContractionMap));

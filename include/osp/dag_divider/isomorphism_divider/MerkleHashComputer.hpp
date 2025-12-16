@@ -46,7 +46,7 @@ namespace osp {
  */
 template <typename GraphT, typename NodeHashFuncT = UniformNodeHashFunc<VertexIdxT<GraphT>>, bool forward = true>
 class MerkleHashComputer : public HashComputer<VertexIdxT<GraphT>> {
-    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
     static_assert(std::is_invocable_r<std::size_t, NodeHashFuncT, VertexIdxT<GraphT>>::value,
                   "NodeHashFuncT must be invocable with one VertexIdxT<GraphT> argument and return std::size_t.");
 

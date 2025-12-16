@@ -211,7 +211,7 @@ inline constexpr bool isConstructableCdagV = IsConstructableCdag<T>::value;
  * @brief Helper trait to check if a graph can be directly constructed from a vertex count and a set of edges.
  */
 template <typename T>
-inline constexpr bool IsDirectConstructableCdagV
+inline constexpr bool isDirectConstructableCdagV
     = std::is_constructible<T, VertexIdxT<T>, std::set<std::pair<VertexIdxT<T>, VertexIdxT<T>>>>::value;
 
 }    // namespace osp

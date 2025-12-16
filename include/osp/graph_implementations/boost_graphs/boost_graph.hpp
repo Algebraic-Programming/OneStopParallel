@@ -362,7 +362,7 @@ inline osp::VertexIdxT<BoostGraph<VertexWorkwT, VertexCommwT, VertexMemwT, Verte
 using BoostGraphIntT = BoostGraph<int, int, int, unsigned, int>;
 using BoostGraphUintT = BoostGraph<unsigned, unsigned, unsigned, unsigned, unsigned>;
 
-static_assert(osp::IsDirectedGraphEdgeDescV<BoostGraphIntT>,
+static_assert(osp::isDirectedGraphEdgeDescV<BoostGraphIntT>,
               "BoostGraphIntT does not satisfy the directed_graph_edge_desc concept");
 
 static_assert(osp::isComputationalDagTypedVerticesEdgeDescV<BoostGraphIntT>,

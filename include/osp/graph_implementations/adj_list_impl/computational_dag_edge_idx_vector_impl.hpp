@@ -270,7 +270,7 @@ using ComputationalDagEdgeIdxVectorImplDefT = ComputationalDagEdgeIdxVectorImpl<
 
 using ComputationalDagEdgeIdxVectorImplDefIntT = ComputationalDagEdgeIdxVectorImpl<CDagVertexImplInt, CDagEdgeImplInt>;
 
-static_assert(IsDirectedGraphEdgeDescV<ComputationalDagEdgeIdxVectorImplDefT>,
+static_assert(isDirectedGraphEdgeDescV<ComputationalDagEdgeIdxVectorImplDefT>,
               "computational_dag_edge_idx_vector_impl must satisfy the directed_graph_edge_desc concept");
 
 static_assert(isComputationalDagTypedVerticesEdgeDescV<ComputationalDagEdgeIdxVectorImplDefT>,

@@ -31,7 +31,7 @@ namespace osp {
  */
 template <typename GraphT>
 class IDagDivider {
-    static_assert(IsDirectedGraphV<GraphT>, "Graph must be directed");
+    static_assert(isDirectedGraphV<GraphT>, "Graph must be directed");
 
   public:
     virtual ~IDagDivider() = default;

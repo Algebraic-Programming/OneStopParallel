@@ -27,7 +27,7 @@ namespace osp {
 
 template <typename GraphT>
 class HillClimbingForCommSteps {
-    static_assert(IsDirectedGraphV<GraphT>, "GraphT must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "GraphT must satisfy the directed_graph concept");
     static_assert(isComputationalDagV<GraphT>, "GraphT must satisfy the computational_dag concept");
 
     using VertexIdx = VertexIdxT<GraphT>;

@@ -286,7 +286,7 @@ class CompactSparseGraph {
                    && "Source and target of edges must be non-negative and less than the number of vertices.");
         }
 
-        if constexpr (IsEdgeListTypeV<EdgeListType, VertexIdx, EdgeT>) {
+        if constexpr (isEdgeListTypeV<EdgeListType, VertexIdx, EdgeT>) {
             assert(std::all_of(edges.begin(),
                                edges.end(),
                                [numVertices](const auto &edge) {
@@ -301,7 +301,7 @@ class CompactSparseGraph {
                 assert(std::all_of(edges.begin(), edges.end(), [](const auto &edge) { return edge.first < edge.second; })
                        && "Vertex order must be a topological order.");
             }
-            if constexpr (IsEdgeListTypeV<EdgeListType, VertexIdx, EdgeT>) {
+            if constexpr (isEdgeListTypeV<EdgeListType, VertexIdx, EdgeT>) {
                 assert(std::all_of(edges.begin(), edges.end(), [](const auto &edge) { return edge.source_ < edge.target_; })
                        && "Vertex order must be a topological order.");
             }
@@ -335,7 +335,7 @@ class CompactSparseGraph {
                 numParentsTmp[edge.second]++;
             }
         }
-        if constexpr (IsEdgeListTypeV<EdgeListType, VertexIdx, EdgeT>) {
+        if constexpr (isEdgeListTypeV<EdgeListType, VertexIdx, EdgeT>) {
             for (const auto &edge : edges) {
                 childrenTmp[edge.source_].push_back(edge.target_);
                 numParentsTmp[edge.target_]++;
@@ -380,7 +380,7 @@ class CompactSparseGraph {
                     parentsTmp[edge.second].push_back(edge.first);
                 }
             }
-            if constexpr (IsEdgeListTypeV<EdgeListType, VertexIdx, EdgeT>) {
+            if constexpr (isEdgeListTypeV<EdgeListType, VertexIdx, EdgeT>) {
                 for (const auto &edge : edges) {
                     parentsTmp[edge.target_].push_back(edge.source_);
                 }
@@ -773,7 +773,7 @@ class CompactSparseGraph {
 
     template <typename GraphType>
     CompactSparseGraph(const GraphType &graph) : CompactSparseGraph(graph.NumVertices(), EdgeView(graph)) {
-        static_assert(IsDirectedGraphV<GraphType>);
+        static_assert(isDirectedGraphV<GraphType>);
 
         if constexpr (isComputationalDagV<GraphType> && useWorkWeights) {
             for (const auto &vert : graph.Vertices()) {
@@ -996,16 +996,16 @@ static_assert(hasVertexWeightsV<CompactSparseGraph<true, true>>,
 static_assert(hasVertexWeightsV<CompactSparseGraph<false, true>>,
               "CompactSparseGraph must satisfy the has_vertex_weights concept");
 
-static_assert(IsDirectedGraphV<CompactSparseGraph<false, false, false, false, false>>,
+static_assert(isDirectedGraphV<CompactSparseGraph<false, false, false, false, false>>,
               "CompactSparseGraph must satisfy the directed_graph concept");
 
-static_assert(IsDirectedGraphV<CompactSparseGraph<false, true, true, true, true>>,
+static_assert(isDirectedGraphV<CompactSparseGraph<false, true, true, true, true>>,
               "CompactSparseGraph must satisfy the directed_graph concept");
 
-static_assert(IsDirectedGraphV<CompactSparseGraph<true, false, false, false, false>>,
+static_assert(isDirectedGraphV<CompactSparseGraph<true, false, false, false, false>>,
               "CompactSparseGraph must satisfy the directed_graph concept");
 
-static_assert(IsDirectedGraphV<CompactSparseGraph<true, true, true, true, true>>,
+static_assert(isDirectedGraphV<CompactSparseGraph<true, true, true, true, true>>,
               "CompactSparseGraph must satisfy the directed_graph concept");
 
 static_assert(isComputationalDagV<CompactSparseGraph<false, true, true, true, false>>,
@@ -1020,13 +1020,13 @@ static_assert(isComputationalDagTypedVerticesV<CompactSparseGraph<false, true, t
 static_assert(isComputationalDagTypedVerticesV<CompactSparseGraph<true, true, true, true, true>>,
               "CompactSparseGraph must satisfy the is_computation_dag with types concept");
 
-static_assert(IsDirectConstructableCdagV<CompactSparseGraph<true, true>>, "CompactSparseGraph must be directly constructable");
+static_assert(isDirectConstructableCdagV<CompactSparseGraph<true, true>>, "CompactSparseGraph must be directly constructable");
 
-static_assert(IsDirectConstructableCdagV<CompactSparseGraph<false, true>>, "CompactSparseGraph must be directly constructable");
+static_assert(isDirectConstructableCdagV<CompactSparseGraph<false, true>>, "CompactSparseGraph must be directly constructable");
 
 using CSG = CompactSparseGraph<false, true, true, true, true, std::size_t, std::size_t, unsigned, unsigned, unsigned, unsigned>;
 
-static_assert(IsDirectedGraphEdgeDescV<CSG>, "CSG must satisfy the directed_graph_edge_desc concept");
+static_assert(isDirectedGraphEdgeDescV<CSG>, "CSG must satisfy the directed_graph_edge_desc concept");
 
 // // Graph specific implementations
 
@@ -1046,9 +1046,9 @@ static_assert(IsDirectedGraphEdgeDescV<CSG>, "CSG must satisfy the directed_grap
 //     using Graph_out_type = CompactSparseGraph<false, useWorkWeights, useCommWeights, useMemWeights, useVertTypes,
 //     VertT, EdgeT, WorkWeightType, CommWeightType, MemWeightType, VertexTypeTemplateType>;
 
-//     static_assert(IsDirectedGraphV<GraphTIn> && IsDirectedGraphV<Graph_out_type>, "Graph types need to satisfy the
+//     static_assert(isDirectedGraphV<GraphTIn> && isDirectedGraphV<Graph_out_type>, "Graph types need to satisfy the
 //     is_directed_graph concept."); static_assert(isComputationalDagV<GraphTIn>, "GraphTIn must be a computational DAG");
-//     static_assert(isConstructableCdagV<Graph_out_type> || IsDirectConstructableCdagV<Graph_out_type>, "Graph_out_type
+//     static_assert(isConstructableCdagV<Graph_out_type> || isDirectConstructableCdagV<Graph_out_type>, "Graph_out_type
 //     must be a (direct) constructable computational DAG");
 
 //     assert(CheckValidContractionMap<Graph_out_type>(vertex_contraction_map));

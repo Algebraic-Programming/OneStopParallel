@@ -28,8 +28,8 @@ namespace osp {
 
 template <typename GraphTIn, typename GraphTOut>
 class HdaggCoarser : public CoarserGenContractionMap<GraphTIn, GraphTOut> {
-    static_assert(IsDirectedGraphEdgeDescV<GraphTIn>, "GraphTIn must satisfy the directed_graph edge desc concept");
-    static_assert(HasHashableEdgeDescV<GraphTIn>, "GraphTIn must satisfy the HasHashableEdgeDesc concept");
+    static_assert(isDirectedGraphEdgeDescV<GraphTIn>, "GraphTIn must satisfy the directed_graph edge desc concept");
+    static_assert(hasHashableEdgeDescV<GraphTIn>, "GraphTIn must satisfy the HasHashableEdgeDesc concept");
     static_assert(hasTypedVerticesV<GraphTIn>, "GraphTIn must have typed vertices");
 
   private:

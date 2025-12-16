@@ -48,7 +48,7 @@ namespace osp {
  */
 template <typename GraphTIn, typename GraphTOut>
 void TransitiveReductionSparse(const GraphTIn &graphIn, GraphTOut &graphOut) {
-    static_assert(IsDirectedGraphV<GraphTIn>, "Input graph must be a directed graph.");
+    static_assert(isDirectedGraphV<GraphTIn>, "Input graph must be a directed graph.");
     static_assert(isConstructableCdagV<GraphTOut>, "Output graph must be a constructable computational DAG.");
     assert(graphOut.NumVertices() == 0 && "Output graph must be empty.");
 
@@ -111,7 +111,7 @@ void TransitiveReductionSparse(const GraphTIn &graphIn, GraphTOut &graphOut) {
  */
 template <typename GraphTIn, typename GraphTOut>
 void TransitiveReductionDense(const GraphTIn &graphIn, GraphTOut &graphOut) {
-    static_assert(IsDirectedGraphEdgeDescV<GraphTIn>, "Input graph must be a directed graph with edge descriptors.");
+    static_assert(isDirectedGraphEdgeDescV<GraphTIn>, "Input graph must be a directed graph with edge descriptors.");
     static_assert(isConstructableCdagV<GraphTOut>, "Output graph must be a constructable computational DAG.");
     assert(graphOut.NumVertices() == 0 && "Output graph must be empty.");
 

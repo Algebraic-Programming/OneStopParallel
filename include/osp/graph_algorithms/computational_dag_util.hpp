@@ -27,7 +27,7 @@ namespace osp {
 
 template <typename GraphT>
 VMemwT<GraphT> MaxMemoryWeight(const GraphT &graph) {
-    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
     static_assert(hasVertexWeightsV<GraphT>, "Graph_t must have vertex weights");
 
     VMemwT<GraphT> maxMemoryWeight = 0;
@@ -40,7 +40,7 @@ VMemwT<GraphT> MaxMemoryWeight(const GraphT &graph) {
 
 template <typename GraphT>
 VMemwT<GraphT> MaxMemoryWeight(const VTypeT<GraphT> &nodeType, const GraphT &graph) {
-    static_assert(IsDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
     static_assert(hasVertexWeightsV<GraphT>, "Graph_t must have vertex weights");
     static_assert(hasTypedVerticesV<GraphT>, "Graph_t must have typed vertices");
 
@@ -140,7 +140,7 @@ ECommwT<GraphT> SumOfEdgesCommunicationWeights(const std::initializer_list<EdgeD
 
 template <typename GraphT>
 VWorkwT<GraphT> CriticalPathWeight(const GraphT &graph) {
-    static_assert(IsDirectedGraphEdgeDescV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphEdgeDescV<GraphT>, "Graph_t must satisfy the directed_graph concept");
     static_assert(hasVertexWeightsV<GraphT>, "Graph_t must have vertex weights");
 
     if (graph.NumVertices() == 0) {
