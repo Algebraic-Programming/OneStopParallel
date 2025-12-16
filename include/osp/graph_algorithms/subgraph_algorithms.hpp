@@ -92,10 +92,7 @@ void CreateInducedSubgraph(const GraphTIn &dag,
 }
 
 template <typename GraphTIn, typename GraphTOut>
-void CreateInducedSubgraph(const GraphTIn &dag,
-                           GraphTOut &dagOut,
-                           const std::vector<VertexIdxT<GraphTIn>> &selectedNodes,
-                           const std::vector<VertexIdxT<GraphTIn>> &extraSources) {
+void CreateInducedSubgraph(const GraphTIn &dag, GraphTOut &dagOut, const std::vector<VertexIdxT<GraphTIn>> &selectedNodes) {
     return CreateInducedSubgraph(dag, dagOut, std::set<VertexIdxT<GraphTIn>>(selectedNodes.begin(), selectedNodes.end()));
 }
 

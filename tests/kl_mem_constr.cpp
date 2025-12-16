@@ -23,7 +23,6 @@ limitations under the License.
 #include "osp/auxiliary/io/arch_file_reader.hpp"
 #include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
-#include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_base.hpp"
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_include.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 #include "test_graphs.hpp"
@@ -87,7 +86,7 @@ BOOST_AUTO_TEST_CASE(KlLocalMemconst) {
             BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
             BOOST_CHECK(schedule.SatisfiesMemoryConstraints());
 
-            kl_total_comm_improver_local_mem_constr<Graph> kl;
+            KlTotalCommImproverLocalMemConstr<Graph> kl;
 
             auto status = kl.ImproveSchedule(schedule);
 

@@ -89,26 +89,26 @@ int main(int argc, char *argv[]) {
     GrowLocalAutoCores<GraphT> growlocal;
     BspLocking<GraphT> locking;
     GreedyChildren<GraphT> children;
-    kl_total_lambda_comm_improver<GraphT> kl(42);
-    kl.setSuperstepRemoveStrengthParameter(1.0);
-    kl.setTimeQualityParameter(1.0);
+    KlTotalCommImprover<GraphT> kl(42);
+    kl.SetSuperstepRemoveStrengthParameter(1.0);
+    kl.SetTimeQualityParameter(1.0);
     ComboScheduler<GraphT> growlocalKl(growlocal, kl);
     ComboScheduler<GraphT> lockingKl(locking, kl);
     ComboScheduler<GraphT> childrenKl(children, kl);
 
     GreedyMetaScheduler<GraphT> scheduler;
     // scheduler.addScheduler(growlocal_kl);
-    scheduler.addScheduler(lockingKl);
-    scheduler.addScheduler(childrenKl);
-    scheduler.addSerialScheduler();
+    scheduler.AddScheduler(lockingKl);
+    scheduler.AddScheduler(childrenKl);
+    scheduler.AddSerialScheduler();
 
     IsomorphicSubgraphScheduler<GraphT2, GraphT> isoScheduler(scheduler);
-    isoScheduler.setMergeDifferentTypes(false);
+    isoScheduler.SetMergeDifferentTypes(false);
     isoScheduler.SetWorkThreshold(100);
     isoScheduler.SetCriticalPathThreshold(500);
-    isoScheduler.setOrbitLockRatio(0.5);
-    isoScheduler.setAllowTrimmedScheduler(false);
-    isoScheduler.set_plot_dot_graphs(true);    // Enable plotting for debug
+    isoScheduler.SetOrbitLockRatio(0.5);
+    isoScheduler.SetAllowTrimmedScheduler(false);
+    isoScheduler.SetPlotDotGraphs(true);    // Enable plotting for debug
 
     std::cout << "Starting partition computation..." << std::endl;
 

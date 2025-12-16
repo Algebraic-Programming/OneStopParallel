@@ -111,7 +111,7 @@ struct LsLocalMemoryConstraint {
             for (unsigned proc = 0; proc < setSchedule_->GetInstance().NumberOfProcessors(); proc++) {
                 stepProcessorMemory_[step][proc] = 0;
 
-                for (const auto &node : setSchedule_->step_processor_vertices[step][proc]) {
+                for (const auto &node : setSchedule_->stepProcessorVertices_[step][proc]) {
                     stepProcessorMemory_[step][proc] += graph_->VertexMemWeight(node);
                 }
             }
@@ -246,7 +246,7 @@ struct LsLocalIncEdgesMemoryConstraint {
                 stepProcessorMemory_[step][proc] = 0;
                 stepProcessorPred_[step][proc].clear();
 
-                for (const auto &node : setSchedule_->step_processor_vertices[step][proc]) {
+                for (const auto &node : setSchedule_->stepProcessorVertices_[step][proc]) {
                     stepProcessorMemory_[step][proc] += graph_->VertexCommWeight(node);
 
                     for (const auto &pred : graph_->Parents(node)) {
@@ -421,7 +421,7 @@ struct LsLocalSourcesIncEdgesMemoryConstraint {
                 stepProcessorMemory_[step][proc] = 0;
                 stepProcessorPred_[step][proc].clear();
 
-                for (const auto &node : setSchedule_->step_processor_vertices[step][proc]) {
+                for (const auto &node : setSchedule_->stepProcessorVertices_[step][proc]) {
                     if (IsSource(node, *graph_)) {
                         stepProcessorMemory_[step][proc] += graph_->VertexMemWeight(node);
                     }
