@@ -57,8 +57,8 @@ BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerSimpleChain) {
 
     // 3. Run Scheduler
     EftSubgraphScheduler<GraphT> scheduler;
-    scheduler.setMinWorkPerProcessor(1);
-    SubgraphSchedule schedule = scheduler.run(instance, multiplicities, requiredProcTypes, maxProcs);
+    scheduler.SetMinWorkPerProcessor(1);
+    SubgraphSchedule schedule = scheduler.Run(instance, multiplicities, requiredProcTypes, maxProcs);
 
     // 4. Assertions
     BOOST_CHECK_CLOSE(schedule.makespan_, 250.0, 1e-9);
@@ -108,8 +108,8 @@ BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerForkJoin) {
 
     // 3. Run Scheduler
     EftSubgraphScheduler<GraphT> scheduler;
-    scheduler.setMinWorkPerProcessor(1);
-    SubgraphSchedule schedule = scheduler.run(instance, multiplicities, requiredProcTypes, maxProcs);
+    scheduler.SetMinWorkPerProcessor(1);
+    SubgraphSchedule schedule = scheduler.Run(instance, multiplicities, requiredProcTypes, maxProcs);
 
     // 4. Assertions
     // Manual calculation:
@@ -160,8 +160,8 @@ BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerDeadlock) {
 
     // 3. Run Scheduler
     EftSubgraphScheduler<GraphT> scheduler;
-    scheduler.setMinWorkPerProcessor(1);
-    SubgraphSchedule schedule = scheduler.run(instance, multiplicities, requiredProcTypes, maxProcs);
+    scheduler.SetMinWorkPerProcessor(1);
+    SubgraphSchedule schedule = scheduler.Run(instance, multiplicities, requiredProcTypes, maxProcs);
 
     // 4. Assertions
     // Expect a deadlock, indicated by a negative makespan
@@ -206,8 +206,8 @@ BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerComplexDag) {
 
     // 3. Run Scheduler
     EftSubgraphScheduler<GraphT> scheduler;
-    scheduler.setMinWorkPerProcessor(1);
-    SubgraphSchedule schedule = scheduler.run(instance, multiplicities, requiredProcTypes, maxProcs);
+    scheduler.SetMinWorkPerProcessor(1);
+    SubgraphSchedule schedule = scheduler.Run(instance, multiplicities, requiredProcTypes, maxProcs);
 
     BOOST_CHECK_CLOSE(schedule.makespan_, 105.0, 1e-9);
 
@@ -257,8 +257,8 @@ BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerResourceContention) {
 
     // 3. Run Scheduler
     EftSubgraphScheduler<GraphT> scheduler;
-    scheduler.setMinWorkPerProcessor(1);
-    SubgraphSchedule schedule = scheduler.run(instance, multiplicities, requiredProcTypes, maxProcs);
+    scheduler.SetMinWorkPerProcessor(1);
+    SubgraphSchedule schedule = scheduler.Run(instance, multiplicities, requiredProcTypes, maxProcs);
 
     // 4. Assertions
     // Manual calculation:
@@ -309,8 +309,8 @@ BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerProportionalAllocation) {
 
     // 3. Run Scheduler
     EftSubgraphScheduler<GraphT> scheduler;
-    scheduler.setMinWorkPerProcessor(1);
-    SubgraphSchedule schedule = scheduler.run(instance, multiplicities, requiredProcTypes, maxProcs);
+    scheduler.SetMinWorkPerProcessor(1);
+    SubgraphSchedule schedule = scheduler.Run(instance, multiplicities, requiredProcTypes, maxProcs);
 
     // 4. Assertions
     // Manual calculation:

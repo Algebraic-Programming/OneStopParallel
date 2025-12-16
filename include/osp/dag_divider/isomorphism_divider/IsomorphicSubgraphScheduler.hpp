@@ -145,7 +145,7 @@ class IsomorphicSubgraphScheduler {
 
         EftSubgraphScheduler<ConstrGraphT> etfScheduler;
         SubgraphSchedule subgraphSchedule
-            = etfScheduler.run(input.instance, input.multiplicities, input.required_proc_types, input.max_num_processors);
+            = etfScheduler.Run(input.instance, input.multiplicities, input.required_proc_types, input.max_num_processors);
         subgraphSchedule.wasTrimmed_ = std::move(wasTrimmed);    // Pass through trimming info
 
         std::vector<VertexIdxT<GraphT>> partition(instance.NumberOfVertices(), 0);

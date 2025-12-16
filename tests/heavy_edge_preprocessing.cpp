@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(HeavyEdgePartitioning) {
             graph.SetEdgeCommWeight(e, 1 + (weight + 100 % 500));
         }
 
-        auto partition = heavy_edge_preprocess(graph, 5.0, 0.7f, 0.34f);
+        auto partition = HeavyEdgePreprocess(graph, 5.0, 0.7f, 0.34f);
         std::vector<bool> vertexInPartition(graph.NumVertices(), false);
         for (const auto &part : partition) {
             for (const auto &vert : part) {

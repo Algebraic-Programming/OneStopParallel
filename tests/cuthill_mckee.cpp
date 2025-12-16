@@ -54,11 +54,11 @@ BOOST_AUTO_TEST_CASE(CuthillMckee1) {
     dag.AddEdge(4, 7, 9);
     dag.AddEdge(3, 7, 9);
 
-    std::vector<VertexType> cmWavefront = cuthill_mckee_wavefront(dag);
+    std::vector<VertexType> cmWavefront = CuthillMckeeWavefront(dag);
     std::vector<unsigned> expectedCmWavefront = {0, 3, 1, 2, 6, 4, 5, 7};
     BOOST_CHECK_EQUAL_COLLECTIONS(cmWavefront.begin(), cmWavefront.end(), expectedCmWavefront.begin(), expectedCmWavefront.end());
 
-    cmWavefront = cuthill_mckee_wavefront(dag, true);
+    cmWavefront = CuthillMckeeWavefront(dag, true);
     expectedCmWavefront = {0, 2, 3, 1, 5, 6, 4, 7};
 
     BOOST_CHECK_EQUAL_COLLECTIONS(cmWavefront.begin(), cmWavefront.end(), expectedCmWavefront.begin(), expectedCmWavefront.end());
@@ -66,30 +66,30 @@ BOOST_AUTO_TEST_CASE(CuthillMckee1) {
     std::vector<VertexType> cmUndirected;
     std::vector<unsigned> expectedCmUndirected;
 
-    cmUndirected = cuthill_mckee_undirected(dag, true);
+    cmUndirected = CuthillMckeeUndirected(dag, true);
     expectedCmUndirected = {7, 3, 4, 0, 1, 2, 6, 5};
     BOOST_CHECK_EQUAL_COLLECTIONS(
         cmUndirected.begin(), cmUndirected.end(), expectedCmUndirected.begin(), expectedCmUndirected.end());
 
-    cmUndirected = cuthill_mckee_undirected(dag, false);
+    cmUndirected = CuthillMckeeUndirected(dag, false);
     expectedCmUndirected = {0, 3, 1, 2, 7, 6, 4, 5};
     BOOST_CHECK_EQUAL_COLLECTIONS(
         cmUndirected.begin(), cmUndirected.end(), expectedCmUndirected.begin(), expectedCmUndirected.end());
 
-    cmUndirected = cuthill_mckee_undirected(dag, true, true);
+    cmUndirected = CuthillMckeeUndirected(dag, true, true);
     expectedCmUndirected = {3, 4, 5, 1, 2, 7, 6, 0};
     BOOST_CHECK_EQUAL_COLLECTIONS(
         cmUndirected.begin(), cmUndirected.end(), expectedCmUndirected.begin(), expectedCmUndirected.end());
 
     std::vector<VertexType> topSort;
-    for (const auto &vertex : priority_vec_top_sort_view(dag, cmUndirected)) {
+    for (const auto &vertex : PriorityVecTopSortView(dag, cmUndirected)) {
         topSort.push_back(vertex);
     }
     std::vector<unsigned> expectedTopSort = {0, 2, 5, 1, 6, 4, 3, 7};
 
     BOOST_CHECK_EQUAL_COLLECTIONS(topSort.begin(), topSort.end(), expectedTopSort.begin(), expectedTopSort.end());
 
-    cmUndirected = cuthill_mckee_undirected(dag, false, true);
+    cmUndirected = CuthillMckeeUndirected(dag, false, true);
     expectedCmUndirected = {0, 2, 3, 1, 6, 7, 5, 4};
     BOOST_CHECK_EQUAL_COLLECTIONS(
         cmUndirected.begin(), cmUndirected.end(), expectedCmUndirected.begin(), expectedCmUndirected.end());
@@ -97,12 +97,12 @@ BOOST_AUTO_TEST_CASE(CuthillMckee1) {
     dag.AddEdge(8, 9);
     dag.AddEdge(9, 10);
 
-    cmUndirected = cuthill_mckee_undirected(dag, true);
+    cmUndirected = CuthillMckeeUndirected(dag, true);
     expectedCmUndirected = {7, 3, 4, 0, 1, 2, 6, 5, 10, 9, 8};
     BOOST_CHECK_EQUAL_COLLECTIONS(
         cmUndirected.begin(), cmUndirected.end(), expectedCmUndirected.begin(), expectedCmUndirected.end());
 
-    cmUndirected = cuthill_mckee_undirected(dag, false);
+    cmUndirected = CuthillMckeeUndirected(dag, false);
     expectedCmUndirected = {0, 3, 1, 2, 7, 6, 4, 5, 8, 9, 10};
     BOOST_CHECK_EQUAL_COLLECTIONS(
         cmUndirected.begin(), cmUndirected.end(), expectedCmUndirected.begin(), expectedCmUndirected.end());
@@ -158,18 +158,18 @@ BOOST_AUTO_TEST_CASE(CuthillMckee2) {
             std::cout << "File read:" << filenameGraph << std::endl;
         }
 
-        std::vector<VertexType> wavefront = cuthill_mckee_wavefront(graph);
+        std::vector<VertexType> wavefront = CuthillMckeeWavefront(graph);
         BOOST_CHECK(IsPermutation(wavefront));
 
-        wavefront = cuthill_mckee_wavefront(graph, true);
+        wavefront = CuthillMckeeWavefront(graph, true);
         BOOST_CHECK(IsPermutation(wavefront));
 
-        const auto cmUndirected = cuthill_mckee_undirected(graph, true, true);
+        const auto cmUndirected = CuthillMckeeUndirected(graph, true, true);
         BOOST_CHECK(IsPermutation(cmUndirected));
 
         std::vector<VertexType> topSort;
 
-        for (const auto &vertex : priority_vec_top_sort_view(graph, cmUndirected)) {
+        for (const auto &vertex : PriorityVecTopSortView(graph, cmUndirected)) {
             topSort.push_back(vertex);
         }
 
