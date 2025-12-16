@@ -309,7 +309,7 @@ struct KlHyperTotalCommCostFunction {
 
                             const unsigned targetStartIdx = StartIdx(targetStep, startStep);
                             const unsigned targetWindowBound = EndIdx(targetStep, endStep);
-                            auto &affinity_table_target = threadData.affinityTable_.At(target);
+                            auto &affinityTableTarget = threadData.affinityTable_.At(target);
                             const CostT commAff = instance_->CommunicationCosts(sourceProc, targetProc) * commGain;
                             for (const unsigned p : procRange_->CompatibleProcessorsVertex(target)) {
                                 if (p == targetProc) {
@@ -317,7 +317,7 @@ struct KlHyperTotalCommCostFunction {
                                 }
 
                                 for (unsigned idx = targetStartIdx; idx < targetWindowBound; idx++) {
-                                    affinity_table_target[p][idx] -= commAff;
+                                    affinityTableTarget[p][idx] -= commAff;
                                 }
                             }
                             break;    // since nodeLambdaMap_[source][move.fromProc_] == 1
@@ -343,10 +343,10 @@ struct KlHyperTotalCommCostFunction {
                             }
 
                             const unsigned targetWindowBound = EndIdx(targetStep, endStep);
-                            auto &affinity_table_target_to_proc = threadData.affinityTable_.At(target)[move.toProc_];
+                            auto &affinityTableTargetToProc = threadData.affinityTable_.At(target)[move.toProc_];
                             const CostT commAff = instance_->CommunicationCosts(sourceProc, move.toProc_) * commGain;
                             for (unsigned idx = StartIdx(targetStep, startStep); idx < targetWindowBound; idx++) {
-                                affinity_table_target_to_proc[idx] -= commAff;
+                                affinityTableTargetToProc[idx] -= commAff;
                             }
                         }
                     }
@@ -369,7 +369,7 @@ struct KlHyperTotalCommCostFunction {
 
                                 const unsigned targetStartIdx = StartIdx(targetStep, startStep);
                                 const unsigned targetWindowBound = EndIdx(targetStep, endStep);
-                                auto &affinity_table_target = threadData.affinityTable_.At(target);
+                                auto &affinityTableTarget = threadData.affinityTable_.At(target);
                                 const CostT commAff = instance_->CommunicationCosts(sourceProc, targetProc)
                                                        * graph_->VertexCommWeight(source) * commMultiplier_;
                                 for (const unsigned p : procRange_->CompatibleProcessorsVertex(target)) {
@@ -378,7 +378,7 @@ struct KlHyperTotalCommCostFunction {
                                     }
 
                                     for (unsigned idx = targetStartIdx; idx < targetWindowBound; idx++) {
-                                        affinity_table_target[p][idx] += commAff;
+                                        affinityTableTarget[p][idx] += commAff;
                                     }
                                 }
                             }
@@ -577,8 +577,8 @@ struct KlHyperTotalCommCostFunction {
                 continue;
             }
 
-            for (const auto lambda_pair : nodeLambdaMap_.IterateProcEntries(node)) {
-                const auto &lambdaProc = lambda_pair.first;
+            for (const auto lambdaPair : nodeLambdaMap_.IterateProcEntries(node)) {
+                const auto &lambdaProc = lambdaPair.first;
                 const CostT comm_cost = ChangeCommCost(
                     instance_->CommunicationCosts(p, lambdaProc), instance_->CommunicationCosts(nodeProc, lambdaProc), commGain);
                 for (unsigned idx = nodeStartIdx; idx < windowBound; idx++) {

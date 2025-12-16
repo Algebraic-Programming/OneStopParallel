@@ -136,7 +136,7 @@ struct KlTotalCommCostFunction {
 
             const unsigned targetProc = activeSchedule_->AssignedProcessor(target);
             const unsigned targetStartIdx = StartIdx(targetStep, startStep);
-            auto &affinity_table_target = threadData.affinityTable_.At(target);
+            auto &affinityTableTarget = threadData.affinityTable_.At(target);
 
             if (move.fromStep_ < targetStep + (move.fromProc_ == targetProc)) {
                 const unsigned diff = targetStep - move.fromStep_;
@@ -144,12 +144,12 @@ struct KlTotalCommCostFunction {
                 unsigned idx = targetStartIdx;
                 for (; idx < bound; idx++) {
                     for (const unsigned p : procRange_->CompatibleProcessorsVertex(target)) {
-                        affinity_table_target[p][idx] -= penalty;
+                        affinityTableTarget[p][idx] -= penalty;
                     }
                 }
 
                 if (idx - 1 < bound && IsCompatible(target, move.fromProc_)) {
-                    affinity_table_target[move.fromProc_][idx - 1] += penalty;
+                    affinityTableTarget[move.fromProc_][idx - 1] += penalty;
                 }
 
             } else {
@@ -158,14 +158,14 @@ struct KlTotalCommCostFunction {
                 unsigned idx = std::min(windowSize + diff, windowBound);
 
                 if (idx < windowBound && IsCompatible(target, move.fromProc_)) {
-                    affinity_table_target[move.fromProc_][idx] += reward;
+                    affinityTableTarget[move.fromProc_][idx] += reward;
                 }
 
                 idx++;
 
                 for (; idx < windowBound; idx++) {
                     for (const unsigned p : procRange_->CompatibleProcessorsVertex(target)) {
-                        affinity_table_target[p][idx] += reward;
+                        affinityTableTarget[p][idx] += reward;
                     }
                 }
             }
@@ -176,12 +176,12 @@ struct KlTotalCommCostFunction {
                 const unsigned bound = windowSize >= diff ? windowSize - diff + 1 : 0;
                 for (; idx < bound; idx++) {
                     for (const unsigned p : procRange_->CompatibleProcessorsVertex(target)) {
-                        affinity_table_target[p][idx] += penalty;
+                        affinityTableTarget[p][idx] += penalty;
                     }
                 }
 
                 if (idx - 1 < bound && IsCompatible(target, move.toProc_)) {
-                    affinity_table_target[move.toProc_][idx - 1] -= penalty;
+                    affinityTableTarget[move.toProc_][idx - 1] -= penalty;
                 }
 
             } else {
@@ -190,14 +190,14 @@ struct KlTotalCommCostFunction {
                 unsigned idx = std::min(windowSize + diff, windowBound);
 
                 if (idx < windowBound && IsCompatible(target, move.toProc_)) {
-                    affinity_table_target[move.toProc_][idx] -= reward;
+                    affinityTableTarget[move.toProc_][idx] -= reward;
                 }
 
                 idx++;
 
                 for (; idx < windowBound; idx++) {
                     for (const unsigned p : procRange_->CompatibleProcessorsVertex(target)) {
-                        affinity_table_target[p][idx] -= reward;
+                        affinityTableTarget[p][idx] -= reward;
                     }
                 }
             }
@@ -216,7 +216,7 @@ struct KlTotalCommCostFunction {
                             = ChangeCommCost(instance_->CommunicationCosts(p, move.toProc_), toProcTargetCommCost, commGain);
                         const auto y
                             = ChangeCommCost(instance_->CommunicationCosts(p, move.fromProc_), fromProcTargetCommCost, commGain);
-                        affinity_table_target[p][idx] += x - y;
+                        affinityTableTarget[p][idx] += x - y;
                     }
                 }
             }
