@@ -44,13 +44,13 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    SarkarParams::MulParameters<VWorkwT<GraphT>> params;
+    sarkar_params::MulParameters<VWorkwT<GraphT>> params;
     params.commCostVec_ = std::vector<VWorkwT<GraphT>>({1, 2, 5, 10, 20, 50, 100, 200, 500, 1000});
     params.maxNumIterationWithoutChanges_ = 3;
     params.leniency_ = 0.005;
     params.maxWeight_ = 15000;
     params.smallWeightThreshold_ = 4000;
-    params.bufferMergeMode_ = SarkarParams::BufferMergeMode::FULL;
+    params.bufferMergeMode_ = sarkar_params::BufferMergeMode::FULL;
 
     SarkarMul<GraphT, GraphT> coarser;
     coarser.SetParameters(params);

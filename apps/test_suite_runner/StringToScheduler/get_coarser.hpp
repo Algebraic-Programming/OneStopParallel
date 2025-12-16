@@ -134,7 +134,7 @@ std::unique_ptr<Coarser<GraphTIn, GraphTOut>> GetCoarserByName(const ConfigParse
         }
 
     } else if (coarserName == "Sarkar") {
-        SarkarParams::Parameters<VWorkwT<GraphTIn>> params;
+        sarkar_params::Parameters<VWorkwT<GraphTIn>> params;
         if (auto paramsOpt = coarserAlgorithm.get_child_optional("parameters")) {
             const auto &paramsPt = paramsOpt.get();
             params.commCost_ = paramsPt.get_optional<VWorkwT<GraphTIn>>("commCost").value_or(params.commCost_);
@@ -148,25 +148,25 @@ std::unique_ptr<Coarser<GraphTIn, GraphTOut>> GetCoarserByName(const ConfigParse
             if (auto modeStrOpt = paramsPt.get_optional<std::string>("mode")) {
                 const std::string &modeStr = modeStrOpt.get();
                 if (modeStr == "LINES") {
-                    params.mode_ = SarkarParams::Mode::LINES;
+                    params.mode_ = sarkar_params::Mode::LINES;
                 } else if (modeStr == "FAN_IN_FULL") {
-                    params.mode_ = SarkarParams::Mode::FAN_IN_FULL;
+                    params.mode_ = sarkar_params::Mode::FAN_IN_FULL;
                 } else if (modeStr == "FAN_IN_PARTIAL") {
-                    params.mode_ = SarkarParams::Mode::FAN_IN_PARTIAL;
+                    params.mode_ = sarkar_params::Mode::FAN_IN_PARTIAL;
                 } else if (modeStr == "FAN_OUT_FULL") {
-                    params.mode_ = SarkarParams::Mode::FAN_OUT_FULL;
+                    params.mode_ = sarkar_params::Mode::FAN_OUT_FULL;
                 } else if (modeStr == "FAN_OUT_PARTIAL") {
-                    params.mode_ = SarkarParams::Mode::FAN_OUT_PARTIAL;
+                    params.mode_ = sarkar_params::Mode::FAN_OUT_PARTIAL;
                 } else if (modeStr == "LEVEL_EVEN") {
-                    params.mode_ = SarkarParams::Mode::LEVEL_EVEN;
+                    params.mode_ = sarkar_params::Mode::LEVEL_EVEN;
                 } else if (modeStr == "LEVEL_ODD") {
-                    params.mode_ = SarkarParams::Mode::LEVEL_ODD;
+                    params.mode_ = sarkar_params::Mode::LEVEL_ODD;
                 } else if (modeStr == "FAN_IN_BUFFER") {
-                    params.mode_ = SarkarParams::Mode::FAN_IN_BUFFER;
+                    params.mode_ = sarkar_params::Mode::FAN_IN_BUFFER;
                 } else if (modeStr == "FAN_OUT_BUFFER") {
-                    params.mode_ = SarkarParams::Mode::FAN_OUT_BUFFER;
+                    params.mode_ = sarkar_params::Mode::FAN_OUT_BUFFER;
                 } else if (modeStr == "HOMOGENEOUS_BUFFER") {
-                    params.mode_ = SarkarParams::Mode::HOMOGENEOUS_BUFFER;
+                    params.mode_ = sarkar_params::Mode::HOMOGENEOUS_BUFFER;
                 } else {
                     throw std::invalid_argument(
                         "Invalid Sarkar mode: " + modeStr
@@ -213,7 +213,7 @@ std::unique_ptr<MultilevelCoarser<GraphTIn, GraphTOut>> GetMultilevelCoarserByNa
 
     if (coarserName == "Sarkar") {
         auto coarser = std::make_unique<SarkarMul<GraphTIn, GraphTOut>>();
-        SarkarParams::MulParameters<VWorkwT<GraphTIn>> mlParams;
+        sarkar_params::MulParameters<VWorkwT<GraphTIn>> mlParams;
 
         if (auto paramsOpt = coarserAlgorithm.get_child_optional("parameters")) {
             const auto &paramsPt = paramsOpt.get();
@@ -236,15 +236,15 @@ std::unique_ptr<MultilevelCoarser<GraphTIn, GraphTOut>> GetMultilevelCoarserByNa
             if (auto modeStrOpt = paramsPt.get_optional<std::string>("buffer_merge_mode")) {
                 const std::string &modeStr = modeStrOpt.get();
                 if (modeStr == "OFF") {
-                    mlParams.bufferMergeMode_ = SarkarParams::BufferMergeMode::OFF;
+                    mlParams.bufferMergeMode_ = sarkar_params::BufferMergeMode::OFF;
                 } else if (modeStr == "FAN_IN") {
-                    mlParams.bufferMergeMode_ = SarkarParams::BufferMergeMode::FAN_IN;
+                    mlParams.bufferMergeMode_ = sarkar_params::BufferMergeMode::FAN_IN;
                 } else if (modeStr == "FAN_OUT") {
-                    mlParams.bufferMergeMode_ = SarkarParams::BufferMergeMode::FAN_OUT;
+                    mlParams.bufferMergeMode_ = sarkar_params::BufferMergeMode::FAN_OUT;
                 } else if (modeStr == "HOMOGENEOUS") {
-                    mlParams.bufferMergeMode_ = SarkarParams::BufferMergeMode::HOMOGENEOUS;
+                    mlParams.bufferMergeMode_ = sarkar_params::BufferMergeMode::HOMOGENEOUS;
                 } else if (modeStr == "FULL") {
-                    mlParams.bufferMergeMode_ = SarkarParams::BufferMergeMode::FULL;
+                    mlParams.bufferMergeMode_ = sarkar_params::BufferMergeMode::FULL;
                 } else {
                     throw std::invalid_argument("Invalid Sarkar Buffer Merge mode: " + modeStr
                                                 + "!\nChoose from: OFF, FAN_IN, FAN_OUT, HOMOGENEOUS, FULL.");

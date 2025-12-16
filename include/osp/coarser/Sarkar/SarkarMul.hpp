@@ -24,7 +24,7 @@ limitations under the License.
 
 namespace osp {
 
-namespace SarkarParams {
+namespace sarkar_params {
 
 enum class BufferMergeMode { OFF, FAN_IN, FAN_OUT, HOMOGENEOUS, FULL };
 
@@ -40,7 +40,7 @@ struct MulParameters {
     BufferMergeMode bufferMergeMode_{BufferMergeMode::OFF};
 };
 
-}    // namespace SarkarParams
+}    // namespace sarkar_params
 
 template <typename GraphT, typename GraphTCoarse>
 class SarkarMul : public MultilevelCoarser<GraphT, GraphTCoarse> {
@@ -50,9 +50,9 @@ class SarkarMul : public MultilevelCoarser<GraphT, GraphTCoarse> {
     BiasedRandom balancedRandom_{42U};
 
     // Multilevel coarser parameters
-    SarkarParams::MulParameters<VWorkwT<GraphT>> mlParams_;
+    sarkar_params::MulParameters<VWorkwT<GraphT>> mlParams_;
     // Coarser parameters
-    SarkarParams::Parameters<VWorkwT<GraphT>> params_;
+    sarkar_params::Parameters<VWorkwT<GraphT>> params_;
     // Initial coarser
     Sarkar<GraphT, GraphTCoarse> coarserInitial_;
     // Subsequent coarser
@@ -68,7 +68,7 @@ class SarkarMul : public MultilevelCoarser<GraphT, GraphTCoarse> {
     ReturnStatus RunContractions() override;
 
   public:
-    void SetParameters(SarkarParams::MulParameters<VWorkwT<GraphT>> mlParams) {
+    void SetParameters(sarkar_params::MulParameters<VWorkwT<GraphT>> mlParams) {
         mlParams_ = std::move(mlParams);
         SetSeed();
         InitParams();
@@ -166,7 +166,7 @@ ReturnStatus SarkarMul<GraphT, GraphTCoarse>::RunContractions(VWorkwT<GraphT> co
 
         // Lines
         while (innerNoChange < mlParams_.maxNumIterationWithoutChanges_) {
-            params_.mode_ = SarkarParams::Mode::LINES;
+            params_.mode_ = sarkar_params::Mode::LINES;
             params_.useTopPoset_ = thueCoin_.GetFlip();
             UpdateParams();
 
@@ -183,7 +183,7 @@ ReturnStatus SarkarMul<GraphT, GraphTCoarse>::RunContractions(VWorkwT<GraphT> co
 
         // Partial Fans
         while (innerNoChange < mlParams_.maxNumIterationWithoutChanges_) {
-            params_.mode_ = thueCoin_.GetFlip() ? SarkarParams::Mode::FAN_IN_PARTIAL : SarkarParams::Mode::FAN_OUT_PARTIAL;
+            params_.mode_ = thueCoin_.GetFlip() ? sarkar_params::Mode::FAN_IN_PARTIAL : sarkar_params::Mode::FAN_OUT_PARTIAL;
             UpdateParams();
 
             status = std::max(status, RunSingleContractionMode(diff));
@@ -199,7 +199,7 @@ ReturnStatus SarkarMul<GraphT, GraphTCoarse>::RunContractions(VWorkwT<GraphT> co
 
         // Full Fans
         while (innerNoChange < mlParams_.maxNumIterationWithoutChanges_) {
-            params_.mode_ = thueCoin_.GetFlip() ? SarkarParams::Mode::FAN_IN_FULL : SarkarParams::Mode::FAN_OUT_FULL;
+            params_.mode_ = thueCoin_.GetFlip() ? sarkar_params::Mode::FAN_IN_FULL : sarkar_params::Mode::FAN_OUT_FULL;
             UpdateParams();
 
             status = std::max(status, RunSingleContractionMode(diff));
@@ -215,7 +215,7 @@ ReturnStatus SarkarMul<GraphT, GraphTCoarse>::RunContractions(VWorkwT<GraphT> co
 
         // Levels
         while (innerNoChange < mlParams_.maxNumIterationWithoutChanges_) {
-            params_.mode_ = thueCoin_.GetFlip() ? SarkarParams::Mode::LEVEL_EVEN : SarkarParams::Mode::LEVEL_ODD;
+            params_.mode_ = thueCoin_.GetFlip() ? sarkar_params::Mode::LEVEL_EVEN : sarkar_params::Mode::LEVEL_ODD;
             params_.useTopPoset_ = balancedRandom_.GetFlip();
             UpdateParams();
 
@@ -246,30 +246,30 @@ ReturnStatus SarkarMul<GraphT, GraphTCoarse>::RunBufferMerges() {
     unsigned noChange = 0;
     while (noChange < mlParams_.maxNumIterationWithoutChanges_) {
         VertexIdxT<GraphT> diff = 0;
-        if ((mlParams_.bufferMergeMode_ == SarkarParams::BufferMergeMode::HOMOGENEOUS)
-            || (mlParams_.bufferMergeMode_ == SarkarParams::BufferMergeMode::FULL && diff == 0)) {
-            params_.mode_ = SarkarParams::Mode::HOMOGENEOUS_BUFFER;
+        if ((mlParams_.bufferMergeMode_ == sarkar_params::BufferMergeMode::HOMOGENEOUS)
+            || (mlParams_.bufferMergeMode_ == sarkar_params::BufferMergeMode::FULL && diff == 0)) {
+            params_.mode_ = sarkar_params::Mode::HOMOGENEOUS_BUFFER;
             UpdateParams();
             status = std::max(status, RunSingleContractionMode(diff));
         }
-        if (mlParams_.bufferMergeMode_ == SarkarParams::BufferMergeMode::FAN_IN) {
-            params_.mode_ = SarkarParams::Mode::FAN_IN_BUFFER;
+        if (mlParams_.bufferMergeMode_ == sarkar_params::BufferMergeMode::FAN_IN) {
+            params_.mode_ = sarkar_params::Mode::FAN_IN_BUFFER;
             UpdateParams();
             status = std::max(status, RunSingleContractionMode(diff));
         }
-        if (mlParams_.bufferMergeMode_ == SarkarParams::BufferMergeMode::FAN_OUT) {
-            params_.mode_ = SarkarParams::Mode::FAN_OUT_BUFFER;
+        if (mlParams_.bufferMergeMode_ == sarkar_params::BufferMergeMode::FAN_OUT) {
+            params_.mode_ = sarkar_params::Mode::FAN_OUT_BUFFER;
             UpdateParams();
             status = std::max(status, RunSingleContractionMode(diff));
         }
-        if (mlParams_.bufferMergeMode_ == SarkarParams::BufferMergeMode::FULL && diff == 0) {
+        if (mlParams_.bufferMergeMode_ == sarkar_params::BufferMergeMode::FULL && diff == 0) {
             const bool flip = thueCoin_.GetFlip();
-            params_.mode_ = flip ? SarkarParams::Mode::FAN_IN_BUFFER : SarkarParams::Mode::FAN_OUT_BUFFER;
+            params_.mode_ = flip ? sarkar_params::Mode::FAN_IN_BUFFER : sarkar_params::Mode::FAN_OUT_BUFFER;
             UpdateParams();
             status = std::max(status, RunSingleContractionMode(diff));
 
             if (diff == 0) {
-                params_.mode_ = (!flip) ? SarkarParams::Mode::FAN_IN_BUFFER : SarkarParams::Mode::FAN_OUT_BUFFER;
+                params_.mode_ = (!flip) ? sarkar_params::Mode::FAN_IN_BUFFER : sarkar_params::Mode::FAN_OUT_BUFFER;
                 UpdateParams();
                 status = std::max(status, RunSingleContractionMode(diff));
             }
@@ -296,7 +296,7 @@ ReturnStatus SarkarMul<GraphT, GraphTCoarse>::RunContractions() {
         status = std::max(status, RunContractions(commCost));
     }
 
-    if (mlParams_.bufferMergeMode_ != SarkarParams::BufferMergeMode::OFF) {
+    if (mlParams_.bufferMergeMode_ != sarkar_params::BufferMergeMode::OFF) {
         status = std::max(status, RunBufferMerges());
     }
 

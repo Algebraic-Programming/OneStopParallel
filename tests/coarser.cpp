@@ -592,8 +592,8 @@ BOOST_AUTO_TEST_CASE(SarkarTest) {
     using GraphT = ComputationalDagEdgeIdxVectorImplDefT;
     // using graph_t = ComputationalDagVectorImplDefUnsignedT;
 
-    SarkarParams::Parameters<VWorkwT<GraphT>> params;
-    params.mode_ = SarkarParams::Mode::LINES;
+    sarkar_params::Parameters<VWorkwT<GraphT>> params;
+    params.mode_ = sarkar_params::Mode::LINES;
     params.commCost_ = 100;
     params.useTopPoset_ = true;
 
@@ -605,39 +605,39 @@ BOOST_AUTO_TEST_CASE(SarkarTest) {
     coarser.SetParameters(params);
     TestCoarserSameGraph<GraphT>(coarser);
 
-    params.mode_ = SarkarParams::Mode::FAN_IN_FULL;
+    params.mode_ = sarkar_params::Mode::FAN_IN_FULL;
     coarser.SetParameters(params);
     TestCoarserSameGraph<GraphT>(coarser);
 
-    params.mode_ = SarkarParams::Mode::FAN_IN_PARTIAL;
+    params.mode_ = sarkar_params::Mode::FAN_IN_PARTIAL;
     coarser.SetParameters(params);
     TestCoarserSameGraph<GraphT>(coarser);
 
-    params.mode_ = SarkarParams::Mode::FAN_OUT_FULL;
+    params.mode_ = sarkar_params::Mode::FAN_OUT_FULL;
     coarser.SetParameters(params);
     TestCoarserSameGraph<GraphT>(coarser);
 
-    params.mode_ = SarkarParams::Mode::FAN_OUT_PARTIAL;
+    params.mode_ = sarkar_params::Mode::FAN_OUT_PARTIAL;
     coarser.SetParameters(params);
     TestCoarserSameGraph<GraphT>(coarser);
 
-    params.mode_ = SarkarParams::Mode::LEVEL_EVEN;
+    params.mode_ = sarkar_params::Mode::LEVEL_EVEN;
     coarser.SetParameters(params);
     TestCoarserSameGraph<GraphT>(coarser);
 
-    params.mode_ = SarkarParams::Mode::LEVEL_ODD;
+    params.mode_ = sarkar_params::Mode::LEVEL_ODD;
     coarser.SetParameters(params);
     TestCoarserSameGraph<GraphT>(coarser);
 
-    params.mode_ = SarkarParams::Mode::FAN_IN_BUFFER;
+    params.mode_ = sarkar_params::Mode::FAN_IN_BUFFER;
     coarser.SetParameters(params);
     TestCoarserSameGraph<GraphT>(coarser);
 
-    params.mode_ = SarkarParams::Mode::FAN_OUT_BUFFER;
+    params.mode_ = sarkar_params::Mode::FAN_OUT_BUFFER;
     coarser.SetParameters(params);
     TestCoarserSameGraph<GraphT>(coarser);
 
-    params.mode_ = SarkarParams::Mode::HOMOGENEOUS_BUFFER;
+    params.mode_ = sarkar_params::Mode::HOMOGENEOUS_BUFFER;
     coarser.SetParameters(params);
     TestCoarserSameGraph<GraphT>(coarser);
 }
@@ -646,7 +646,7 @@ BOOST_AUTO_TEST_CASE(SarkarMlTest) {
     using GraphT = ComputationalDagEdgeIdxVectorImplDefT;
     // using graph_t = ComputationalDagVectorImplDefUnsignedT;
 
-    SarkarParams::MulParameters<VWorkwT<GraphT>> params;
+    sarkar_params::MulParameters<VWorkwT<GraphT>> params;
     params.commCostVec_ = {100};
 
     SarkarMul<GraphT, GraphT> coarser;
@@ -659,9 +659,9 @@ BOOST_AUTO_TEST_CASE(SarkarMlBufferMergeTest) {
     using GraphT = ComputationalDagEdgeIdxVectorImplDefT;
     // using graph_t = ComputationalDagVectorImplDefUnsignedT;
 
-    SarkarParams::MulParameters<VWorkwT<GraphT>> params;
+    sarkar_params::MulParameters<VWorkwT<GraphT>> params;
     params.commCostVec_ = {1, 2, 10, 50, 100};
-    params.bufferMergeMode_ = SarkarParams::BufferMergeMode::FULL;
+    params.bufferMergeMode_ = sarkar_params::BufferMergeMode::FULL;
 
     SarkarMul<GraphT, GraphT> coarser;
     coarser.SetParameters(params);
