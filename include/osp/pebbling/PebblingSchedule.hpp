@@ -54,7 +54,7 @@ class PebblingSchedule {
   private:
     using VertexIdx = VertexIdxT<GraphT>;
     using CostType = VWorkwT<GraphT>;
-    using MemweightType = VMemwT<GraphT>;
+    using MemWeightType = VMemwT<GraphT>;
 
     static_assert(std::is_same_v<VWorkwT<GraphT>, VCommwT<GraphT>>,
                   "PebblingSchedule requires work and comm. weights to have the same type.");
@@ -177,7 +177,7 @@ class PebblingSchedule {
 
     // other basic operations
     bool IsValid() const;
-    static std::vector<MemweightType> MinimumMemoryRequiredPerNodeType(const BspInstance<GraphT> &instance,
+    static std::vector<MemWeightType> MinimumMemoryRequiredPerNodeType(const BspInstance<GraphT> &instance,
                                                                        const std::set<VertexIdx> &externalSources
                                                                        = std::set<VertexIdx>());
 
@@ -225,7 +225,7 @@ class PebblingSchedule {
                                     const std::vector<std::vector<std::set<VertexIdx>>> &hasRedsInBeginning);
 
     // auxiliary function to remove some unnecessary communications after assembling from partial pebblings
-    void FixForceEvicts(const std::vector<std::tuple<VertexIdx, unsigned, unsigned>> forceEvictNodeProcStep);
+    void FixForceEvicts(const std::vector<std::tuple<VertexIdx, unsigned, unsigned>> &forceEvictNodeProcStep);
 
     // auxiliary after partial pebblings: try to merge supersteps
     void TryToMergeSupersteps();
@@ -234,23 +234,23 @@ class PebblingSchedule {
         return computeStepsForProcSuperstep_[proc][supstep];
     }
 
-    const std::vector<std::vector<std::vector<VertexIdx>>> &GetNodesEvictedInComm(unsigned proc, unsigned supstep) const {
-        return nodes_evicted_in_comm[proc][supstep];
+    const std::vector<VertexIdx> &GetNodesEvictedInComm(unsigned proc, unsigned supstep) const {
+        return nodesEvictedInComm_[proc][supstep];
     }
 
-    const std::vector<std::vector<std::vector<VertexIdx>>> &GetNodesSentDown(unsigned proc, unsigned supstep) const {
-        return nodes_sent_down[proc][supstep];
+    const std::vector<VertexIdx> &GetNodesSentDown(unsigned proc, unsigned supstep) const {
+        return nodesSentDown_[proc][supstep];
     }
 
-    const std::vector<std::vector<std::vector<VertexIdx>>> &GetNodesSentUp(unsigned proc, unsigned supstep) const {
-        return nodes_sent_up[proc][supstep];
+    const std::vector<VertexIdx> &GetNodesSentUp(unsigned proc, unsigned supstep) const {
+        return nodesSentUp_[proc][supstep];
     }
 
-    void SetNeedsBlueAtEnd(const std::set<VertexIdx> &nodes) { needs_blue_at_end = nodes_; }
+    void SetNeedsBlueAtEnd(const std::set<VertexIdx> &nodes) { needsBlueAtEnd_ = nodes; }
 
-    void SetExternalSources(const std::set<VertexIdx> &nodes) { external_sources = nodes_; }
+    void SetExternalSources(const std::set<VertexIdx> &nodes) { externalSources_ = nodes; }
 
-    void SetHasRedInBeginning(const std::vector<std::set<VertexIdx>> &nodes) { has_red_in_beginning = nodes_; }
+    void SetHasRedInBeginning(const std::vector<std::set<VertexIdx>> &nodes) { hasRedInBeginning_ = nodes; }
 };
 
 template <typename GraphT>
@@ -261,18 +261,18 @@ void PebblingSchedule<GraphT>::UpdateNumberOfSupersteps(unsigned newNumberOfSupe
     computeStepsForProcSuperstep_.resize(instance_->NumberOfProcessors(),
                                          std::vector<std::vector<ComputeStep>>(numberOfSupersteps_));
 
-    nodes_evicted_in_comm.clear();
-    nodes_evicted_in_comm.resize(instance_->NumberOfProcessors(), std::vector<std::vector<VertexIdx>>(numberOfSupersteps_));
+    nodesEvictedInComm_.clear();
+    nodesEvictedInComm_.resize(instance_->NumberOfProcessors(), std::vector<std::vector<VertexIdx>>(numberOfSupersteps_));
 
-    nodes_sent_down.clear();
-    nodes_sent_down.resize(instance_->NumberOfProcessors(), std::vector<std::vector<VertexIdx>>(numberOfSupersteps_));
+    nodesSentDown_.clear();
+    nodesSentDown_.resize(instance_->NumberOfProcessors(), std::vector<std::vector<VertexIdx>>(numberOfSupersteps_));
 
-    nodes_sent_up.clear();
-    nodes_sent_up.resize(instance_->NumberOfProcessors(), std::vector<std::vector<VertexIdx>>(numberOfSupersteps_));
+    nodesSentUp_.clear();
+    nodesSentUp_.resize(instance_->NumberOfProcessors(), std::vector<std::vector<VertexIdx>>(numberOfSupersteps_));
 }
 
 template <typename GraphT>
-CostType PebblingSchedule<GraphT>::ComputeCost() const {
+VWorkwT<GraphT> PebblingSchedule<GraphT>::ComputeCost() const {
     CostType totalCosts = 0;
     for (unsigned step = 0; step < numberOfSupersteps_; ++step) {
         // compute phase
@@ -280,54 +280,54 @@ CostType PebblingSchedule<GraphT>::ComputeCost() const {
         for (unsigned proc = 0; proc < instance_->GetArchitecture().NumberOfProcessors(); ++proc) {
             CostType work = 0;
             for (const auto &computeStep : computeStepsForProcSuperstep_[proc][step]) {
-                work += instance_->GetComputationalDag().VertexWorkWeight(computeStep.node);
+                work += instance_->GetComputationalDag().VertexWorkWeight(computeStep.node_);
             }
 
-            if (work > max_work) {
+            if (work > maxWork) {
                 maxWork = work;
             }
         }
-        totalCosts += max_work;
+        totalCosts += maxWork;
 
         // communication phase
         CostType maxSendUp = std::numeric_limits<CostType>::min();
         for (unsigned proc = 0; proc < instance_->GetArchitecture().NumberOfProcessors(); ++proc) {
             CostType sendUp = 0;
-            for (VertexIdx node : nodes_sent_up[proc][step]) {
-                send_up
-                    += instance->GetComputationalDag().VertexCommWeight(node) * instance->GetArchitecture().CommunicationCosts();
+            for (VertexIdx node : nodesSentUp_[proc][step]) {
+                sendUp
+                    += instance_->GetComputationalDag().VertexCommWeight(node) * instance_->GetArchitecture().CommunicationCosts();
             }
 
-            if (sendUp > max_send_up) {
-                maxSendUp = send_up;
+            if (sendUp > maxSendUp) {
+                maxSendUp = sendUp;
             }
         }
-        totalCosts += max_send_up;
+        totalCosts += maxSendUp;
 
         totalCosts += static_cast<CostType>(instance_->GetArchitecture().SynchronisationCosts());
 
         CostType maxSendDown = std::numeric_limits<CostType>::min();
         for (unsigned proc = 0; proc < instance_->GetArchitecture().NumberOfProcessors(); ++proc) {
             CostType sendDown = 0;
-            for (VertexIdx node : nodes_sent_down[proc][step]) {
-                send_down
-                    += instance->GetComputationalDag().VertexCommWeight(node) * instance->GetArchitecture().CommunicationCosts();
+            for (VertexIdx node : nodesSentDown_[proc][step]) {
+                sendDown
+                    += instance_->GetComputationalDag().VertexCommWeight(node) * instance_->GetArchitecture().CommunicationCosts();
             }
 
-            if (sendDown > max_send_down) {
-                maxSendDown = send_down;
+            if (sendDown > maxSendDown) {
+                maxSendDown = sendDown;
             }
         }
-        totalCosts += max_send_down;
+        totalCosts += maxSendDown;
     }
 
-    return total_costs;
+    return totalCosts;
 }
 
 template <typename GraphT>
 VWorkwT<GraphT> PebblingSchedule<GraphT>::ComputeAsynchronousCost() const {
     std::vector<CostType> currentTimeAtProcessor(instance_->GetArchitecture().NumberOfProcessors(), 0);
-    std::vector<CostType> timeWhenNodeGetsBlue(instance->GetComputationalDag().NumVertices(), std::numeric_limits<CostType>::max());
+    std::vector<CostType> timeWhenNodeGetsBlue(instance_->GetComputationalDag().NumVertices(), std::numeric_limits<CostType>::max());
     if (needToLoadInputs_) {
         for (VertexIdx node = 0; node < instance_->NumberOfVertices(); ++node) {
             if (instance_->GetComputationalDag().InDegree(node) == 0) {
@@ -340,13 +340,13 @@ VWorkwT<GraphT> PebblingSchedule<GraphT>::ComputeAsynchronousCost() const {
         // compute phase
         for (unsigned proc = 0; proc < instance_->GetArchitecture().NumberOfProcessors(); ++proc) {
             for (const auto &computeStep : computeStepsForProcSuperstep_[proc][step]) {
-                currentTimeAtProcessor[proc] += instance_->GetComputationalDag().VertexWorkWeight(computeStep.node);
+                currentTimeAtProcessor[proc] += instance_->GetComputationalDag().VertexWorkWeight(computeStep.node_);
             }
         }
 
         // communication phase - send up
         for (unsigned proc = 0; proc < instance_->GetArchitecture().NumberOfProcessors(); ++proc) {
-            for (VertexIdx node : nodesSentUp[proc][step]) {
+            for (VertexIdx node : nodesSentUp_[proc][step]) {
                 currentTimeAtProcessor[proc] += instance_->GetComputationalDag().VertexCommWeight(node)
                                                 * instance_->GetArchitecture().CommunicationCosts();
                 if (timeWhenNodeGetsBlue[node] > currentTimeAtProcessor[proc]) {
@@ -357,7 +357,7 @@ VWorkwT<GraphT> PebblingSchedule<GraphT>::ComputeAsynchronousCost() const {
 
         // communication phase - send down
         for (unsigned proc = 0; proc < instance_->GetArchitecture().NumberOfProcessors(); ++proc) {
-            for (VertexIdx node : nodesSentDown[proc][step]) {
+            for (VertexIdx node : nodesSentDown_[proc][step]) {
                 if (currentTimeAtProcessor[proc] < timeWhenNodeGetsBlue[node]) {
                     currentTimeAtProcessor[proc] = timeWhenNodeGetsBlue[node];
                 }
@@ -393,29 +393,29 @@ void PebblingSchedule<GraphT>::CleanSchedule() {
                                                        std::vector<bool>(instance_->NumberOfProcessors(), false));
 
     std::vector<bool> everNeededAsBlue(instance_->NumberOfVertices(), false);
-    if (needsBlueAtEnd.empty()) {
+    if (needsBlueAtEnd_.empty()) {
         for (VertexIdx node = 0; node < instance_->NumberOfVertices(); ++node) {
             if (instance_->GetComputationalDag().OutDegree(node) == 0) {
                 everNeededAsBlue[node] = true;
             }
         }
     } else {
-        for (VertexIdx node : needsBlueAtEnd) {
+        for (VertexIdx node : needsBlueAtEnd_) {
             everNeededAsBlue[node] = true;
         }
     }
 
     for (unsigned step = 0; step < numberOfSupersteps_; ++step) {
         for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); ++proc) {
-            for (VertexIdx node : nodesSentDown[proc][step]) {
+            for (VertexIdx node : nodesSentDown_[proc][step]) {
                 everNeededAsBlue[node] = true;
             }
         }
     }
 
-    if (!hasRedInBeginning.empty()) {
+    if (!hasRedInBeginning_.empty()) {
         for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); ++proc) {
-            for (VertexIdx node : hasRedInBeginning[proc]) {
+            for (VertexIdx node : hasRedInBeginning_[proc]) {
                 hasRedAfterCleaning[node][proc] = true;
             }
         }
@@ -425,7 +425,7 @@ void PebblingSchedule<GraphT>::CleanSchedule() {
         // compute phase
         for (unsigned proc = 0; proc < instance_->GetArchitecture().NumberOfProcessors(); ++proc) {
             for (const auto &computeStep : computeStepsForProcSuperstep_[proc][step]) {
-                VertexIdx node = computeStep.node;
+                VertexIdx node = computeStep.node_;
                 needed[node][proc].emplace_back(false);
                 keepFalse[node][proc] = hasRedAfterCleaning[node][proc];
                 for (VertexIdx pred : instance_->GetComputationalDag().Parents(node)) {
@@ -434,7 +434,7 @@ void PebblingSchedule<GraphT>::CleanSchedule() {
                         needed[pred][proc].back() = true;
                     }
                 }
-                for (VertexIdx toEvict : computeStep.nodesEvictedAfter) {
+                for (VertexIdx toEvict : computeStep.nodesEvictedAfter_) {
                     hasRedAfterCleaning[toEvict][proc] = false;
                 }
             }
@@ -442,7 +442,7 @@ void PebblingSchedule<GraphT>::CleanSchedule() {
 
         // send up phase
         for (unsigned proc = 0; proc < instance_->GetArchitecture().NumberOfProcessors(); ++proc) {
-            for (VertexIdx node : nodesSentUp[proc][step]) {
+            for (VertexIdx node : nodesSentUp_[proc][step]) {
                 if (everNeededAsBlue[node]) {
                     hasRedAfterCleaning[node][proc] = true;
                     if (!keepFalse[node][proc]) {
@@ -453,14 +453,14 @@ void PebblingSchedule<GraphT>::CleanSchedule() {
         }
 
         for (unsigned proc = 0; proc < instance_->GetArchitecture().NumberOfProcessors(); ++proc) {
-            for (VertexIdx node : nodesEvictedInComm[proc][step]) {
+            for (VertexIdx node : nodesEvictedInComm_[proc][step]) {
                 hasRedAfterCleaning[node][proc] = false;
             }
         }
 
         // send down phase
         for (unsigned proc = 0; proc < instance_->GetArchitecture().NumberOfProcessors(); ++proc) {
-            for (VertexIdx node : nodesSentDown[proc][step]) {
+            for (VertexIdx node : nodesSentDown_[proc][step]) {
                 needed[node][proc].emplace_back(false);
                 keepFalse[node][proc] = hasRedAfterCleaning[node][proc];
             }
@@ -477,9 +477,9 @@ void PebblingSchedule<GraphT>::CleanSchedule() {
                                                                     std::vector<std::vector<VertexIdx>>(numberOfSupersteps_));
 
     std::vector<std::vector<bool>> hasRed(instance_->NumberOfVertices(), std::vector<bool>(instance_->NumberOfProcessors(), false));
-    if (!hasRedInBeginning.empty()) {
+    if (!hasRedInBeginning_.empty()) {
         for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); ++proc) {
-            for (VertexIdx node : hasRedInBeginning[proc]) {
+            for (VertexIdx node : hasRedInBeginning_[proc]) {
                 hasRed[node][proc] = true;
             }
         }
@@ -507,7 +507,7 @@ void PebblingSchedule<GraphT>::CleanSchedule() {
 
             unsigned newStepIndex = 0;
             for (unsigned stepIndex = 0; stepIndex < computeStepsForProcSuperstep_[proc][superstep].size(); ++stepIndex) {
-                VertexIdx node = computeStepsForProcSuperstep_[proc][superstep][stepIndex].node;
+                VertexIdx node = computeStepsForProcSuperstep_[proc][superstep][stepIndex].node_;
 
                 if (needed[node][proc].front()) {
                     newComputeStepsForProcSuperstep[proc][superstep].emplace_back(node, std::vector<VertexIdx>());
@@ -519,7 +519,7 @@ void PebblingSchedule<GraphT>::CleanSchedule() {
 
                 needed[node][proc].pop_front();
 
-                for (VertexIdx toEvict : computeStepsForProcSuperstep_[proc][superstep][stepIndex].nodesEvictedAfter) {
+                for (VertexIdx toEvict : computeStepsForProcSuperstep_[proc][superstep][stepIndex].nodesEvictedAfter_) {
                     if (hasRed[toEvict][proc]) {
                         newEvictAfter[stepIndex].push_back(toEvict);
                     }
@@ -537,7 +537,7 @@ void PebblingSchedule<GraphT>::CleanSchedule() {
                 }
 
                 if (stepRemains[stepIndex]) {
-                    newComputeStepsForProcSuperstep[proc][superstep][newStepIndex - 1].nodesEvictedAfter = toEvict;
+                    newComputeStepsForProcSuperstep[proc][superstep][newStepIndex - 1].nodesEvictedAfter_ = toEvict;
                     toEvict.clear();
                     --newStepIndex;
                 }
@@ -556,7 +556,7 @@ void PebblingSchedule<GraphT>::CleanSchedule() {
         }
         for (unsigned proc = 0; proc < instance_->GetArchitecture().NumberOfProcessors(); ++proc) {
             // send up phase
-            for (VertexIdx node : nodesSentUp[proc][superstep]) {
+            for (VertexIdx node : nodesSentUp_[proc][superstep]) {
                 if (!everNeededAsBlue[node]) {
                     continue;
                 }
@@ -579,7 +579,7 @@ void PebblingSchedule<GraphT>::CleanSchedule() {
 
         // comm phase evict
         for (unsigned proc = 0; proc < instance_->GetArchitecture().NumberOfProcessors(); ++proc) {
-            for (VertexIdx node : nodesEvictedInComm[proc][superstep]) {
+            for (VertexIdx node : nodesEvictedInComm_[proc][superstep]) {
                 if (hasRed[node][proc]) {
                     newNodesEvictedInComm[proc][superstep].push_back(node);
                     hasRed[node][proc] = false;
@@ -589,7 +589,7 @@ void PebblingSchedule<GraphT>::CleanSchedule() {
 
         for (unsigned proc = 0; proc < instance_->GetArchitecture().NumberOfProcessors(); ++proc) {
             // send down phase
-            for (VertexIdx node : nodesSentDown[proc][superstep]) {
+            for (VertexIdx node : nodesSentDown_[proc][superstep]) {
                 if (needed[node][proc].front()) {
                     newNodesSentDown[proc][superstep].push_back(node);
                     hasRed[node][proc] = true;
@@ -605,9 +605,9 @@ void PebblingSchedule<GraphT>::CleanSchedule() {
     }
 
     computeStepsForProcSuperstep_ = newComputeStepsForProcSuperstep;
-    nodesEvictedInComm = newNodesEvictedInComm;
-    nodesSentDown = newNodesSentDown;
-    nodesSentUp = newNodesSentUp;
+    nodesEvictedInComm_ = newNodesEvictedInComm;
+    nodesSentDown_ = newNodesSentDown;
+    nodesSentUp_ = newNodesSentUp;
 }
 
 template <typename GraphT>
@@ -615,7 +615,7 @@ void PebblingSchedule<GraphT>::ConvertFromBsp(const BspSchedule<GraphT> &schedul
     instance_ = &schedule.GetInstance();
 
     // check if conversion possible at all
-    if (!hasValidSolution(schedule.GetInstance(), externalSources)) {
+    if (!HasValidSolution(schedule.GetInstance(), externalSources_)) {
         std::cout << "Conversion failed." << std::endl;
         return;
     }
@@ -629,7 +629,7 @@ void PebblingSchedule<GraphT>::ConvertFromBsp(const BspSchedule<GraphT> &schedul
 
 template <typename GraphT>
 bool PebblingSchedule<GraphT>::HasValidSolution(const BspInstance<GraphT> &instance, const std::set<VertexIdx> &externalSources) {
-    std::vector<MemweightType> memoryRequired = minimumMemoryRequiredPerNodeType(instance);
+    std::vector<MemWeightType> memoryRequired = MinimumMemoryRequiredPerNodeType(instance);
     std::vector<bool> hasEnoughMemory(instance.GetComputationalDag().NumVertexTypes(), true);
     for (VertexIdx node = 0; node < instance.NumberOfVertices(); ++node) {
         if (externalSources.find(node) == externalSources.end()) {
@@ -660,7 +660,7 @@ bool PebblingSchedule<GraphT>::HasValidSolution(const BspInstance<GraphT> &insta
 template <typename GraphT>
 void PebblingSchedule<GraphT>::SplitSupersteps(const BspSchedule<GraphT> &schedule) {
     // get DFS topological order in each superstep
-    std::vector<std::vector<std::vector<VertexIdx>>> topOrders = computeTopOrdersDFS(schedule);
+    std::vector<std::vector<std::vector<VertexIdx>>> topOrders = ComputeTopOrdersDfs(schedule);
 
     std::vector<unsigned> topOrderIdx(instance_->GetComputationalDag().NumVertices(), 0);
     for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); ++proc) {
@@ -709,10 +709,10 @@ void PebblingSchedule<GraphT>::SplitSupersteps(const BspSchedule<GraphT> &schedu
                     for (unsigned idx = startIdx; idx <= endCurrent; ++idx) {
                         VertexIdx node = topOrders[proc][step][idx];
                         neededAfter[node] = false;
-                        if (needsBlueAtEnd.empty()) {
+                        if (needsBlueAtEnd_.empty()) {
                             neededAfter[node] = (instance_->GetComputationalDag().OutDegree(node) == 0);
                         } else {
-                            neededAfter[node] = (needsBlueAtEnd.find(node) != needsBlueAtEnd.end());
+                            neededAfter[node] = (needsBlueAtEnd_.find(node) != needsBlueAtEnd_.end());
                         }
                         for (VertexIdx succ : instance_->GetComputationalDag().Children(node)) {
                             if (schedule.AssignedSuperstep(succ) > step) {
@@ -735,14 +735,14 @@ void PebblingSchedule<GraphT>::SplitSupersteps(const BspSchedule<GraphT> &schedu
                             }
                             if (schedule.AssignedSuperstep(pred) < step
                                 || (schedule.AssignedSuperstep(pred) == step && topOrderIdx[pred] < startIdx)
-                                || (needToLoadInputs && instance_->GetComputationalDag().InDegree(pred) == 0)
-                                || externalSources.find(pred) != externalSources.end()) {
+                                || (needToLoadInputs_ && instance_->GetComputationalDag().InDegree(pred) == 0)
+                                || externalSources_.find(pred) != externalSources_.end()) {
                                 valuesNeeded.insert(pred);
                             }
                         }
                     }
 
-                    MemweightType memNeeded = 0;
+                    MemWeightType memNeeded = 0;
                     for (VertexIdx node : valuesNeeded) {
                         memNeeded += instance_->GetComputationalDag().VertexMemWeight(node);
                     }
@@ -769,7 +769,7 @@ void PebblingSchedule<GraphT>::SplitSupersteps(const BspSchedule<GraphT> &schedu
 
                     if (valid) {
                         endLowerBound = endCurrent;
-                        if (endCurrent == top_orders[proc][step].size() - 1) {
+                        if (endCurrent == topOrders[proc][step].size() - 1) {
                             doublingPhase = false;
                             endUpperBound = endCurrent;
                         }
@@ -785,7 +785,7 @@ void PebblingSchedule<GraphT>::SplitSupersteps(const BspSchedule<GraphT> &schedu
             unsigned stepIdx = 0;
             for (auto segment : segments) {
                 for (unsigned idx = segment.first; idx <= segment.second; ++idx) {
-                    newSuperstepId[top_orders[proc][step][idx]] = superstepIndex + stepIdx;
+                    newSuperstepId[topOrders[proc][step][idx]] = superstepIndex + stepIdx;
                 }
 
                 ++stepIdx;
@@ -824,7 +824,7 @@ void PebblingSchedule<GraphT>::SplitSupersteps(const BspSchedule<GraphT> &schedu
         for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); ++proc) {
             for (VertexIdx node : topOrders[proc][step]) {
                 if (!needToLoadInputs_ || instance_->GetComputationalDag().InDegree(node) > 0) {
-                    computeStepsForProcSuperstep[proc][reindexToShrink[newSuperstepId[node]] + offset].emplace_back(node);
+                    computeStepsForProcSuperstep_[proc][reindexToShrink[newSuperstepId[node]] + offset].emplace_back(node);
                 }
             }
         }
@@ -835,7 +835,7 @@ template <typename GraphT>
 void PebblingSchedule<GraphT>::SetMemoryMovement(CacheEvictionStrategy evictRule) {
     const size_t n = instance_->GetComputationalDag().NumVertices();
 
-    std::vector<MemweightType> memUsed(instance_->NumberOfProcessors(), 0);
+    std::vector<MemWeightType> memUsed(instance_->NumberOfProcessors(), 0);
     std::vector<std::set<VertexIdx>> inMem(instance_->NumberOfProcessors());
 
     std::vector<bool> inSlowMem(n, false);
@@ -852,7 +852,7 @@ void PebblingSchedule<GraphT>::SetMemoryMovement(CacheEvictionStrategy evictRule
 
     // iterator to its position in "evictable" - for efficient delete
     std::vector<std::vector<decltype(evictable[0].begin())>> placeInEvictable(
-        N, std::vector<decltype(evictable[0].begin())>(instance_->NumberOfProcessors()));
+        n, std::vector<decltype(evictable[0].begin())>(instance_->NumberOfProcessors()));
     for (VertexIdx node = 0; node < n; ++node) {
         for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); ++proc) {
             placeInEvictable[node][proc] = evictable[proc].end();
@@ -875,7 +875,7 @@ void PebblingSchedule<GraphT>::SetMemoryMovement(CacheEvictionStrategy evictRule
     for (unsigned superstep = 0; superstep < numberOfSupersteps_; ++superstep) {
         for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); ++proc) {
             for (unsigned stepIndex = 0; stepIndex < computeStepsForProcSuperstep_[proc][superstep].size(); ++stepIndex) {
-                VertexIdx node = computeStepsForProcSuperstep_[proc][superstep][stepIndex].node;
+                VertexIdx node = computeStepsForProcSuperstep_[proc][superstep][stepIndex].node_;
                 if (selectedStep[node].first > superstep
                     || (selectedStep[node].first == superstep && selectedStep[node].second < stepIndex)) {
                     selectedProcessor[node] = proc;
@@ -891,7 +891,7 @@ void PebblingSchedule<GraphT>::SetMemoryMovement(CacheEvictionStrategy evictRule
     for (unsigned superstep = 0; superstep < numberOfSupersteps_; ++superstep) {
         for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); ++proc) {
             for (unsigned stepIndex = 0; stepIndex < computeStepsForProcSuperstep_[proc][superstep].size(); ++stepIndex) {
-                VertexIdx node = computeStepsForProcSuperstep_[proc][superstep][stepIndex].node;
+                VertexIdx node = computeStepsForProcSuperstep_[proc][superstep][stepIndex].node_;
                 computedInCurrentSuperstep[node] = true;
                 for (VertexIdx pred : instance_->GetComputationalDag().Parents(node)) {
                     if (!computedInCurrentSuperstep[pred]) {
@@ -900,18 +900,18 @@ void PebblingSchedule<GraphT>::SetMemoryMovement(CacheEvictionStrategy evictRule
                 }
             }
             for (unsigned stepIndex = 0; stepIndex < computeStepsForProcSuperstep_[proc][superstep].size(); ++stepIndex) {
-                computedInCurrentSuperstep[computeStepsForProcSuperstep_[proc][superstep][stepIndex].node] = false;
+                computedInCurrentSuperstep[computeStepsForProcSuperstep_[proc][superstep][stepIndex].node_] = false;
             }
         }
     }
-    if (needsBlueAtEnd.empty()) {
+    if (needsBlueAtEnd_.empty()) {
         for (VertexIdx node = 0; node < n; ++node) {
             if (instance_->GetComputationalDag().OutDegree(node) == 0) {
                 mustBePreserved[node] = true;
             }
         }
     } else {
-        for (VertexIdx node : needsBlueAtEnd) {
+        for (VertexIdx node : needsBlueAtEnd_) {
             mustBePreserved[node] = true;
         }
     }
@@ -924,7 +924,7 @@ void PebblingSchedule<GraphT>::SetMemoryMovement(CacheEvictionStrategy evictRule
     for (unsigned superstep = 0; superstep < numberOfSupersteps_; ++superstep) {
         for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); ++proc) {
             for (unsigned stepIndex = 0; stepIndex < computeStepsForProcSuperstep_[proc][superstep].size(); ++stepIndex) {
-                VertexIdx node = computeStepsForProcSuperstep_[proc][superstep][stepIndex].node;
+                VertexIdx node = computeStepsForProcSuperstep_[proc][superstep][stepIndex].node_;
                 for (VertexIdx pred : instance_->GetComputationalDag().Parents(node)) {
                     nodeUsedAtProcLists[pred][proc].back().emplace_back(superstep, stepIndex);
                 }
@@ -935,18 +935,18 @@ void PebblingSchedule<GraphT>::SetMemoryMovement(CacheEvictionStrategy evictRule
     }
 
     // set up initial content of fast memories
-    if (!hasRedInBeginning.empty()) {
+    if (!hasRedInBeginning_.empty()) {
         for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); ++proc) {
-            inMem[proc] = hasRedInBeginning;
+            inMem = hasRedInBeginning_;
             for (VertexIdx node : inMem[proc]) {
                 memUsed[proc] += instance_->GetComputationalDag().VertexMemWeight(node);
 
                 std::pair<unsigned, unsigned> prio;
-                if (evictRule == CACHE_EVICTION_STRATEGY::FORESIGHT) {
+                if (evictRule == CacheEvictionStrategy::FORESIGHT) {
                     prio = nodeUsedAtProcLists[node][proc].front().front();
-                } else if (evictRule == CACHE_EVICTION_STRATEGY::LEAST_RECENTLY_USED) {
+                } else if (evictRule == CacheEvictionStrategy::LEAST_RECENTLY_USED) {
                     prio = std::make_pair(UINT_MAX - nodeLastUsedOnProc[node][proc], static_cast<unsigned>(node));
-                } else if (evictRule == CACHE_EVICTION_STRATEGY::LARGEST_ID) {
+                } else if (evictRule == CacheEvictionStrategy::LARGEST_ID) {
                     prio = std::make_pair(static_cast<unsigned>(node), 0);
                 }
 
@@ -965,11 +965,11 @@ void PebblingSchedule<GraphT>::SetMemoryMovement(CacheEvictionStrategy evictRule
             // before compute phase, evict data in comm phase of previous superstep
             std::set<VertexIdx> newValuesNeeded;
             for (unsigned stepIndex = 0; stepIndex < computeStepsForProcSuperstep_[proc][superstep].size(); ++stepIndex) {
-                VertexIdx node = computeStepsForProcSuperstep_[proc][superstep][stepIndex].node;
+                VertexIdx node = computeStepsForProcSuperstep_[proc][superstep][stepIndex].node_;
                 computedInCurrentSuperstep[node] = true;
                 for (VertexIdx pred : instance_->GetComputationalDag().Parents(node)) {
                     if (!computedInCurrentSuperstep[pred]) {
-                        non_evictable[proc].insert(pred);
+                        nonEvictable[proc].insert(pred);
 
                         if (placeInEvictable[pred][proc] != evictable[proc].end()) {
                             evictable[proc].erase(placeInEvictable[pred][proc]);
@@ -983,24 +983,24 @@ void PebblingSchedule<GraphT>::SetMemoryMovement(CacheEvictionStrategy evictRule
                 }
             }
             for (unsigned stepIndex = 0; stepIndex < computeStepsForProcSuperstep_[proc][superstep].size(); ++stepIndex) {
-                computedInCurrentSuperstep[computeStepsForProcSuperstep_[proc][superstep][stepIndex].node] = false;
+                computedInCurrentSuperstep[computeStepsForProcSuperstep_[proc][superstep][stepIndex].node_] = false;
             }
 
             for (VertexIdx node : newValuesNeeded) {
                 inMem[proc].insert(node);
                 memUsed[proc] += instance_->GetComputationalDag().VertexMemWeight(node);
-                nodesSentDown[proc][superstep - 1].push_back(node);
+                nodesSentDown_[proc][superstep - 1].push_back(node);
                 if (!inSlowMem[node]) {
                     inSlowMem[node] = true;
-                    nodesSentUp[selectedProcessor[node]][selectedStep[node].first].push_back(node);
+                    nodesSentUp_[selectedProcessor[node]][selectedStep[node].first].push_back(node);
                 }
             }
 
             MemWeightType firstNodeWeight
-                = instance_->GetComputationalDag().VertexMemWeight(computeStepsForProcSuperstep_[proc][superstep][0].node);
+                = instance_->GetComputationalDag().VertexMemWeight(computeStepsForProcSuperstep_[proc][superstep][0].node_);
 
             while (memUsed[proc] + firstNodeWeight
-                   > instance_->GetArchitecture().memoryBound(proc))    // no sliding pebbles for now
+                   > instance_->GetArchitecture().MemoryBound(proc))    // no sliding pebbles for now
             {
                 if (evictable[proc].empty()) {
                     std::cout << "ERROR: Cannot create valid memory movement for these superstep lists." << std::endl;
@@ -1013,7 +1013,7 @@ void PebblingSchedule<GraphT>::SetMemoryMovement(CacheEvictionStrategy evictRule
                 memUsed[proc] -= instance_->GetComputationalDag().VertexMemWeight(evicted);
                 inMem[proc].erase(evicted);
 
-                nodes_evicted_in_comm[proc][superstep - 1].push_back(evicted);
+                nodesEvictedInComm_[proc][superstep - 1].push_back(evicted);
             }
 
             // indicates if the node will be needed after (and thus cannot be deleted during) this compute phase
@@ -1021,12 +1021,12 @@ void PebblingSchedule<GraphT>::SetMemoryMovement(CacheEvictionStrategy evictRule
 
             // during compute phase
             for (unsigned stepIndex = 0; stepIndex < computeStepsForProcSuperstep_[proc][superstep].size(); ++stepIndex) {
-                VertexIdx node = computeStepsForProcSuperstep_[proc][superstep][stepIndex].node;
+                VertexIdx node = computeStepsForProcSuperstep_[proc][superstep][stepIndex].node_;
                 MemWeightType nodeWeight = instance_->GetComputationalDag().VertexMemWeight(node);
 
                 if (stepIndex > 0) {
                     // evict nodes to make space
-                    while (memUsed[proc] + nodeWeight > instance_->GetArchitecture().memoryBound(proc)) {
+                    while (memUsed[proc] + nodeWeight > instance_->GetArchitecture().MemoryBound(proc)) {
                         if (evictable[proc].empty()) {
                             std::cout << "ERROR: Cannot create valid memory movement for these superstep lists." << std::endl;
                             return;
@@ -1038,7 +1038,7 @@ void PebblingSchedule<GraphT>::SetMemoryMovement(CacheEvictionStrategy evictRule
                         memUsed[proc] -= instance_->GetComputationalDag().VertexMemWeight(evicted);
                         inMem[proc].erase(evicted);
 
-                        computeStepsForProcSuperstep_[proc][superstep][stepIndex - 1].nodesEvictedAfter.push_back(evicted);
+                        computeStepsForProcSuperstep_[proc][superstep][stepIndex - 1].nodesEvictedAfter_.push_back(evicted);
                     }
                 }
 
@@ -1077,16 +1077,16 @@ void PebblingSchedule<GraphT>::SetMemoryMovement(CacheEvictionStrategy evictRule
                         inMem[proc].erase(pred);
                         nonEvictable[proc].erase(pred);
                         memUsed[proc] -= instance_->GetComputationalDag().VertexMemWeight(pred);
-                        computeStepsForProcSuperstep_[proc][superstep][stepIndex].nodesEvictedAfter.push_back(pred);
+                        computeStepsForProcSuperstep_[proc][superstep][stepIndex].nodesEvictedAfter_.push_back(pred);
                     } else if (nodeUsedAtProcLists[pred][proc].front().front().first > superstep) {
                         nonEvictable[proc].erase(pred);
 
                         std::pair<unsigned, unsigned> prio;
-                        if (evictRule == CACHE_EVICTION_STRATEGY::FORESIGHT) {
+                        if (evictRule == CacheEvictionStrategy::FORESIGHT) {
                             prio = nodeUsedAtProcLists[pred][proc].front().front();
-                        } else if (evictRule == CACHE_EVICTION_STRATEGY::LEAST_RECENTLY_USED) {
+                        } else if (evictRule == CacheEvictionStrategy::LEAST_RECENTLY_USED) {
                             prio = std::make_pair(UINT_MAX - nodeLastUsedOnProc[pred][proc], static_cast<unsigned>(pred));
-                        } else if (evictRule == CACHE_EVICTION_STRATEGY::LARGEST_ID) {
+                        } else if (evictRule == CacheEvictionStrategy::LARGEST_ID) {
                             prio = std::make_pair(static_cast<unsigned>(pred), 0);
                         }
 
@@ -1100,27 +1100,27 @@ void PebblingSchedule<GraphT>::SetMemoryMovement(CacheEvictionStrategy evictRule
                 if (nodeUsedAtProcLists[node][proc].front().empty()) {
                     memUsed[proc] -= instance_->GetComputationalDag().VertexMemWeight(node);
                     inMem[proc].erase(node);
-                    nodesEvictedInComm[proc][superstep].push_back(node);
-                    if ((instance_->GetComputationalDag().OutDegree(node) == 0 || needsBlueAtEnd.find(node) != needsBlueAtEnd.end())
+                    nodesEvictedInComm_[proc][superstep].push_back(node);
+                    if ((instance_->GetComputationalDag().OutDegree(node) == 0 || needsBlueAtEnd_.find(node) != needsBlueAtEnd_.end())
                         && !inSlowMem[node]) {
                         inSlowMem[node] = true;
-                        nodesSentUp[proc][superstep].push_back(node);
+                        nodesSentUp_[proc][superstep].push_back(node);
                     }
                 } else {
                     std::pair<unsigned, unsigned> prio;
-                    if (evictRule == CACHE_EVICTION_STRATEGY::FORESIGHT) {
+                    if (evictRule == CacheEvictionStrategy::FORESIGHT) {
                         prio = nodeUsedAtProcLists[node][proc].front().front();
-                    } else if (evictRule == CACHE_EVICTION_STRATEGY::LEAST_RECENTLY_USED) {
+                    } else if (evictRule == CacheEvictionStrategy::LEAST_RECENTLY_USED) {
                         prio = std::make_pair(UINT_MAX - nodeLastUsedOnProc[node][proc], static_cast<unsigned>(node));
-                    } else if (evictRule == CACHE_EVICTION_STRATEGY::LARGEST_ID) {
+                    } else if (evictRule == CacheEvictionStrategy::LARGEST_ID) {
                         prio = std::make_pair(static_cast<unsigned>(node), 0);
                     }
 
                     placeInEvictable[node][proc] = evictable[proc].emplace(prio, node).first;
 
-                    if (needsBlueAtEnd.find(node) != needsBlueAtEnd.end() && !inSlowMem[node]) {
+                    if (needsBlueAtEnd_.find(node) != needsBlueAtEnd_.end() && !inSlowMem[node]) {
                         inSlowMem[node] = true;
-                        nodesSentUp[proc][superstep].push_back(node);
+                        nodesSentUp_[proc][superstep].push_back(node);
                     }
                 }
             }
@@ -1131,21 +1131,21 @@ void PebblingSchedule<GraphT>::SetMemoryMovement(CacheEvictionStrategy evictRule
 
 template <typename GraphT>
 void PebblingSchedule<GraphT>::ResetToForesight() {
-    nodesEvictedInComm.clear();
-    nodesEvictedInComm.resize(instance_->NumberOfProcessors(), std::vector<std::vector<VertexIdx>>(numberOfSupersteps_));
+    nodesEvictedInComm_.clear();
+    nodesEvictedInComm_.resize(instance_->NumberOfProcessors(), std::vector<std::vector<VertexIdx>>(numberOfSupersteps_));
 
-    nodesSentDown.clear();
-    nodesSentDown.resize(instance_->NumberOfProcessors(), std::vector<std::vector<VertexIdx>>(numberOfSupersteps_));
+    nodesSentDown_.clear();
+    nodesSentDown_.resize(instance_->NumberOfProcessors(), std::vector<std::vector<VertexIdx>>(numberOfSupersteps_));
 
-    nodesSentUp.clear();
-    nodesSentUp.resize(instance_->NumberOfProcessors(), std::vector<std::vector<VertexIdx>>(numberOfSupersteps_));
+    nodesSentUp_.clear();
+    nodesSentUp_.resize(instance_->NumberOfProcessors(), std::vector<std::vector<VertexIdx>>(numberOfSupersteps_));
 
     SetMemoryMovement(CacheEvictionStrategy::FORESIGHT);
 }
 
 template <typename GraphT>
 bool PebblingSchedule<GraphT>::IsValid() const {
-    std::vector<MemweightType> memUsed(instance_->NumberOfProcessors(), 0);
+    std::vector<MemWeightType> memUsed(instance_->NumberOfProcessors(), 0);
     std::vector<std::vector<VertexIdx>> inFastMem(instance_->GetComputationalDag().NumVertices(),
                                                   std::vector<VertexIdx>(instance_->NumberOfProcessors(), false));
     std::vector<VertexIdx> inSlowMem(instance_->GetComputationalDag().NumVertices(), false);
@@ -1158,9 +1158,9 @@ bool PebblingSchedule<GraphT>::IsValid() const {
         }
     }
 
-    if (!hasRedInBeginning.empty()) {
+    if (!hasRedInBeginning_.empty()) {
         for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); ++proc) {
-            for (VertexIdx node : hasRedInBeginning[proc]) {
+            for (VertexIdx node : hasRedInBeginning_[proc]) {
                 memUsed[proc] += instance_->GetComputationalDag().VertexMemWeight(node);
                 inFastMem[node][proc] = true;
             }
@@ -1171,26 +1171,26 @@ bool PebblingSchedule<GraphT>::IsValid() const {
         for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); ++proc) {
             // computation phase
             for (const auto &computeStep : computeStepsForProcSuperstep_[proc][step]) {
-                if (!instance_->IsCompatible(computeStep.node, proc)) {
+                if (!instance_->IsCompatible(computeStep.node_, proc)) {
                     return false;
                 }
 
-                for (VertexIdx pred : instance_->GetComputationalDag().Parents(computeStep.node)) {
+                for (VertexIdx pred : instance_->GetComputationalDag().Parents(computeStep.node_)) {
                     if (!inFastMem[pred][proc]) {
                         return false;
                     }
                 }
 
-                if (needToLoadInputs_ && instance_->GetComputationalDag().InDegree(computeStep.node) == 0) {
+                if (needToLoadInputs_ && instance_->GetComputationalDag().InDegree(computeStep.node_) == 0) {
                     return false;
                 }
 
-                if (!inFastMem[computeStep.node][proc]) {
-                    inFastMem[computeStep.node][proc] = true;
-                    memUsed[proc] += instance_->GetComputationalDag().VertexMemWeight(computeStep.node);
+                if (!inFastMem[computeStep.node_][proc]) {
+                    inFastMem[computeStep.node_][proc] = true;
+                    memUsed[proc] += instance_->GetComputationalDag().VertexMemWeight(computeStep.node_);
                 }
 
-                if (memUsed[proc] > instance_->GetArchitecture().memoryBound(proc)) {
+                if (memUsed[proc] > instance_->GetArchitecture().MemoryBound(proc)) {
                     return false;
                 }
 
@@ -1205,14 +1205,14 @@ bool PebblingSchedule<GraphT>::IsValid() const {
             }
 
             // communication phase - sendup and eviction
-            for (VertexIdx node : nodesSentUp[proc][step]) {
+            for (VertexIdx node : nodesSentUp_[proc][step]) {
                 if (!inFastMem[node][proc]) {
                     return false;
                 }
 
                 inSlowMem[node] = true;
             }
-            for (VertexIdx node : nodesEvictedInComm[proc][step]) {
+            for (VertexIdx node : nodesEvictedInComm_[proc][step]) {
                 if (!inFastMem[node][proc]) {
                     return false;
                 }
@@ -1224,7 +1224,7 @@ bool PebblingSchedule<GraphT>::IsValid() const {
 
         // communication phase - senddown
         for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); ++proc) {
-            for (VertexIdx node : nodesSentDown[proc][step]) {
+            for (VertexIdx node : nodesSentDown_[proc][step]) {
                 if (!inSlowMem[node]) {
                     return false;
                 }
@@ -1243,14 +1243,14 @@ bool PebblingSchedule<GraphT>::IsValid() const {
         }
     }
 
-    if (needsBlueAtEnd.empty()) {
+    if (needsBlueAtEnd_.empty()) {
         for (VertexIdx node = 0; node < instance_->NumberOfVertices(); ++node) {
             if (instance_->GetComputationalDag().OutDegree(node) == 0 && !inSlowMem[node]) {
                 return false;
             }
         }
     } else {
-        for (VertexIdx node : needsBlueAtEnd) {
+        for (VertexIdx node : needsBlueAtEnd_) {
             if (!inSlowMem[node]) {
                 return false;
             }
@@ -1289,23 +1289,23 @@ std::vector<std::vector<std::vector<VertexIdxT<GraphT>>>> PebblingSchedule<Graph
     unsigned numProcs = schedule.GetInstance().NumberOfProcessors();
     unsigned numSupsteps = schedule.NumberOfSupersteps();
 
-    std::vector<std::vector<std::vector<VertexIdx>>> topOrders(num_procs, std::vector<std::vector<VertexIdx>>(numSupsteps));
+    std::vector<std::vector<std::vector<VertexIdx>>> topOrders(numProcs, std::vector<std::vector<VertexIdx>>(numSupsteps));
 
-    std::vector<std::vector<std::deque<VertexIdx>>> Q(num_procs, std::vector<std::deque<VertexIdx>>(numSupsteps));
-    std::vector<std::vector<std::vector<VertexIdx>>> NodesUpdated(num_procs, std::vector<std::vector<VertexIdx>>(numSupsteps));
+    std::vector<std::vector<std::deque<VertexIdx>>> Q(numProcs, std::vector<std::deque<VertexIdx>>(numSupsteps));
+    std::vector<std::vector<std::vector<VertexIdx>>> NodesUpdated(numProcs, std::vector<std::vector<VertexIdx>>(numSupsteps));
     std::vector<unsigned> nrPred(n);
     std::vector<unsigned> predDone(n, 0);
     for (VertexIdx node = 0; node < n; ++node) {
         unsigned predecessors = 0;
         for (VertexIdx pred : schedule.GetInstance().GetComputationalDag().Parents(node)) {
-            if (externalSources.find(pred) == externalSources.end()
+            if (externalSources_.find(pred) == externalSources_.end()
                 && schedule.AssignedProcessor(node) == schedule.AssignedProcessor(pred)
                 && schedule.AssignedSuperstep(node) == schedule.AssignedSuperstep(pred)) {
                 ++predecessors;
             }
         }
         nrPred[node] = predecessors;
-        if (predecessors == 0 && externalSources.find(node) == externalSources.end()) {
+        if (predecessors == 0 && externalSources_.find(node) == externalSources_.end()) {
             Q[schedule.AssignedProcessor(node)][schedule.AssignedSuperstep(node)].push_back(node);
         }
     }
@@ -1346,11 +1346,11 @@ void PebblingSchedule<GraphT>::GetDataForMultiprocessorPebbling(
     nodesEvictedAfterStep.clear();
     nodesEvictedAfterStep.resize(instance_->NumberOfProcessors());
 
-    std::vector<MemweightType> memUsed(instance_->NumberOfProcessors(), 0);
+    std::vector<MemWeightType> memUsed(instance_->NumberOfProcessors(), 0);
     std::vector<std::set<VertexIdx>> inMem(instance_->NumberOfProcessors());
-    if (!hasRedInBeginning.empty()) {
+    if (!hasRedInBeginning_.empty()) {
         for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); ++proc) {
-            for (VertexIdx node : hasRedInBeginning[proc]) {
+            for (VertexIdx node : hasRedInBeginning_[proc]) {
                 inMem[proc].insert(node);
                 memUsed[proc] += instance_->GetComputationalDag().VertexMemWeight(node);
             }
@@ -1380,9 +1380,9 @@ void PebblingSchedule<GraphT>::GetDataForMultiprocessorPebbling(
         for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); ++proc) {
             std::vector<VertexIdx> evictList;
             for (unsigned stepIndex = 0; stepIndex < computeStepsForProcSuperstep_[proc][superstep].size(); ++stepIndex) {
-                VertexIdx node = computeStepsForProcSuperstep_[proc][superstep][stepIndex].node;
+                VertexIdx node = computeStepsForProcSuperstep_[proc][superstep][stepIndex].node_;
                 if (memUsed[proc] + instance_->GetComputationalDag().VertexMemWeight(node)
-                    > instance_->GetArchitecture().memoryBound(proc)) {
+                    > instance_->GetArchitecture().MemoryBound(proc)) {
                     // open new step
                     nodesEvictedAfterStep[proc][stepOnProc[proc]] = evictList;
                     ++stepOnProc[proc];
@@ -1399,7 +1399,7 @@ void PebblingSchedule<GraphT>::GetDataForMultiprocessorPebbling(
 
                 computeSteps[proc][stepOnProc[proc]].emplace_back(node);
                 memUsed[proc] += instance_->GetComputationalDag().VertexMemWeight(node);
-                for (VertexIdx toEvict : computeStepsForProcSuperstep_[proc][superstep][stepIndex].nodes_evicted_after) {
+                for (VertexIdx toEvict : computeStepsForProcSuperstep_[proc][superstep][stepIndex].nodesEvictedAfter_) {
                     evictList.emplace_back(toEvict);
                 }
             }
@@ -1431,7 +1431,7 @@ void PebblingSchedule<GraphT>::GetDataForMultiprocessorPebbling(
 
         bool anySendUp = false;
         for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); ++proc) {
-            if (!nodesSentUp[proc][superstep].empty() || !nodesEvictedInComm[proc][superstep].empty()) {
+            if (!nodesSentUp_[proc][superstep].empty() || !nodesEvictedInComm_[proc][superstep].empty()) {
                 anySendUp = true;
             }
         }
@@ -1439,10 +1439,10 @@ void PebblingSchedule<GraphT>::GetDataForMultiprocessorPebbling(
         if (anySendUp) {
             for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); ++proc) {
                 computeSteps[proc].emplace_back();
-                sendUpSteps[proc].emplace_back(nodesSentUp[proc][superstep]);
+                sendUpSteps[proc].emplace_back(nodesSentUp_[proc][superstep]);
                 sendDownSteps[proc].emplace_back();
-                nodesEvictedAfterStep[proc].emplace_back(nodesEvictedInComm[proc][superstep]);
-                for (VertexIdx toEvict : nodesEvictedInComm[proc][superstep]) {
+                nodesEvictedAfterStep[proc].emplace_back(nodesEvictedInComm_[proc][superstep]);
+                for (VertexIdx toEvict : nodesEvictedInComm_[proc][superstep]) {
                     memUsed[proc] -= instance_->GetComputationalDag().VertexMemWeight(toEvict);
                 }
                 ++stepOnProc[proc];
@@ -1452,7 +1452,7 @@ void PebblingSchedule<GraphT>::GetDataForMultiprocessorPebbling(
 
         bool anySendDown = false;
         for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); ++proc) {
-            if (!nodesSentDown[proc][superstep].empty()) {
+            if (!nodesSentDown_[proc][superstep].empty()) {
                 anySendDown = true;
             }
         }
@@ -1461,8 +1461,8 @@ void PebblingSchedule<GraphT>::GetDataForMultiprocessorPebbling(
             for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); ++proc) {
                 computeSteps[proc].emplace_back();
                 sendUpSteps[proc].emplace_back();
-                sendDownSteps[proc].emplace_back(nodesSentDown[proc][superstep]);
-                for (VertexIdx sendDown : nodesSentDown[proc][superstep]) {
+                sendDownSteps[proc].emplace_back(nodesSentDown_[proc][superstep]);
+                for (VertexIdx sendDown : nodesSentDown_[proc][superstep]) {
                     memUsed[proc] += instance_->GetComputationalDag().VertexMemWeight(sendDown);
                 }
                 nodesEvictedAfterStep[proc].emplace_back();
@@ -1476,27 +1476,27 @@ void PebblingSchedule<GraphT>::GetDataForMultiprocessorPebbling(
 template <typename GraphT>
 std::vector<std::set<VertexIdxT<GraphT>>> PebblingSchedule<GraphT>::GetMemContentAtEnd() const {
     std::vector<std::set<VertexIdxT<GraphT>>> memContent(instance_->NumberOfProcessors());
-    if (!hasRedInBeginning.empty()) {
-        memContent = hasRedInBeginning;
+    if (!hasRedInBeginning_.empty()) {
+        memContent = hasRedInBeginning_;
     }
 
     for (unsigned step = 0; step < numberOfSupersteps_; ++step) {
         for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); ++proc) {
             // computation phase
             for (const auto &computeStep : computeStepsForProcSuperstep_[proc][step]) {
-                memContent[proc].insert(computeStep.node);
-                for (VertexIdx to_remove : computeStep.nodes_evicted_after) {
+                memContent[proc].insert(computeStep.node_);
+                for (VertexIdx toRemove : computeStep.nodesEvictedAfter_) {
                     memContent[proc].erase(toRemove);
                 }
             }
 
             // communication phase - eviction
-            for (VertexIdx node : nodesEvictedInComm[proc][step]) {
+            for (VertexIdx node : nodesEvictedInComm_[proc][step]) {
                 memContent[proc].erase(node);
             }
 
             // communication phase - senddown
-            for (VertexIdx node : nodesSentDown[proc][step]) {
+            for (VertexIdx node : nodesSentDown_[proc][step]) {
                 memContent[proc].insert(node);
             }
         }
@@ -1507,15 +1507,15 @@ std::vector<std::set<VertexIdxT<GraphT>>> PebblingSchedule<GraphT>::GetMemConten
 
 template <typename GraphT>
 void PebblingSchedule<GraphT>::RemoveEvictStepsFromEnd() {
-    std::vector<MemweightType> memUsed(instance_->NumberOfProcessors(), 0);
-    std::vector<MemweightType> bottleneck(instance_->NumberOfProcessors(), 0);
-    std::vector<std::set<VertexIdxT<GraphT>>> fastMemEnd = getMemContentAtEnd();
+    std::vector<MemWeightType> memUsed(instance_->NumberOfProcessors(), 0);
+    std::vector<MemWeightType> bottleneck(instance_->NumberOfProcessors(), 0);
+    std::vector<std::set<VertexIdxT<GraphT>>> fastMemEnd = GetMemContentAtEnd();
     for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); ++proc) {
         for (VertexIdx node : fastMemEnd[proc]) {
             memUsed[proc] += instance_->GetComputationalDag().VertexMemWeight(node);
         }
 
-        bottleneck[proc] = instance_->GetArchitecture().memoryBound(proc) - memUsed[proc];
+        bottleneck[proc] = instance_->GetArchitecture().MemoryBound(proc) - memUsed[proc];
     }
 
     for (unsigned step = numberOfSupersteps_; step > 0;) {
@@ -1523,13 +1523,13 @@ void PebblingSchedule<GraphT>::RemoveEvictStepsFromEnd() {
 
         for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); ++proc) {
             // communication phase - senddown
-            for (VertexIdx node : nodesSentDown[proc][step]) {
+            for (VertexIdx node : nodesSentDown_[proc][step]) {
                 memUsed[proc] -= instance_->GetComputationalDag().VertexMemWeight(node);
             }
 
             // communication phase - eviction
             std::vector<VertexIdx> remaining;
-            for (VertexIdx node : nodesEvictedInComm[proc][step]) {
+            for (VertexIdx node : nodesEvictedInComm_[proc][step]) {
                 memUsed[proc] += instance_->GetComputationalDag().VertexMemWeight(node);
                 if (instance_->GetComputationalDag().VertexMemWeight(node) <= bottleneck[proc]
                     && fastMemEnd[proc].find(node) == fastMemEnd[proc].end()) {
@@ -1539,8 +1539,8 @@ void PebblingSchedule<GraphT>::RemoveEvictStepsFromEnd() {
                     remaining.push_back(node);
                 }
             }
-            nodesEvictedInComm[proc][step] = remaining;
-            bottleneck[proc] = std::min(bottleneck[proc], instance_->GetArchitecture().memoryBound(proc) - memUsed[proc]);
+            nodesEvictedInComm_[proc][step] = remaining;
+            bottleneck[proc] = std::min(bottleneck[proc], instance_->GetArchitecture().MemoryBound(proc) - memUsed[proc]);
 
             // computation phase
             for (unsigned stepIndex = static_cast<unsigned>(computeStepsForProcSuperstep_[proc][step].size()); stepIndex > 0;) {
@@ -1548,7 +1548,7 @@ void PebblingSchedule<GraphT>::RemoveEvictStepsFromEnd() {
                 auto &computeStep = computeStepsForProcSuperstep_[proc][step][stepIndex];
 
                 std::vector<VertexIdx> remaining2;
-                for (VertexIdx toRemove : computeStep.nodesEvictedAfter) {
+                for (VertexIdx toRemove : computeStep.nodesEvictedAfter_) {
                     memUsed[proc] += instance_->GetComputationalDag().VertexMemWeight(toRemove);
                     if (instance_->GetComputationalDag().VertexMemWeight(toRemove) <= bottleneck[proc]
                         && fastMemEnd[proc].find(toRemove) == fastMemEnd[proc].end()) {
@@ -1558,10 +1558,10 @@ void PebblingSchedule<GraphT>::RemoveEvictStepsFromEnd() {
                         remaining2.push_back(toRemove);
                     }
                 }
-                computeStep.nodesEvictedAfter = remaining2;
-                bottleneck[proc] = std::min(bottleneck[proc], instance_->GetArchitecture().memoryBound(proc) - memUsed[proc]);
+                computeStep.nodesEvictedAfter_ = remaining2;
+                bottleneck[proc] = std::min(bottleneck[proc], instance_->GetArchitecture().MemoryBound(proc) - memUsed[proc]);
 
-                memUsed[proc] -= instance_->GetComputationalDag().VertexMemWeight(computeStep.node);
+                memUsed[proc] -= instance_->GetComputationalDag().VertexMemWeight(computeStep.node_);
             }
         }
     }
@@ -1586,13 +1586,13 @@ void PebblingSchedule<GraphT>::CreateFromPartialPebblings(const BspInstance<Grap
     std::vector<std::tuple<VertexIdx, unsigned, unsigned>> forceEvicts;
 
     computeStepsForProcSuperstep_.clear();
-    nodesSentUp.clear();
-    nodesSentDown.clear();
-    nodesEvictedInComm.clear();
+    nodesSentUp_.clear();
+    nodesSentDown_.clear();
+    nodesEvictedInComm_.clear();
     computeStepsForProcSuperstep_.resize(instance_->NumberOfProcessors());
-    nodesSentUp.resize(instance_->NumberOfProcessors());
-    nodesSentDown.resize(instance_->NumberOfProcessors());
-    nodesEvictedInComm.resize(instance_->NumberOfProcessors());
+    nodesSentUp_.resize(instance_->NumberOfProcessors());
+    nodesSentDown_.resize(instance_->NumberOfProcessors());
+    nodesEvictedInComm_.resize(instance_->NumberOfProcessors());
 
     std::vector<unsigned> supstepIdx(instance_->NumberOfProcessors(), 0);
 
@@ -1620,9 +1620,9 @@ void PebblingSchedule<GraphT>::CreateFromPartialPebblings(const BspInstance<Grap
         for (unsigned proc : processorsToParts[part]) {
             while (supstepIdx[proc] < startingStepIndex) {
                 computeStepsForProcSuperstep_[proc].emplace_back();
-                nodesSentUp[proc].emplace_back();
-                nodesSentDown[proc].emplace_back();
-                nodesEvictedInComm[proc].emplace_back();
+                nodesSentUp_[proc].emplace_back();
+                nodesSentDown_[proc].emplace_back();
+                nodesEvictedInComm_[proc].emplace_back();
                 ++supstepIdx[proc];
             }
         }
@@ -1647,20 +1647,20 @@ void PebblingSchedule<GraphT>::CreateFromPartialPebblings(const BspInstance<Grap
             if ((!addBefore.empty() || !removeBefore.empty()) && supstepIdx[procId] == 0) {
                 // this code is added just in case - this shouldn't happen in normal schedules
                 computeStepsForProcSuperstep_[procId].emplace_back();
-                nodesSentUp[procId].emplace_back();
-                nodesSentDown[procId].emplace_back();
-                nodesEvictedInComm[procId].emplace_back();
+                nodesSentUp_[procId].emplace_back();
+                nodesSentDown_[procId].emplace_back();
+                nodesEvictedInComm_[procId].emplace_back();
                 ++supstepIdx[procId];
             }
 
             for (VertexIdx node : addBefore) {
                 inMem[procId].insert(node);
-                nodesSentDown[procId].back().push_back(node);
+                nodesSentDown_[procId].back().push_back(node);
             }
             for (VertexIdx node : removeBefore) {
                 inMem[procId].erase(node);
-                nodesEvictedInComm[procId].back().push_back(node);
-                forceEvicts.push_back(std::make_tuple(node, procId, nodesEvictedInComm[procId].size() - 1));
+                nodesEvictedInComm_[procId].back().push_back(node);
+                forceEvicts.push_back(std::make_tuple(node, procId, nodesEvictedInComm_[procId].size() - 1));
             }
         }
 
@@ -1668,33 +1668,33 @@ void PebblingSchedule<GraphT>::CreateFromPartialPebblings(const BspInstance<Grap
             for (unsigned proc = 0; proc < processorsToParts[part].size(); ++proc) {
                 unsigned procId = originalProcId[part].at(proc);
                 computeStepsForProcSuperstep_[procId].emplace_back();
-                nodesSentUp[procId].emplace_back();
-                nodesSentDown[procId].emplace_back();
-                nodesEvictedInComm[procId].emplace_back();
+                nodesSentUp_[procId].emplace_back();
+                nodesSentDown_[procId].emplace_back();
+                nodesEvictedInComm_[procId].emplace_back();
 
                 // copy schedule with translated indeces
                 for (const ComputeStep &computeStep : pebblings[part].GetComputeStepsForProcSuperstep(proc, supstep)) {
                     computeStepsForProcSuperstep_[procId].back().emplace_back();
-                    computeStepsForProcSuperstep_[procId].back().back().node = originalNodeId[part].at(computeStep.node_);
+                    computeStepsForProcSuperstep_[procId].back().back().node_ = originalNodeId[part].at(computeStep.node_);
                     inMem[procId].insert(originalNodeId[part].at(computeStep.node_));
 
-                    for (VertexIdx localId : computeStep.nodesEvictedAfter) {
-                        computeStepsForProcSuperstep_[procId].back().back().nodesEvictedAfter.push_back(
+                    for (VertexIdx localId : computeStep.nodesEvictedAfter_) {
+                        computeStepsForProcSuperstep_[procId].back().back().nodesEvictedAfter_.push_back(
                             originalNodeId[part].at(localId));
                         inMem[procId].erase(originalNodeId[part].at(localId));
                     }
                 }
                 for (VertexIdx node : pebblings[part].GetNodesSentUp(proc, supstep)) {
                     VertexIdx nodeId = originalNodeId[part].at(node);
-                    nodesSentUp[procId].back().push_back(nodeId);
+                    nodesSentUp_[procId].back().push_back(nodeId);
                     getsBlueInSuperstep[nodeId] = std::min(getsBlueInSuperstep[nodeId], supstepIdx[procId]);
                 }
                 for (VertexIdx node : pebblings[part].GetNodesEvictedInComm(proc, supstep)) {
-                    nodesEvictedInComm[procId].back().push_back(originalNodeId[part].at(node));
+                    nodesEvictedInComm_[procId].back().push_back(originalNodeId[part].at(node));
                     inMem[procId].erase(originalNodeId[part].at(node));
                 }
                 for (VertexIdx node : pebblings[part].GetNodesSentDown(proc, supstep)) {
-                    nodesSentDown[procId].back().push_back(originalNodeId[part].at(node));
+                    nodesSentDown_[procId].back().push_back(originalNodeId[part].at(node));
                     inMem[procId].insert(originalNodeId[part].at(node));
                 }
 
@@ -1711,26 +1711,26 @@ void PebblingSchedule<GraphT>::CreateFromPartialPebblings(const BspInstance<Grap
     for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); ++proc) {
         while (supstepIdx[proc] < maxStepIndex) {
             computeStepsForProcSuperstep_[proc].emplace_back();
-            nodesSentUp[proc].emplace_back();
-            nodesSentDown[proc].emplace_back();
-            nodesEvictedInComm[proc].emplace_back();
+            nodesSentUp_[proc].emplace_back();
+            nodesSentDown_[proc].emplace_back();
+            nodesEvictedInComm_[proc].emplace_back();
             ++supstepIdx[proc];
         }
     }
     numberOfSupersteps_ = maxStepIndex;
     needToLoadInputs_ = true;
 
-    FixForceEvicts(force_evicts);
+    FixForceEvicts(forceEvicts);
     TryToMergeSupersteps();
 }
 
 template <typename GraphT>
 void PebblingSchedule<GraphT>::FixForceEvicts(const std::vector<std::tuple<VertexIdx, unsigned, unsigned>> &forceEvictNodeProcStep) {
     // Some values were evicted only because they weren't present in the next part - see if we can undo those evictions
-    for (auto force_evict : forceEvictNodeProcStep) {
-        VertexIdx node = std::get<0>(force_evict);
-        unsigned proc = std::get<1>(force_evict);
-        unsigned superstep = std::get<2>(force_evict);
+    for (auto forceEvict : forceEvictNodeProcStep) {
+        VertexIdx node = std::get<0>(forceEvict);
+        unsigned proc = std::get<1>(forceEvict);
+        unsigned superstep = std::get<2>(forceEvict);
 
         bool nextInComp = false;
         bool nextInComm = false;
@@ -1738,7 +1738,7 @@ void PebblingSchedule<GraphT>::FixForceEvicts(const std::vector<std::tuple<Verte
 
         for (unsigned findSupstep = superstep + 1; findSupstep < NumberOfSupersteps(); ++findSupstep) {
             for (unsigned stepIndex = 0; stepIndex < computeStepsForProcSuperstep_[proc][findSupstep].size(); ++stepIndex) {
-                if (computeStepsForProcSuperstep_[proc][findSupstep][stepIndex].node == node) {
+                if (computeStepsForProcSuperstep_[proc][findSupstep][stepIndex].node_ == node) {
                     nextInComp = true;
                     where = std::make_pair(findSupstep, stepIndex);
                     break;
@@ -1747,7 +1747,7 @@ void PebblingSchedule<GraphT>::FixForceEvicts(const std::vector<std::tuple<Verte
             if (nextInComp) {
                 break;
             }
-            for (VertexIdx sendDown : nodesSentDown[proc][findSupstep]) {
+            for (VertexIdx sendDown : nodesSentDown_[proc][findSupstep]) {
                 if (sendDown == node) {
                     nextInComm = true;
                     where = std::make_pair(findSupstep, 0);
@@ -1765,11 +1765,11 @@ void PebblingSchedule<GraphT>::FixForceEvicts(const std::vector<std::tuple<Verte
         }
 
         PebblingSchedule<GraphT> testSchedule = *this;
-        for (auto itr = testSchedule.nodesEvictedInComm[proc][superstep].begin();
-             itr != testSchedule.nodesEvictedInComm[proc][superstep].end();
+        for (auto itr = testSchedule.nodesEvictedInComm_[proc][superstep].begin();
+             itr != testSchedule.nodesEvictedInComm_[proc][superstep].end();
              ++itr) {
             if (*itr == node) {
-                testSchedule.nodesEvictedInComm[proc][superstep].erase(itr);
+                testSchedule.nodesEvictedInComm_[proc][superstep].erase(itr);
                 break;
             }
         }
@@ -1787,7 +1787,7 @@ void PebblingSchedule<GraphT>::FixForceEvicts(const std::vector<std::tuple<Verte
                         }
                     } else {
                         for (VertexIdx toEvict : itr->nodesEvictedAfter) {
-                            testSchedule.nodesEvictedInComm[proc][where.first - 1].push_back(toEvict);
+                            testSchedule.nodesEvictedInComm_[proc][where.first - 1].push_back(toEvict);
                         }
                     }
                     testSchedule.computeStepsForProcSuperstep_[proc][where.first].erase(itr);
@@ -1796,23 +1796,23 @@ void PebblingSchedule<GraphT>::FixForceEvicts(const std::vector<std::tuple<Verte
             }
 
             if (testSchedule.IsValid()) {
-                nodesEvictedInComm[proc][superstep] = testSchedule.nodesEvictedInComm[proc][superstep];
+                nodesEvictedInComm_[proc][superstep] = testSchedule.nodesEvictedInComm_[proc][superstep];
                 computeStepsForProcSuperstep_[proc][where.first] = testSchedule.computeStepsForProcSuperstep_[proc][where.first];
-                nodesEvictedInComm[proc][where.first - 1] = testSchedule.nodesEvictedInComm[proc][where.first - 1];
+                nodesEvictedInComm_[proc][where.first - 1] = testSchedule.nodesEvictedInComm_[proc][where.first - 1];
             }
         } else if (nextInComm) {
-            for (auto itr = testSchedule.nodesSentDown[proc][where.first].begin();
-                 itr != testSchedule.nodesSentDown[proc][where.first].end();
+            for (auto itr = testSchedule.nodesSentDown_[proc][where.first].begin();
+                 itr != testSchedule.nodesSentDown_[proc][where.first].end();
                  ++itr) {
                 if (*itr == node) {
-                    testSchedule.nodesSentDown[proc][where.first].erase(itr);
+                    testSchedule.nodesSentDown_[proc][where.first].erase(itr);
                     break;
                 }
             }
 
             if (testSchedule.IsValid()) {
-                nodesEvictedInComm[proc][superstep] = testSchedule.nodesEvictedInComm[proc][superstep];
-                nodesSentDown[proc][where.first] = testSchedule.nodesSentDown[proc][where.first];
+                nodesEvictedInComm_[proc][superstep] = testSchedule.nodesEvictedInComm_[proc][superstep];
+                nodesSentDown_[proc][where.first] = testSchedule.nodesSentDown_[proc][where.first];
             }
         }
     }
@@ -1843,20 +1843,20 @@ void PebblingSchedule<GraphT>::TryToMergeSupersteps() {
                     testSchedule.computeStepsForProcSuperstep_[proc][nextStep].end());
                 testSchedule.computeStepsForProcSuperstep_[proc][nextStep].clear();
 
-                testSchedule.nodesSentUp[proc][step].insert(testSchedule.nodesSentUp[proc][step].end(),
-                                                            testSchedule.nodesSentUp[proc][nextStep].begin(),
-                                                            testSchedule.nodesSentUp[proc][nextStep].end());
-                testSchedule.nodesSentUp[proc][nextStep].clear();
+                testSchedule.nodesSentUp_[proc][step].insert(testSchedule.nodesSentUp_[proc][step].end(),
+                                                            testSchedule.nodesSentUp_[proc][nextStep].begin(),
+                                                            testSchedule.nodesSentUp_[proc][nextStep].end());
+                testSchedule.nodesSentUp_[proc][nextStep].clear();
 
-                testSchedule.nodesSentDown[proc][prevStep].insert(testSchedule.nodesSentDown[proc][prevStep].end(),
-                                                                  testSchedule.nodesSentDown[proc][step].begin(),
-                                                                  testSchedule.nodesSentDown[proc][step].end());
-                testSchedule.nodesSentDown[proc][step].clear();
+                testSchedule.nodesSentDown_[proc][prevStep].insert(testSchedule.nodesSentDown_[proc][prevStep].end(),
+                                                                  testSchedule.nodesSentDown_[proc][step].begin(),
+                                                                  testSchedule.nodesSentDown_[proc][step].end());
+                testSchedule.nodesSentDown_[proc][step].clear();
 
-                testSchedule.nodesEvictedInComm[proc][step].insert(testSchedule.nodesEvictedInComm[proc][step].end(),
-                                                                   testSchedule.nodesEvictedInComm[proc][nextStep].begin(),
-                                                                   testSchedule.nodesEvictedInComm[proc][nextStep].end());
-                testSchedule.nodesEvictedInComm[proc][nextStep].clear();
+                testSchedule.nodesEvictedInComm_[proc][step].insert(testSchedule.nodesEvictedInComm_[proc][step].end(),
+                                                                   testSchedule.nodesEvictedInComm_[proc][nextStep].begin(),
+                                                                   testSchedule.nodesEvictedInComm_[proc][nextStep].end());
+                testSchedule.nodesEvictedInComm_[proc][nextStep].clear();
             }
 
             if (testSchedule.IsValid()) {
@@ -1865,15 +1865,15 @@ void PebblingSchedule<GraphT>::TryToMergeSupersteps() {
                     computeStepsForProcSuperstep_[proc][step] = testSchedule.computeStepsForProcSuperstep_[proc][step];
                     computeStepsForProcSuperstep_[proc][nextStep].clear();
 
-                    nodesSentUp[proc][step] = testSchedule.nodesSentUp[proc][step];
-                    nodesSentUp[proc][nextStep].clear();
+                    nodesSentUp_[proc][step] = testSchedule.nodesSentUp_[proc][step];
+                    nodesSentUp_[proc][nextStep].clear();
 
-                    nodesSentDown[proc][prevStep] = testSchedule.nodesSentDown[proc][prevStep];
-                    nodesSentDown[proc][step] = nodesSentDown[proc][nextStep];
-                    nodesSentDown[proc][nextStep].clear();
+                    nodesSentDown_[proc][prevStep] = testSchedule.nodesSentDown_[proc][prevStep];
+                    nodesSentDown_[proc][step] = nodesSentDown_[proc][nextStep];
+                    nodesSentDown_[proc][nextStep].clear();
 
-                    nodesEvictedInComm[proc][step] = testSchedule.nodesEvictedInComm[proc][step];
-                    nodesEvictedInComm[proc][nextStep].clear();
+                    nodesEvictedInComm_[proc][step] = testSchedule.nodesEvictedInComm_[proc][step];
+                    nodesEvictedInComm_[proc][nextStep].clear();
                 }
             } else {
                 break;
@@ -1903,9 +1903,9 @@ void PebblingSchedule<GraphT>::TryToMergeSupersteps() {
 
         for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); ++proc) {
             shortenedSchedule.computeStepsForProcSuperstep_[proc][newIndex] = computeStepsForProcSuperstep_[proc][step];
-            shortenedSchedule.nodesSentUp[proc][newIndex] = nodesSentUp[proc][step];
-            shortenedSchedule.nodesSentDown[proc][newIndex] = nodesSentDown[proc][step];
-            shortenedSchedule.nodesEvictedInComm[proc][newIndex] = nodesEvictedInComm[proc][step];
+            shortenedSchedule.nodesSentUp_[proc][newIndex] = nodesSentUp_[proc][step];
+            shortenedSchedule.nodesSentDown_[proc][newIndex] = nodesSentDown_[proc][step];
+            shortenedSchedule.nodesEvictedInComm_[proc][newIndex] = nodesEvictedInComm_[proc][step];
         }
 
         ++newIndex;
@@ -1934,7 +1934,7 @@ PebblingSchedule<GraphT> PebblingSchedule<GraphT>::ExpandMemSchedule(const BspIn
         for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); ++proc) {
             // computation phase
             for (const auto &computeStep : computeStepsForProcSuperstep_[proc][step]) {
-                VertexIdx node = computeStep.node;
+                VertexIdx node = computeStep.node_;
                 for (VertexIdx originalNode : originalVerticesForCoarseID[node]) {
                     fineSchedule.computeStepsForProcSuperstep_[proc][step].emplace_back(originalNode);
                 }
@@ -1947,21 +1947,21 @@ PebblingSchedule<GraphT> PebblingSchedule<GraphT>::ExpandMemSchedule(const BspIn
             }
 
             // communication phase
-            for (VertexIdx node : nodesSentUp[proc][step]) {
+            for (VertexIdx node : nodesSentUp_[proc][step]) {
                 for (VertexIdx originalNode : originalVerticesForCoarseID[node]) {
-                    fineSchedule.nodesSentUp[proc][step].push_back(originalNode);
+                    fineSchedule.nodesSentUp_[proc][step].push_back(originalNode);
                 }
             }
 
-            for (VertexIdx node : nodesEvictedInComm[proc][step]) {
+            for (VertexIdx node : nodesEvictedInComm_[proc][step]) {
                 for (VertexIdx originalNode : originalVerticesForCoarseID[node]) {
-                    fineSchedule.nodesEvictedInComm[proc][step].push_back(originalNode);
+                    fineSchedule.nodesEvictedInComm_[proc][step].push_back(originalNode);
                 }
             }
 
-            for (VertexIdx node : nodesSentDown[proc][step]) {
+            for (VertexIdx node : nodesSentDown_[proc][step]) {
                 for (VertexIdx originalNode : originalVerticesForCoarseID[node]) {
-                    fineSchedule.nodesSentDown[proc][step].push_back(originalNode);
+                    fineSchedule.nodesSentDown_[proc][step].push_back(originalNode);
                 }
             }
         }
@@ -1979,7 +1979,7 @@ BspSchedule<GraphT> PebblingSchedule<GraphT>::ConvertToBsp() const {
     for (unsigned step = 0; step < numberOfSupersteps_; ++step) {
         for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); ++proc) {
             for (const auto &computeStep : computeStepsForProcSuperstep_[proc][step]) {
-                const VertexIdx &node = computeStep.node;
+                const VertexIdx &node = computeStep.node_;
                 if (nodeToProc[node] == UINT_MAX) {
                     nodeToProc[node] = proc;
                     nodeToSupstep[node] = step;

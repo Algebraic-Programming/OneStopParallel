@@ -95,7 +95,7 @@ void RunTestLocalMemory(Scheduler<GraphT> *testScheduler) {
             const std::vector<VMemwT<GraphT>> boundsToTest = {10, 20, 50, 100};
 
             for (const auto &bound : boundsToTest) {
-                instance.GetArchitecture().setMemoryBound(bound);
+                instance.GetArchitecture().SetMemoryBound(bound);
 
                 BspSchedule<GraphT> schedule(instance);
                 const auto result = testScheduler->ComputeSchedule(schedule);
@@ -152,7 +152,7 @@ void RunTestPersistentTransientMemory(Scheduler<GraphT> *testScheduler) {
             const std::vector<VMemwT<GraphT>> boundsToTest = {50, 100};
 
             for (const auto &bound : boundsToTest) {
-                instance.GetArchitecture().setMemoryBound(bound);
+                instance.GetArchitecture().SetMemoryBound(bound);
 
                 BspSchedule<GraphT> schedule(instance);
                 const auto result = testScheduler->ComputeSchedule(schedule);
@@ -209,7 +209,7 @@ void RunTestLocalInOutMemory(Scheduler<GraphT> *testScheduler) {
             const std::vector<VMemwT<GraphT>> boundsToTest = {10, 20, 50, 100};
 
             for (const auto &bound : boundsToTest) {
-                instance.GetArchitecture().setMemoryBound(bound);
+                instance.GetArchitecture().SetMemoryBound(bound);
 
                 BspSchedule<GraphT> schedule(instance);
                 const auto result = testScheduler->ComputeSchedule(schedule);
@@ -266,7 +266,7 @@ void RunTestLocalIncEdgesMemory(Scheduler<GraphT> *testScheduler) {
             const std::vector<VMemwT<GraphT>> boundsToTest = {50, 100};
 
             for (const auto &bound : boundsToTest) {
-                instance.GetArchitecture().setMemoryBound(bound);
+                instance.GetArchitecture().SetMemoryBound(bound);
 
                 BspSchedule<GraphT> schedule(instance);
                 const auto result = testScheduler->ComputeSchedule(schedule);
@@ -323,7 +323,7 @@ void RunTestLocalIncEdges2Memory(Scheduler<GraphT> *testScheduler) {
             const std::vector<VMemwT<GraphT>> boundsToTest = {20, 50, 100};
 
             for (const auto &bound : boundsToTest) {
-                instance.GetArchitecture().setMemoryBound(bound);
+                instance.GetArchitecture().SetMemoryBound(bound);
 
                 BspSchedule<GraphT> schedule(instance);
                 const auto result = testScheduler->ComputeSchedule(schedule);

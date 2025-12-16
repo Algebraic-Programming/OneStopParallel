@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(KlLocalMemconst) {
         }
 
         for (const auto &bound : boundsToTest) {
-            instance.GetArchitecture().setMemoryBound(bound);
+            instance.GetArchitecture().SetMemoryBound(bound);
 
             BspSchedule<Graph> schedule(instance);
             const auto result = testScheduler.ComputeSchedule(schedule);

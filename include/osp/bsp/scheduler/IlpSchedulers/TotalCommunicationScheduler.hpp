@@ -369,7 +369,7 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
                         expr += nodeToProcessorSuperstepVar_[node][processor][static_cast<int>(step)]
                                 * instance.GetComputationalDag().VertexMemWeight(node);
                     }
-                    model.AddConstr(expr <= instance.GetArchitecture().memoryBound(processor));
+                    model.AddConstr(expr <= instance.GetArchitecture().MemoryBound(processor));
                 }
             }
         }

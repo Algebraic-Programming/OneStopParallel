@@ -89,7 +89,7 @@ template <typename GraphT>
 ReturnStatus PebblingPartialILP<GraphT>::ComputePebbling(PebblingSchedule<GraphT> &schedule) {
     const BspInstance<GraphT> &instance = schedule.GetInstance();
 
-    if (!PebblingSchedule<GraphT>::hasValidSolution(instance)) {
+    if (!PebblingSchedule<GraphT>::HasValidSolution(instance)) {
         return ReturnStatus::ERROR;
     }
 
@@ -241,7 +241,7 @@ ReturnStatus PebblingPartialILP<GraphT>::ComputePebbling(PebblingSchedule<GraphT
         unsigned procIndex = 0;
         for (unsigned proc : processorsToParts[part]) {
             subArch[part].setProcessorType(procIndex, instance.GetArchitecture().ProcessorType(proc));
-            subArch[part].setMemoryBound(instance.GetArchitecture().memoryBound(proc), procIndex);
+            subArch[part].SetMemoryBound(instance.GetArchitecture().MemoryBound(proc), procIndex);
             originalProcId[part][procIndex] = proc;
             ++procIndex;
         }
@@ -293,7 +293,7 @@ ReturnStatus PebblingPartialILP<GraphT>::ComputePebbling(PebblingSchedule<GraphT
         heuristicPebbling.SetExternalSources(extraSourceIds);
         heuristicPebbling.SetNeedsBlueAtEnd(needsBlueAtEnd);
         heuristicPebbling.SetHasRedInBeginning(hasRedsInBeginning[part]);
-        heuristicPebbling.ConvertFromBsp(bspHeuristic, PebblingSchedule<GraphT>::CACHE_EVICTION_STRATEGY::FORESIGHT);
+        heuristicPebbling.ConvertFromBsp(bspHeuristic, PebblingSchedule<GraphT>::CacheEvictionStrategy::FORESIGHT);
 
         heuristicPebbling.RemoveEvictStepsFromEnd();
         pebbling[part] = heuristicPebbling;
@@ -315,7 +315,7 @@ ReturnStatus PebblingPartialILP<GraphT>::ComputePebbling(PebblingSchedule<GraphT
         PebblingSchedule<GraphT> pebblingILP(subInstance[part]);
         ReturnStatus status = mpp.ComputePebblingWithInitialSolution(heuristicPebbling, pebblingILP, asynchronous_);
         if (status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND) {
-            if (!pebblingILP.isValid()) {
+            if (!pebblingILP.IsValid()) {
                 std::cout << "ERROR: Pebbling ILP INVALID!" << std::endl;
             }
 
@@ -344,7 +344,7 @@ ReturnStatus PebblingPartialILP<GraphT>::ComputePebbling(PebblingSchedule<GraphT
     // AUX: assemble final schedule from subschedules
     schedule.CreateFromPartialPebblings(instance, pebbling, processorsToParts, originalNodeId, originalProcId, hasRedsInBeginning);
     schedule.cleanSchedule();
-    return schedule.isValid() ? ReturnStatus::OSP_SUCCESS : ReturnStatus::ERROR;
+    return schedule.IsValid() ? ReturnStatus::OSP_SUCCESS : ReturnStatus::ERROR;
 }
 
 template <typename GraphT>

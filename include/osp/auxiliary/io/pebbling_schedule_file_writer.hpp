@@ -37,7 +37,7 @@ void WriteTxt(std::ostream &os, const PebblingSchedule<GraphT> &schedule) {
         for (unsigned proc = 0; proc < schedule.GetInstance().NumberOfProcessors(); ++proc) {
             const auto &computeSteps = schedule.GetComputeStepsForProcSuperstep(proc, step);
             for (const auto &computeStep : computeSteps) {
-                os << "Compute " << computeStep.node << " on proc " << proc << " in superstep " << step << std::endl;
+                os << "Compute " << computeStep.node_ << " on proc " << proc << " in superstep " << step << std::endl;
                 for (VertexIdx toEvict : computeStep.nodesEvictedAfter_) {
                     os << "Evict " << toEvict << " from proc " << proc << " in superstep " << step << std::endl;
                 }

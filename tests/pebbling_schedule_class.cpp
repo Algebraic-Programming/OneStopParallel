@@ -94,32 +94,32 @@ void RunTest(Scheduler<GraphT> *testScheduler) {
             BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
 
             std::vector<VMemwT<GraphT> > minimumMemoryRequiredVector
-                = PebblingSchedule<GraphT>::minimumMemoryRequiredPerNodeType(instance);
+                = PebblingSchedule<GraphT>::MinimumMemoryRequiredPerNodeType(instance);
             VMemwT<GraphT> maxRequired = *std::max_element(minimumMemoryRequiredVector.begin(), minimumMemoryRequiredVector.end());
-            instance.GetArchitecture().setMemoryBound(maxRequired);
+            instance.GetArchitecture().SetMemoryBound(maxRequired);
 
-            PebblingSchedule<GraphT> memSchedule1(bspSchedule, PebblingSchedule<GraphT>::CACHE_EVICTION_STRATEGY::LARGEST_ID);
+            PebblingSchedule<GraphT> memSchedule1(bspSchedule, PebblingSchedule<GraphT>::CacheEvictionStrategy::LARGEST_ID);
             BOOST_CHECK_EQUAL(&memSchedule1.GetInstance(), &instance);
-            BOOST_CHECK(memSchedule1.isValid());
+            BOOST_CHECK(memSchedule1.IsValid());
 
             PebblingSchedule<GraphT> memSchedule3(bspSchedule,
-                                                  PebblingSchedule<GraphT>::CACHE_EVICTION_STRATEGY::LEAST_RECENTLY_USED);
-            BOOST_CHECK(memSchedule3.isValid());
+                                                  PebblingSchedule<GraphT>::CacheEvictionStrategy::LEAST_RECENTLY_USED);
+            BOOST_CHECK(memSchedule3.IsValid());
 
-            PebblingSchedule<GraphT> memSchedule5(bspSchedule, PebblingSchedule<GraphT>::CACHE_EVICTION_STRATEGY::FORESIGHT);
-            BOOST_CHECK(memSchedule5.isValid());
+            PebblingSchedule<GraphT> memSchedule5(bspSchedule, PebblingSchedule<GraphT>::CacheEvictionStrategy::FORESIGHT);
+            BOOST_CHECK(memSchedule5.IsValid());
 
-            instance.GetArchitecture().setMemoryBound(2 * maxRequired);
+            instance.GetArchitecture().SetMemoryBound(2 * maxRequired);
 
-            PebblingSchedule<GraphT> memSchedule2(bspSchedule, PebblingSchedule<GraphT>::CACHE_EVICTION_STRATEGY::LARGEST_ID);
-            BOOST_CHECK(memSchedule2.isValid());
+            PebblingSchedule<GraphT> memSchedule2(bspSchedule, PebblingSchedule<GraphT>::CacheEvictionStrategy::LARGEST_ID);
+            BOOST_CHECK(memSchedule2.IsValid());
 
             PebblingSchedule<GraphT> memSchedule4(bspSchedule,
-                                                  PebblingSchedule<GraphT>::CACHE_EVICTION_STRATEGY::LEAST_RECENTLY_USED);
-            BOOST_CHECK(memSchedule4.isValid());
+                                                  PebblingSchedule<GraphT>::CacheEvictionStrategy::LEAST_RECENTLY_USED);
+            BOOST_CHECK(memSchedule4.IsValid());
 
-            PebblingSchedule<GraphT> memSchedule6(bspSchedule, PebblingSchedule<GraphT>::CACHE_EVICTION_STRATEGY::FORESIGHT);
-            BOOST_CHECK(memSchedule6.isValid());
+            PebblingSchedule<GraphT> memSchedule6(bspSchedule, PebblingSchedule<GraphT>::CacheEvictionStrategy::FORESIGHT);
+            BOOST_CHECK(memSchedule6.IsValid());
         }
     }
 }
@@ -158,13 +158,13 @@ BOOST_AUTO_TEST_CASE(TestPebblingScheduleWriter) {
     ReturnStatus result = scheduler.ComputeSchedule(bspSchedule);
     BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
 
-    std::vector<VMemwT<Graph> > minimumMemoryRequiredVector = PebblingSchedule<Graph>::minimumMemoryRequiredPerNodeType(instance);
+    std::vector<VMemwT<Graph> > minimumMemoryRequiredVector = PebblingSchedule<Graph>::MinimumMemoryRequiredPerNodeType(instance);
     VMemwT<Graph> maxRequired = *std::max_element(minimumMemoryRequiredVector.begin(), minimumMemoryRequiredVector.end());
-    instance.GetArchitecture().setMemoryBound(maxRequired + 3);
+    instance.GetArchitecture().SetMemoryBound(maxRequired + 3);
 
-    PebblingSchedule<Graph> memSchedule(bspSchedule, PebblingSchedule<Graph>::CACHE_EVICTION_STRATEGY::LEAST_RECENTLY_USED);
-    BOOST_CHECK(memSchedule.isValid());
+    PebblingSchedule<Graph> memSchedule(bspSchedule, PebblingSchedule<Graph>::CacheEvictionStrategy::LEAST_RECENTLY_USED);
+    BOOST_CHECK(memSchedule.IsValid());
 
     std::cout << "Writing pebbling schedule" << std::endl;
-    file_writer::write_txt(std::cout, memSchedule);
+    file_writer::WriteTxt(std::cout, memSchedule);
 }

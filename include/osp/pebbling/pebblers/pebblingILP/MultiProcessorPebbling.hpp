@@ -671,7 +671,7 @@ void MultiProcessorPebbling<GraphT>::SetupBaseVariablesConstraints(const BspInst
                 }
             }
 
-            model.AddConstr(expr <= instance.GetArchitecture().memoryBound(processor));
+            model.AddConstr(expr <= instance.GetArchitecture().MemoryBound(processor));
         }
     }
 
