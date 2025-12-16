@@ -32,7 +32,7 @@ class GreedyRecomputer {
 
   private:
     using VertexIdx = VertexIdxT<GraphT>;
-    using cost_type = VWorkwT<GraphT>;
+    using CostType = VWorkwT<GraphT>;
     using KeyTriple = std::tuple<VertexIdxT<GraphT>, unsigned int, unsigned int>;
 
     static_assert(std::is_same_v<VWorkwT<GraphT>, VCommwT<GraphT>>,
@@ -59,15 +59,15 @@ ReturnStatus GreedyRecomputer<GraphT>::ComputeRecompSchedule(BspScheduleCS<Graph
     outSchedule.SetNumberOfSupersteps(initialSchedule.NumberOfSupersteps());
 
     // Initialize required data structures
-    std::vector<std::vector<cost_type>> workCost(p, std::vector<cost_type>(s, 0)), sendCost(p, std::vector<cost_type>(s, 0)),
-        recCost(p, std::vector<cost_type>(s, 0));
+    std::vector<std::vector<CostType>> workCost(p, std::vector<CostType>(s, 0)), sendCost(p, std::vector<CostType>(s, 0)),
+        recCost(p, std::vector<CostType>(s, 0));
 
     std::vector<std::vector<unsigned>> firstComputable(n, std::vector<unsigned>(p, 0U)),
         firstPresent(n, std::vector<unsigned>(p, std::numeric_limits<unsigned>::max()));
 
     std::vector<std::vector<std::multiset<unsigned>>> neededOnProc(n, std::vector<std::multiset<unsigned>>(p, {s}));
 
-    std::vector<cost_type> maxWork(s, 0), maxComm(s, 0);
+    std::vector<CostType> maxWork(s, 0), maxComm(s, 0);
 
     std::vector<std::set<KeyTriple>> commSteps(s);
 
@@ -126,10 +126,10 @@ ReturnStatus GreedyRecomputer<GraphT>::ComputeRecompSchedule(BspScheduleCS<Graph
                 const unsigned &toProc = std::get<2>(entry);
 
                 // check how much comm cost we save by removing comm schedule entry
-                cost_type commInduced = g.VertexCommWeight(node)
+                CostType commInduced = g.VertexCommWeight(node)
                                         * initialSchedule.GetInstance().GetArchitecture().CommunicationCosts(fromProc, toProc);
 
-                cost_type newMaxComm = 0;
+                CostType newMaxComm = 0;
                 for (unsigned proc = 0; proc < p; ++proc) {
                     if (proc == fromProc) {
                         newMaxComm = std::max(newMaxComm, sendCost[proc][step] - commInduced);
@@ -150,17 +150,17 @@ ReturnStatus GreedyRecomputer<GraphT>::ComputeRecompSchedule(BspScheduleCS<Graph
                     continue;
                 }
 
-                cost_type decrease = maxComm[step] - newMaxComm;
+                CostType decrease = maxComm[step] - newMaxComm;
                 if (maxComm[step] > 0 && newMaxComm == 0) {
                     decrease += initialSchedule.GetInstance().GetArchitecture().SynchronisationCosts();
                 }
 
                 // check how much it would increase the work cost instead
                 unsigned bestStep = s;
-                cost_type smallestIncrease = std::numeric_limits<cost_type>::max();
+                CostType smallestIncrease = std::numeric_limits<CostType>::max();
                 for (unsigned compStep = firstComputable[node][toProc]; compStep <= *neededOnProc[node][toProc].begin();
                      ++compStep) {
-                    cost_type increase = workCost[toProc][compStep] + g.VertexWorkWeight(node) > maxWork[compStep]
+                    CostType increase = workCost[toProc][compStep] + g.VertexWorkWeight(node) > maxWork[compStep]
                                              ? workCost[toProc][compStep] + g.VertexWorkWeight(node) - maxWork[compStep]
                                              : 0;
 

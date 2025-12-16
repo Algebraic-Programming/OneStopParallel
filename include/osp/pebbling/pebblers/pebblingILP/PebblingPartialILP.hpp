@@ -36,7 +36,7 @@ class PebblingPartialILP : public Scheduler<GraphT> {
                   "PebblingSchedule requires work and comm. weights to have the same type.");
 
     using VertexIdx = VertexIdxT<GraphT>;
-    using cost_type = VWorkwT<GraphT>;
+    using CostType = VWorkwT<GraphT>;
 
     unsigned minPartitionSize_ = 50, maxPartitionSize_ = 100;
     unsigned timeSecondsForSubIlPs_ = 600;
@@ -297,7 +297,7 @@ ReturnStatus PebblingPartialILP<GraphT>::ComputePebbling(PebblingSchedule<GraphT
 
         heuristicPebbling.RemoveEvictStepsFromEnd();
         pebbling[part] = heuristicPebbling;
-        cost_type heuristicCost = asynchronous_ ? heuristicPebbling.ComputeAsynchronousCost() : heuristicPebbling.ComputeCost();
+        CostType heuristicCost = asynchronous_ ? heuristicPebbling.ComputeAsynchronousCost() : heuristicPebbling.ComputeCost();
 
         if (!heuristicPebbling.IsValid()) {
             std::cout << "ERROR: Pebbling heuristic INVALID!" << std::endl;
@@ -320,7 +320,7 @@ ReturnStatus PebblingPartialILP<GraphT>::ComputePebbling(PebblingSchedule<GraphT
             }
 
             pebblingILP.removeEvictStepsFromEnd();
-            cost_type ilpCost = asynchronous_ ? pebblingILP.computeAsynchronousCost() : pebblingILP.computeCost();
+            CostType ilpCost = asynchronous_ ? pebblingILP.computeAsynchronousCost() : pebblingILP.computeCost();
             if (ILP_cost < heuristicCost) {
                 pebbling[part] = pebblingILP;
                 std::cout << "ILP chosen instead of greedy. (" << ILP_cost << " < " << heuristicCost << ")" << std::endl;
