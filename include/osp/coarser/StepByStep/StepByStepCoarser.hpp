@@ -32,7 +32,7 @@ template <typename GraphT>
 class StepByStepCoarser : public CoarserGenContractionMap<GraphT, GraphT> {
     using VertexIdx = VertexIdxT<GraphT>;
 
-    using VertexTypeTOrDefault = std::conditional_t<IsComputationalDagTypedVerticesV<GraphT>, VTypeT<GraphT>, unsigned>;
+    using VertexTypeTOrDefault = std::conditional_t<isComputationalDagTypedVerticesV<GraphT>, VTypeT<GraphT>, unsigned>;
     using EdgeCommwTOrDefault = std::conditional_t<hasEdgeWeightsV<GraphT>, ECommwT<GraphT>, VCommwT<GraphT>>;
 
     using BoostGraphT

@@ -36,7 +36,7 @@ namespace osp {
  */
 template <typename GraphT>
 void NearDiagRandomGraph(GraphT &dagOut, VertexIdxT<GraphT> numVertices, double bandwidth, double prob) {
-    static_assert(IsConstructableCdagV<GraphT>, "Graph_t must be a constructable computational DAG type");
+    static_assert(isConstructableCdagV<GraphT>, "Graph_t must be a constructable computational DAG type");
 
     dagOut = GraphT(numVertices);
 

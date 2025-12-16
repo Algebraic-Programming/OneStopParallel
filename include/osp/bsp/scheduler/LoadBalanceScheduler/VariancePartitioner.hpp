@@ -26,7 +26,7 @@ namespace osp {
 
 template <typename GraphT, typename InterpolationT, typename MemoryConstraintT = NoMemoryConstraint>
 class VariancePartitioner : public LoadBalancerBase<GraphT, InterpolationT> {
-    static_assert(IsComputationalDagV<GraphT>, "VariancePartitioner can only be used with computational DAGs.");
+    static_assert(isComputationalDagV<GraphT>, "VariancePartitioner can only be used with computational DAGs.");
 
     using VertexType = VertexIdxT<GraphT>;
 

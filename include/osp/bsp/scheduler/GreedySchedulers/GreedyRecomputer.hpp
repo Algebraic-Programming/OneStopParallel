@@ -28,7 +28,7 @@ namespace osp {
  */
 template <typename GraphT>
 class GreedyRecomputer {
-    static_assert(IsComputationalDagV<GraphT>, "GreedyRecomputer can only be used with computational DAGs.");
+    static_assert(isComputationalDagV<GraphT>, "GreedyRecomputer can only be used with computational DAGs.");
 
   private:
     using VertexIdx = VertexIdxT<GraphT>;

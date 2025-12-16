@@ -35,7 +35,7 @@ namespace osp {
 
 template <typename GraphT>
 class CoptCommScheduleOptimizer {
-    static_assert(IsComputationalDagV<GraphT>, "CoptFullScheduler can only be used with computational DAGs.");
+    static_assert(isComputationalDagV<GraphT>, "CoptFullScheduler can only be used with computational DAGs.");
 
     bool ignoreLatency_ = false;
 

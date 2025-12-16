@@ -43,7 +43,7 @@ enum CilkMode { CILK, SJF };
  */
 template <typename GraphT>
 class CilkScheduler : public Scheduler<GraphT> {
-    static_assert(IsComputationalDagV<GraphT>, "CilkScheduler can only be used with computational DAGs.");
+    static_assert(isComputationalDagV<GraphT>, "CilkScheduler can only be used with computational DAGs.");
 
   private:
     using TvPair = std::pair<VWorkwT<GraphT>, VertexIdxT<GraphT>>;

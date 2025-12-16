@@ -251,7 +251,7 @@ bool ReadComputationalDagHyperdagFormatDB(std::ifstream &infile, GraphT &graph) 
             graph.SetVertexCommWeight(static_cast<VertexIdxT<GraphT>>(node), hyperedgeCommWeights[edgeIdx]);
             graph.SetVertexMemWeight(static_cast<VertexIdxT<GraphT>>(node), hyperedgeMemWeights[edgeIdx]);
         } else {
-            if constexpr (IsModifiableCdagCommEdgeV<GraphT>) {
+            if constexpr (isModifiableCdagCommEdgeV<GraphT>) {
                 auto edge = graph.AddEdge(static_cast<VertexIdxT<GraphT>>(edgeSource[edgeIdx]),
                                           static_cast<VertexIdxT<GraphT>>(nodeIdx));
 

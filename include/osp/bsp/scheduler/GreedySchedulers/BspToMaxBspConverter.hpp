@@ -27,7 +27,7 @@ namespace osp {
 
 template <typename GraphT>
 class GreedyBspToMaxBspConverter {
-    static_assert(IsComputationalDagV<GraphT>, "GreedyBspToMaxBspConverter can only be used with computational DAGs.");
+    static_assert(isComputationalDagV<GraphT>, "GreedyBspToMaxBspConverter can only be used with computational DAGs.");
     static_assert(std::is_same_v<VWorkwT<GraphT>, VCommwT<GraphT>>,
                   "GreedyBspToMaxBspConverter requires work and comm. weights to have the same type.");
 

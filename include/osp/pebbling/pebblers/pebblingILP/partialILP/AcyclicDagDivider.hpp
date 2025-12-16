@@ -28,7 +28,7 @@ namespace osp {
 
 template <typename GraphT>
 class AcyclicDagDivider {
-    static_assert(IsComputationalDagV<GraphT>, "PebblingSchedule can only be used with computational DAGs.");
+    static_assert(isComputationalDagV<GraphT>, "PebblingSchedule can only be used with computational DAGs.");
 
   protected:
     using VertexIdx = VertexIdxT<GraphT>;

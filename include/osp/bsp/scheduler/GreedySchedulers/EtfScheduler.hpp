@@ -49,7 +49,7 @@ enum EtfMode { ETF, BL_EST };
  */
 template <typename GraphT, typename MemoryConstraintT = NoMemoryConstraint>
 class EtfScheduler : public Scheduler<GraphT> {
-    static_assert(IsComputationalDagV<GraphT>, "EtfScheduler can only be used with computational DAGs.");
+    static_assert(isComputationalDagV<GraphT>, "EtfScheduler can only be used with computational DAGs.");
 
     static_assert(std::is_convertible_v<VCommwT<GraphT>, VWorkwT<GraphT>>,
                   "EtfScheduler requires that work and communication weights are convertible.");

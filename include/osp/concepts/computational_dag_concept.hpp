@@ -130,7 +130,7 @@ template <typename T>
 struct IsComputationalDag<T, std::void_t<>> : std::conjunction<IsDirectedGraph<T>, HasVertexWeights<T>> {};
 
 template <typename T>
-inline constexpr bool IsComputationalDagV = IsComputationalDag<T>::value;
+inline constexpr bool isComputationalDagV = IsComputationalDag<T>::value;
 
 /**
  * @brief Concept for a computational DAG with typed vertices.
@@ -146,7 +146,7 @@ template <typename T>
 struct IsComputationalDagTypedVertices<T, std::void_t<>> : std::conjunction<IsComputationalDag<T>, HasTypedVertices<T>> {};
 
 template <typename T>
-inline constexpr bool IsComputationalDagTypedVerticesV = IsComputationalDagTypedVertices<T>::value;
+inline constexpr bool isComputationalDagTypedVerticesV = IsComputationalDagTypedVertices<T>::value;
 
 /**
  * @brief Concept for a computational DAG that supports explicit edge descriptors.
@@ -163,7 +163,7 @@ template <typename T>
 struct IsComputationalDagEdgeDesc<T, std::void_t<>> : std::conjunction<IsDirectedGraphEdgeDesc<T>, IsComputationalDag<T>> {};
 
 template <typename T>
-inline constexpr bool IsComputationalDagEdgeDescV = IsComputationalDagEdgeDesc<T>::value;
+inline constexpr bool isComputationalDagEdgeDescV = IsComputationalDagEdgeDesc<T>::value;
 
 /**
  * @brief Concept for a computational DAG with both typed vertices and edge descriptors.
@@ -180,6 +180,6 @@ struct IsComputationalDagTypedVerticesEdgeDesc<T, std::void_t<>>
     : std::conjunction<IsDirectedGraphEdgeDesc<T>, IsComputationalDagTypedVertices<T>> {};
 
 template <typename T>
-inline constexpr bool IsComputationalDagTypedVerticesEdgeDescV = IsComputationalDagTypedVerticesEdgeDesc<T>::value;
+inline constexpr bool isComputationalDagTypedVerticesEdgeDescV = IsComputationalDagTypedVerticesEdgeDesc<T>::value;
 
 }    // namespace osp

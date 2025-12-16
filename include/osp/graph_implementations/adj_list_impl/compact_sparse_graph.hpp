@@ -775,25 +775,25 @@ class CompactSparseGraph {
     CompactSparseGraph(const GraphType &graph) : CompactSparseGraph(graph.NumVertices(), EdgeView(graph)) {
         static_assert(IsDirectedGraphV<GraphType>);
 
-        if constexpr (IsComputationalDagV<GraphType> && useWorkWeights) {
+        if constexpr (isComputationalDagV<GraphType> && useWorkWeights) {
             for (const auto &vert : graph.Vertices()) {
                 SetVertexWorkWeight(vert, graph.VertexWorkWeight(vert));
             }
         }
 
-        if constexpr (IsComputationalDagV<GraphType> && useCommWeights) {
+        if constexpr (isComputationalDagV<GraphType> && useCommWeights) {
             for (const auto &vert : graph.Vertices()) {
                 SetVertexCommWeight(vert, graph.VertexCommWeight(vert));
             }
         }
 
-        if constexpr (IsComputationalDagV<GraphType> && useMemWeights) {
+        if constexpr (isComputationalDagV<GraphType> && useMemWeights) {
             for (const auto &vert : graph.Vertices()) {
                 SetVertexMemWeight(vert, graph.VertexMemWeight(vert));
             }
         }
 
-        if constexpr (IsComputationalDagTypedVerticesV<GraphType> && useVertTypes) {
+        if constexpr (isComputationalDagTypedVerticesV<GraphType> && useVertTypes) {
             for (const auto &vert : graph.Vertices()) {
                 SetVertexType(vert, graph.VertexType(vert));
             }
@@ -1008,16 +1008,16 @@ static_assert(IsDirectedGraphV<CompactSparseGraph<true, false, false, false, fal
 static_assert(IsDirectedGraphV<CompactSparseGraph<true, true, true, true, true>>,
               "CompactSparseGraph must satisfy the directed_graph concept");
 
-static_assert(IsComputationalDagV<CompactSparseGraph<false, true, true, true, false>>,
+static_assert(isComputationalDagV<CompactSparseGraph<false, true, true, true, false>>,
               "CompactSparseGraph must satisfy the is_computation_dag concept");
 
-static_assert(IsComputationalDagV<CompactSparseGraph<true, true, true, true, false>>,
+static_assert(isComputationalDagV<CompactSparseGraph<true, true, true, true, false>>,
               "CompactSparseGraph must satisfy the is_computation_dag concept");
 
-static_assert(IsComputationalDagTypedVerticesV<CompactSparseGraph<false, true, true, true, true>>,
+static_assert(isComputationalDagTypedVerticesV<CompactSparseGraph<false, true, true, true, true>>,
               "CompactSparseGraph must satisfy the is_computation_dag with types concept");
 
-static_assert(IsComputationalDagTypedVerticesV<CompactSparseGraph<true, true, true, true, true>>,
+static_assert(isComputationalDagTypedVerticesV<CompactSparseGraph<true, true, true, true, true>>,
               "CompactSparseGraph must satisfy the is_computation_dag with types concept");
 
 static_assert(IsDirectConstructableCdagV<CompactSparseGraph<true, true>>, "CompactSparseGraph must be directly constructable");
@@ -1047,8 +1047,8 @@ static_assert(IsDirectedGraphEdgeDescV<CSG>, "CSG must satisfy the directed_grap
 //     VertT, EdgeT, WorkWeightType, CommWeightType, MemWeightType, VertexTypeTemplateType>;
 
 //     static_assert(IsDirectedGraphV<GraphTIn> && IsDirectedGraphV<Graph_out_type>, "Graph types need to satisfy the
-//     is_directed_graph concept."); static_assert(IsComputationalDagV<GraphTIn>, "GraphTIn must be a computational DAG");
-//     static_assert(IsConstructableCdagV<Graph_out_type> || IsDirectConstructableCdagV<Graph_out_type>, "Graph_out_type
+//     is_directed_graph concept."); static_assert(isComputationalDagV<GraphTIn>, "GraphTIn must be a computational DAG");
+//     static_assert(isConstructableCdagV<Graph_out_type> || IsDirectConstructableCdagV<Graph_out_type>, "Graph_out_type
 //     must be a (direct) constructable computational DAG");
 
 //     assert(CheckValidContractionMap<Graph_out_type>(vertex_contraction_map));
@@ -1075,7 +1075,7 @@ static_assert(IsDirectedGraphEdgeDescV<CSG>, "CSG must satisfy the directed_grap
 //         combined_expansion_map[vert] = pushforward_map[vertex_contraction_map[vert]];
 //     }
 
-//     if constexpr (hasVertexWeightsV<GraphTIn> && IsModifiableCdagVertexV<Graph_out_type>) {
+//     if constexpr (hasVertexWeightsV<GraphTIn> && isModifiableCdagVertexV<Graph_out_type>) {
 //         static_assert(std::is_same_v<VWorkwT<GraphTIn>, VWorkwT<Graph_out_type>>, "Work weight types of in-graph and
 //         out-graph must be the same."); static_assert(std::is_same_v<VCommwT<GraphTIn>, VCommwT<Graph_out_type>>, "Vertex
 //         communication types of in-graph and out-graph must be the same."); static_assert(std::is_same_v<VMemwT<GraphTIn>,

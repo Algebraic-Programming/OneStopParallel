@@ -37,8 +37,8 @@ namespace osp {
  */
 template <typename GraphTIn, typename GraphTOut>
 class Coarser {
-    static_assert(IsComputationalDagV<GraphTIn>, "GraphTIn must be a computational DAG");
-    static_assert(IsConstructableCdagV<GraphTOut> || IsDirectConstructableCdagV<GraphTOut>,
+    static_assert(isComputationalDagV<GraphTIn>, "GraphTIn must be a computational DAG");
+    static_assert(isConstructableCdagV<GraphTOut> || IsDirectConstructableCdagV<GraphTOut>,
                   "GraphTOut must be a (direct) constructable computational DAG");
 
     // probably too strict, need to be refined.

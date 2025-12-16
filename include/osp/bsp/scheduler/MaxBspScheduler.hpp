@@ -34,7 +34,7 @@ namespace osp {
 template <typename GraphT>
 class MaxBspScheduler : public Scheduler<GraphT> {
   public:
-    static_assert(IsComputationalDagV<GraphT>, "BspSchedule can only be used with computational DAGs.");
+    static_assert(isComputationalDagV<GraphT>, "BspSchedule can only be used with computational DAGs.");
 
     /**
      * @brief Get the name of the scheduling algorithm.

@@ -93,7 +93,7 @@ class TopOrderCoarser : public Coarser<GraphTIn, GraphTOut> {
         currentWork_ = dagIn.VertexWorkWeight(node);
         currentCommunication_ = dagIn.VertexCommWeight(node);
 
-        if constexpr (IsComputationalDagTypedVerticesV<GraphTIn> && IsComputationalDagTypedVerticesV<GraphTOut>) {
+        if constexpr (isComputationalDagTypedVerticesV<GraphTIn> && isComputationalDagTypedVerticesV<GraphTOut>) {
             currentSuperNodeIdx_ = dagOut.AddVertex(currentWork_, currentCommunication_, currentMemory_, dagIn.VertexType(node));
         } else {
             currentSuperNodeIdx_ = dagOut.AddVertex(currentWork_, currentCommunication_, currentMemory_);
@@ -170,7 +170,7 @@ class TopOrderCoarser : public Coarser<GraphTIn, GraphTOut> {
 
             } else {    // grow current super node
 
-                if constexpr (IsComputationalDagTypedVerticesV<GraphTIn> && IsComputationalDagTypedVerticesV<GraphTOut>) {
+                if constexpr (isComputationalDagTypedVerticesV<GraphTIn> && isComputationalDagTypedVerticesV<GraphTOut>) {
                     if (dagOut.VertexType(currentSuperNodeIdx_) != dagIn.VertexType(v)) {
                         FinishSuperNodeAddEdges(dagIn, dagOut, vertexMap.back(), reverseVertexMap);
                         vertexMap.push_back(std::vector<VertexType>({v}));

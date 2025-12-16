@@ -30,7 +30,7 @@ namespace osp {
 
 template <typename GraphT>
 class RandomGreedy : public Scheduler<GraphT> {
-    static_assert(IsComputationalDagV<GraphT>, "RandomGreedy can only be used with computational DAGs.");
+    static_assert(isComputationalDagV<GraphT>, "RandomGreedy can only be used with computational DAGs.");
 
   private:
     bool ensureEnoughSources_;

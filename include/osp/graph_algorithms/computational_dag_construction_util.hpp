@@ -38,8 +38,8 @@ namespace osp {
  */
 template <typename GraphFrom, typename GraphTo>
 void ConstructComputationalDag(const GraphFrom &from, GraphTo &to) {
-    static_assert(IsComputationalDagV<GraphFrom>, "GraphFrom must satisfy the computational_dag concept");
-    static_assert(IsConstructableCdagVertexV<GraphTo>, "GraphTo must satisfy the constructable_cdag_vertex concept");
+    static_assert(isComputationalDagV<GraphFrom>, "GraphFrom must satisfy the computational_dag concept");
+    static_assert(isConstructableCdagVertexV<GraphTo>, "GraphTo must satisfy the constructable_cdag_vertex concept");
 
     std::vector<VertexIdxT<GraphTo>> vertexMap;
     vertexMap.reserve(from.NumVertices());

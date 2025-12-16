@@ -59,7 +59,7 @@ namespace osp {
  */
 template <typename GraphT>
 class BspInstance {
-    static_assert(IsComputationalDagV<GraphT>, "BspInstance can only be used with computational DAGs.");
+    static_assert(isComputationalDagV<GraphT>, "BspInstance can only be used with computational DAGs.");
 
   private:
     /**
@@ -91,7 +91,7 @@ class BspInstance {
      * @brief The type of the vectex types in the computational DAG.
      * If the DAG does not support vertex types, this is `unsigned`.
      */
-    using VertexTypeTOrDefault = std::conditional_t<IsComputationalDagTypedVerticesV<GraphT>, VTypeT<GraphT>, unsigned>;
+    using VertexTypeTOrDefault = std::conditional_t<isComputationalDagTypedVerticesV<GraphT>, VTypeT<GraphT>, unsigned>;
     using ProcessorTypeT = unsigned;
 
   public:

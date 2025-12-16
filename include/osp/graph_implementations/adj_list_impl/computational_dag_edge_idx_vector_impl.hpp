@@ -109,7 +109,7 @@ class ComputationalDagEdgeIdxVectorImpl {
 
     template <typename GraphT>
     ComputationalDagEdgeIdxVectorImpl(const GraphT &other) {
-        static_assert(IsComputationalDagV<GraphT>, "Graph_t must satisfy the is_computation_dag concept");
+        static_assert(isComputationalDagV<GraphT>, "Graph_t must satisfy the is_computation_dag concept");
 
         ConstructComputationalDag(other, *this);
     }
@@ -273,7 +273,7 @@ using ComputationalDagEdgeIdxVectorImplDefIntT = ComputationalDagEdgeIdxVectorIm
 static_assert(IsDirectedGraphEdgeDescV<ComputationalDagEdgeIdxVectorImplDefT>,
               "computational_dag_edge_idx_vector_impl must satisfy the directed_graph_edge_desc concept");
 
-static_assert(IsComputationalDagTypedVerticesEdgeDescV<ComputationalDagEdgeIdxVectorImplDefT>,
+static_assert(isComputationalDagTypedVerticesEdgeDescV<ComputationalDagEdgeIdxVectorImplDefT>,
               "computational_dag_edge_idx_vector_impl must satisfy the computation_dag_typed_vertices_edge_desc concept");
 
 }    // namespace osp

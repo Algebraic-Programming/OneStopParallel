@@ -46,7 +46,7 @@ namespace osp {
 
 template <typename GraphT, typename MemoryConstraintT = NoMemoryConstraint>
 class BspLocking : public Scheduler<GraphT> {
-    static_assert(IsComputationalDagV<GraphT>, "BspLocking can only be used with computational DAGs.");
+    static_assert(isComputationalDagV<GraphT>, "BspLocking can only be used with computational DAGs.");
 
   private:
     using VertexType = VertexIdxT<GraphT>;

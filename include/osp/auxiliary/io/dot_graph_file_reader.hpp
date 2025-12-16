@@ -147,7 +147,7 @@ void ParseDotEdge(const std::string &line, GraphT &g) {
         VertexIdxT<GraphT> sourceNode = static_cast<VertexIdxT<GraphT>>(std::stoll(sourceStr));
         VertexIdxT<GraphT> targetNode = static_cast<VertexIdxT<GraphT>>(std::stoll(targetStr));
 
-        if constexpr (IsConstructableCdagCommEdgeV<GraphT>) {
+        if constexpr (isConstructableCdagCommEdgeV<GraphT>) {
             EdgeCommwTOrDefault commWeight = 0;
 
             if (bracketPos != std::string::npos) {

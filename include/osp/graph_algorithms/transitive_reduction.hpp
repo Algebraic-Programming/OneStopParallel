@@ -49,7 +49,7 @@ namespace osp {
 template <typename GraphTIn, typename GraphTOut>
 void TransitiveReductionSparse(const GraphTIn &graphIn, GraphTOut &graphOut) {
     static_assert(IsDirectedGraphV<GraphTIn>, "Input graph must be a directed graph.");
-    static_assert(IsConstructableCdagV<GraphTOut>, "Output graph must be a constructable computational DAG.");
+    static_assert(isConstructableCdagV<GraphTOut>, "Output graph must be a constructable computational DAG.");
     assert(graphOut.NumVertices() == 0 && "Output graph must be empty.");
 
     if (graphIn.NumVertices() == 0) {
@@ -81,7 +81,7 @@ void TransitiveReductionSparse(const GraphTIn &graphIn, GraphTOut &graphOut) {
             }
         }
         if (!isTransitive) {
-            if constexpr (hasEdgeWeightsV<GraphTIn> && IsConstructableCdagCommEdgeV<GraphTOut>) {
+            if constexpr (hasEdgeWeightsV<GraphTIn> && isConstructableCdagCommEdgeV<GraphTOut>) {
                 graphOut.AddEdge(u, v, graphIn.EdgeCommWeight(edge));
             } else {
                 graphOut.AddEdge(u, v);
@@ -112,7 +112,7 @@ void TransitiveReductionSparse(const GraphTIn &graphIn, GraphTOut &graphOut) {
 template <typename GraphTIn, typename GraphTOut>
 void TransitiveReductionDense(const GraphTIn &graphIn, GraphTOut &graphOut) {
     static_assert(IsDirectedGraphEdgeDescV<GraphTIn>, "Input graph must be a directed graph with edge descriptors.");
-    static_assert(IsConstructableCdagV<GraphTOut>, "Output graph must be a constructable computational DAG.");
+    static_assert(isConstructableCdagV<GraphTOut>, "Output graph must be a constructable computational DAG.");
     assert(graphOut.NumVertices() == 0 && "Output graph must be empty.");
 
     const auto numV = graphIn.NumVertices();
@@ -163,7 +163,7 @@ void TransitiveReductionDense(const GraphTIn &graphIn, GraphTOut &graphOut) {
             }
         }
         if (!isTransitive) {
-            if constexpr (hasEdgeWeightsV<GraphTIn> && IsConstructableCdagCommEdgeV<GraphTOut>) {
+            if constexpr (hasEdgeWeightsV<GraphTIn> && isConstructableCdagCommEdgeV<GraphTOut>) {
                 graphOut.AddEdge(u, v, graphIn.EdgeCommWeight(edge));
             } else {
                 graphOut.AddEdge(u, v);

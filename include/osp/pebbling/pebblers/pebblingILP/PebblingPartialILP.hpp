@@ -31,7 +31,7 @@ namespace osp {
 
 template <typename GraphT>
 class PebblingPartialILP : public Scheduler<GraphT> {
-    static_assert(IsComputationalDagV<GraphT>, "PebblingSchedule can only be used with computational DAGs.");
+    static_assert(isComputationalDagV<GraphT>, "PebblingSchedule can only be used with computational DAGs.");
     static_assert(std::is_same_v<VWorkwT<GraphT>, VCommwT<GraphT>>,
                   "PebblingSchedule requires work and comm. weights to have the same type.");
 

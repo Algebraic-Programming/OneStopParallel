@@ -359,7 +359,7 @@ class DotFileWriter {
 
         std::unordered_map<VertexType, std::vector<size_t>> vertexToIdx;
 
-        using VertexTypeTOrDefault = std::conditional_t<IsComputationalDagTypedVerticesV<GraphT>, VTypeT<GraphT>, unsigned>;
+        using VertexTypeTOrDefault = std::conditional_t<isComputationalDagTypedVerticesV<GraphT>, VTypeT<GraphT>, unsigned>;
         using EdgeCommwTOrDefault = std::conditional_t<hasEdgeWeightsV<GraphT>, ECommwT<GraphT>, VCommwT<GraphT>>;
 
         using CDagVertexImplT
@@ -437,14 +437,14 @@ class DotFileWriter {
 
     template <typename GraphT, typename ColorContainerT>
     void WriteColoredGraph(std::ostream &os, const GraphT &graph, const ColorContainerT &colors) const {
-        static_assert(IsComputationalDagV<GraphT>, "GraphT must be a computational DAG");
+        static_assert(isComputationalDagV<GraphT>, "GraphT must be a computational DAG");
 
         WriteGraphStructure(os, graph, ColoredVertexWriterGraphDot<GraphT, ColorContainerT>(graph, colors));
     }
 
     template <typename GraphT, typename ColorContainerT>
     void WriteColoredGraph(const std::string &filename, const GraphT &graph, const ColorContainerT &colors) const {
-        static_assert(IsComputationalDagV<GraphT>, "GraphT must be a computational DAG");
+        static_assert(isComputationalDagV<GraphT>, "GraphT must be a computational DAG");
 
         std::ofstream os(filename);
         WriteColoredGraph(os, graph, colors);
@@ -452,14 +452,14 @@ class DotFileWriter {
 
     template <typename GraphT>
     void WriteGraph(std::ostream &os, const GraphT &graph) const {
-        static_assert(IsComputationalDagV<GraphT>, "GraphT must be a computational DAG");
+        static_assert(isComputationalDagV<GraphT>, "GraphT must be a computational DAG");
 
         WriteGraphStructure(os, graph, VertexWriterGraphDot<GraphT>(graph));
     }
 
     template <typename GraphT>
     void WriteGraph(const std::string &filename, const GraphT &graph) const {
-        static_assert(IsComputationalDagV<GraphT>, "GraphT must be a computational DAG");
+        static_assert(isComputationalDagV<GraphT>, "GraphT must be a computational DAG");
 
         std::ofstream os(filename);
         WriteGraph(os, graph);

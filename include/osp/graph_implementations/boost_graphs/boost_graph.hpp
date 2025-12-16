@@ -199,7 +199,7 @@ class BoostGraph {
 
     template <typename GraphT>
     BoostGraph(const GraphT &other) : numberOfVertexTypes_(0) {
-        static_assert(osp::IsComputationalDagV<GraphT>, "GraphT must satisfy the is_computation_dag concept");
+        static_assert(osp::isComputationalDagV<GraphT>, "GraphT must satisfy the is_computation_dag concept");
 
         graph_.m_vertices.reserve(other.NumVertices());
 
@@ -365,16 +365,16 @@ using BoostGraphUintT = BoostGraph<unsigned, unsigned, unsigned, unsigned, unsig
 static_assert(osp::IsDirectedGraphEdgeDescV<BoostGraphIntT>,
               "BoostGraphIntT does not satisfy the directed_graph_edge_desc concept");
 
-static_assert(osp::IsComputationalDagTypedVerticesEdgeDescV<BoostGraphIntT>,
+static_assert(osp::isComputationalDagTypedVerticesEdgeDescV<BoostGraphIntT>,
               "BoostGraphIntT must satisfy the computational_dag_typed_vertices_edge_desc concept");
 
-static_assert(osp::IsConstructableCdagVertexV<BoostGraphIntT>,
+static_assert(osp::isConstructableCdagVertexV<BoostGraphIntT>,
               "BoostGraphIntT must satisfy the is_constructable_cdag_vertex concept");
 
 static_assert(osp::IsConstructableCdagTypedVertexV<BoostGraphIntT>,
               "BoostGraphIntT must satisfy the is_constructable_cdag_typed_vertex concept");
 
-static_assert(osp::IsConstructableCdagEdgeV<BoostGraphIntT>, "BoostGraphIntT must satisfy the is_constructable_cdag_edge concept");
+static_assert(osp::isConstructableCdagEdgeV<BoostGraphIntT>, "BoostGraphIntT must satisfy the is_constructable_cdag_edge concept");
 
-static_assert(osp::IsConstructableCdagCommEdgeV<BoostGraphIntT>,
+static_assert(osp::isConstructableCdagCommEdgeV<BoostGraphIntT>,
               "BoostGraphIntT must satisfy the is_constructable_cdag_comm_edge concept");

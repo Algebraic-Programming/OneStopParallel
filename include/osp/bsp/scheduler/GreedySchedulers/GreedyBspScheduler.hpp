@@ -42,7 +42,7 @@ namespace osp {
  */
 template <typename GraphT, typename MemoryConstraintT = NoMemoryConstraint>
 class GreedyBspScheduler : public Scheduler<GraphT> {
-    static_assert(IsComputationalDagV<GraphT>, "GreedyBspScheduler can only be used with computational DAGs.");
+    static_assert(isComputationalDagV<GraphT>, "GreedyBspScheduler can only be used with computational DAGs.");
 
   private:
     using VertexType = VertexIdxT<GraphT>;

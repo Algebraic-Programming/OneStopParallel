@@ -32,7 +32,7 @@ class BspScheduleRecomp : public IBspScheduleEval<GraphT> {
 
     using KeyTriple = std::tuple<VertexIdx, unsigned int, unsigned int>;
 
-    static_assert(IsComputationalDagV<GraphT>, "BspScheduleRecomp can only be used with computational DAGs.");
+    static_assert(isComputationalDagV<GraphT>, "BspScheduleRecomp can only be used with computational DAGs.");
     static_assert(std::is_same_v<VWorkwT<GraphT>, VCommwT<GraphT>>,
                   "BspScheduleRecomp requires work and comm. weights to have the same type.");
 

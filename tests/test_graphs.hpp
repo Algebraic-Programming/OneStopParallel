@@ -73,7 +73,7 @@ std::vector<std::string> TestGraphs() {
  */
 template <typename GraphT>
 inline GraphT ConstructMultiPipelineDag(unsigned numPipelines, unsigned pipelineLen) {
-    static_assert(IsConstructableCdagV<GraphT>, "Graph_t must be a constructable computational DAG");
+    static_assert(isConstructableCdagV<GraphT>, "Graph_t must be a constructable computational DAG");
     GraphT dag;
     if (numPipelines == 0 || pipelineLen == 0) {
         return dag;
@@ -106,7 +106,7 @@ inline GraphT ConstructMultiPipelineDag(unsigned numPipelines, unsigned pipeline
  */
 template <typename GraphT>
 inline GraphT ConstructLadderDag(unsigned numRungs) {
-    static_assert(IsConstructableCdagV<GraphT>, "Graph_t must be a constructable computational DAG");
+    static_assert(isConstructableCdagV<GraphT>, "Graph_t must be a constructable computational DAG");
     GraphT dag;
     if (numRungs == 0) {
         return dag;
@@ -142,7 +142,7 @@ inline GraphT ConstructLadderDag(unsigned numRungs) {
  */
 template <typename GraphT>
 inline GraphT ConstructAsymmetricDag(unsigned numNodes) {
-    static_assert(IsConstructableCdagV<GraphT>, "Graph_t must be a constructable computational DAG");
+    static_assert(isConstructableCdagV<GraphT>, "Graph_t must be a constructable computational DAG");
     GraphT dag;
     for (unsigned i = 0; i < numNodes; ++i) {
         dag.AddVertex(10 * (i + 1), 1, 1);
@@ -161,7 +161,7 @@ inline GraphT ConstructAsymmetricDag(unsigned numNodes) {
  */
 template <typename GraphT>
 inline GraphT ConstructBinaryOutTree(unsigned height) {
-    static_assert(IsConstructableCdagV<GraphT>, "Graph_t must be a constructable computational DAG");
+    static_assert(isConstructableCdagV<GraphT>, "Graph_t must be a constructable computational DAG");
     GraphT dag;
     unsigned numNodes = (1U << (height + 1)) - 1;
     if (numNodes == 0) {
@@ -187,7 +187,7 @@ inline GraphT ConstructBinaryOutTree(unsigned height) {
  */
 template <typename GraphT>
 inline GraphT ConstructBinaryInTree(unsigned height) {
-    static_assert(IsConstructableCdagV<GraphT>, "Graph_t must be a constructable computational DAG");
+    static_assert(isConstructableCdagV<GraphT>, "Graph_t must be a constructable computational DAG");
     GraphT dag;
     unsigned numNodes = (1U << (height + 1)) - 1;
     if (numNodes == 0) {
@@ -214,7 +214,7 @@ inline GraphT ConstructBinaryInTree(unsigned height) {
  */
 template <typename GraphT>
 inline GraphT ConstructGridDag(unsigned rows, unsigned cols) {
-    static_assert(IsConstructableCdagV<GraphT>, "Graph_t must be a constructable computational DAG");
+    static_assert(isConstructableCdagV<GraphT>, "Graph_t must be a constructable computational DAG");
     GraphT dag;
     if (rows == 0 || cols == 0) {
         return dag;
@@ -245,7 +245,7 @@ inline GraphT ConstructGridDag(unsigned rows, unsigned cols) {
  */
 template <typename GraphT>
 inline GraphT ConstructButterflyDag(unsigned stages) {
-    static_assert(IsConstructableCdagV<GraphT>, "Graph_t must be a constructable computational DAG");
+    static_assert(isConstructableCdagV<GraphT>, "Graph_t must be a constructable computational DAG");
     GraphT dag;
     if (stages == 0) {
         return dag;

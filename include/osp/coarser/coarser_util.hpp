@@ -69,8 +69,8 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
                         const std::vector<VertexIdxT<GraphTOut>> &vertexContractionMap) {
     static_assert(IsDirectedGraphV<GraphTIn> && IsDirectedGraphV<GraphTOut>,
                   "Graph types need to satisfy the is_directed_graph concept.");
-    static_assert(IsComputationalDagV<GraphTIn>, "GraphTIn must be a computational DAG");
-    static_assert(IsConstructableCdagV<GraphTOut> || IsDirectConstructableCdagV<GraphTOut>,
+    static_assert(isComputationalDagV<GraphTIn>, "GraphTIn must be a computational DAG");
+    static_assert(isConstructableCdagV<GraphTOut> || IsDirectConstructableCdagV<GraphTOut>,
                   "GraphTOut must be a (direct) constructable computational DAG");
 
     assert(CheckValidContractionMap<GraphTOut>(vertexContractionMap));
@@ -97,7 +97,7 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
 
         coarsenedDag = GraphTOut(numVertQuotient, quotientEdges);
 
-        if constexpr (hasVertexWeightsV<GraphTIn> && IsModifiableCdagVertexV<GraphTOut>) {
+        if constexpr (hasVertexWeightsV<GraphTIn> && isModifiableCdagVertexV<GraphTOut>) {
             static_assert(std::is_same_v<VWorkwT<GraphTIn>, VWorkwT<GraphTOut>>,
                           "Work weight types of in-graph and out-graph must be the same.");
             static_assert(std::is_same_v<VCommwT<GraphTIn>, VCommwT<GraphTOut>>,
@@ -126,7 +126,7 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
             }
         }
 
-        if constexpr (hasTypedVerticesV<GraphTIn> && IsModifiableCdagTypedVertexV<GraphTOut>) {
+        if constexpr (hasTypedVerticesV<GraphTIn> && isModifiableCdagTypedVertexV<GraphTOut>) {
             static_assert(std::is_same_v<VTypeT<GraphTIn>, VTypeT<GraphTOut>>,
                           "Vertex type types of in graph and out graph must be the same!");
 
@@ -135,7 +135,7 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
             }
         }
 
-        if constexpr (hasEdgeWeightsV<GraphTIn> && IsModifiableCdagCommEdgeV<GraphTOut>) {
+        if constexpr (hasEdgeWeightsV<GraphTIn> && isModifiableCdagCommEdgeV<GraphTOut>) {
             static_assert(std::is_same_v<ECommwT<GraphTIn>, ECommwT<GraphTOut>>,
                           "Edge weight type of in graph and out graph must be the same!");
 
@@ -160,7 +160,7 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
         return true;
     }
 
-    if constexpr (IsConstructableCdagV<GraphTOut>) {
+    if constexpr (isConstructableCdagV<GraphTOut>) {
         coarsenedDag = GraphTOut();
 
         const VertexIdxT<GraphTOut> numVertQuotient
@@ -184,7 +184,7 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
                 VMemAccMethod()(coarsenedDag.VertexMemWeight(vertexContractionMap[vert]), dagIn.VertexMemWeight(vert)));
         }
 
-        if constexpr (hasTypedVerticesV<GraphTIn> && IsModifiableCdagTypedVertexV<GraphTOut>) {
+        if constexpr (hasTypedVerticesV<GraphTIn> && isModifiableCdagTypedVertexV<GraphTOut>) {
             static_assert(std::is_same_v<VTypeT<GraphTIn>, VTypeT<GraphTOut>>,
                           "Vertex type types of in graph and out graph must be the same!");
 
@@ -199,7 +199,7 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
                     continue;
                 }
 
-                if constexpr (hasEdgeWeightsV<GraphTIn> && IsModifiableCdagCommEdgeV<GraphTOut>) {
+                if constexpr (hasEdgeWeightsV<GraphTIn> && isModifiableCdagCommEdgeV<GraphTOut>) {
                     static_assert(std::is_same_v<ECommwT<GraphTIn>, ECommwT<GraphTOut>>,
                                   "Edge weight type of in graph and out graph must be the same!");
 
@@ -233,8 +233,8 @@ bool ConstructCoarseDag(const GraphTIn &dagIn, GraphTOut &coarsenedDag, std::vec
     if constexpr (IsCompactSparseGraphReorderV<GraphTOut>) {
         static_assert(IsDirectedGraphV<GraphTIn> && IsDirectedGraphV<GraphTOut>,
                       "Graph types need to satisfy the is_directed_graph concept.");
-        static_assert(IsComputationalDagV<GraphTIn>, "GraphTIn must be a computational DAG");
-        static_assert(IsConstructableCdagV<GraphTOut> || IsDirectConstructableCdagV<GraphTOut>,
+        static_assert(isComputationalDagV<GraphTIn>, "GraphTIn must be a computational DAG");
+        static_assert(isConstructableCdagV<GraphTOut> || IsDirectConstructableCdagV<GraphTOut>,
                       "GraphTOut must be a (direct) constructable computational DAG");
 
         assert(CheckValidContractionMap<GraphTOut>(vertexContractionMap));
@@ -265,7 +265,7 @@ bool ConstructCoarseDag(const GraphTIn &dagIn, GraphTOut &coarsenedDag, std::vec
             combinedExpansionMap[vert] = pushforwardMap[vertexContractionMap[vert]];
         }
 
-        if constexpr (hasVertexWeightsV<GraphTIn> && IsModifiableCdagVertexV<GraphTOut>) {
+        if constexpr (hasVertexWeightsV<GraphTIn> && isModifiableCdagVertexV<GraphTOut>) {
             static_assert(std::is_same_v<VWorkwT<GraphTIn>, VWorkwT<GraphTOut>>,
                           "Work weight types of in-graph and out-graph must be the same.");
             static_assert(std::is_same_v<VCommwT<GraphTIn>, VCommwT<GraphTOut>>,
@@ -294,7 +294,7 @@ bool ConstructCoarseDag(const GraphTIn &dagIn, GraphTOut &coarsenedDag, std::vec
             }
         }
 
-        if constexpr (hasTypedVerticesV<GraphTIn> && IsModifiableCdagTypedVertexV<GraphTOut>) {
+        if constexpr (hasTypedVerticesV<GraphTIn> && isModifiableCdagTypedVertexV<GraphTOut>) {
             static_assert(std::is_same_v<VTypeT<GraphTIn>, VTypeT<GraphTOut>>,
                           "Vertex type types of in graph and out graph must be the same!");
 

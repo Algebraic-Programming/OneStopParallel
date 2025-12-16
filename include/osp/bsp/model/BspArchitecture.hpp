@@ -112,7 +112,7 @@ inline std::ostream &operator<<(std::ostream &os, MemoryConstraintType type) { r
  */
 template <typename GraphT>
 class BspArchitecture {
-    static_assert(IsComputationalDagV<GraphT>, "BspSchedule can only be used with computational DAGs.");
+    static_assert(isComputationalDagV<GraphT>, "BspSchedule can only be used with computational DAGs.");
 
   private:
     /** @brief The number of processors in the architecture. Must be at least 1. */

@@ -49,7 +49,7 @@ typedef std::tuple<unsigned int, unsigned int, unsigned int> KeyTriple;
  */
 template <typename GraphT>
 class PebblingSchedule {
-    static_assert(IsComputationalDagV<GraphT>, "PebblingSchedule can only be used with computational DAGs.");
+    static_assert(isComputationalDagV<GraphT>, "PebblingSchedule can only be used with computational DAGs.");
 
   private:
     using VertexIdx = VertexIdxT<GraphT>;

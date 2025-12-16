@@ -36,9 +36,9 @@ void CreateInducedSubgraph(const GraphTIn &dag,
     static_assert(std::is_same_v<VertexIdxT<GraphTIn>, VertexIdxT<GraphTOut>>,
                   "GraphTIn and out must have the same VertexIdx types");
 
-    static_assert(IsConstructableCdagVertexV<GraphTOut>, "GraphTOut must satisfy the constructable_cdag_vertex concept");
+    static_assert(isConstructableCdagVertexV<GraphTOut>, "GraphTOut must satisfy the constructable_cdag_vertex concept");
 
-    static_assert(IsConstructableCdagEdgeV<GraphTOut>, "GraphTOut must satisfy the constructable_cdag_edge concept");
+    static_assert(isConstructableCdagEdgeV<GraphTOut>, "GraphTOut must satisfy the constructable_cdag_edge concept");
 
     assert(dagOut.NumVertices() == 0);
 
@@ -165,9 +165,9 @@ std::vector<GraphTOut> CreateInducedSubgraphs(const GraphTIn &dagIn, const std::
     static_assert(std::is_same_v<VertexIdxT<GraphTIn>, VertexIdxT<GraphTOut>>,
                   "GraphTIn and out must have the same VertexIdx types");
 
-    static_assert(IsConstructableCdagVertexV<GraphTOut>, "GraphTOut must satisfy the constructable_cdag_vertex concept");
+    static_assert(isConstructableCdagVertexV<GraphTOut>, "GraphTOut must satisfy the constructable_cdag_vertex concept");
 
-    static_assert(IsConstructableCdagEdgeV<GraphTOut>, "GraphTOut must satisfy the constructable_cdag_edge concept");
+    static_assert(isConstructableCdagEdgeV<GraphTOut>, "GraphTOut must satisfy the constructable_cdag_edge concept");
 
     unsigned numberOfParts = 0;
     for (const auto id : partitionIDs) {
@@ -219,9 +219,9 @@ std::unordered_map<VertexIdxT<GraphTIn>, VertexIdxT<GraphTOut>> CreateInducedSub
     static_assert(std::is_same_v<VertexIdxT<GraphTIn>, VertexIdxT<GraphTOut>>,
                   "GraphTIn and out must have the same VertexIdx types");
 
-    static_assert(IsConstructableCdagVertexV<GraphTOut>, "GraphTOut must satisfy the constructable_cdag_vertex concept");
+    static_assert(isConstructableCdagVertexV<GraphTOut>, "GraphTOut must satisfy the constructable_cdag_vertex concept");
 
-    static_assert(IsConstructableCdagEdgeV<GraphTOut>, "GraphTOut must satisfy the constructable_cdag_edge concept");
+    static_assert(isConstructableCdagEdgeV<GraphTOut>, "GraphTOut must satisfy the constructable_cdag_edge concept");
 
     assert(dagOut.NumVertices() == 0);
 
