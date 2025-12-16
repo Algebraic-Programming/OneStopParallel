@@ -74,10 +74,10 @@ BOOST_AUTO_TEST_CASE(SubGraphCompactSparseGraph) {
 }
 
 BOOST_AUTO_TEST_CASE(SubGraphDagVectorImpl) {
-    using VImpl = cdag_vertex_impl<std::size_t, unsigned, unsigned, unsigned, unsigned>;
+    using VImpl = CDagVertexImpl<std::size_t, unsigned, unsigned, unsigned, unsigned>;
 
-    computational_dag_vector_impl<VImpl> graph;
-    computational_dag_vector_impl<VImpl> subGraph;
+    ComputationalDagVectorImpl<VImpl> graph;
+    ComputationalDagVectorImpl<VImpl> subGraph;
 
     const std::size_t numVert = 11;
     const std::vector<std::pair<std::size_t, std::size_t>> edges({
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(SubGraphDagVectorImpl) {
         graph.AddEdge(src, tgt);
     }
 
-    const std::vector<VertexIdxT<computational_dag_vector_impl<VImpl>>> selectVert({2, 3, 10, 6, 7});
+    const std::vector<VertexIdxT<ComputationalDagVectorImpl<VImpl>>> selectVert({2, 3, 10, 6, 7});
     const auto vertCorrespondence = CreateInducedSubgraphMap(graph, subGraph, selectVert);
     BOOST_CHECK_EQUAL(subGraph.NumVertices(), selectVert.size());
     BOOST_CHECK_EQUAL(subGraph.NumEdges(), 4);

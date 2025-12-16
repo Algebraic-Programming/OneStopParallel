@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(TestFull) {
     for (VertexIdxT<graph> node = 0; node < static_cast<VertexIdxT<graph> >(instance_typed.NumberOfVertices()); ++node) {
         instanceTyped.GetComputationalDag().SetVertexType(node, node % 2);
     }
-    instanceTyped.setDiagonalCompatibilityMatrix(2);
+    instanceTyped.SetDiagonalCompatibilityMatrix(2);
 
     BspSchedule<graph> scheduleTyped(instanceTyped);
     greedy.ComputeSchedule(schedule_typed);

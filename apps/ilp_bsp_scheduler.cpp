@@ -73,8 +73,8 @@ int main(int argc, char *argv[]) {
 
     bool statusGraph = file_reader::ReadGraph(filenameGraph, graph);
     bool statusArch = file_reader::ReadBspArchitecture(filenameMachine, instance.GetArchitecture());
-    // instance.setDiagonalCompatibilityMatrix(graph.NumVertexTypes());
-    // instance.GetArchitecture().setProcessorsWithTypes({0,0,1,1,1,1});
+    // instance.SetDiagonalCompatibilityMatrix(graph.NumVertexTypes());
+    // instance.GetArchitecture().SetProcessorsWithTypes({0,0,1,1,1,1});
 
     if (!statusGraph || !statusArch) {
         std::cout << "Reading files failed." << std::endl;

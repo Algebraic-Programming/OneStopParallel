@@ -76,8 +76,8 @@ BOOST_AUTO_TEST_CASE(TrimSubgraphGroupsTestNoTrim) {
     dag.AddVertex(1, 1, 1, 0);                                                     // 1
     dag.AddVertex(1, 1, 1, 0);                                                     // 2
     dag.AddVertex(1, 1, 1, 0);                                                     // 3
-    instance.GetArchitecture().setProcessorsWithTypes({0, 0, 0, 0, 0, 0, 0, 0});    // 8 processors of type 0
-    instance.setDiagonalCompatibilityMatrix(1);
+    instance.GetArchitecture().SetProcessorsWithTypes({0, 0, 0, 0, 0, 0, 0, 0});    // 8 processors of type 0
+    instance.SetDiagonalCompatibilityMatrix(1);
 
     // A single group with 4 subgraphs, each with 1 node.
     std::vector<GroupT> isoGroups = {GroupT{{{0}, {1}, {2}, {3}}}};
@@ -105,8 +105,8 @@ BOOST_AUTO_TEST_CASE(TrimSubgraphGroupsTestWithTrim) {
     dag.AddVertex(10, 1, 1, 0);                                                    // 3
     dag.AddVertex(10, 1, 1, 0);                                                    // 4
     dag.AddVertex(10, 1, 1, 0);                                                    // 5
-    instance.GetArchitecture().setProcessorsWithTypes({0, 0, 0, 0, 0, 0, 0, 0});    // 8 processors of type 0
-    instance.setDiagonalCompatibilityMatrix(1);
+    instance.GetArchitecture().SetProcessorsWithTypes({0, 0, 0, 0, 0, 0, 0, 0});    // 8 processors of type 0
+    instance.SetDiagonalCompatibilityMatrix(1);
 
     // 6 subgraphs, each with 1 node and work weight 10.
     std::vector<GroupT> isoGroups = {GroupT{{{0}, {1}, {2}, {3}, {4}, {5}}}};
@@ -164,8 +164,8 @@ BOOST_AUTO_TEST_CASE(TrimSubgraphGroupsTestMultipleGroups) {
     // Make sure all vertices used in iso_groups exist.
     // All are type 0.
 
-    instance.GetArchitecture().setProcessorsWithTypes({0, 0, 0, 0, 0, 0, 0, 0, 0});    // 9 processors of type 0
-    instance.setDiagonalCompatibilityMatrix(1);
+    instance.GetArchitecture().SetProcessorsWithTypes({0, 0, 0, 0, 0, 0, 0, 0, 0});    // 9 processors of type 0
+    instance.SetDiagonalCompatibilityMatrix(1);
 
     // Group 1: size 6. gcd(6, 9) = 3. merge_size = 6/3 = 2. -> 3 subgraphs of size 2.
     // Group 2: size 3. gcd(3, 9) = 3. merge_size = 3/3 = 1. -> no trim.
@@ -219,8 +219,8 @@ BOOST_AUTO_TEST_CASE(ScheduleIsomorphicGroupHeterogeneousArch) {
     dag.AddEdge(3, 5);
 
     // 2 procs of type 0, 2 procs of type 1
-    instance.GetArchitecture().setProcessorsWithTypes({0, 0, 1, 1});
-    instance.setDiagonalCompatibilityMatrix(2);
+    instance.GetArchitecture().SetProcessorsWithTypes({0, 0, 1, 1});
+    instance.SetDiagonalCompatibilityMatrix(2);
 
     std::vector<GroupT> isoGroups = {GroupT{{{0, 1}, {2, 3}}}, GroupT{{{4}, {5}}}};
 
@@ -285,8 +285,8 @@ BOOST_AUTO_TEST_CASE(ScheduleIsomorphicGroupShuffledIDs) {
     dag.AddEdge(3, 2);
 
     // Architecture: 2 processors, so each subgraph gets its own partition space.
-    instance.GetArchitecture().setProcessorsWithTypes({0, 0});
-    instance.setDiagonalCompatibilityMatrix(1);
+    instance.GetArchitecture().SetProcessorsWithTypes({0, 0});
+    instance.SetDiagonalCompatibilityMatrix(1);
 
     // Manually define the isomorphic groups.
     // Subgraph 1 vertices: {0, 1}
@@ -356,8 +356,8 @@ BOOST_AUTO_TEST_CASE(ScheduleIsomorphicGroupShuffledIDs) {
 //     dag.AddEdge(5, 6);
 
 //     // Architecture: 4 processors, so each subgraph gets its own partition space.
-//     instance.GetArchitecture().setProcessorsWithTypes({0, 0, 0, 0});
-//     instance.setDiagonalCompatibilityMatrix(1);
+//     instance.GetArchitecture().SetProcessorsWithTypes({0, 0, 0, 0});
+//     instance.SetDiagonalCompatibilityMatrix(1);
 
 //     // Manually define the isomorphic groups.
 //     std::vector<group_t> iso_groups = {

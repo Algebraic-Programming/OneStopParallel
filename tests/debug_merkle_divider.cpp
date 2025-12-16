@@ -81,7 +81,7 @@ int main(int argc, char *argv[]) {
 
     // Set up architecture
     instance.GetArchitecture().SetProcessorsConsequTypes({24, 48}, {100, 100});
-    instance.setDiagonalCompatibilityMatrix(2);
+    instance.SetDiagonalCompatibilityMatrix(2);
     instance.SetSynchronisationCosts(2000);
     instance.SetCommunicationCosts(1);
 

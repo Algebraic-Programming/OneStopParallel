@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(TestDagVectorAdapter) {
 
     using VImpl = CDagVertexImpl<unsigned, int, int, int, unsigned>;
     using GraphT = DagVectorAdapter<VImpl, int>;
-    using GraphConstrT = computational_dag_vector_impl<VImpl>;
+    using GraphConstrT = ComputationalDagVectorImpl<VImpl>;
     using CoarseGraphType = CompactSparseGraph<true,
                                                true,
                                                true,

@@ -40,8 +40,8 @@ BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerSimpleChain) {
     dag.AddEdge(1, 2);
 
     // Setup Architecture: 2 processors of type 0, 2 of type 1
-    instance.GetArchitecture().setProcessorsWithTypes({0, 0, 1, 1});
-    instance.setDiagonalCompatibilityMatrix(2);
+    instance.GetArchitecture().SetProcessorsWithTypes({0, 0, 1, 1});
+    instance.SetDiagonalCompatibilityMatrix(2);
 
     // 2. Setup Scheduler Inputs
     std::vector<unsigned> multiplicities = {1, 2, 1};
@@ -92,8 +92,8 @@ BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerForkJoin) {
     dag.AddEdge(2, 3);
 
     // Setup Architecture: 4 processors of type 0
-    instance.GetArchitecture().setProcessorsWithTypes({0, 0, 0, 0});
-    instance.setDiagonalCompatibilityMatrix(1);
+    instance.GetArchitecture().SetProcessorsWithTypes({0, 0, 0, 0});
+    instance.SetDiagonalCompatibilityMatrix(1);
 
     // 2. Setup Scheduler Inputs
     std::vector<unsigned> multiplicities = {1, 2, 1, 4};
@@ -148,8 +148,8 @@ BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerDeadlock) {
     dag.AddVertex(100, 1, 0);    // node 0
 
     // Setup Architecture: 1 processor of type 0
-    instance.GetArchitecture().setProcessorsWithTypes({0});
-    instance.setDiagonalCompatibilityMatrix(1);
+    instance.GetArchitecture().SetProcessorsWithTypes({0});
+    instance.SetDiagonalCompatibilityMatrix(1);
 
     // 2. Setup Scheduler Inputs
     // Job needs 2 workers (multiplicity), but only 1 is available
@@ -190,8 +190,8 @@ BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerComplexDag) {
     dag.AddEdge(4, 5);
 
     // Setup Architecture: 4 processors of type 0, 4 of type 1
-    instance.GetArchitecture().setProcessorsWithTypes({0, 0, 0, 0, 1, 1, 1, 1});
-    instance.setDiagonalCompatibilityMatrix(2);
+    instance.GetArchitecture().SetProcessorsWithTypes({0, 0, 0, 0, 1, 1, 1, 1});
+    instance.SetDiagonalCompatibilityMatrix(2);
 
     // 2. Setup Scheduler Inputs
     std::vector<unsigned> multiplicities = {1, 2, 1, 4, 2, 1};
@@ -242,8 +242,8 @@ BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerResourceContention) {
     dag.AddEdge(3, 4);
 
     // Setup Architecture: 4 processors of type 0
-    instance.GetArchitecture().setProcessorsWithTypes({0, 0, 0, 0});
-    instance.setDiagonalCompatibilityMatrix(1);
+    instance.GetArchitecture().SetProcessorsWithTypes({0, 0, 0, 0});
+    instance.SetDiagonalCompatibilityMatrix(1);
 
     // 2. Setup Scheduler Inputs
     std::vector<unsigned> multiplicities = {1, 2, 2, 2, 1};
@@ -296,8 +296,8 @@ BOOST_AUTO_TEST_CASE(EftSubgraphSchedulerProportionalAllocation) {
     dag.AddEdge(0, 2);
 
     // Setup Architecture: 10 processors of type 0
-    instance.GetArchitecture().setProcessorsWithTypes({0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
-    instance.setDiagonalCompatibilityMatrix(1);
+    instance.GetArchitecture().SetProcessorsWithTypes({0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+    instance.SetDiagonalCompatibilityMatrix(1);
 
     // 2. Setup Scheduler Inputs
     std::vector<unsigned> multiplicities = {1, 1, 1};

@@ -57,7 +57,7 @@ struct TrimmedGroupSchedulerFixture {
         // Default architecture: 1 processor type, 100 memory bound
         arch_.SetCommunicationCosts(1);
         arch_.SetSynchronisationCosts(1);
-        instance_.setAllOnesCompatibilityMatrix();    // All node types compatible with all processor types
+        instance_.SetAllOnesCompatibilityMatrix();    // All node types compatible with all processor types
     }
 };
 
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(SingleComponentSingleProcessorTypeTest) {
     instance_.GetComputationalDag() = dag_;
 
     // Architecture: 4 processors of type 0
-    arch_.setProcessorsWithTypes({0, 0, 0, 0});
+    arch_.SetProcessorsWithTypes({0, 0, 0, 0});
     instance_.GetArchitecture() = arch_;
 
     // min_non_zero_procs_ = 1 (all 4 processors assigned to this single component group)
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(MultipleComponentsSingleProcessorTypeEvenDistributionTest) 
     instance_.GetComputationalDag() = dag_;
 
     // Architecture: 4 processors of type 0
-    arch_.setProcessorsWithTypes({0, 0, 0, 0});
+    arch_.SetProcessorsWithTypes({0, 0, 0, 0});
     instance_.GetArchitecture() = arch_;
 
     // min_non_zero_procs_ = 2 (2 component groups, each gets 2 processors)
@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(MultipleComponentsSingleProcessorTypeUnevenDistributionTest
     instance_.GetComputationalDag() = dag_;
 
     // Architecture: 6 processors of type 0
-    arch_.setProcessorsWithTypes({0, 0, 0, 0, 0, 0});
+    arch_.SetProcessorsWithTypes({0, 0, 0, 0, 0, 0});
     instance_.GetArchitecture() = arch_;
 
     // min_non_zero_procs_ = 2 (3 components, 2 groups)
@@ -189,9 +189,9 @@ BOOST_AUTO_TEST_CASE(MultipleComponentsHeterogeneousArchitectureTest) {
     instance_.GetComputationalDag() = dag_;
 
     // Architecture: 2 processors of type 0 (global 0,1), 2 processors of type 1 (global 2,3)
-    arch_.setProcessorsWithTypes({0, 0, 1, 1});
+    arch_.SetProcessorsWithTypes({0, 0, 1, 1});
     instance_.GetArchitecture() = arch_;
-    instance_.setDiagonalCompatibilityMatrix(2);    // Node type 0 compatible with proc type 0, etc.
+    instance_.SetDiagonalCompatibilityMatrix(2);    // Node type 0 compatible with proc type 0, etc.
 
     // min_non_zero_procs_ = 2 (2 components, 2 groups)
     // sub_proc_counts for type 0: 2 / 2 = 1

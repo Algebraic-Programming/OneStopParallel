@@ -57,7 +57,7 @@ namespace osp {
  *   `v_impl(vertex_idx_type id, work_weight_type work_weight, comm_weight_type comm_weight, mem_weight_type mem_weight,
  * cdag_VertexTypeType vertex_type)`
  *
- * @see cdag_vertex_impl for a reference implementation of the vertex type.
+ * @see CDagVertexImpl for a reference implementation of the vertex type.
  */
 template <typename VImpl>
 class ComputationalDagVectorImpl {
@@ -266,15 +266,15 @@ using ComputationalDagVectorImplDefUnsignedT = ComputationalDagVectorImpl<CDagVe
 using ComputationalDagVectorImplDefIntT = ComputationalDagVectorImpl<CDagVertexImplInt>;
 
 static_assert(IsDirectedGraphEdgeDescV<ComputationalDagVectorImplDefUnsignedT>,
-              "computational_dag_vector_impl must satisfy the directed_graph_edge_desc concept");
+              "ComputationalDagVectorImpl must satisfy the directed_graph_edge_desc concept");
 
 static_assert(HasVertexWeightsV<ComputationalDagVectorImplDefUnsignedT>,
-              "computational_dag_vector_impl must satisfy the has_vertex_weights concept");
+              "ComputationalDagVectorImpl must satisfy the has_vertex_weights concept");
 
 static_assert(IsDirectedGraphV<ComputationalDagVectorImplDefUnsignedT>,
-              "computational_dag_vector_impl must satisfy the directed_graph concept");
+              "ComputationalDagVectorImpl must satisfy the directed_graph concept");
 
 static_assert(IsComputationalDagTypedVerticesV<ComputationalDagVectorImplDefUnsignedT>,
-              "computational_dag_vector_impl must satisfy the is_computation_dag concept");
+              "ComputationalDagVectorImpl must satisfy the is_computation_dag concept");
 
 }    // namespace osp
