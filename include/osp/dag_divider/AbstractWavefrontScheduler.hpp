@@ -146,11 +146,11 @@ class AbstractWavefrontScheduler : public Scheduler<GraphT> {
     bool ValidateWorkDistribution(const std::vector<ConstrGraphT> &subDags, const BspInstance<GraphT> &instance) const {
         const auto &originalArch = instance.GetArchitecture();
         for (const auto &repSubDag : subDags) {
-            const double totalRepWork = sumOfVerticesWorkWeights(repSubDag);
+            const double totalRepWork = SumOfVerticesWorkWeights(repSubDag);
 
             double sumOfCompatibleWorksForRep = 0.0;
             for (unsigned typeIdx = 0; typeIdx < originalArch.GetNumberOfProcessorTypes(); ++typeIdx) {
-                sumOfCompatibleWorksForRep += sumOfCompatibleWorkWeights(repSubDag, instance, typeIdx);
+                sumOfCompatibleWorksForRep += SumOfCompatibleWorkWeights(repSubDag, instance, typeIdx);
             }
 
             if (sumOfCompatibleWorksForRep > totalRepWork + 1e-9) {
