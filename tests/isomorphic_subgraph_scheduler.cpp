@@ -37,7 +37,7 @@ using GroupT = typename OrbitGraphProcessor<GraphT, ConstrGraphT>::Group;
 template <typename GraphT, typename ConstrGraphT>
 class IsomorphicSubgraphSchedulerTester : public IsomorphicSubgraphScheduler<GraphT, ConstrGraphT> {
   public:
-    using IsomorphicSubgraphScheduler<GraphT, ConstrGraphT>::ConstrGraphT;
+    // using IsomorphicSubgraphScheduler<GraphT, ConstrGraphT>::ConstrGraphT;
 
     void TestTrimSubgraphGroups(std::vector<GroupT> &isomorphicGroups,
                                 const BspInstance<GraphT> &instance,
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(EmptyGraphTest) {
     GreedyBspScheduler<ConstrGraphT> greedyScheduler;
     IsomorphicSubgraphScheduler<GraphT, ConstrGraphT> isoScheduler(greedyScheduler);
 
-    auto partition = isoScheduler.compute_partition(instance);
+    auto partition = isoScheduler.ComputePartition(instance);
     BOOST_CHECK(partition.empty());
 }
 
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(TrimSubgraphGroupsTestNoTrim) {
     BOOST_REQUIRE_EQUAL(wasTrimmed.size(), 1);
     BOOST_CHECK(!wasTrimmed[0]);
     BOOST_CHECK_EQUAL(isoGroups.size(), 1);
-    BOOST_CHECK_EQUAL(isoGroups[0].subgraphs.size(), 4);    // Still 4 subgraphs in the group
+    BOOST_CHECK_EQUAL(isoGroups[0].subgraphs_.size(), 4);    // Still 4 subgraphs in the group
 }
 
 BOOST_AUTO_TEST_CASE(TrimSubgraphGroupsTestWithTrim) {
@@ -121,13 +121,13 @@ BOOST_AUTO_TEST_CASE(TrimSubgraphGroupsTestWithTrim) {
     BOOST_REQUIRE_EQUAL(wasTrimmed.size(), 1);
     BOOST_CHECK(wasTrimmed[0]);
     BOOST_CHECK_EQUAL(isoGroups.size(), 1);
-    BOOST_REQUIRE_EQUAL(isoGroups[0].subgraphs.size(), 2);    // Group now contains 2 merged subgraphs
+    BOOST_REQUIRE_EQUAL(isoGroups[0].subgraphs_.size(), 2);    // Group now contains 2 merged subgraphs
 
     // Check that the new subgraphs are correctly merged.
-    BOOST_CHECK_EQUAL(isoGroups[0].subgraphs[0].size(), 3);
-    BOOST_CHECK_EQUAL(isoGroups[0].subgraphs[1].size(), 3);
+    BOOST_CHECK_EQUAL(isoGroups[0].subgraphs_[0].size(), 3);
+    BOOST_CHECK_EQUAL(isoGroups[0].subgraphs_[1].size(), 3);
 
-    const auto &finalSgs = isoGroups[0].subgraphs;
+    const auto &finalSgs = isoGroups[0].subgraphs_;
     std::set<unsigned> verticesSg0(finalSgs[0].begin(), finalSgs[0].end());
     std::set<unsigned> verticesSg1(finalSgs[1].begin(), finalSgs[1].end());
     std::set<unsigned> expectedSg0 = {0, 1, 2};
@@ -186,18 +186,18 @@ BOOST_AUTO_TEST_CASE(TrimSubgraphGroupsTestMultipleGroups) {
     BOOST_CHECK(!wasTrimmed[1]);    // Group 2 should not be trimmed
     BOOST_CHECK(wasTrimmed[2]);     // Group 3 should be trimmed
     // Check Group 1
-    BOOST_REQUIRE_EQUAL(isoGroups[0].subgraphs.size(), 3);
-    BOOST_CHECK_EQUAL(isoGroups[0].subgraphs[0].size(), 2);
-    BOOST_CHECK_EQUAL(isoGroups[0].subgraphs[1].size(), 2);
-    BOOST_CHECK_EQUAL(isoGroups[0].subgraphs[2].size(), 2);
+    BOOST_REQUIRE_EQUAL(isoGroups[0].subgraphs_.size(), 3);
+    BOOST_CHECK_EQUAL(isoGroups[0].subgraphs_[0].size(), 2);
+    BOOST_CHECK_EQUAL(isoGroups[0].subgraphs_[1].size(), 2);
+    BOOST_CHECK_EQUAL(isoGroups[0].subgraphs_[2].size(), 2);
 
     // Check Group 2
-    BOOST_REQUIRE_EQUAL(isoGroups[1].subgraphs.size(), 3);
-    BOOST_CHECK_EQUAL(isoGroups[1].subgraphs[0].size(), 1);
+    BOOST_REQUIRE_EQUAL(isoGroups[1].subgraphs_.size(), 3);
+    BOOST_CHECK_EQUAL(isoGroups[1].subgraphs_[0].size(), 1);
 
     // Check Group 3
-    BOOST_REQUIRE_EQUAL(isoGroups[2].subgraphs.size(), 1);
-    BOOST_CHECK_EQUAL(isoGroups[2].subgraphs[0].size(), 5);
+    BOOST_REQUIRE_EQUAL(isoGroups[2].subgraphs_.size(), 1);
+    BOOST_CHECK_EQUAL(isoGroups[2].subgraphs_[0].size(), 5);
 }
 
 BOOST_AUTO_TEST_CASE(ScheduleIsomorphicGroupHeterogeneousArch) {

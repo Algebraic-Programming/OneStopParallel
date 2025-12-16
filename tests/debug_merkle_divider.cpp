@@ -113,7 +113,7 @@ int main(int argc, char *argv[]) {
     std::cout << "Starting partition computation..." << std::endl;
 
     // This is the call that is expected to throw the exception
-    auto partition = isoScheduler.compute_partition(instance);
+    auto partition = isoScheduler.ComputePartition(instance);
 
     CheckPartitionTypeHomogeneity(instance.GetComputationalDag(), partition);
 
