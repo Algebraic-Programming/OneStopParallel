@@ -63,7 +63,7 @@ struct GrowLocalAutoCoresParallelParams {
 template <typename GraphT>
 class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
     static_assert(IsDirectedGraphV<GraphT>);
-    static_assert(HasVertexWeightsV<GraphT>);
+    static_assert(hasVertexWeightsV<GraphT>);
 
   private:
     using VertexType = VertexIdxT<GraphT>;

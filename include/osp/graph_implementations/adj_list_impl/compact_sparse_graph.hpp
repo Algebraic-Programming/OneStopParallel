@@ -990,10 +990,10 @@ static_assert(IsCompactSparseGraphV<CompactSparseGraph<false>>);
 static_assert(!IsCompactSparseGraphReorderV<CompactSparseGraph<true>>);
 static_assert(IsCompactSparseGraphReorderV<CompactSparseGraph<false>>);
 
-static_assert(HasVertexWeightsV<CompactSparseGraph<true, true>>,
+static_assert(hasVertexWeightsV<CompactSparseGraph<true, true>>,
               "CompactSparseGraph must satisfy the has_vertex_weights concept");
 
-static_assert(HasVertexWeightsV<CompactSparseGraph<false, true>>,
+static_assert(hasVertexWeightsV<CompactSparseGraph<false, true>>,
               "CompactSparseGraph must satisfy the has_vertex_weights concept");
 
 static_assert(IsDirectedGraphV<CompactSparseGraph<false, false, false, false, false>>,
@@ -1075,7 +1075,7 @@ static_assert(IsDirectedGraphEdgeDescV<CSG>, "CSG must satisfy the directed_grap
 //         combined_expansion_map[vert] = pushforward_map[vertex_contraction_map[vert]];
 //     }
 
-//     if constexpr (HasVertexWeightsV<GraphTIn> && IsModifiableCdagVertexV<Graph_out_type>) {
+//     if constexpr (hasVertexWeightsV<GraphTIn> && IsModifiableCdagVertexV<Graph_out_type>) {
 //         static_assert(std::is_same_v<VWorkwT<GraphTIn>, VWorkwT<Graph_out_type>>, "Work weight types of in-graph and
 //         out-graph must be the same."); static_assert(std::is_same_v<VCommwT<GraphTIn>, VCommwT<Graph_out_type>>, "Vertex
 //         communication types of in-graph and out-graph must be the same."); static_assert(std::is_same_v<VMemwT<GraphTIn>,
@@ -1105,7 +1105,7 @@ static_assert(IsDirectedGraphEdgeDescV<CSG>, "CSG must satisfy the directed_grap
 //         }
 //     }
 
-//     if constexpr (HasTypedVerticesV<GraphTIn> && is_modifiable_cdag_typed_vertex_v<Graph_out_type>) {
+//     if constexpr (hasTypedVerticesV<GraphTIn> && is_modifiable_cdag_typed_vertex_v<Graph_out_type>) {
 //         static_assert(std::is_same_v<VTypeT<GraphTIn>, VTypeT<Graph_out_type>>,
 //                         "Vertex type types of in graph and out graph must be the same!");
 

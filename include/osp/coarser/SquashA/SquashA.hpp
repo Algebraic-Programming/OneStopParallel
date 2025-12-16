@@ -253,7 +253,7 @@ std::vector<std::vector<VertexIdxT<GraphTIn>>> SquashA<GraphTIn, GraphTOut>::Gen
 
     std::vector<int> posetIntMapping = GeneratePosetInMap(dagIn);
 
-    if constexpr (HasEdgeWeightsV<GraphTIn>) {
+    if constexpr (hasEdgeWeightsV<GraphTIn>) {
         if (params_.mode_ == squash_a_params::Mode::EDGE_WEIGHT) {
             auto edgeWCmp = [](const std::pair<EdgeDescT<GraphTIn>, ECommwT<GraphTIn>> &lhs,
                                const std::pair<EdgeDescT<GraphTIn>, ECommwT<GraphTIn>> &rhs) { return lhs.second < rhs.second; };
@@ -262,7 +262,7 @@ std::vector<std::vector<VertexIdxT<GraphTIn>>> SquashA<GraphTIn, GraphTOut>::Gen
                 std::vector<EdgeDescT<GraphTIn>> contractableEdges
                     = GetContractableEdgesFromPosetIntMap<GraphTIn>(posetIntMapping, dagIn);
                 for (const auto &edge : contractableEdges) {
-                    if constexpr (HasEdgeWeightsV<GraphTIn>) {
+                    if constexpr (hasEdgeWeightsV<GraphTIn>) {
                         edgeWeights.emplace(edge, dagIn.EdgeCommWeight(edge));
                     } else {
                         edgeWeights.emplace(edge, dagIn.VertexCommWeight(Source(edge, dagIn)));

@@ -213,7 +213,7 @@ class OrbitGraphProcessor {
             changed = false;
             for (const auto u : currentCoarseGraph.Vertices()) {
                 for (const auto v : currentCoarseGraph.Children(u)) {
-                    if constexpr (HasTypedVerticesV<ConstrGraphT>) {
+                    if constexpr (hasTypedVerticesV<ConstrGraphT>) {
                         if (not mergeDifferentNodeTypes_) {
                             if (currentCoarseGraph.VertexType(u) != currentCoarseGraph.VertexType(v)) {
                                 if constexpr (verbose_) {
@@ -330,7 +330,7 @@ class OrbitGraphProcessor {
                 if (nonViableEdgesCache_.count({u, v}) || nonViableCritPathEdgesCache_.count({u, v})) {
                     continue;
                 }
-                if constexpr (HasTypedVerticesV<ConstrGraphT>) {
+                if constexpr (hasTypedVerticesV<ConstrGraphT>) {
                     if (not mergeDifferentNodeTypes) {
                         if (currentCoarseGraph.VertexType(u) != currentCoarseGraph.VertexType(v)) {
                             continue;
@@ -416,7 +416,7 @@ class OrbitGraphProcessor {
                     continue;
                 }
 
-                if constexpr (HasTypedVerticesV<ConstrGraphT>) {
+                if constexpr (hasTypedVerticesV<ConstrGraphT>) {
                     if (not mergeDifferentNodeTypes) {
                         if (currentCoarseGraph.VertexType(u) != currentCoarseGraph.VertexType(v)) {
                             if constexpr (verbose_) {
@@ -467,7 +467,7 @@ class OrbitGraphProcessor {
 
                 VTypeT<GraphT> uType = 0;
                 VTypeT<GraphT> vType = 0;
-                if (not mergeDifferentNodeTypes && HasTypedVerticesV<GraphT>) {
+                if (not mergeDifferentNodeTypes && hasTypedVerticesV<GraphT>) {
                     uType = currentCoarseGraph.VertexType(u);
                     vType = currentCoarseGraph.VertexType(v);
                 }
@@ -616,7 +616,7 @@ class OrbitGraphProcessor {
                 orbitWork += dag.VertexWorkWeight(v);
             }
 
-            if (not mergeDifferentNodeTypes_ && HasTypedVerticesV<GraphT>) {
+            if (not mergeDifferentNodeTypes_ && hasTypedVerticesV<GraphT>) {
                 workPerVertexType[dag.VertexType(vertices[0])] += orbitWork;
             } else {
                 workPerVertexType[0] += orbitWork;
@@ -856,7 +856,7 @@ class OrbitGraphProcessor {
             currentGroups[coarseNode].subgraphs_.push_back({i});
         }
 
-        if constexpr (HasTypedVerticesV<ConstrGraphT>) {
+        if constexpr (hasTypedVerticesV<ConstrGraphT>) {
             if constexpr (verbose_) {
                 std::cout << "Attempting to merge same node types.\n";
             }

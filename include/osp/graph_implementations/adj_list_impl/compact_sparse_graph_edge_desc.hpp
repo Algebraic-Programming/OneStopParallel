@@ -300,7 +300,7 @@ class CompactSparseGraphEdgeDesc : public CompactSparseGraph<keepVertexOrder,
             edgeCommWeights_ = std::vector<EdgeCommWeightType>(BaseT::NumEdges(), static_cast<EdgeCommWeightType>(0));
         }
 
-        if constexpr (HasEdgeWeightsV<GraphType> && useEdgeCommWeights) {
+        if constexpr (hasEdgeWeightsV<GraphType> && useEdgeCommWeights) {
             for (const auto &edge : Edges(graph)) {
                 const auto src = Source(edge, graph);
                 const auto tgt = Target(edge, graph);
@@ -648,10 +648,10 @@ static_assert(IsCompactSparseGraphV<CompactSparseGraphEdgeDesc<false>>);
 static_assert(!IsCompactSparseGraphReorderV<CompactSparseGraphEdgeDesc<true>>);
 static_assert(IsCompactSparseGraphReorderV<CompactSparseGraphEdgeDesc<false>>);
 
-static_assert(HasVertexWeightsV<CompactSparseGraphEdgeDesc<true, true>>,
+static_assert(hasVertexWeightsV<CompactSparseGraphEdgeDesc<true, true>>,
               "CompactSparseGraphEdgeDesc must satisfy the has_vertex_weights concept");
 
-static_assert(HasVertexWeightsV<CompactSparseGraphEdgeDesc<false, true>>,
+static_assert(hasVertexWeightsV<CompactSparseGraphEdgeDesc<false, true>>,
               "CompactSparseGraphEdgeDesc must satisfy the has_vertex_weights concept");
 
 static_assert(IsDirectedGraphV<CompactSparseGraphEdgeDesc<false, false, false, false, false>>,
@@ -690,10 +690,10 @@ static_assert(IsComputationalDagTypedVerticesEdgeDescV<CompactSparseGraphEdgeDes
 static_assert(IsComputationalDagTypedVerticesEdgeDescV<CompactSparseGraphEdgeDesc<true, true, true, true, true, true>>,
               "CompactSparseGraphEdgeDesc must satisfy the IsComputationalDagTypedVerticesEdgeDescV with types concept");
 
-static_assert(HasEdgeWeightsV<CompactSparseGraphEdgeDesc<false, true, true, true, true, true>>,
+static_assert(hasEdgeWeightsV<CompactSparseGraphEdgeDesc<false, true, true, true, true, true>>,
               "CompactSparseGraphEdgeDesc must satisfy the has_edge_weights concept");
 
-static_assert(HasEdgeWeightsV<CompactSparseGraphEdgeDesc<true, true, true, true, true, true>>,
+static_assert(hasEdgeWeightsV<CompactSparseGraphEdgeDesc<true, true, true, true, true, true>>,
               "CompactSparseGraphEdgeDesc must satisfy the has_edge_weights concept");
 
 static_assert(HasHashableEdgeDescV<CompactSparseGraphEdgeDesc<true, true>>,

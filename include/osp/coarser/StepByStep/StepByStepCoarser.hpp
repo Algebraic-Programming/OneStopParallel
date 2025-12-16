@@ -33,7 +33,7 @@ class StepByStepCoarser : public CoarserGenContractionMap<GraphT, GraphT> {
     using VertexIdx = VertexIdxT<GraphT>;
 
     using VertexTypeTOrDefault = std::conditional_t<IsComputationalDagTypedVerticesV<GraphT>, VTypeT<GraphT>, unsigned>;
-    using EdgeCommwTOrDefault = std::conditional_t<HasEdgeWeightsV<GraphT>, ECommwT<GraphT>, VCommwT<GraphT>>;
+    using EdgeCommwTOrDefault = std::conditional_t<hasEdgeWeightsV<GraphT>, ECommwT<GraphT>, VCommwT<GraphT>>;
 
     using BoostGraphT
         = BoostGraph<VWorkwT<GraphT>, VCommwT<GraphT>, VMemwT<GraphT>, VertexTypeTOrDefault, EdgeCommwTOrDefault>;
@@ -945,7 +945,7 @@ GraphT StepByStepCoarser<GraphT>::Contract(const std::vector<VertexIdxT<GraphT>>
                 continue;
             }
 
-            if constexpr (HasEdgeWeightsV<GraphT>) {
+            if constexpr (hasEdgeWeightsV<GraphT>) {
                 const auto pair = EdgeDesc(newVertexId[node], newVertexId[succ], gContracted);
 
                 if (pair.second) {

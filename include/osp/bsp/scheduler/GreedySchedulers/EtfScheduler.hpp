@@ -54,7 +54,7 @@ class EtfScheduler : public Scheduler<GraphT> {
     static_assert(std::is_convertible_v<VCommwT<GraphT>, VWorkwT<GraphT>>,
                   "EtfScheduler requires that work and communication weights are convertible.");
 
-    static_assert(not HasEdgeWeightsV<GraphT> || std::is_convertible_v<ECommwT<GraphT>, VWorkwT<GraphT>>,
+    static_assert(not hasEdgeWeightsV<GraphT> || std::is_convertible_v<ECommwT<GraphT>, VWorkwT<GraphT>>,
                   "EtfScheduler requires that work and communication weights are convertible.");
 
   private:
@@ -88,7 +88,7 @@ class EtfScheduler : public Scheduler<GraphT> {
 
             VWorkwT<GraphT> maxval = 0;
 
-            if constexpr (HasEdgeWeightsV<GraphT>) {
+            if constexpr (hasEdgeWeightsV<GraphT>) {
                 for (const auto &outEdge : OutEdges(node, instance.GetComputationalDag())) {
                     const VWorkwT<GraphT> tmpVal = bl[Target(outEdge, instance.GetComputationalDag())]
                                                    + instance.GetComputationalDag().EdgeCommWeight(outEdge);
@@ -171,7 +171,7 @@ class EtfScheduler : public Scheduler<GraphT> {
                 t = std::max(t, send[schedule.proc_[next.second]]);
                 t = std::max(t, rec[proc]);
 
-                if constexpr (HasEdgeWeightsV<GraphT>) {
+                if constexpr (hasEdgeWeightsV<GraphT>) {
                     t += instance.GetComputationalDag().EdgeCommWeight(
                              EdgeDesc(next.second, node, instance.GetComputationalDag()).first)
                          * instance.SendCosts(schedule.proc_[next.second], proc);

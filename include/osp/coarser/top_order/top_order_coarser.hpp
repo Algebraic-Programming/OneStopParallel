@@ -54,7 +54,7 @@ class TopOrderCoarser : public Coarser<GraphTIn, GraphTOut> {
         dagOut.SetVertexCommWeight(currentSuperNodeIdx_, currentCommunication_);
 
         for (const auto &node : nodes) {
-            if constexpr (HasEdgeWeightsV<GraphTIn> && HasEdgeWeightsV<GraphTOut>) {
+            if constexpr (hasEdgeWeightsV<GraphTIn> && hasEdgeWeightsV<GraphTOut>) {
                 for (const auto &inEdge : InEdges(node, dagIn)) {
                     const VertexType parentRev = reverseVertexMap[Source(inEdge, dagIn)];
                     if (parentRev != currentSuperNodeIdx_ && parentRev != std::numeric_limits<VertexType>::max()) {

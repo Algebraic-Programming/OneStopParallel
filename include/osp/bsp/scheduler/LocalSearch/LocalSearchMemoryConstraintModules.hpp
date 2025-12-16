@@ -55,7 +55,7 @@ struct IsLocalSearchMemoryConstraint<
                 decltype(T())>> : std::true_type {};
 
 template <typename T>
-inline constexpr bool IsLocalSearchMemoryConstraintV = IsLocalSearchMemoryConstraint<T>::value;
+inline constexpr bool isLocalSearchMemoryConstraintV = IsLocalSearchMemoryConstraint<T>::value;
 
 /**
  * @brief The default memory constraint type, no memory constraints apply.

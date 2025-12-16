@@ -123,9 +123,9 @@ static_assert(IsDirectedGraphV<SparseMatrixImp<int32_t>>, "SparseMatrix must sat
 
 static_assert(IsDirectedGraphV<SparseMatrixImp<int64_t>>, "SparseMatrix must satisfy directed_graph_concept");
 
-static_assert(HasVertexWeightsV<SparseMatrixImp<int32_t>>, "CompactSparseGraph must satisfy the has_vertex_weights concept");
+static_assert(hasVertexWeightsV<SparseMatrixImp<int32_t>>, "CompactSparseGraph must satisfy the has_vertex_weights concept");
 
-static_assert(HasVertexWeightsV<SparseMatrixImp<int64_t>>, "CompactSparseGraph must satisfy the has_vertex_weights concept");
+static_assert(hasVertexWeightsV<SparseMatrixImp<int64_t>>, "CompactSparseGraph must satisfy the has_vertex_weights concept");
 
 static_assert(IsComputationalDagTypedVerticesV<SparseMatrixImp<int32_t>>,
               "CompactSparseGraph must satisfy the is_computation_dag concept");

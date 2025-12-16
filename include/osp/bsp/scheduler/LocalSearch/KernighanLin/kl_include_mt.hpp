@@ -30,10 +30,10 @@ namespace osp {
 template <typename GraphT,
           typename MemoryConstraintT = NoLocalSearchMemoryConstraint,
           unsigned windowSize = 1,
-          bool UseNodeCommunicationCostsArg = true>
+          bool useNodeCommunicationCostsArg = true>
 using KlTotalCommImproverMt
     = KlImproverMt<GraphT,
-                   KlTotalCommCostFunction<GraphT, double, MemoryConstraintT, windowSize, UseNodeCommunicationCostsArg>,
+                   KlTotalCommCostFunction<GraphT, double, MemoryConstraintT, windowSize, useNodeCommunicationCostsArg>,
                    MemoryConstraintT,
                    windowSize,
                    double>;

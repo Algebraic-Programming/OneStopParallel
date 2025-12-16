@@ -332,7 +332,7 @@ class KlActiveSchedule {
 
     inline void SetCost(CostT cost) { cost_ = cost; }
 
-    constexpr static bool useMemoryConstraint_ = IsLocalSearchMemoryConstraintV<MemoryConstraintT>;
+    constexpr static bool useMemoryConstraint_ = isLocalSearchMemoryConstraintV<MemoryConstraintT>;
 
     MemoryConstraintT memoryConstraint_;
 

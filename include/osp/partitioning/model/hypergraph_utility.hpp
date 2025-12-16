@@ -114,7 +114,7 @@ HypergraphT ConvertFromCdagAsDag(const GraphT &dag) {
     static_assert(std::is_same_v<VertexIdxT<GraphT>, IndexType>, "Index type mismatch, cannot convert DAG to hypergraph.");
     static_assert(std::is_same_v<VWorkwT<GraphT>, WorkwType>, "Work weight type mismatch, cannot convert DAG to hypergraph.");
     static_assert(std::is_same_v<VMemwT<GraphT>, MemwType>, "Memory weight type mismatch, cannot convert DAG to hypergraph.");
-    static_assert(!HasEdgeWeightsV<GraphT> || std::is_same_v<ECommwT<GraphT>, CommwType>,
+    static_assert(!hasEdgeWeightsV<GraphT> || std::is_same_v<ECommwT<GraphT>, CommwType>,
                   "Communication weight type mismatch, cannot convert DAG to hypergraph.");
 
     HypergraphT hgraph(dag.NumVertices(), 0);
@@ -122,7 +122,7 @@ HypergraphT ConvertFromCdagAsDag(const GraphT &dag) {
         hgraph.SetVertexWorkWeight(node, dag.VertexWorkWeight(node));
         hgraph.SetVertexMemoryWeight(node, dag.VertexMemWeight(node));
         for (const auto &child : dag.Children(node)) {
-            if constexpr (HasEdgeWeightsV<GraphT>) {
+            if constexpr (hasEdgeWeightsV<GraphT>) {
                 hgraph.AddHyperedge({node, child}, dag.EdgeCommWeight(EdgeDesc(node, child, dag).first));
             } else {
                 hgraph.AddHyperedge({node, child});

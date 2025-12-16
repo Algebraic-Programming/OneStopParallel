@@ -195,7 +195,7 @@ class DagVectorAdapter {
 static_assert(IsDirectedGraphEdgeDescV<DagVectorAdapter<CDagVertexImplUnsigned, int>>,
               "dag_vector_adapter must satisfy the directed_graph_edge_desc concept");
 
-static_assert(HasVertexWeightsV<DagVectorAdapter<CDagVertexImplUnsigned, int>>,
+static_assert(hasVertexWeightsV<DagVectorAdapter<CDagVertexImplUnsigned, int>>,
               "dag_vector_adapter must satisfy the has_vertex_weights concept");
 
 static_assert(IsDirectedGraphV<DagVectorAdapter<CDagVertexImplUnsigned, int>>,

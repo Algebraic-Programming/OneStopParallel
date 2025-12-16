@@ -58,7 +58,7 @@ void TransitiveReductionSparse(const GraphTIn &graphIn, GraphTOut &graphOut) {
 
     // 1. Copy vertices and their properties from graph_in to graph_out.
     for (const auto &vIdx : graphIn.Vertices()) {
-        if constexpr (HasTypedVerticesV<GraphTIn> && IsConstructableCdagTypedVertexV<GraphTOut>) {
+        if constexpr (hasTypedVerticesV<GraphTIn> && IsConstructableCdagTypedVertexV<GraphTOut>) {
             graphOut.AddVertex(graphIn.VertexWorkWeight(vIdx),
                                graphIn.VertexCommWeight(vIdx),
                                graphIn.VertexMemWeight(vIdx),
@@ -81,7 +81,7 @@ void TransitiveReductionSparse(const GraphTIn &graphIn, GraphTOut &graphOut) {
             }
         }
         if (!isTransitive) {
-            if constexpr (HasEdgeWeightsV<GraphTIn> && IsConstructableCdagCommEdgeV<GraphTOut>) {
+            if constexpr (hasEdgeWeightsV<GraphTIn> && IsConstructableCdagCommEdgeV<GraphTOut>) {
                 graphOut.AddEdge(u, v, graphIn.EdgeCommWeight(edge));
             } else {
                 graphOut.AddEdge(u, v);
@@ -122,7 +122,7 @@ void TransitiveReductionDense(const GraphTIn &graphIn, GraphTOut &graphOut) {
 
     // 1. Copy vertices and their properties from graph_in to graph_out.
     for (const auto &vIdx : graphIn.Vertices()) {
-        if constexpr (HasTypedVerticesV<GraphTIn> && IsConstructableCdagTypedVertexV<GraphTOut>) {
+        if constexpr (hasTypedVerticesV<GraphTIn> && IsConstructableCdagTypedVertexV<GraphTOut>) {
             graphOut.AddVertex(graphIn.VertexWorkWeight(vIdx),
                                graphIn.VertexCommWeight(vIdx),
                                graphIn.VertexMemWeight(vIdx),
@@ -163,7 +163,7 @@ void TransitiveReductionDense(const GraphTIn &graphIn, GraphTOut &graphOut) {
             }
         }
         if (!isTransitive) {
-            if constexpr (HasEdgeWeightsV<GraphTIn> && IsConstructableCdagCommEdgeV<GraphTOut>) {
+            if constexpr (hasEdgeWeightsV<GraphTIn> && IsConstructableCdagCommEdgeV<GraphTOut>) {
                 graphOut.AddEdge(u, v, graphIn.EdgeCommWeight(edge));
             } else {
                 graphOut.AddEdge(u, v);

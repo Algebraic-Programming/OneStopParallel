@@ -97,7 +97,7 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
 
         coarsenedDag = GraphTOut(numVertQuotient, quotientEdges);
 
-        if constexpr (HasVertexWeightsV<GraphTIn> && IsModifiableCdagVertexV<GraphTOut>) {
+        if constexpr (hasVertexWeightsV<GraphTIn> && IsModifiableCdagVertexV<GraphTOut>) {
             static_assert(std::is_same_v<VWorkwT<GraphTIn>, VWorkwT<GraphTOut>>,
                           "Work weight types of in-graph and out-graph must be the same.");
             static_assert(std::is_same_v<VCommwT<GraphTIn>, VCommwT<GraphTOut>>,
@@ -126,7 +126,7 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
             }
         }
 
-        if constexpr (HasTypedVerticesV<GraphTIn> && IsModifiableCdagTypedVertexV<GraphTOut>) {
+        if constexpr (hasTypedVerticesV<GraphTIn> && IsModifiableCdagTypedVertexV<GraphTOut>) {
             static_assert(std::is_same_v<VTypeT<GraphTIn>, VTypeT<GraphTOut>>,
                           "Vertex type types of in graph and out graph must be the same!");
 
@@ -135,7 +135,7 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
             }
         }
 
-        if constexpr (HasEdgeWeightsV<GraphTIn> && IsModifiableCdagCommEdgeV<GraphTOut>) {
+        if constexpr (hasEdgeWeightsV<GraphTIn> && IsModifiableCdagCommEdgeV<GraphTOut>) {
             static_assert(std::is_same_v<ECommwT<GraphTIn>, ECommwT<GraphTOut>>,
                           "Edge weight type of in graph and out graph must be the same!");
 
@@ -184,7 +184,7 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
                 VMemAccMethod()(coarsenedDag.VertexMemWeight(vertexContractionMap[vert]), dagIn.VertexMemWeight(vert)));
         }
 
-        if constexpr (HasTypedVerticesV<GraphTIn> && IsModifiableCdagTypedVertexV<GraphTOut>) {
+        if constexpr (hasTypedVerticesV<GraphTIn> && IsModifiableCdagTypedVertexV<GraphTOut>) {
             static_assert(std::is_same_v<VTypeT<GraphTIn>, VTypeT<GraphTOut>>,
                           "Vertex type types of in graph and out graph must be the same!");
 
@@ -199,7 +199,7 @@ bool ConstructCoarseDag(const GraphTIn &dagIn,
                     continue;
                 }
 
-                if constexpr (HasEdgeWeightsV<GraphTIn> && IsModifiableCdagCommEdgeV<GraphTOut>) {
+                if constexpr (hasEdgeWeightsV<GraphTIn> && IsModifiableCdagCommEdgeV<GraphTOut>) {
                     static_assert(std::is_same_v<ECommwT<GraphTIn>, ECommwT<GraphTOut>>,
                                   "Edge weight type of in graph and out graph must be the same!");
 
@@ -265,7 +265,7 @@ bool ConstructCoarseDag(const GraphTIn &dagIn, GraphTOut &coarsenedDag, std::vec
             combinedExpansionMap[vert] = pushforwardMap[vertexContractionMap[vert]];
         }
 
-        if constexpr (HasVertexWeightsV<GraphTIn> && IsModifiableCdagVertexV<GraphTOut>) {
+        if constexpr (hasVertexWeightsV<GraphTIn> && IsModifiableCdagVertexV<GraphTOut>) {
             static_assert(std::is_same_v<VWorkwT<GraphTIn>, VWorkwT<GraphTOut>>,
                           "Work weight types of in-graph and out-graph must be the same.");
             static_assert(std::is_same_v<VCommwT<GraphTIn>, VCommwT<GraphTOut>>,
@@ -294,7 +294,7 @@ bool ConstructCoarseDag(const GraphTIn &dagIn, GraphTOut &coarsenedDag, std::vec
             }
         }
 
-        if constexpr (HasTypedVerticesV<GraphTIn> && IsModifiableCdagTypedVertexV<GraphTOut>) {
+        if constexpr (hasTypedVerticesV<GraphTIn> && IsModifiableCdagTypedVertexV<GraphTOut>) {
             static_assert(std::is_same_v<VTypeT<GraphTIn>, VTypeT<GraphTOut>>,
                           "Vertex type types of in graph and out graph must be the same!");
 
@@ -303,7 +303,7 @@ bool ConstructCoarseDag(const GraphTIn &dagIn, GraphTOut &coarsenedDag, std::vec
             }
         }
 
-        if constexpr (HasEdgeWeightsV<GraphTIn> && HasEdgeWeightsV<GraphTOut>) {
+        if constexpr (hasEdgeWeightsV<GraphTIn> && hasEdgeWeightsV<GraphTOut>) {
             static_assert(std::is_same_v<ECommwT<GraphTIn>, ECommwT<GraphTOut>>,
                           "Edge weight type of in graph and out graph must be the same!");
 

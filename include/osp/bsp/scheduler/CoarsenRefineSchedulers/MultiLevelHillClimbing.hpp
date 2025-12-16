@@ -28,7 +28,7 @@ class MultiLevelHillClimbingScheduler : public Scheduler<GraphT> {
     using VertexIdx = VertexIdxT<GraphT>;
 
     using VertexTypeTOrDefault = std::conditional_t<IsComputationalDagTypedVerticesV<GraphT>, VTypeT<GraphT>, unsigned>;
-    using EdgeCommwTOrDefault = std::conditional_t<HasEdgeWeightsV<GraphT>, ECommwT<GraphT>, VCommwT<GraphT>>;
+    using EdgeCommwTOrDefault = std::conditional_t<hasEdgeWeightsV<GraphT>, ECommwT<GraphT>, VCommwT<GraphT>>;
 
   private:
     typename StepByStepCoarser<GraphT>::CoarseningStrategy coarseningStrategy_

@@ -215,7 +215,7 @@ bool ReadComputationalDagHyperdagFormatDB(std::ifstream &infile, GraphT &graph) 
 
         graph.SetVertexWorkWeight(static_cast<VertexIdxT<GraphT>>(node), static_cast<VWorkwT<GraphT>>(work));
 
-        if constexpr (HasTypedVerticesV<GraphT>) {
+        if constexpr (hasTypedVerticesV<GraphT>) {
             graph.SetVertexType(static_cast<VertexIdxT<GraphT>>(node), static_cast<VTypeT<GraphT>>(type));
         }
     }

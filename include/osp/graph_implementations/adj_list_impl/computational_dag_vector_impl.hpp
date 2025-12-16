@@ -268,7 +268,7 @@ using ComputationalDagVectorImplDefIntT = ComputationalDagVectorImpl<CDagVertexI
 static_assert(IsDirectedGraphEdgeDescV<ComputationalDagVectorImplDefUnsignedT>,
               "ComputationalDagVectorImpl must satisfy the directed_graph_edge_desc concept");
 
-static_assert(HasVertexWeightsV<ComputationalDagVectorImplDefUnsignedT>,
+static_assert(hasVertexWeightsV<ComputationalDagVectorImplDefUnsignedT>,
               "ComputationalDagVectorImpl must satisfy the has_vertex_weights concept");
 
 static_assert(IsDirectedGraphV<ComputationalDagVectorImplDefUnsignedT>,

@@ -122,7 +122,7 @@ void ParseDotNode(const std::string &line, GraphT &g) {
 
 template <typename GraphT>
 void ParseDotEdge(const std::string &line, GraphT &g) {
-    using EdgeCommwTOrDefault = std::conditional_t<HasEdgeWeightsV<GraphT>, ECommwT<GraphT>, VCommwT<GraphT>>;
+    using EdgeCommwTOrDefault = std::conditional_t<hasEdgeWeightsV<GraphT>, ECommwT<GraphT>, VCommwT<GraphT>>;
 
     std::size_t arrowPos = line.find("->");
     if (arrowPos == std::string::npos) {

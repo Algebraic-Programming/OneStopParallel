@@ -56,7 +56,7 @@ class DotFileWriter {
                 << "comm_weight=\"" << schedule_.GetInstance().GetComputationalDag().VertexCommWeight(i) << "\";"
                 << "mem_weight=\"" << schedule_.GetInstance().GetComputationalDag().VertexMemWeight(i) << "\";";
 
-            if constexpr (HasTypedVerticesV<GraphT>) {
+            if constexpr (hasTypedVerticesV<GraphT>) {
                 out << "type=\"" << schedule_.GetInstance().GetComputationalDag().VertexType(i) << "\";";
             }
 
@@ -79,7 +79,7 @@ class DotFileWriter {
                 << "comm_weight=\"" << schedule_.GetInstance().GetComputationalDag().VertexCommWeight(i) << "\";"
                 << "mem_weight=\"" << schedule_.GetInstance().GetComputationalDag().VertexMemWeight(i) << "\";";
 
-            if constexpr (HasTypedVerticesV<GraphT>) {
+            if constexpr (hasTypedVerticesV<GraphT>) {
                 out << "type=\"" << schedule_.GetInstance().GetComputationalDag().VertexType(i) << "\";";
             }
 
@@ -152,7 +152,7 @@ class DotFileWriter {
                 << "comm_weight=\"" << schedule_.GetInstance().GetComputationalDag().VertexCommWeight(i) << "\";"
                 << "mem_weight=\"" << schedule_.GetInstance().GetComputationalDag().VertexMemWeight(i) << "\";";
 
-            if constexpr (HasTypedVerticesV<GraphT>) {
+            if constexpr (hasTypedVerticesV<GraphT>) {
                 out << "type=\"" << schedule_.GetInstance().GetComputationalDag().VertexType(i) << "\";";
             }
 
@@ -194,7 +194,7 @@ class DotFileWriter {
                 << "comm_weight=\"" << graph_.VertexCommWeight(i) << "\";"
                 << "mem_weight=\"" << graph_.VertexMemWeight(i) << "\";";
 
-            if constexpr (HasTypedVerticesV<GraphT>) {
+            if constexpr (hasTypedVerticesV<GraphT>) {
                 out << "type=\"" << graph_.VertexType(i) << "\";";
             }
 
@@ -247,7 +247,7 @@ class DotFileWriter {
                 << "comm_weight=\"" << graph_.VertexCommWeight(i) << "\";"
                 << "mem_weight=\"" << graph_.VertexMemWeight(i) << "\";";
 
-            if constexpr (HasTypedVerticesV<GraphT>) {
+            if constexpr (hasTypedVerticesV<GraphT>) {
                 out << "type=\"" << graph_.VertexType(i) << "\";shape=\""
                     << shapeStrings_[graph_.VertexType(i) % shapeStrings_.size()] << "\";";
             }
@@ -264,7 +264,7 @@ class DotFileWriter {
             os << "\n";
         }
 
-        if constexpr (HasEdgeWeightsV<GraphT>) {
+        if constexpr (hasEdgeWeightsV<GraphT>) {
             EdgeWriterDot<GraphT> edgeWriter(graph);
 
             for (const auto &e : Edges(graph)) {
@@ -360,7 +360,7 @@ class DotFileWriter {
         std::unordered_map<VertexType, std::vector<size_t>> vertexToIdx;
 
         using VertexTypeTOrDefault = std::conditional_t<IsComputationalDagTypedVerticesV<GraphT>, VTypeT<GraphT>, unsigned>;
-        using EdgeCommwTOrDefault = std::conditional_t<HasEdgeWeightsV<GraphT>, ECommwT<GraphT>, VCommwT<GraphT>>;
+        using EdgeCommwTOrDefault = std::conditional_t<hasEdgeWeightsV<GraphT>, ECommwT<GraphT>, VCommwT<GraphT>>;
 
         using CDagVertexImplT
             = CDagVertexImpl<VertexIdxT<GraphT>, VWorkwT<GraphT>, VCommwT<GraphT>, VMemwT<GraphT>, VertexTypeTOrDefault>;

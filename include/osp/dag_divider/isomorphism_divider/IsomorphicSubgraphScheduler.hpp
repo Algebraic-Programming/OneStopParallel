@@ -207,7 +207,7 @@ class IsomorphicSubgraphScheduler {
                 bool isSingleTypeGroup = true;
                 VTypeT<GraphT> commonNodeType = 0;
 
-                if constexpr (HasTypedVerticesV<GraphT>) {
+                if constexpr (hasTypedVerticesV<GraphT>) {
                     if (!group.subgraphs_.empty() && !group.subgraphs_[0].empty()) {
                         commonNodeType = instance.GetComputationalDag().VertexType(group.subgraphs_[0][0]);
                         const auto &repSubgraph = group.subgraphs_[0];

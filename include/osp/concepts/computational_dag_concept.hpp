@@ -65,7 +65,7 @@ struct HasVertexWeights<T,
                        std::is_arithmetic<decltype(std::declval<T>().VertexMemWeight(std::declval<VertexIdxT<T>>()))>> {};
 
 template <typename T>
-inline constexpr bool HasVertexWeightsV = HasVertexWeights<T>::value;
+inline constexpr bool hasVertexWeightsV = HasVertexWeights<T>::value;
 
 /**
  * @brief Concept to check if a graph has typed vertices.
@@ -90,7 +90,7 @@ struct HasTypedVertices<
                        std::is_integral<decltype(std::declval<T>().NumVertexTypes())>> {};
 
 template <typename T>
-inline constexpr bool HasTypedVerticesV = HasTypedVertices<T>::value;
+inline constexpr bool hasTypedVerticesV = HasTypedVertices<T>::value;
 
 /**
  * @brief Concept to check if edges have communication weights.
@@ -112,7 +112,7 @@ struct HasEdgeWeights<T,
                        IsDirectedGraphEdgeDesc<T>> {};
 
 template <typename T>
-inline constexpr bool HasEdgeWeightsV = HasEdgeWeights<T>::value;
+inline constexpr bool hasEdgeWeightsV = HasEdgeWeights<T>::value;
 
 /**
  * @brief Concept for a basic computational DAG.

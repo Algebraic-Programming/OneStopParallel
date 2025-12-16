@@ -36,10 +36,10 @@ using DoubleCostT = double;
 template <typename GraphT,
           typename MemoryConstraintT = NoLocalSearchMemoryConstraint,
           unsigned windowSize = 1,
-          bool UseNodeCommunicationCostsArg = true>
+          bool useNodeCommunicationCostsArg = true>
 using KlTotalCommImprover
     = KlImprover<GraphT,
-                 KlTotalCommCostFunction<GraphT, DoubleCostT, MemoryConstraintT, windowSize, UseNodeCommunicationCostsArg>,
+                 KlTotalCommCostFunction<GraphT, DoubleCostT, MemoryConstraintT, windowSize, useNodeCommunicationCostsArg>,
                  MemoryConstraintT,
                  windowSize,
                  DoubleCostT>;
@@ -47,10 +47,10 @@ using KlTotalCommImprover
 template <typename GraphT,
           typename MemoryConstraintT = LsLocalMemoryConstraint<GraphT>,
           unsigned windowSize = 1,
-          bool UseNodeCommunicationCostsArg = true>
+          bool useNodeCommunicationCostsArg = true>
 using KlTotalCommImproverLocalMemConstr
     = KlImprover<GraphT,
-                 KlTotalCommCostFunction<GraphT, DoubleCostT, MemoryConstraintT, windowSize, UseNodeCommunicationCostsArg>,
+                 KlTotalCommCostFunction<GraphT, DoubleCostT, MemoryConstraintT, windowSize, useNodeCommunicationCostsArg>,
                  MemoryConstraintT,
                  windowSize,
                  DoubleCostT>;

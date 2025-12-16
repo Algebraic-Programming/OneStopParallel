@@ -109,7 +109,7 @@ class Serial : public Scheduler<GraphT> {
                 bool scheduled = false;
 
                 unsigned vType = 0;
-                if constexpr (HasTypedVerticesV<GraphT>) {
+                if constexpr (hasTypedVerticesV<GraphT>) {
                     vType = dag.VertexType(v);
                 }
 

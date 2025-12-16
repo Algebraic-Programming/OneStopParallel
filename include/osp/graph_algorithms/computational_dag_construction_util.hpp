@@ -45,7 +45,7 @@ void ConstructComputationalDag(const GraphFrom &from, GraphTo &to) {
     vertexMap.reserve(from.NumVertices());
 
     for (const auto &vIdx : from.Vertices()) {
-        if constexpr (HasTypedVerticesV<GraphFrom> and HasTypedVerticesV<GraphTo>) {
+        if constexpr (hasTypedVerticesV<GraphFrom> and hasTypedVerticesV<GraphTo>) {
             vertexMap.push_back(to.AddVertex(
                 from.VertexWorkWeight(vIdx), from.VertexCommWeight(vIdx), from.VertexMemWeight(vIdx), from.VertexType(vIdx)));
         } else {
@@ -53,7 +53,7 @@ void ConstructComputationalDag(const GraphFrom &from, GraphTo &to) {
         }
     }
 
-    if constexpr (HasEdgeWeightsV<GraphFrom> and HasEdgeWeightsV<GraphTo>) {
+    if constexpr (hasEdgeWeightsV<GraphFrom> and hasEdgeWeightsV<GraphTo>) {
         for (const auto &e : Edges(from)) {
             to.AddEdge(vertexMap[Source(e, from)], vertexMap[Target(e, from)], from.EdgeCommWeight(e));
         }
