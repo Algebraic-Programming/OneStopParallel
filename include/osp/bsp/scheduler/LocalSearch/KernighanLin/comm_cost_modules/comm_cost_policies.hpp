@@ -35,8 +35,8 @@ struct EagerCommCostPolicy {
                                               const unsigned vProc,
                                               const unsigned vStep,
                                               const ValueType &val) {
-        ds.step_proc_receive(uStep, vProc) += cost;
-        ds.step_proc_send(uStep, uProc) += cost;
+        ds.StepProcReceive(uStep, vProc) += cost;
+        ds.StepProcSend(uStep, uProc) += cost;
     }
 
     template <typename DS, typename CommWeightT>
@@ -47,8 +47,8 @@ struct EagerCommCostPolicy {
                                                 const unsigned vProc,
                                                 const unsigned vStep,
                                                 const ValueType &val) {
-        ds.step_proc_receive(uStep, vProc) -= cost;
-        ds.step_proc_send(uStep, uProc) -= cost;
+        ds.StepProcReceive(uStep, vProc) -= cost;
+        ds.StepProcSend(uStep, uProc) -= cost;
     }
 
     static inline bool AddChild(ValueType &val, unsigned step) {
@@ -76,8 +76,8 @@ struct EagerCommCostPolicy {
                                             CommWeightT cost,
                                             DeltaTracker &dt) {
         if (val == 1) {
-            dt.add(true, parentStep, childProc, -cost);
-            dt.add(false, parentStep, parentProc, -cost);
+            dt.Add(true, parentStep, childProc, -cost);
+            dt.Add(false, parentStep, parentProc, -cost);
         }
     }
 
@@ -90,8 +90,8 @@ struct EagerCommCostPolicy {
                                          CommWeightT cost,
                                          DeltaTracker &dt) {
         if (val == 0) {
-            dt.add(true, parentStep, childProc, cost);
-            dt.add(false, parentStep, parentProc, cost);
+            dt.Add(true, parentStep, childProc, cost);
+            dt.Add(false, parentStep, parentProc, cost);
         }
     }
 
@@ -100,8 +100,8 @@ struct EagerCommCostPolicy {
         const ValueType &val, unsigned nodeStep, unsigned nodeProc, unsigned childProc, CommWeightT cost, DeltaTracker &dt) {
         if (val > 0) {
             CommWeightT totalCost = cost * val;
-            dt.add(true, nodeStep, childProc, totalCost);
-            dt.add(false, nodeStep, nodeProc, totalCost);
+            dt.Add(true, nodeStep, childProc, totalCost);
+            dt.Add(false, nodeStep, nodeProc, totalCost);
         }
     }
 };
@@ -133,12 +133,12 @@ struct LazyCommCostPolicy {
 
             if (vStep < prevMin) {
                 if (prevMin != std::numeric_limits<unsigned>::max() && prevMin > 0) {
-                    ds.step_proc_receive(prevMin - 1, vProc) -= cost;
-                    ds.step_proc_send(prevMin - 1, uProc) -= cost;
+                    ds.StepProcReceive(prevMin - 1, vProc) -= cost;
+                    ds.StepProcSend(prevMin - 1, uProc) -= cost;
                 }
                 if (vStep > 0) {
-                    ds.step_proc_receive(vStep - 1, vProc) += cost;
-                    ds.step_proc_send(vStep - 1, uProc) += cost;
+                    ds.StepProcReceive(vStep - 1, vProc) += cost;
+                    ds.StepProcSend(vStep - 1, uProc) += cost;
                 }
             }
         }
@@ -157,8 +157,8 @@ struct LazyCommCostPolicy {
         if (val.empty()) {
             // Removed the last child.
             if (vStep > 0) {
-                ds.step_proc_receive(vStep - 1, vProc) -= cost;
-                ds.step_proc_send(vStep - 1, uProc) -= cost;
+                ds.StepProcReceive(vStep - 1, vProc) -= cost;
+                ds.StepProcSend(vStep - 1, uProc) -= cost;
             }
         } else {
             // Check if v_step was the unique minimum.
@@ -170,12 +170,12 @@ struct LazyCommCostPolicy {
             if (vStep < newMin) {
                 // v_step was the unique minimum.
                 if (vStep > 0) {
-                    ds.step_proc_receive(vStep - 1, vProc) -= cost;
-                    ds.step_proc_send(vStep - 1, uProc) -= cost;
+                    ds.StepProcReceive(vStep - 1, vProc) -= cost;
+                    ds.StepProcSend(vStep - 1, uProc) -= cost;
                 }
                 if (newMin > 0) {
-                    ds.step_proc_receive(newMin - 1, vProc) += cost;
-                    ds.step_proc_send(newMin - 1, uProc) += cost;
+                    ds.StepProcReceive(newMin - 1, vProc) += cost;
+                    ds.StepProcSend(newMin - 1, uProc) += cost;
                 }
             }
         }
@@ -242,8 +242,8 @@ struct LazyCommCostPolicy {
 
             if (count == 1) {
                 if (minS > 0) {
-                    dt.add(true, minS - 1, childProc, -cost);
-                    dt.add(false, minS - 1, parentProc, -cost);
+                    dt.Add(true, minS - 1, childProc, -cost);
+                    dt.Add(false, minS - 1, parentProc, -cost);
                 }
                 if (val.size() > 1) {
                     unsigned nextMin = std::numeric_limits<unsigned>::max();
@@ -253,8 +253,8 @@ struct LazyCommCostPolicy {
                         }
                     }
                     if (nextMin != std::numeric_limits<unsigned>::max() && nextMin > 0) {
-                        dt.add(true, nextMin - 1, childProc, cost);
-                        dt.add(false, nextMin - 1, parentProc, cost);
+                        dt.Add(true, nextMin - 1, childProc, cost);
+                        dt.Add(false, nextMin - 1, parentProc, cost);
                     }
                 }
             }
@@ -271,8 +271,8 @@ struct LazyCommCostPolicy {
                                          DeltaTracker &dt) {
         if (val.empty()) {
             if (childStep > 0) {
-                dt.add(true, childStep - 1, childProc, cost);
-                dt.add(false, childStep - 1, parentProc, cost);
+                dt.Add(true, childStep - 1, childProc, cost);
+                dt.Add(false, childStep - 1, parentProc, cost);
             }
         } else {
             unsigned minS = val[0];
@@ -282,12 +282,12 @@ struct LazyCommCostPolicy {
 
             if (childStep < minS) {
                 if (minS > 0) {
-                    dt.add(true, minS - 1, childProc, -cost);
-                    dt.add(false, minS - 1, parentProc, -cost);
+                    dt.Add(true, minS - 1, childProc, -cost);
+                    dt.Add(false, minS - 1, parentProc, -cost);
                 }
                 if (childStep > 0) {
-                    dt.add(true, childStep - 1, childProc, cost);
-                    dt.add(false, childStep - 1, parentProc, cost);
+                    dt.Add(true, childStep - 1, childProc, cost);
+                    dt.Add(false, childStep - 1, parentProc, cost);
                 }
             }
         }
@@ -298,8 +298,8 @@ struct LazyCommCostPolicy {
         const ValueType &val, unsigned nodeStep, unsigned nodeProc, unsigned childProc, CommWeightT cost, DeltaTracker &dt) {
         for (unsigned s : val) {
             if (s > 0) {
-                dt.add(true, s - 1, childProc, cost);
-                dt.add(false, s - 1, nodeProc, cost);
+                dt.Add(true, s - 1, childProc, cost);
+                dt.Add(false, s - 1, nodeProc, cost);
             }
         }
     }
@@ -331,10 +331,10 @@ struct BufferedCommCostPolicy {
 
             if (vStep < prevMin) {
                 if (prevMin != std::numeric_limits<unsigned>::max() && prevMin > 0) {
-                    ds.step_proc_receive(prevMin - 1, vProc) -= cost;
+                    ds.StepProcReceive(prevMin - 1, vProc) -= cost;
                 }
                 if (vStep > 0) {
-                    ds.step_proc_receive(vStep - 1, vProc) += cost;
+                    ds.StepProcReceive(vStep - 1, vProc) += cost;
                 }
             }
         }
@@ -342,7 +342,7 @@ struct BufferedCommCostPolicy {
         // Send side logic (u_step)
         // If this is the FIRST child on this proc, add send cost.
         if (val.size() == 1) {
-            ds.step_proc_send(uStep, uProc) += cost;
+            ds.StepProcSend(uStep, uProc) += cost;
         }
     }
 
@@ -358,9 +358,9 @@ struct BufferedCommCostPolicy {
 
         if (val.empty()) {
             // Removed last child.
-            ds.step_proc_send(uStep, uProc) -= cost;    // Send side
+            ds.StepProcSend(uStep, uProc) -= cost;    // Send side
             if (vStep > 0) {
-                ds.step_proc_receive(vStep - 1, vProc) -= cost;    // Recv side
+                ds.StepProcReceive(vStep - 1, vProc) -= cost;    // Recv side
             }
         } else {
             // Check if v_step was unique minimum for Recv side.
@@ -371,10 +371,10 @@ struct BufferedCommCostPolicy {
 
             if (vStep < newMin) {
                 if (vStep > 0) {
-                    ds.step_proc_receive(vStep - 1, vProc) -= cost;
+                    ds.StepProcReceive(vStep - 1, vProc) -= cost;
                 }
                 if (newMin > 0) {
-                    ds.step_proc_receive(newMin - 1, vProc) += cost;
+                    ds.StepProcReceive(newMin - 1, vProc) += cost;
                 }
             }
             // Send side remains (val not empty).
@@ -445,8 +445,8 @@ struct BufferedCommCostPolicy {
             if (count == 1) {
                 // Unique min being removed.
                 if (minS > 0) {
-                    dt.add(true, minS - 1, childProc, -cost);      // Remove Recv
-                    dt.add(false, minS - 1, parentProc, -cost);    // Remove Send
+                    dt.Add(true, minS - 1, childProc, -cost);      // Remove Recv
+                    dt.Add(false, minS - 1, parentProc, -cost);    // Remove Send
                 }
 
                 if (val.size() > 1) {
@@ -458,8 +458,8 @@ struct BufferedCommCostPolicy {
                     }
 
                     if (nextMin != std::numeric_limits<unsigned>::max() && nextMin > 0) {
-                        dt.add(true, nextMin - 1, childProc, cost);      // Add Recv at new min
-                        dt.add(false, nextMin - 1, parentProc, cost);    // Add Send at new min
+                        dt.Add(true, nextMin - 1, childProc, cost);      // Add Recv at new min
+                        dt.Add(false, nextMin - 1, parentProc, cost);    // Add Send at new min
                     }
                 }
             }
@@ -479,8 +479,8 @@ struct BufferedCommCostPolicy {
         if (val.empty()) {
             // First child.
             if (childStep > 0) {
-                dt.add(true, childStep - 1, childProc, cost);
-                dt.add(false, childStep - 1, parentProc, cost);
+                dt.Add(true, childStep - 1, childProc, cost);
+                dt.Add(false, childStep - 1, parentProc, cost);
             }
         } else {
             unsigned minS = val[0];
@@ -491,12 +491,12 @@ struct BufferedCommCostPolicy {
             if (childStep < minS) {
                 // New global minimum.
                 if (minS > 0) {
-                    dt.add(true, minS - 1, childProc, -cost);      // Remove old Recv
-                    dt.add(false, minS - 1, parentProc, -cost);    // Remove old Send
+                    dt.Add(true, minS - 1, childProc, -cost);      // Remove old Recv
+                    dt.Add(false, minS - 1, parentProc, -cost);    // Remove old Send
                 }
                 if (childStep > 0) {
-                    dt.add(true, childStep - 1, childProc, cost);      // Add new Recv
-                    dt.add(false, childStep - 1, parentProc, cost);    // Add new Send
+                    dt.Add(true, childStep - 1, childProc, cost);      // Add new Recv
+                    dt.Add(false, childStep - 1, parentProc, cost);    // Add new Send
                 }
             }
         }
@@ -512,7 +512,7 @@ struct BufferedCommCostPolicy {
         // Send side: node_step.
         // If val is not empty, we pay send cost ONCE.
         if (!val.empty()) {
-            dt.add(false, nodeStep, nodeProc, cost);
+            dt.Add(false, nodeStep, nodeProc, cost);
         }
 
         // Recv side: iterate steps in val (child steps).
@@ -524,7 +524,7 @@ struct BufferedCommCostPolicy {
             }
 
             if (minS > 0) {
-                dt.add(true, minS - 1, childProc, cost);
+                dt.Add(true, minS - 1, childProc, cost);
             }
         }
     }

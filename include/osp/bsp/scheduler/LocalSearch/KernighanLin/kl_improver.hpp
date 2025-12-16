@@ -1071,9 +1071,9 @@ class KlImprover : public ImprovementScheduler<GraphT> {
             for (const auto &[step, stepInfo] : prevCommData.stepData_) {
                 // typename CommCostFunctionT::PreMoveCommDataT::StepInfo currentInfo;
                 // Query current values
-                const auto currentMax = commCostF_.commDS_.StepMaxComm(step);
-                const auto currentSecondMax = commCostF_.commDS_.StepSecondMaxComm(step);
-                const auto currentCount = commCostF_.commDS_.StepMaxCommCount(step);
+                const auto currentMax = commCostF_.commDs_.StepMaxComm(step);
+                const auto currentSecondMax = commCostF_.commDs_.StepSecondMaxComm(step);
+                const auto currentCount = commCostF_.commDs_.StepMaxCommCount(step);
 
                 if (currentMax != stepInfo.maxComm_ || currentSecondMax != stepInfo.secondMaxComm_
                     || currentCount != stepInfo.maxCommCount_) {
