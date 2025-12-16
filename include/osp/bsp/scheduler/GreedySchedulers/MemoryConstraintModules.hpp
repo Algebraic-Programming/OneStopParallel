@@ -42,7 +42,7 @@ struct IsMemoryConstraint<
                 decltype(T())>> : std::true_type {};
 
 template <typename T>
-inline constexpr bool IsMemoryConstraintV = IsMemoryConstraint<T>::value;
+inline constexpr bool isMemoryConstraintV = IsMemoryConstraint<T>::value;
 
 /**
  * @brief The default memory constraint type, no memory constraints apply.
@@ -209,7 +209,7 @@ struct IsMemoryConstraintSchedule<
                 decltype(T())>> : std::true_type {};
 
 template <typename T>
-inline constexpr bool IsMemoryConstraintScheduleV = IsMemoryConstraintSchedule<T>::value;
+inline constexpr bool isMemoryConstraintScheduleV = IsMemoryConstraintSchedule<T>::value;
 
 template <typename GraphT>
 struct LocalInOutMemoryConstraint {

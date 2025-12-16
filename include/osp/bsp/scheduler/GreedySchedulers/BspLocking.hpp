@@ -51,8 +51,8 @@ class BspLocking : public Scheduler<GraphT> {
   private:
     using VertexType = VertexIdxT<GraphT>;
 
-    constexpr static bool useMemoryConstraint_ = IsMemoryConstraintV<MemoryConstraintT>
-                                                 or IsMemoryConstraintScheduleV<MemoryConstraintT>;
+    constexpr static bool useMemoryConstraint_ = isMemoryConstraintV<MemoryConstraintT>
+                                                 or isMemoryConstraintScheduleV<MemoryConstraintT>;
 
     static_assert(not useMemoryConstraint_ or std::is_same_v<GraphT, typename MemoryConstraintT::GraphImplT>,
                   "GraphT must be the same as MemoryConstraintT::GraphImplT.");
@@ -314,9 +314,9 @@ class BspLocking : public Scheduler<GraphT> {
 
         unsigned supstepIdx = 0;
 
-        if constexpr (IsMemoryConstraintV<MemoryConstraintT>) {
+        if constexpr (isMemoryConstraintV<MemoryConstraintT>) {
             memoryConstraint_.Initialize(instance);
-        } else if constexpr (IsMemoryConstraintScheduleV<MemoryConstraintT>) {
+        } else if constexpr (isMemoryConstraintScheduleV<MemoryConstraintT>) {
             memoryConstraint_.Initialize(schedule, supstepIdx);
         }
 

@@ -58,12 +58,12 @@ class EtfScheduler : public Scheduler<GraphT> {
                   "EtfScheduler requires that work and communication weights are convertible.");
 
   private:
-    using tvPair = std::pair<VWorkwT<GraphT>, VertexIdxT<GraphT>>;
+    using TvPair = std::pair<VWorkwT<GraphT>, VertexIdxT<GraphT>>;
 
     EtfMode mode_;    // The mode of the scheduler (ETF or BL_EST)
     bool useNuma_;    // Flag indicating whether to use NUMA-aware scheduling
 
-    constexpr static bool useMemoryConstraint_ = IsMemoryConstraintV<MemoryConstraintT>;
+    constexpr static bool useMemoryConstraint_ = isMemoryConstraintV<MemoryConstraintT>;
 
     static_assert(not useMemoryConstraint_ || std::is_same_v<MemoryConstraintT, PersistentTransientMemoryConstraint<GraphT>>,
                   "EtfScheduler implements only PersistentTransientMemoryConstraint.");
@@ -113,7 +113,7 @@ class EtfScheduler : public Scheduler<GraphT> {
         return bl;
     }
 
-    bool CheckMemFeasibility(const BspInstance<GraphT> &instance, const std::set<tvPair> &ready) const {
+    bool CheckMemFeasibility(const BspInstance<GraphT> &instance, const std::set<TvPair> &ready) const {
         if (instance.GetArchitecture().GetMemoryConstraintType() == MemoryConstraintType::PERSISTENT_AND_TRANSIENT) {
             if (ready.empty()) {
                 return true;
@@ -157,7 +157,7 @@ class EtfScheduler : public Scheduler<GraphT> {
                                   const VWorkwT<GraphT> procAvailableFrom,
                                   std::vector<VWorkwT<GraphT>> &send,
                                   std::vector<VWorkwT<GraphT>> &rec) const {
-        std::vector<tvPair> predec;
+        std::vector<TvPair> predec;
         for (const auto &pred : instance.GetComputationalDag().Parents(node)) {
             predec.emplace_back(schedule.time_[pred] + instance.GetComputationalDag().VertexWorkWeight(pred), pred);
         }
@@ -201,7 +201,7 @@ class EtfScheduler : public Scheduler<GraphT> {
      * @param avg_ The average execution time of the tasks.
      * @return A triple containing the best EST, the node index, and the processor index.
      */
-    tvPair GetBestESTforNodes(const BspInstance<GraphT> &instance,
+    TvPair GetBestESTforNodes(const BspInstance<GraphT> &instance,
                                CSchedule<GraphT> &schedule,
                                const std::vector<VertexIdxT<GraphT>> &nodeList,
                                const std::vector<VWorkwT<GraphT>> &procAvailableFrom,
@@ -280,14 +280,14 @@ class EtfScheduler : public Scheduler<GraphT> {
             bl = std::vector<VWorkwT<GraphT>>(instance.NumberOfVertices(), 0);
         }
 
-        std::set<tvPair> ready;
+        std::set<TvPair> ready;
 
         for (const auto &v : SourceVerticesView(instance.GetComputationalDag())) {
             ready.insert({bl[v], v});
         }
 
         while (!ready.empty()) {
-            tvPair bestTv(0, 0);
+            TvPair bestTv(0, 0);
             unsigned bestProc = 0;
 
             if (mode_ == BL_EST) {
@@ -302,7 +302,7 @@ class EtfScheduler : public Scheduler<GraphT> {
                     nodeList.push_back(next.second);
                 }
                 bestTv = GetBestESTforNodes(instance, schedule, nodeList, finishTimes, send, rec, bestProc);
-                ready.erase(tvPair({0, bestTv.second}));
+                ready.erase(TvPair({0, bestTv.second}));
             }
             const auto node = bestTv.second;
 

@@ -37,8 +37,8 @@ class VariancePartitioner : public LoadBalancerBase<GraphT, InterpolationT> {
     };
 
   protected:
-    constexpr static bool useMemoryConstraint_ = IsMemoryConstraintV<MemoryConstraintT>
-                                                 or IsMemoryConstraintScheduleV<MemoryConstraintT>;
+    constexpr static bool useMemoryConstraint_ = isMemoryConstraintV<MemoryConstraintT>
+                                                 or isMemoryConstraintScheduleV<MemoryConstraintT>;
 
     static_assert(not useMemoryConstraint_ or std::is_same_v<GraphT, typename MemoryConstraintT::GraphImplT>,
                   "Graph_t must be the same as MemoryConstraintT::GraphImplT.");
@@ -111,9 +111,9 @@ class VariancePartitioner : public LoadBalancerBase<GraphT, InterpolationT> {
 
         unsigned superstep = 0;
 
-        if constexpr (IsMemoryConstraintV<MemoryConstraintT>) {
+        if constexpr (isMemoryConstraintV<MemoryConstraintT>) {
             memoryConstraint_.Initialize(instance);
-        } else if constexpr (IsMemoryConstraintScheduleV<MemoryConstraintT>) {
+        } else if constexpr (isMemoryConstraintScheduleV<MemoryConstraintT>) {
             memoryConstraint_.Initialize(schedule, superstep);
         }
 
@@ -252,7 +252,7 @@ class VariancePartitioner : public LoadBalancerBase<GraphT, InterpolationT> {
                         break;
                     }
 
-                    if constexpr (IsMemoryConstraintV<MemoryConstraintT> || IsMemoryConstraintScheduleV<MemoryConstraintT>) {
+                    if constexpr (isMemoryConstraintV<MemoryConstraintT> || isMemoryConstraintScheduleV<MemoryConstraintT>) {
                         if (memoryConstraint_.CanAdd(vertexPriorPairIter->first, proc)) {
                             nextNode = vertexPriorPairIter->first;
                             assignedANode = true;
@@ -269,7 +269,7 @@ class VariancePartitioner : public LoadBalancerBase<GraphT, InterpolationT> {
                         break;
                     }
 
-                    if constexpr (IsMemoryConstraintV<MemoryConstraintT> || IsMemoryConstraintScheduleV<MemoryConstraintT>) {
+                    if constexpr (isMemoryConstraintV<MemoryConstraintT> || isMemoryConstraintScheduleV<MemoryConstraintT>) {
                         if (memoryConstraint_.CanAdd(vertexPriorPairIter->first, proc)) {
                             nextNode = vertexPriorPairIter->first;
                             assignedANode = true;
@@ -285,7 +285,7 @@ class VariancePartitioner : public LoadBalancerBase<GraphT, InterpolationT> {
                         break;
                     }
 
-                    if constexpr (IsMemoryConstraintV<MemoryConstraintT> || IsMemoryConstraintScheduleV<MemoryConstraintT>) {
+                    if constexpr (isMemoryConstraintV<MemoryConstraintT> || isMemoryConstraintScheduleV<MemoryConstraintT>) {
                         if (memoryConstraint_.CanAdd(vertexPriorPairIter->first, proc)) {
                             nextNode = vertexPriorPairIter->first;
                             assignedANode = true;
@@ -309,7 +309,7 @@ class VariancePartitioner : public LoadBalancerBase<GraphT, InterpolationT> {
                     totalPartitionWork[proc] += graph.VertexWorkWeight(nextNode);
                     superstepPartitionWork[proc] += graph.VertexWorkWeight(nextNode);
 
-                    if constexpr (IsMemoryConstraintV<MemoryConstraintT> || IsMemoryConstraintScheduleV<MemoryConstraintT>) {
+                    if constexpr (isMemoryConstraintV<MemoryConstraintT> || isMemoryConstraintScheduleV<MemoryConstraintT>) {
                         memoryConstraint_.Add(nextNode, proc);
                     }
 

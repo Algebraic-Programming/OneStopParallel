@@ -177,9 +177,9 @@ bool BspScheduleRecomp<GraphT>::SatisfiesConstraints() const {
         std::vector<unsigned>(instance_->NumberOfProcessors(), std::numeric_limits<unsigned>::max()));
 
     for (VertexIdx node = 0; node < instance_->NumberOfVertices(); ++node) {
-        for (const std::pair<unsigned, unsigned> &compute_step : nodeToProcessorAndSupertepAssignment_[node]) {
-            nodeFirstAvailableOnProc[node][compute_step.first]
-                = std::min(nodeFirstAvailableOnProc[node][compute_step.first], compute_step.second);
+        for (const std::pair<unsigned, unsigned> &computeStep : nodeToProcessorAndSupertepAssignment_[node]) {
+            nodeFirstAvailableOnProc[node][computeStep.first]
+                = std::min(nodeFirstAvailableOnProc[node][computeStep.first], computeStep.second);
         }
     }
 
@@ -194,10 +194,10 @@ bool BspScheduleRecomp<GraphT>::SatisfiesConstraints() const {
 
     for (VertexIdx node = 0; node < instance_->NumberOfVertices(); ++node) {
         for (VertexIdx pred : instance_->GetComputationalDag().Parents(node)) {
-            for (const std::pair<unsigned, unsigned> &compute_step : nodeToProcessorAndSupertepAssignment_[node]) {
-                if (nodeFirstAvailableOnProc[pred][compute_step.first] > compute_step.second) {
+            for (const std::pair<unsigned, unsigned> &computeStep : nodeToProcessorAndSupertepAssignment_[node]) {
+                if (nodeFirstAvailableOnProc[pred][computeStep.first] > computeStep.second) {
                     // std::cout << "Not a valid schedule: parent " << pred << " of node "<< node <<
-                    //" not yet available on processor " << compute_step.first << " in superstep "<< compute_step.second <<"." << std::endl;
+                    //" not yet available on processor " << computeStep.first << " in superstep "<< computeStep.second <<"." << std::endl;
                     return false;
                 }
             }
@@ -225,8 +225,8 @@ VWorkwT<GraphT> BspScheduleRecomp<GraphT>::ComputeWorkCosts() const {
     std::vector<std::vector<CostType>> stepProcWork(numberOfSupersteps_, std::vector<CostType>(instance_->NumberOfProcessors(), 0));
 
     for (VertexIdx node = 0; node < instance_->NumberOfVertices(); node++) {
-        for (const std::pair<unsigned, unsigned> &processor_superstep : nodeToProcessorAndSupertepAssignment_[node]) {
-            stepProcWork[processor_superstep.second][processor_superstep.first]
+        for (const std::pair<unsigned, unsigned> &processorSuperstep : nodeToProcessorAndSupertepAssignment_[node]) {
+            stepProcWork[processorSuperstep.second][processorSuperstep.first]
                 += instance_->GetComputationalDag().VertexWorkWeight(node);
         }
     }
@@ -316,8 +316,8 @@ void BspScheduleRecomp<GraphT>::MergeSupersteps() {
         }
         nodeToProcessorAndSupertepAssignment_[node] = newAssignment;
     }
-    for (auto &key_step_pair : commSchedule_) {
-        auto &step = key_step_pair.second;
+    for (auto &keyStepPair : commSchedule_) {
+        auto &step = keyStepPair.second;
         step = newStepIdx[step];
     }
 
