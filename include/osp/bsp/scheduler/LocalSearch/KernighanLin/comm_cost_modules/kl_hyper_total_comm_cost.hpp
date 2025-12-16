@@ -108,8 +108,8 @@ struct KlHyperTotalCommCostFunction {
         for (const auto vertex : graph_->Vertices()) {
             const unsigned vertexProc = activeSchedule_->AssignedProcessor(vertex);
             const CostT vCommCost = graph_->VertexCommWeight(vertex);
-            for (const auto lambdaproc_mult_pair : nodeLambdaMap_.IterateProcEntries(vertex)) {
-                const auto &lambdaProc = lambdaproc_mult_pair.first;
+            for (const auto lambdaprocMultPair : nodeLambdaMap_.IterateProcEntries(vertex)) {
+                const auto &lambdaProc = lambdaprocMultPair.first;
                 commCosts += vCommCost * instance_->CommunicationCosts(vertexProc, lambdaProc);
             }
         }

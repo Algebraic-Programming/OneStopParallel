@@ -290,10 +290,10 @@ struct MaxCommDatastructure {
             const CommWeightT commWParent = graph.VertexCommWeight(parent);
 
             auto &val = nodeLambdaMap_.GetProcEntry(parent, fromProc);
-            const bool removed_from_proc = CommPolicy::RemoveChild(val, fromStep);
+            const bool removedFromProc = CommPolicy::RemoveChild(val, fromStep);
 
             // 1. Handle Removal from fromProc
-            if (removed_from_proc) {
+            if (removedFromProc) {
                 if (fromProc != parentProc) {
                     const CommWeightT cost = commWParent * instance_->SendCosts(parentProc, fromProc);
                     if (cost > 0) {
@@ -302,15 +302,15 @@ struct MaxCommDatastructure {
                 }
             }
 
-            auto &val_to = nodeLambdaMap_.GetProcEntry(parent, toProc);
-            const bool added_to_proc = CommPolicy::AddChild(val_to, toStep);
+            auto &valTo = nodeLambdaMap_.GetProcEntry(parent, toProc);
+            const bool addedToProc = CommPolicy::AddChild(valTo, toStep);
 
             // 2. Handle Addition to toProc
-            if (added_to_proc) {
+            if (addedToProc) {
                 if (toProc != parentProc) {
                     const CommWeightT cost = commWParent * instance_->SendCosts(parentProc, toProc);
                     if (cost > 0) {
-                        CommPolicy::AttributeCommunication(*this, cost, parentStep, parentProc, toProc, toStep, val_to);
+                        CommPolicy::AttributeCommunication(*this, cost, parentStep, parentProc, toProc, toStep, valTo);
                     }
                 }
             }
