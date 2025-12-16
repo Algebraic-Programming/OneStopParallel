@@ -37,7 +37,7 @@ using GroupT = typename OrbitGraphProcessor<GraphT, ConstrGraphT>::Group;
 template <typename GraphT, typename ConstrGraphT>
 class IsomorphicSubgraphSchedulerTester : public IsomorphicSubgraphScheduler<GraphT, ConstrGraphT> {
   public:
-    // using IsomorphicSubgraphScheduler<GraphT, ConstrGraphT>::ConstrGraphT;
+    using IsomorphicSubgraphScheduler<GraphT, ConstrGraphT>::IsomorphicSubgraphScheduler;
 
     void TestTrimSubgraphGroups(std::vector<GroupT> &isomorphicGroups,
                                 const BspInstance<GraphT> &instance,
@@ -72,10 +72,10 @@ BOOST_AUTO_TEST_CASE(TrimSubgraphGroupsTestNoTrim) {
 
     BspInstance<GraphT> instance;
     auto &dag = instance.GetComputationalDag();
-    dag.AddVertex(1, 1, 1, 0);                                                     // 0
-    dag.AddVertex(1, 1, 1, 0);                                                     // 1
-    dag.AddVertex(1, 1, 1, 0);                                                     // 2
-    dag.AddVertex(1, 1, 1, 0);                                                     // 3
+    dag.AddVertex(1, 1, 1, 0);                                                      // 0
+    dag.AddVertex(1, 1, 1, 0);                                                      // 1
+    dag.AddVertex(1, 1, 1, 0);                                                      // 2
+    dag.AddVertex(1, 1, 1, 0);                                                      // 3
     instance.GetArchitecture().SetProcessorsWithTypes({0, 0, 0, 0, 0, 0, 0, 0});    // 8 processors of type 0
     instance.SetDiagonalCompatibilityMatrix(1);
 
@@ -95,16 +95,16 @@ BOOST_AUTO_TEST_CASE(TrimSubgraphGroupsTestNoTrim) {
 BOOST_AUTO_TEST_CASE(TrimSubgraphGroupsTestWithTrim) {
     GreedyBspScheduler<ConstrGraphT> greedyScheduler;
     IsomorphicSubgraphSchedulerTester<GraphT, ConstrGraphT> tester(greedyScheduler);
-    tester.setAllowTrimmedScheduler(false);
+    tester.SetAllowTrimmedScheduler(false);
 
     BspInstance<GraphT> instance;
     auto &dag = instance.GetComputationalDag();
-    dag.AddVertex(10, 1, 1, 0);                                                    // 0
-    dag.AddVertex(10, 1, 1, 0);                                                    // 1
-    dag.AddVertex(10, 1, 1, 0);                                                    // 2
-    dag.AddVertex(10, 1, 1, 0);                                                    // 3
-    dag.AddVertex(10, 1, 1, 0);                                                    // 4
-    dag.AddVertex(10, 1, 1, 0);                                                    // 5
+    dag.AddVertex(10, 1, 1, 0);                                                     // 0
+    dag.AddVertex(10, 1, 1, 0);                                                     // 1
+    dag.AddVertex(10, 1, 1, 0);                                                     // 2
+    dag.AddVertex(10, 1, 1, 0);                                                     // 3
+    dag.AddVertex(10, 1, 1, 0);                                                     // 4
+    dag.AddVertex(10, 1, 1, 0);                                                     // 5
     instance.GetArchitecture().SetProcessorsWithTypes({0, 0, 0, 0, 0, 0, 0, 0});    // 8 processors of type 0
     instance.SetDiagonalCompatibilityMatrix(1);
 
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(TrimSubgraphGroupsTestWithTrim) {
 BOOST_AUTO_TEST_CASE(TrimSubgraphGroupsTestMultipleGroups) {
     GreedyBspScheduler<ConstrGraphT> greedyScheduler;
     IsomorphicSubgraphSchedulerTester<GraphT, ConstrGraphT> tester(greedyScheduler);
-    tester.setAllowTrimmedScheduler(false);
+    tester.SetAllowTrimmedScheduler(false);
 
     BspInstance<GraphT> instance;
     auto &dag = instance.GetComputationalDag();

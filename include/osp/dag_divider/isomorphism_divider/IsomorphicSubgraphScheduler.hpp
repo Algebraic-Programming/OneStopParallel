@@ -76,7 +76,7 @@ class IsomorphicSubgraphScheduler {
     bool useAdaptiveSymmetryThreshold_ = true;
 
   public:
-    explicit IsomorphicSubgraphScheduler(Scheduler<ConstrGraphT> &bspScheduler)
+    IsomorphicSubgraphScheduler(Scheduler<ConstrGraphT> &bspScheduler)
         : hashComputer_(nullptr), bspScheduler_(&bspScheduler), plotDotGraphs_(false) {}
 
     IsomorphicSubgraphScheduler(Scheduler<ConstrGraphT> &bspScheduler, const HashComputer<VertexIdxT<GraphT>> &hashComputer)
