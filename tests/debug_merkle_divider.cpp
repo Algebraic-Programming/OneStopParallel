@@ -119,7 +119,7 @@ int main(int argc, char *argv[]) {
 
     GraphT coraseGraph;
     coarser_util::ConstructCoarseDag(instance.GetComputationalDag(), coraseGraph, partition);
-    bool acyc = is_acyclic(coraseGraph);
+    bool acyc = IsAcyclic(coraseGraph);
     std::cout << "Partition is " << (acyc ? "acyclic." : "not acyclic.");
 
     std::cout << "Partition computation finished." << std::endl;

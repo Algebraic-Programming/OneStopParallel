@@ -34,7 +34,7 @@ limitations under the License.
 using namespace osp;
 
 BOOST_AUTO_TEST_CASE(StepByStepCoarserTest) {
-    using Graph = boost_graph_uint_t;
+    using Graph = BoostGraphUintT;
     StepByStepCoarser<Graph> test;
 
     // Getting root git directory
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(StepByStepCoarserTest) {
 
     StepByStepCoarser<Graph> coarser;
 
-    coarser.setTargetNumberOfNodes(static_cast<unsigned>(dag.NumVertices()) / 2);
+    coarser.SetTargetNumberOfNodes(static_cast<unsigned>(dag.NumVertices()) / 2);
 
     Graph coarsenedDag1, coarsenedDag2;
     std::vector<std::vector<VertexIdxT<Graph>>> oldVertexIds;
@@ -63,13 +63,13 @@ BOOST_AUTO_TEST_CASE(StepByStepCoarserTest) {
     coarser.CoarsenDag(dag, coarsenedDag1, newVertexId);
     oldVertexIds = coarser_util::InvertVertexContractionMap<Graph, Graph>(newVertexId);
 
-    coarser.setTargetNumberOfNodes(static_cast<unsigned>(dag.NumVertices()) * 2 / 3);
-    coarser.coarsenForPebbling(dag, coarsenedDag2, newVertexId);
+    coarser.SetTargetNumberOfNodes(static_cast<unsigned>(dag.NumVertices()) * 2 / 3);
+    coarser.CoarsenForPebbling(dag, coarsenedDag2, newVertexId);
     oldVertexIds = coarser_util::InvertVertexContractionMap<Graph, Graph>(newVertexId);
 }
 
 BOOST_AUTO_TEST_CASE(MultilevelTest) {
-    using Graph = boost_graph_uint_t;
+    using Graph = BoostGraphUintT;
     StepByStepCoarser<Graph> test;
 
     BspInstance<Graph> instance;
@@ -93,15 +93,15 @@ BOOST_AUTO_TEST_CASE(MultilevelTest) {
     MultiLevelHillClimbingScheduler<Graph> multi1, multi2;
     BspSchedule<Graph> schedule1(instance), schedule2(instance);
 
-    multi1.setContractionRate(0.3);
-    multi1.useLinearRefinementSteps(5);
+    multi1.SetContractionRate(0.3);
+    multi1.UseLinearRefinementSteps(5);
 
     auto result = multi1.ComputeSchedule(schedule1);
     BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
     BOOST_CHECK(schedule1.SatisfiesPrecedenceConstraints());
 
-    multi2.setContractionRate(0.3);
-    multi2.useExponentialRefinementPoints(1.2);
+    multi2.SetContractionRate(0.3);
+    multi2.UseExponentialRefinementPoints(1.2);
 
     result = multi2.ComputeSchedule(schedule2);
     BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);

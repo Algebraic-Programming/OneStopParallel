@@ -38,10 +38,10 @@ BOOST_AUTO_TEST_CASE(ErdosRenyiGraphTest) {
 
     for (size_t i = 0; i < graphSizes.size(); i++) {
         ComputationalDagVectorImplDefIntT graph;
-        erdos_renyi_graph_gen(graph, graphSizes[i], graphChances[i]);
+        ErdosRenyiGraphGen(graph, graphSizes[i], graphChances[i]);
 
         BOOST_CHECK_EQUAL(graph.NumVertices(), graphSizes[i]);
-        BOOST_CHECK_EQUAL(is_acyclic(graph), true);
+        BOOST_CHECK_EQUAL(IsAcyclic(graph), true);
     }
 }
 
@@ -52,9 +52,9 @@ BOOST_AUTO_TEST_CASE(NearDiagRandomGraphTest) {
 
     for (size_t i = 0; i < graphSizes.size(); i++) {
         ComputationalDagVectorImplDefIntT graph;
-        near_diag_random_graph(graph, graphSizes[i], graphBw[i], graphProb[i]);
+        NearDiagRandomGraph(graph, graphSizes[i], graphBw[i], graphProb[i]);
 
         BOOST_CHECK_EQUAL(graph.NumVertices(), graphSizes[i]);
-        BOOST_CHECK_EQUAL(is_acyclic(graph), true);
+        BOOST_CHECK_EQUAL(IsAcyclic(graph), true);
     }
 }

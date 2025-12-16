@@ -41,7 +41,7 @@ void CheckPartitioning(const GraphT &dag, const OrbitGraphProcessor<GraphT, Grap
     const auto &finalGroups = processor.get_final_groups();
 
     // Check that the final coarse graph is acyclic
-    BOOST_CHECK(is_acyclic(finalCoarseGraph));
+    BOOST_CHECK(IsAcyclic(finalCoarseGraph));
 
     // Check that the final groups form a valid partition of the original DAG's vertices
     std::vector<int> vertexCounts(dag.NumVertices(), 0);
