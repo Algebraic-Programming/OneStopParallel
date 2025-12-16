@@ -118,13 +118,13 @@ class IsomorphicSubgraphScheduler {
 
     std::vector<VertexIdxT<GraphT>> ComputePartition(const BspInstance<GraphT> &instance) {
         OrbitGraphProcessor<GraphT, ConstrGraphT> orbitProcessor;
-        orbitProcessor.setWorkThreshold(workThreshold_);
-        orbitProcessor.setMergeDifferentNodeTypes(mergeDifferentNodeTypes_);
-        orbitProcessor.setCriticalPathThreshold(criticalPathThreshold_);
-        orbitProcessor.setLockRatio(orbitLockRatio_);
-        orbitProcessor.setNaturalBreaksCountPercentage(naturalBreaksCountPercentage_);
+        orbitProcessor.SetWorkThreshold(workThreshold_);
+        orbitProcessor.SetMergeDifferentNodeTypes(mergeDifferentNodeTypes_);
+        orbitProcessor.SetCriticalPathThreshold(criticalPathThreshold_);
+        orbitProcessor.SetLockRatio(orbitLockRatio_);
+        orbitProcessor.SetNaturalBreaksCountPercentage(naturalBreaksCountPercentage_);
         if (not useAdaptiveSymmetryThreshold_) {
-            orbitProcessor.setUseStaticSymmetryLevel(symmetry_);
+            orbitProcessor.SetUseStaticSymmetryLevel(symmetry_);
         }
 
         std::unique_ptr<HashComputer<VertexIdxT<GraphT>>> localHasher;

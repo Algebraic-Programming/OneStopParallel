@@ -104,8 +104,8 @@ int main(int argc, char *argv[]) {
 
     IsomorphicSubgraphScheduler<GraphT2, GraphT> isoScheduler(scheduler);
     isoScheduler.setMergeDifferentTypes(false);
-    isoScheduler.setWorkThreshold(100);
-    isoScheduler.setCriticalPathThreshold(500);
+    isoScheduler.SetWorkThreshold(100);
+    isoScheduler.SetCriticalPathThreshold(500);
     isoScheduler.setOrbitLockRatio(0.5);
     isoScheduler.setAllowTrimmedScheduler(false);
     isoScheduler.set_plot_dot_graphs(true);    // Enable plotting for debug

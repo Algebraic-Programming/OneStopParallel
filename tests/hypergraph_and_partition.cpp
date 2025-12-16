@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(HypergraphAndPartitionTest) {
     BOOST_CHECK_EQUAL(hgraph.NumHyperedges(), 16);
 
     // DAG format, all hyperedges have size 2
-    hgraph = convert_from_cdag_as_dag<HypergraphImpl, Graph>(dag);
+    hgraph = ConvertFromCdagAsDag<HypergraphImpl, Graph>(dag);
     BOOST_CHECK_EQUAL(dag.NumVertices(), hgraph.NumVertices());
     BOOST_CHECK_EQUAL(dag.NumEdges(), hgraph.NumHyperedges());
     BOOST_CHECK_EQUAL(dag.NumEdges() * 2, hgraph.NumPins());

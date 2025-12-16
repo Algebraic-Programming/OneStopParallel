@@ -61,18 +61,18 @@ BOOST_AUTO_TEST_CASE(HillClimbing) {
     scheduler.ImproveSchedule(schedule1);
     BOOST_CHECK_EQUAL(schedule1.SatisfiesPrecedenceConstraints(), true);
 
-    scheduler.setSteepestAscend(true);
+    scheduler.SetSteepestAscend(true);
     BspSchedule<Graph> schedule2 = bspInitial;
     scheduler.ImproveSchedule(schedule2);
     BOOST_CHECK_EQUAL(schedule2.SatisfiesPrecedenceConstraints(), true);
 
     BspSchedule<Graph> schedule3 = bspInitial;
     scheduler.SetTimeLimitSeconds(1U);
-    scheduler.improveScheduleWithTimeLimit(schedule3);
+    scheduler.ImproveScheduleWithTimeLimit(schedule3);
     BOOST_CHECK_EQUAL(schedule3.SatisfiesPrecedenceConstraints(), true);
 
     BspSchedule<Graph> schedule4 = bspInitial;
-    scheduler.improveScheduleWithStepLimit(schedule4, 5);
+    scheduler.ImproveScheduleWithStepLimit(schedule4, 5);
     BOOST_CHECK_EQUAL(schedule4.SatisfiesPrecedenceConstraints(), true);
 }
 
@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(HillClimbingForCommSchedule) {
     BspSchedule<Graph> schedule = initial;
     BspScheduleCS<Graph> initialCs(std::move(initial));
     // initial_cs.SetAutoCommunicationSchedule();
-    initialCs.setEagerCommunicationSchedule();
+    initialCs.SetEagerCommunicationSchedule();
     BOOST_CHECK_EQUAL(initialCs.HasValidCommSchedule(), true);
 
     HillClimbingForCommSteps<Graph> hcCs;
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(HillClimbingForCommSchedule) {
     BOOST_CHECK_EQUAL(schedule1.HasValidCommSchedule(), true);
 
     BspScheduleCS<Graph> schedule2 = initialCs;
-    hcCs.setSteepestAscend(true);
+    hcCs.SetSteepestAscend(true);
     hcCs.ImproveSchedule(schedule2);
     BOOST_CHECK_EQUAL(schedule2.HasValidCommSchedule(), true);
 }
