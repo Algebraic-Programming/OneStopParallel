@@ -34,12 +34,12 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecompTest) {
     const auto projectRoot = GetProjectRoot();
     file_reader::ReadComputationalDagHyperdagFormatDB((projectRoot / "data/spaa/tiny/instance_bicgstab.hdag").string(), graph);
 
-    MerkleHashComputer<GraphT, uniform_node_hash_func<VertexIdxT<GraphT>>> mHash(graph);
+    MerkleHashComputer<GraphT, UniformNodeHashFunc<VertexIdxT<GraphT>>> mHash(graph);
 
-    BOOST_CHECK_EQUAL(mHash.get_vertex_hashes().size(), graph.NumVertices());
+    BOOST_CHECK_EQUAL(mHash.GetVertexHashes().size(), graph.NumVertices());
 
-    for (const auto &v : source_vertices_view(graph)) {
-        BOOST_CHECK_EQUAL(mHash.get_vertex_hash(v), 11);
+    for (const auto &v : SourceVerticesView(graph)) {
+        BOOST_CHECK_EQUAL(mHash.GetVertexHash(v), 11);
     }
 
     size_t num = 0;
@@ -54,12 +54,12 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecompTest) {
 
     BOOST_CHECK_EQUAL(num, graph.NumVertices());
 
-    BOOST_CHECK_EQUAL(mHash.get_vertex_hash(41), mHash.get_vertex_hash(47));
-    BOOST_CHECK_EQUAL(mHash.get_vertex_hash(28), mHash.get_vertex_hash(18));
-    BOOST_CHECK_EQUAL(mHash.get_vertex_hash(43), mHash.get_vertex_hash(48));
-    BOOST_CHECK_EQUAL(mHash.get_vertex_hash(29), mHash.get_vertex_hash(22));
-    BOOST_CHECK(mHash.get_vertex_hash(3) != mHash.get_vertex_hash(12));
-    BOOST_CHECK(mHash.get_vertex_hash(53) != mHash.get_vertex_hash(29));
+    BOOST_CHECK_EQUAL(mHash.GetVertexHash(41), mHash.GetVertexHash(47));
+    BOOST_CHECK_EQUAL(mHash.GetVertexHash(28), mHash.GetVertexHash(18));
+    BOOST_CHECK_EQUAL(mHash.GetVertexHash(43), mHash.GetVertexHash(48));
+    BOOST_CHECK_EQUAL(mHash.GetVertexHash(29), mHash.GetVertexHash(22));
+    BOOST_CHECK(mHash.GetVertexHash(3) != mHash.GetVertexHash(12));
+    BOOST_CHECK(mHash.GetVertexHash(53) != mHash.GetVertexHash(29));
 }
 
 BOOST_AUTO_TEST_CASE(MerkleHashComputerTestFwBwPrecomp) {
@@ -71,9 +71,9 @@ BOOST_AUTO_TEST_CASE(MerkleHashComputerTestFwBwPrecomp) {
 
     std::vector<size_t> precomNodeHashes(graphTest.NumVertices(), 5);
 
-    MerkleHashComputer<GraphT, precom_bwd_merkle_node_hash_func<GraphT>> mHash(graphTest, graphTest, precomNodeHashes);
+    MerkleHashComputer<GraphT, PrecomBwdMerkleNodeHashFunc<GraphT>> mHash(graphTest, graphTest, precomNodeHashes);
 
-    BOOST_CHECK_EQUAL(mHash.get_vertex_hashes().size(), graphTest.NumVertices());
+    BOOST_CHECK_EQUAL(mHash.GetVertexHashes().size(), graphTest.NumVertices());
 
     size_t num = 0;
     for (const auto &pair : mHash.GetOrbits()) {
@@ -106,9 +106,9 @@ BOOST_AUTO_TEST_CASE(MerkleIsomorphismTestIdenticalGraphsAreIsomorphic) {
     dag2.AddEdge(vA, vB);
     dag2.AddEdge(vB, vC);
 
-    bool test = AreIsomorphicByMerkleHash<GraphType, uniform_node_hash_func<VertexType>, true>(dag1, dag2);
+    bool test = AreIsomorphicByMerkleHash<GraphType, UniformNodeHashFunc<VertexType>, true>(dag1, dag2);
     BOOST_CHECK(test);
-    test = AreIsomorphicByMerkleHash<GraphType, uniform_node_hash_func<VertexType>, false>(dag1, dag2);
+    test = AreIsomorphicByMerkleHash<GraphType, UniformNodeHashFunc<VertexType>, false>(dag1, dag2);
     BOOST_CHECK(test);
 }
 
