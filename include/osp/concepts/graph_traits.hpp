@@ -231,8 +231,8 @@ template <typename T, typename = void>
 struct HasVerticesInTopOrderTrait : std::false_type {};
 
 template <typename T>
-struct HasVerticesInTopOrderTrait<T, std::void_t<decltype(T::VerticesInTopOrder)>>
-    : std::bool_constant<std::is_same_v<decltype(T::VerticesInTopOrder), const bool> && T::VerticesInTopOrder> {};
+struct HasVerticesInTopOrderTrait<T, std::void_t<decltype(T::verticesInTopOrder_)>>
+    : std::bool_constant<std::is_same_v<decltype(T::verticesInTopOrder_), const bool> && T::verticesInTopOrder_> {};
 
 template <typename T>
 inline constexpr bool HasVerticesInTopOrderV = HasVerticesInTopOrderTrait<T>::value;
@@ -244,8 +244,8 @@ template <typename T, typename = void>
 struct HasChildrenInVertexOrderTrait : std::false_type {};
 
 template <typename T>
-struct HasChildrenInVertexOrderTrait<T, std::void_t<decltype(T::ChildrenInVertexOrder)>>
-    : std::bool_constant<std::is_same_v<decltype(T::ChildrenInVertexOrder), const bool> && T::ChildrenInVertexOrder> {};
+struct HasChildrenInVertexOrderTrait<T, std::void_t<decltype(T::childrenInVertexOrder_)>>
+    : std::bool_constant<std::is_same_v<decltype(T::childrenInVertexOrder_), const bool> && T::childrenInVertexOrder_> {};
 
 template <typename T>
 inline constexpr bool HasChildrenInVertexOrderV = HasChildrenInVertexOrderTrait<T>::value;
@@ -257,8 +257,8 @@ template <typename T, typename = void>
 struct HasParentsInVertexOrderTrait : std::false_type {};
 
 template <typename T>
-struct HasParentsInVertexOrderTrait<T, std::void_t<decltype(T::ParentsInVertexOrder)>>
-    : std::bool_constant<std::is_same_v<decltype(T::ParentsInVertexOrder), const bool> && T::ParentsInVertexOrder> {};
+struct HasParentsInVertexOrderTrait<T, std::void_t<decltype(T::parentsInVertexOrder_)>>
+    : std::bool_constant<std::is_same_v<decltype(T::parentsInVertexOrder_), const bool> && T::parentsInVertexOrder_> {};
 
 template <typename T>
 inline constexpr bool HasParentsInVertexOrderV = HasParentsInVertexOrderTrait<T>::value;
