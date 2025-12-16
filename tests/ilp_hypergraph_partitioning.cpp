@@ -42,12 +42,12 @@ BOOST_AUTO_TEST_CASE(TestFull) {
 
     graph dag;
 
-    bool status = file_reader::ReadComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(), DAG);
+    bool status = file_reader::ReadComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(), dag);
 
     BOOST_CHECK(status);
 
-    HypergraphImpl hgraph = ConvertFromCdagAsHyperdag<HypergraphImpl, graph>(DAG);
-    BOOST_CHECK_EQUAL(DAG.NumVertices(), Hgraph.NumVertices());
+    HypergraphImpl hgraph = ConvertFromCdagAsHyperdag<HypergraphImpl, graph>(dag);
+    BOOST_CHECK_EQUAL(dag.NumVertices(), hgraph.NumVertices());
 
     PartitioningProblem instance(hgraph, 3, 35);
     Partitioning partition(instance);
@@ -58,26 +58,26 @@ BOOST_AUTO_TEST_CASE(TestFull) {
     partitioner.SetTimeLimitSeconds(60);
     partitioner.ComputePartitioning(partition);
 
-    BOOST_CHECK(partition.satisfiesBalanceConstraint());
-    BOOST_CHECK(partition.computeConnectivityCost() >= partition.computeCutNetCost());
+    BOOST_CHECK(partition.SatisfiesBalanceConstraint());
+    BOOST_CHECK(partition.ComputeConnectivityCost() >= partition.ComputeCutNetCost());
 
     for (unsigned node = 0; node < hgraph.NumVertices(); ++node) {
-        partition.setAssignedPartition(node, node % 3);
+        partition.SetAssignedPartition(node, node % 3);
     }
 
     partitioner.SetUseInitialSolution(true);
     partitioner.ComputePartitioning(partition);
 
-    BOOST_CHECK(partition.satisfiesBalanceConstraint());
-    int cutNetCost = partition.computeCutNetCost(), connectivityCost = partition.computeConnectivityCost();
+    BOOST_CHECK(partition.SatisfiesBalanceConstraint());
+    int cutNetCost = partition.ComputeCutNetCost(), connectivityCost = partition.ComputeConnectivityCost();
     BOOST_CHECK(connectivityCost >= cutNetCost);
 
-    instance.setMaxMemoryWeightExplicitly(37);
+    instance.SetMaxMemoryWeightExplicitly(37);
     partitioner.ComputePartitioning(partition);
-    BOOST_CHECK(partition.satisfiesBalanceConstraint());
-    BOOST_CHECK(cutNetCost == partition.computeCutNetCost());
-    BOOST_CHECK(connectivityCost == partition.computeConnectivityCost());
-    instance.setMaxMemoryWeightExplicitly(std::numeric_limits<int>::max());
+    BOOST_CHECK(partition.SatisfiesBalanceConstraint());
+    BOOST_CHECK(cutNetCost == partition.ComputeCutNetCost());
+    BOOST_CHECK(connectivityCost == partition.ComputeConnectivityCost());
+    instance.SetMaxMemoryWeightExplicitly(std::numeric_limits<int>::max());
 
     // ILP with replication
 
@@ -85,53 +85,53 @@ BOOST_AUTO_TEST_CASE(TestFull) {
     PartitioningWithReplication partitionRep(instance);
 
     partitionerRep.SetTimeLimitSeconds(60);
-    partitionerRep.ComputePartitioning(partition_rep);
+    partitionerRep.ComputePartitioning(partitionRep);
 
-    BOOST_CHECK(partitionRep.satisfiesBalanceConstraint());
-    BOOST_CHECK(partitionRep.computeConnectivityCost() == 0);
+    BOOST_CHECK(partitionRep.SatisfiesBalanceConstraint());
+    BOOST_CHECK(partitionRep.ComputeConnectivityCost() == 0);
 
     partitionerRep.SetUseInitialSolution(true);
     for (unsigned node = 0; node < hgraph.NumVertices(); ++node) {
         partitionRep.SetAssignedPartitions(node, {node % 3});
     }
 
-    partitionerRep.ComputePartitioning(partition_rep);
-    BOOST_CHECK(partitionRep.satisfiesBalanceConstraint());
-    BOOST_CHECK(partitionRep.computeConnectivityCost() == 0);
+    partitionerRep.ComputePartitioning(partitionRep);
+    BOOST_CHECK(partitionRep.SatisfiesBalanceConstraint());
+    BOOST_CHECK(partitionRep.ComputeConnectivityCost() == 0);
 
-    instance.setMaxWorkWeightExplicitly(60);
+    instance.SetMaxWorkWeightExplicitly(60);
     for (unsigned node = 0; node < hgraph.NumVertices(); ++node) {
         partitionRep.SetAssignedPartitions(node, {node % 3, (node + 1) % 3});
     }
 
-    partitionerRep.ComputePartitioning(partition_rep);
-    BOOST_CHECK(partitionRep.satisfiesBalanceConstraint());
-    BOOST_CHECK(partitionRep.computeConnectivityCost() == 0);
+    partitionerRep.ComputePartitioning(partitionRep);
+    BOOST_CHECK(partitionRep.SatisfiesBalanceConstraint());
+    BOOST_CHECK(partitionRep.ComputeConnectivityCost() == 0);
 
     // same tests with other replication formulation
-    instance.setMaxWorkWeightExplicitly(35);
-    partitioner_rep.SetReplicationModel(HypergraphPartitioningILPWithReplication<HypergraphImpl>::REPLICATION_MODEL_IN_ILP::GENERAL);
+    instance.SetMaxWorkWeightExplicitly(35);
+    partitionerRep.SetReplicationModel(HypergraphPartitioningILPWithReplication<HypergraphImpl>::ReplicationModelInIlp::GENERAL);
     partitionerRep.SetUseInitialSolution(false);
-    partitionerRep.ComputePartitioning(partition_rep);
+    partitionerRep.ComputePartitioning(partitionRep);
 
-    BOOST_CHECK(partitionRep.satisfiesBalanceConstraint());
-    BOOST_CHECK(partitionRep.computeConnectivityCost() == 0);
+    BOOST_CHECK(partitionRep.SatisfiesBalanceConstraint());
+    BOOST_CHECK(partitionRep.ComputeConnectivityCost() == 0);
 
     partitionerRep.SetUseInitialSolution(true);
     for (unsigned node = 0; node < hgraph.NumVertices(); ++node) {
         partitionRep.SetAssignedPartitions(node, {node % 3});
     }
 
-    partitionerRep.ComputePartitioning(partition_rep);
-    BOOST_CHECK(partitionRep.satisfiesBalanceConstraint());
-    BOOST_CHECK(partitionRep.computeConnectivityCost() == 0);
+    partitionerRep.ComputePartitioning(partitionRep);
+    BOOST_CHECK(partitionRep.SatisfiesBalanceConstraint());
+    BOOST_CHECK(partitionRep.ComputeConnectivityCost() == 0);
 
-    instance.setMaxWorkWeightExplicitly(60);
+    instance.SetMaxWorkWeightExplicitly(60);
     for (unsigned node = 0; node < hgraph.NumVertices(); ++node) {
         partitionRep.SetAssignedPartitions(node, {node % 3, (node + 1) % 3});
     }
 
-    partitionerRep.ComputePartitioning(partition_rep);
-    BOOST_CHECK(partitionRep.satisfiesBalanceConstraint());
-    BOOST_CHECK(partitionRep.computeConnectivityCost() == 0);
+    partitionerRep.ComputePartitioning(partitionRep);
+    BOOST_CHECK(partitionRep.SatisfiesBalanceConstraint());
+    BOOST_CHECK(partitionRep.ComputeConnectivityCost() == 0);
 };
