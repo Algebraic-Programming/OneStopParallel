@@ -186,16 +186,16 @@ bool ReadComputationalDagMartixMarketFormat(const std::string &filename, GraphT 
 // std::pair<bool, BspInstance> readBspInstance(const std::string &filename);
 
 // std::pair<bool, ComputationalDag>
-// readComputationalDagMartixMarketFormat(const std::string &filename,
+// ReadComputationalDagMartixMarketFormat(const std::string &filename,
 //                                        std::unordered_map<std::pair<VertexType, VertexType>, double, pair_hash> &mtx);
 
 // std::pair<bool, ComputationalDag>
-// readComputationalDagMartixMarketFormat(std::ifstream &infile,
+// ReadComputationalDagMartixMarketFormat(std::ifstream &infile,
 //                                        std::unordered_map<std::pair<VertexType, VertexType>, double, pair_hash> &mtx);
 
-// std::pair<bool, ComputationalDag> readComputationalDagMartixMarketFormat(const std::string &filename);
+// std::pair<bool, ComputationalDag> ReadComputationalDagMartixMarketFormat(const std::string &filename);
 
-// std::pair<bool, ComputationalDag> readComputationalDagMartixMarketFormat(std::ifstream &infile);
+// std::pair<bool, ComputationalDag> ReadComputationalDagMartixMarketFormat(std::ifstream &infile);
 
 // std::pair<bool, ComputationalDag> readCombinedSptrsvSpmvDagMartixMarket(const std::string &firstFilename, const std::string &secondFilename);
 

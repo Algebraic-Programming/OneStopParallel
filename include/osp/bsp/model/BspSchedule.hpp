@@ -610,7 +610,7 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
         for (unsigned step = 0; step < numberOfSupersteps_; step++) {
             for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); proc++) {
                 VMemwT<GraphT> memory = 0;
-                for (const auto &node : setSchedule.step_processor_vertices[step][proc]) {
+                for (const auto &node : setSchedule.stepProcessorVertices_[step][proc]) {
                     memory += instance_->GetComputationalDag().VertexMemWeight(node);
                 }
 
@@ -677,7 +677,7 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
         for (unsigned step = 0; step < numberOfSupersteps_; step++) {
             for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); proc++) {
                 VMemwT<GraphT> memory = 0;
-                for (const auto &node : setSchedule.step_processor_vertices[step][proc]) {
+                for (const auto &node : setSchedule.stepProcessorVertices_[step][proc]) {
                     memory += instance_->GetComputationalDag().VertexMemWeight(node)
                               + instance_->GetComputationalDag().VertexCommWeight(node);
 
@@ -705,7 +705,7 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
                 std::unordered_set<VertexIdxT<GraphT>> nodesWithIncomingEdges;
 
                 VMemwT<GraphT> memory = 0;
-                for (const auto &node : setSchedule.step_processor_vertices[step][proc]) {
+                for (const auto &node : setSchedule.stepProcessorVertices_[step][proc]) {
                     memory += instance_->GetComputationalDag().VertexCommWeight(node);
 
                     for (const auto &parent : instance_->GetComputationalDag().Parents(node)) {
@@ -735,7 +735,7 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
                 std::unordered_set<VertexIdxT<GraphT>> nodesWithIncomingEdges;
 
                 VMemwT<GraphT> memory = 0;
-                for (const auto &node : setSchedule.step_processor_vertices[step][proc]) {
+                for (const auto &node : setSchedule.stepProcessorVertices_[step][proc]) {
                     if (IsSource(node, instance_->GetComputationalDag())) {
                         memory += instance_->GetComputationalDag().VertexMemWeight(node);
                     }

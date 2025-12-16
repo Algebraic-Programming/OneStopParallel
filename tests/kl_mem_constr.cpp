@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(KlLocalMemconst) {
         std::cout << cwd << std::endl;
     }
 
-    GreedyBspScheduler<Graph, local_memory_constraint<Graph>> testScheduler;
+    GreedyBspScheduler<Graph, LocalMemoryConstraint<Graph>> testScheduler;
 
     for (auto &filenameGraph : filenamesGraph) {
         std::cout << filenameGraph << std::endl;
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(KlLocalMemconst) {
 
             BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
             BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
-            BOOST_CHECK(schedule.satisfiesMemoryConstraints());
+            BOOST_CHECK(schedule.SatisfiesMemoryConstraints());
 
             kl_total_comm_improver_local_mem_constr<Graph> kl;
 
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(KlLocalMemconst) {
 
             BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
             BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
-            BOOST_CHECK(schedule.satisfiesMemoryConstraints());
+            BOOST_CHECK(schedule.SatisfiesMemoryConstraints());
         }
     }
 }

@@ -110,7 +110,7 @@ struct LocalMemoryConstraint {
 template <typename GraphT>
 struct PersistentTransientMemoryConstraint {
     static_assert(std::is_convertible_v<VCommwT<GraphT>, VMemwT<GraphT>>,
-                  "persistent_transient_memory_constraint requires that memory and communication weights are convertible.");
+                  "PersistentTransientMemoryConstraint requires that memory and communication weights are convertible.");
 
     using GraphImplT = GraphT;
 
@@ -214,7 +214,7 @@ inline constexpr bool IsMemoryConstraintScheduleV = IsMemoryConstraintSchedule<T
 template <typename GraphT>
 struct LocalInOutMemoryConstraint {
     static_assert(std::is_convertible_v<VCommwT<GraphT>, VMemwT<GraphT>>,
-                  "local_in_out_memory_constraint requires that memory and communication weights are convertible.");
+                  "LocalInOutMemoryConstraint requires that memory and communication weights are convertible.");
 
     using GraphImplT = GraphT;
 
@@ -329,7 +329,7 @@ struct LocalIncEdgesMemoryConstraint {
 template <typename GraphT>
 struct LocalSourcesIncEdgesMemoryConstraint {
     static_assert(std::is_convertible_v<VCommwT<GraphT>, VMemwT<GraphT>>,
-                  "local_sources_inc_edges_memory_constraint requires that memory and communication weights are convertible.");
+                  "LocalSourcesIncEdgesMemoryConstraint requires that memory and communication weights are convertible.");
 
     using GraphImplT = GraphT;
 

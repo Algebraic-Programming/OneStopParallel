@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(TestMtxComputationalDagVectorImpl) {
     ComputationalDagVectorImplDefUnsignedT graph;
 
     bool status
-        = file_reader::readComputationalDagMartixMarketFormat((cwd / "data/mtx_tests/ErdosRenyi_8_19_A.mtx").string(), graph);
+        = file_reader::ReadComputationalDagMartixMarketFormat((cwd / "data/mtx_tests/ErdosRenyi_8_19_A.mtx").string(), graph);
 
     std::cout << "STATUS:" << status << std::endl;
     BOOST_CHECK(status);
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(TestMtxBoostGraph) {
     BoostGraphIntT graph;
 
     bool status
-        = file_reader::readComputationalDagMartixMarketFormat((cwd / "data/mtx_tests/ErdosRenyi_8_19_A.mtx").string(), graph);
+        = file_reader::ReadComputationalDagMartixMarketFormat((cwd / "data/mtx_tests/ErdosRenyi_8_19_A.mtx").string(), graph);
 
     std::cout << "STATUS:" << status << std::endl;
     BOOST_CHECK(status);
@@ -220,7 +220,7 @@ BOOST_AUTO_TEST_CASE(TestArchSmpl) {
     BOOST_CHECK_EQUAL(arch.NumberOfProcessors(), 3);
     BOOST_CHECK_EQUAL(arch.CommunicationCosts(), 3);
     BOOST_CHECK_EQUAL(arch.SynchronisationCosts(), 5);
-    BOOST_CHECK_EQUAL(arch.SetMemoryConstraintType(), MemoryConstraintType::NONE);
+    BOOST_CHECK_EQUAL(arch.GetMemoryConstraintType(), MemoryConstraintType::NONE);
 }
 
 BOOST_AUTO_TEST_CASE(TestArchSmplSigned) {
@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_CASE(TestArchSmplSigned) {
     BOOST_CHECK_EQUAL(arch.NumberOfProcessors(), 3);
     BOOST_CHECK_EQUAL(arch.CommunicationCosts(), 3);
     BOOST_CHECK_EQUAL(arch.SynchronisationCosts(), 5);
-    BOOST_CHECK_EQUAL(arch.SetMemoryConstraintType(), MemoryConstraintType::NONE);
+    BOOST_CHECK_EQUAL(arch.GetMemoryConstraintType(), MemoryConstraintType::NONE);
 }
 
 BOOST_AUTO_TEST_CASE(TestKMeans) {

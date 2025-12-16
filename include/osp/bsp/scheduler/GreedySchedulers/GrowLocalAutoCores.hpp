@@ -64,7 +64,7 @@ class GrowLocalAutoCores : public Scheduler<GraphT> {
     static_assert(not useMemoryConstraint_
                       or not(std::is_same_v<MemoryConstraintT, PersistentTransientMemoryConstraint<GraphT>>
                              or std::is_same_v<MemoryConstraintT, GlobalMemoryConstraint<GraphT>>),
-                  "MemoryConstraintT must not be persistent_transient_memory_constraint or global_memory_constraint. Not "
+                  "MemoryConstraintT must not be PersistentTransientMemoryConstraint or global_memory_constraint. Not "
                   "supported in GrowLocalAutoCores.");
 
     MemoryConstraintT localMemoryConstraint_;

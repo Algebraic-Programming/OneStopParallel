@@ -66,7 +66,7 @@ class EtfScheduler : public Scheduler<GraphT> {
     constexpr static bool useMemoryConstraint_ = IsMemoryConstraintV<MemoryConstraintT>;
 
     static_assert(not useMemoryConstraint_ || std::is_same_v<MemoryConstraintT, PersistentTransientMemoryConstraint<GraphT>>,
-                  "EtfScheduler implements only persistent_transient_memory_constraint.");
+                  "EtfScheduler implements only PersistentTransientMemoryConstraint.");
 
     MemoryConstraintT memoryConstraint_;
 
