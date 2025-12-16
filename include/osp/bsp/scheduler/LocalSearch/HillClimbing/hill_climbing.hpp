@@ -40,7 +40,7 @@ class HillClimbingScheduler : public ImprovementScheduler<GraphT> {
   public:
     enum Direction { EARLIER = 0, AT, LATER };
 
-    static const int NumDirections_ = 3;
+    static const int numDirections_ = 3;
 
     // aux structure for efficiently storing the changes incurred by a potential HC step
     struct StepAuxData {
@@ -68,7 +68,7 @@ class HillClimbingScheduler : public ImprovementScheduler<GraphT> {
     std::vector<std::vector<typename std::set<std::pair<CostType, unsigned>>::iterator>> workCostPointer_, commCostPointer_;
     std::vector<typename std::list<VertexIdx>::iterator> supStepListPointer_;
     std::pair<int, typename std::list<std::pair<VertexIdx, unsigned>>::iterator> nextMove_;
-    bool HCwithLatency_ = true;
+    bool hcWithLatency_ = true;
 
     // for improved candidate selection
     std::deque<std::tuple<VertexIdx, unsigned, int>> promisingMoves_;
@@ -191,11 +191,11 @@ void HillClimbingScheduler<GraphT>::Init() {
 
     // Movement options
     canMove_.clear();
-    canMove_.resize(NumDirections_, std::vector<std::vector<bool>>(n, std::vector<bool>(p, false)));
+    canMove_.resize(numDirections_, std::vector<std::vector<bool>>(n, std::vector<bool>(p, false)));
     moveOptions_.clear();
-    moveOptions_.resize(NumDirections_);
+    moveOptions_.resize(numDirections_);
     movePointer_.clear();
-    movePointer_.resize(NumDirections_,
+    movePointer_.resize(numDirections_,
                        std::vector<std::vector<typename std::list<std::pair<VertexIdx, unsigned>>::iterator>>(
                            n, std::vector<typename std::list<std::pair<VertexIdx, unsigned>>::iterator>(p)));
 
@@ -838,7 +838,7 @@ int HillClimbingScheduler<GraphT>::MoveCostChange(const VertexIdx node, unsigned
     bool lastAffectedEmpty = false;
     for (const unsigned sstep : affectedSteps) {
         CostType oldMax = schedule_->GetInstance().GetArchitecture().CommunicationCosts() * commCostList_[sstep].rbegin()->first;
-        CostType oldSync = (HCwithLatency_ && oldMax > 0) ? schedule_->GetInstance().GetArchitecture().SynchronisationCosts() : 0;
+        CostType oldSync = (hcWithLatency_ && oldMax > 0) ? schedule_->GetInstance().GetArchitecture().SynchronisationCosts() : 0;
 
         CostType newMax = 0;
         for (unsigned j = 0; j < schedule_->GetInstance().GetArchitecture().NumberOfProcessors(); ++j) {
@@ -856,7 +856,7 @@ int HillClimbingScheduler<GraphT>::MoveCostChange(const VertexIdx node, unsigned
             }
         }
         newMax *= schedule_->GetInstance().GetArchitecture().CommunicationCosts();
-        CostType newSync = (HCwithLatency_ && newMax > 0) ? schedule_->GetInstance().GetArchitecture().SynchronisationCosts() : 0;
+        CostType newSync = (hcWithLatency_ && newMax > 0) ? schedule_->GetInstance().GetArchitecture().SynchronisationCosts() : 0;
 
         if (newMax == 0) {
             if (schedule_->GetStaleness() == 1) {
@@ -1015,7 +1015,7 @@ bool HillClimbingScheduler<GraphT>::Improve() {
     while (true) {
         bool reachedBeginning = false;
         while (nextMove_.second == moveOptions_[static_cast<unsigned>(nextMove_.first)].end()) {
-            dir = (nextMove_.first + 1) % NumDirections_;
+            dir = (nextMove_.first + 1) % numDirections_;
             if (dir == startingDir) {
                 reachedBeginning = true;
                 break;

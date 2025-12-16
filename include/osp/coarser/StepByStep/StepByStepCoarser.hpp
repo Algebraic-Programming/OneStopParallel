@@ -189,12 +189,12 @@ std::vector<VertexIdxT<GraphT>> StepByStepCoarser<GraphT>::GenerateVertexContrac
 
         // choose edges to contract in this step
         if (coarseningStrategy_ == CoarseningStrategy::EDGE_BY_EDGE) {
-            std::vector<EdgeToContract> candidates_ = CreateEdgeCandidateList();
-            if (candidates_.empty()) {
+            std::vector<EdgeToContract> candidates = CreateEdgeCandidateList();
+            if (candidates.empty()) {
                 std::cout << "Error: no more edges to contract" << std::endl;
                 break;
             }
-            std::pair<VertexIdx, VertexIdx> chosenEdge = PickEdgeToContract(candidates_);
+            std::pair<VertexIdx, VertexIdx> chosenEdge = PickEdgeToContract(candidates);
             edgesToContract.push_back(chosenEdge);
 
             // Update far-away edges that become uncontractable now
