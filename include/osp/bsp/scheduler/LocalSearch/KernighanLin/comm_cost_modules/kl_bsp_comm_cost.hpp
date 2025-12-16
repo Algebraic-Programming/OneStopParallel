@@ -88,14 +88,14 @@ struct FastDeltaTracker {
     }
 };
 
-template <typename GraphT, typename CostT, typename MemoryConstraintT, unsigned WindowSize = 1>
+template <typename GraphT, typename CostT, typename MemoryConstraintT, unsigned windowSize = 1>
 struct KlBspCommCostFunction {
     using VertexType = VertexIdxT<GraphT>;
     using KlMove = KlMoveStruct<CostT, VertexType>;
     using KlGainUpdateInfo = KlUpdateInfo<VertexType>;
     using CommWeightT = VCommwT<GraphT>;
 
-    constexpr static unsigned windowRange_ = 2 * WindowSize + 1;
+    constexpr static unsigned windowRange_ = 2 * windowSize + 1;
     constexpr static bool isMaxCommCostFunction_ = true;
 
     KlActiveSchedule<GraphT, CostT, MemoryConstraintT> *activeSchedule_;
@@ -116,11 +116,11 @@ struct KlBspCommCostFunction {
     inline bool IsCompatible(VertexType node, unsigned proc) { return activeSchedule_->GetInstance().IsCompatible(node, proc); }
 
     inline unsigned StartIdx(const unsigned nodeStep, const unsigned startStep) {
-        return (nodeStep < WindowSize + startStep) ? WindowSize - (nodeStep - startStep) : 0;
+        return (nodeStep < windowSize + startStep) ? windowSize - (nodeStep - startStep) : 0;
     }
 
     inline unsigned EndIdx(const unsigned nodeStep, const unsigned endStep) {
-        return (nodeStep + WindowSize <= endStep) ? windowRange_ : windowRange_ - (nodeStep + WindowSize - endStep);
+        return (nodeStep + windowSize <= endStep) ? windowRange_ : windowRange_ - (nodeStep + windowSize - endStep);
     }
 
     void Initialize(KlActiveSchedule<GraphT, CostT, MemoryConstraintT> &sched, CompatibleProcessorRange<GraphT> &pRange) {
@@ -233,19 +233,19 @@ struct KlBspCommCostFunction {
 
             if (targetStep < nodeStep + (targetProc != nodeProc)) {
                 const unsigned diff = nodeStep - targetStep;
-                const unsigned bound = WindowSize > diff ? WindowSize - diff : 0;
+                const unsigned bound = windowSize > diff ? windowSize - diff : 0;
                 unsigned idx = nodeStartIdx;
                 for (; idx < bound; idx++) {
                     for (const unsigned p : procRange_->CompatibleProcessorsVertex(node)) {
                         affinityTableNode[p][idx] -= reward;
                     }
                 }
-                if (WindowSize >= diff && IsCompatible(node, targetProc)) {
+                if (windowSize >= diff && IsCompatible(node, targetProc)) {
                     affinityTableNode[targetProc][idx] -= reward;
                 }
             } else {
                 const unsigned diff = targetStep - nodeStep;
-                unsigned idx = WindowSize + diff;
+                unsigned idx = windowSize + diff;
                 if (idx < windowBound && IsCompatible(node, targetProc)) {
                     affinityTableNode[targetProc][idx] -= penalty;
                 }
@@ -263,7 +263,7 @@ struct KlBspCommCostFunction {
 
             if (sourceStep < nodeStep + (sourceProc == nodeProc)) {
                 const unsigned diff = nodeStep - sourceStep;
-                const unsigned bound = WindowSize >= diff ? WindowSize - diff + 1 : 0;
+                const unsigned bound = windowSize >= diff ? windowSize - diff + 1 : 0;
                 unsigned idx = nodeStartIdx;
                 for (; idx < bound; idx++) {
                     for (const unsigned p : procRange_->CompatibleProcessorsVertex(node)) {
@@ -275,7 +275,7 @@ struct KlBspCommCostFunction {
                 }
             } else {
                 const unsigned diff = sourceStep - nodeStep;
-                unsigned idx = std::min(WindowSize + diff, windowBound);
+                unsigned idx = std::min(windowSize + diff, windowBound);
                 if (idx < windowBound && IsCompatible(node, sourceProc)) {
                     affinityTableNode[sourceProc][idx] -= reward;
                 }
@@ -395,7 +395,7 @@ struct KlBspCommCostFunction {
 
             // Iterate Window (s_to)
             for (unsigned s_to_idx = nodeStartIdx; s_to_idx < windowBound; ++s_to_idx) {
-                unsigned s_to = nodeStep + s_to_idx - WindowSize;
+                unsigned s_to = nodeStep + s_to_idx - windowSize;
 
                 // Apply Outgoing Deltas for this specific step s_to
                 for (const auto &[v_proc, cost] : scratch.childCostBuffer_) {
@@ -540,7 +540,7 @@ struct KlBspCommCostFunction {
 
             if (move.fromStep_ < targetStep + (move.fromProc_ == targetProc)) {
                 const unsigned diff = targetStep - move.fromStep_;
-                const unsigned bound = WindowSize >= diff ? WindowSize - diff + 1 : 0;
+                const unsigned bound = windowSize >= diff ? windowSize - diff + 1 : 0;
                 unsigned idx = targetStartIdx;
                 for (; idx < bound; idx++) {
                     for (const unsigned p : procRange_->CompatibleProcessorsVertex(target)) {
@@ -555,7 +555,7 @@ struct KlBspCommCostFunction {
             } else {
                 const unsigned diff = move.fromStep_ - targetStep;
                 const unsigned windowBound = EndIdx(targetStep, endStep);
-                unsigned idx = std::min(WindowSize + diff, windowBound);
+                unsigned idx = std::min(windowSize + diff, windowBound);
 
                 if (idx < windowBound && IsCompatible(target, move.fromProc_)) {
                     affinityTable[move.fromProc_][idx] += reward;
@@ -573,7 +573,7 @@ struct KlBspCommCostFunction {
             if (move.toStep_ < targetStep + (move.toProc_ == targetProc)) {
                 unsigned idx = targetStartIdx;
                 const unsigned diff = targetStep - move.toStep_;
-                const unsigned bound = WindowSize >= diff ? WindowSize - diff + 1 : 0;
+                const unsigned bound = windowSize >= diff ? windowSize - diff + 1 : 0;
                 for (; idx < bound; idx++) {
                     for (const unsigned p : procRange_->CompatibleProcessorsVertex(target)) {
                         affinityTable[p][idx] += penalty;
@@ -587,7 +587,7 @@ struct KlBspCommCostFunction {
             } else {
                 const unsigned diff = move.toStep_ - targetStep;
                 const unsigned windowBound = EndIdx(targetStep, endStep);
-                unsigned idx = std::min(WindowSize + diff, windowBound);
+                unsigned idx = std::min(windowSize + diff, windowBound);
 
                 if (idx < windowBound && IsCompatible(target, move.toProc_)) {
                     affinityTable[move.toProc_][idx] -= reward;
@@ -625,7 +625,7 @@ struct KlBspCommCostFunction {
 
             if (move.fromStep_ < sourceStep + (move.fromProc_ != sourceProc)) {
                 const unsigned diff = sourceStep - move.fromStep_;
-                const unsigned bound = WindowSize > diff ? WindowSize - diff : 0;
+                const unsigned bound = windowSize > diff ? windowSize - diff : 0;
                 unsigned idx = sourceStartIdx;
                 for (; idx < bound; idx++) {
                     for (const unsigned p : procRange_->CompatibleProcessorsVertex(source)) {
@@ -633,13 +633,13 @@ struct KlBspCommCostFunction {
                     }
                 }
 
-                if (WindowSize >= diff && IsCompatible(source, move.fromProc_)) {
+                if (windowSize >= diff && IsCompatible(source, move.fromProc_)) {
                     affinityTableSource[move.fromProc_][idx] += reward;
                 }
 
             } else {
                 const unsigned diff = move.fromStep_ - sourceStep;
-                unsigned idx = WindowSize + diff;
+                unsigned idx = windowSize + diff;
 
                 if (idx < windowBound && IsCompatible(source, move.fromProc_)) {
                     affinityTableSource[move.fromProc_][idx] += penalty;
@@ -654,7 +654,7 @@ struct KlBspCommCostFunction {
 
             if (move.toStep_ < sourceStep + (move.toProc_ != sourceProc)) {
                 const unsigned diff = sourceStep - move.toStep_;
-                const unsigned bound = WindowSize > diff ? WindowSize - diff : 0;
+                const unsigned bound = windowSize > diff ? windowSize - diff : 0;
                 unsigned idx = sourceStartIdx;
                 for (; idx < bound; idx++) {
                     for (const unsigned p : procRange_->CompatibleProcessorsVertex(source)) {
@@ -662,13 +662,13 @@ struct KlBspCommCostFunction {
                     }
                 }
 
-                if (WindowSize >= diff && IsCompatible(source, move.toProc_)) {
+                if (windowSize >= diff && IsCompatible(source, move.toProc_)) {
                     affinityTableSource[move.toProc_][idx] -= reward;
                 }
 
             } else {
                 const unsigned diff = move.toStep_ - sourceStep;
-                unsigned idx = WindowSize + diff;
+                unsigned idx = windowSize + diff;
 
                 if (idx < windowBound && IsCompatible(source, move.toProc_)) {
                     affinityTableSource[move.toProc_][idx] -= penalty;

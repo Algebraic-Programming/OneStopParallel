@@ -29,21 +29,21 @@ namespace osp {
 
 template <typename GraphT,
           typename MemoryConstraintT = NoLocalSearchMemoryConstraint,
-          unsigned WindowSize = 1,
+          unsigned windowSize = 1,
           bool UseNodeCommunicationCostsArg = true>
 using KlTotalCommImproverMt
     = KlImproverMt<GraphT,
-                   KlTotalCommCostFunction<GraphT, double, MemoryConstraintT, WindowSize, UseNodeCommunicationCostsArg>,
+                   KlTotalCommCostFunction<GraphT, double, MemoryConstraintT, windowSize, UseNodeCommunicationCostsArg>,
                    MemoryConstraintT,
-                   WindowSize,
+                   windowSize,
                    double>;
 
-template <typename GraphT, typename MemoryConstraintT = NoLocalSearchMemoryConstraint, unsigned WindowSize = 1>
+template <typename GraphT, typename MemoryConstraintT = NoLocalSearchMemoryConstraint, unsigned windowSize = 1>
 using KlTotalLambdaCommImproverMt
-    = KlImproverMt<GraphT, KlHyperTotalCommCostFunction<GraphT, double, MemoryConstraintT, WindowSize>, MemoryConstraintT, WindowSize, double>;
+    = KlImproverMt<GraphT, KlHyperTotalCommCostFunction<GraphT, double, MemoryConstraintT, windowSize>, MemoryConstraintT, windowSize, double>;
 
-template <typename GraphT, typename MemoryConstraintT = NoLocalSearchMemoryConstraint, unsigned WindowSize = 1>
+template <typename GraphT, typename MemoryConstraintT = NoLocalSearchMemoryConstraint, unsigned windowSize = 1>
 using KlBspCommImproverMt
-    = KlImproverMt<GraphT, KlBspCommCostFunction<GraphT, double, MemoryConstraintT, WindowSize>, MemoryConstraintT, WindowSize, double>;
+    = KlImproverMt<GraphT, KlBspCommCostFunction<GraphT, double, MemoryConstraintT, windowSize>, MemoryConstraintT, windowSize, double>;
 
 }    // namespace osp

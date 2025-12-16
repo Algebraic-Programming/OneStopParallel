@@ -56,21 +56,21 @@ class EftSubgraphScheduler {
   private:
     static constexpr bool verbose_ = false;
 
-    using job_id_t = VertexIdxT<GraphT>;
+    using JobIdT = VertexIdxT<GraphT>;
 
     VWorkwT<GraphT> minWorkPerProcessor_ = 2000;
 
     enum class JobStatus { WAITING, READY, RUNNING, COMPLETED };
 
     struct Job {
-        job_id_t id_;
+        JobIdT id_;
 
         std::vector<VWorkwT<GraphT>> requiredProcTypes_;
         VWorkwT<GraphT> totalWork_;
         unsigned multiplicity_ = 1;
         unsigned maxNumProcs_ = 1;
 
-        job_id_t inDegreeCurrent_ = 0;
+        JobIdT inDegreeCurrent_ = 0;
 
         JobStatus status_ = JobStatus::WAITING;
         VWorkwT<GraphT> upwardRank_ = 0.0;
@@ -110,7 +110,7 @@ class EftSubgraphScheduler {
         if constexpr (verbose_) {
             std::cout << "Initializing jobs..." << std::endl;
         }
-        job_id_t idx = 0;
+        JobIdT idx = 0;
         for (auto &job : jobs_) {
             job.id_ = idx;
             job.inDegreeCurrent_ = graph.InDegree(idx);
@@ -156,7 +156,7 @@ class EftSubgraphScheduler {
         double currentTime = 0.0;
         std::vector<unsigned> availableWorkers = instance.GetArchitecture().GetProcessorTypeCount();
         const size_t numWorkerTypes = availableWorkers.size();
-        std::vector<job_id_t> runningJobs;
+        std::vector<JobIdT> runningJobs;
         unsigned completedCount = 0;
         const auto &graph = instance.GetComputationalDag();
 
@@ -312,7 +312,7 @@ class EftSubgraphScheduler {
             }
 
             double nextEventTime = std::numeric_limits<double>::max();
-            for (job_id_t id : runningJobs) {
+            for (JobIdT id : runningJobs) {
                 nextEventTime = std::min(nextEventTime, jobs_.at(id).finishTime_);
             }
             if constexpr (verbose_) {
@@ -339,8 +339,8 @@ class EftSubgraphScheduler {
                     if constexpr (verbose_) {
                         std::cout << "  - Updating successors..." << std::endl;
                     }
-                    for (const auto &successor_id : graph.Children(job.id_)) {
-                        Job &successorJob = jobs_.at(successor_id);
+                    for (const auto &successorId : graph.Children(job.id_)) {
+                        Job &successorJob = jobs_.at(successorId);
                         successorJob.inDegreeCurrent_--;
                         if (successorJob.inDegreeCurrent_ == 0) {
                             successorJob.status_ = JobStatus::READY;

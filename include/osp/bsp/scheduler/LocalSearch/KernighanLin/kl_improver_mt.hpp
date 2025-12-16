@@ -27,9 +27,9 @@ namespace osp {
 template <typename GraphT,
           typename CommCostFunctionT,
           typename MemoryConstraintT = NoLocalSearchMemoryConstraint,
-          unsigned WindowSize = 1,
+          unsigned windowSize = 1,
           typename CostT = double>
-class KlImproverMt : public KlImprover<GraphT, CommCostFunctionT, MemoryConstraintT, WindowSize, CostT> {
+class KlImproverMt : public KlImprover<GraphT, CommCostFunctionT, MemoryConstraintT, windowSize, CostT> {
   protected:
     unsigned maxNumThreads_ = std::numeric_limits<unsigned>::max();
 
@@ -97,9 +97,9 @@ class KlImproverMt : public KlImprover<GraphT, CommCostFunctionT, MemoryConstrai
     }
 
   public:
-    KlImproverMt() : KlImprover<GraphT, CommCostFunctionT, MemoryConstraintT, WindowSize, CostT>() {}
+    KlImproverMt() : KlImprover<GraphT, CommCostFunctionT, MemoryConstraintT, windowSize, CostT>() {}
 
-    explicit KlImproverMt(unsigned seed) : KlImprover<GraphT, CommCostFunctionT, MemoryConstraintT, WindowSize, CostT>(seed) {}
+    explicit KlImproverMt(unsigned seed) : KlImprover<GraphT, CommCostFunctionT, MemoryConstraintT, windowSize, CostT>(seed) {}
 
     virtual ~KlImproverMt() = default;
 

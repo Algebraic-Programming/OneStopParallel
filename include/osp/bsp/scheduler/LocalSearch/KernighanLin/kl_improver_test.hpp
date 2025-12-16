@@ -25,18 +25,18 @@ namespace osp {
 template <typename GraphT,
           typename CommCostFunctionT,
           typename MemoryConstraintT = NoLocalSearchMemoryConstraint,
-          unsigned WindowSize = 1,
+          unsigned windowSize = 1,
           typename CostT = double>
-class KlImproverTest : public KlImprover<GraphT, CommCostFunctionT, MemoryConstraintT, WindowSize, CostT> {
+class KlImproverTest : public KlImprover<GraphT, CommCostFunctionT, MemoryConstraintT, windowSize, CostT> {
     using VertexType = VertexIdxT<GraphT>;
     using KlMove = KlMoveStruct<CostT, VertexType>;
     using HeapDatastructure = MaxPairingHeap<VertexType, KlMove>;
     using ActiveSchedule = KlActiveSchedule<GraphT, CostT, MemoryConstraintT>;
     using KlGainUpdateInfo = KlUpdateInfo<VertexType>;
-    using NodeSelectionContainer = AdaptiveAffinityTable<GraphT, CostT, ActiveSchedule, WindowSize>;
+    using NodeSelectionContainer = AdaptiveAffinityTable<GraphT, CostT, ActiveSchedule, windowSize>;
 
   public:
-    KlImproverTest() : KlImprover<GraphT, CommCostFunctionT, MemoryConstraintT, WindowSize, CostT>() {
+    KlImproverTest() : KlImprover<GraphT, CommCostFunctionT, MemoryConstraintT, windowSize, CostT>() {
         this->threadDataVec_.resize(1);
         this->threadFinishedVec_.assign(1, true);
     }

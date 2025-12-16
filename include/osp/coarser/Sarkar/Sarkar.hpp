@@ -368,11 +368,11 @@ VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::AllChildrenContraction(
         if (shouldSkip) {
             continue;
         }
-        VWorkwT<GraphTIn> combined_weight = graph.VertexWorkWeight(groupHead);
+        VWorkwT<GraphTIn> combinedWeight = graph.VertexWorkWeight(groupHead);
         for (const VertexType &groupFoot : graph.Children(groupHead)) {
-            combined_weight += graph.VertexWorkWeight(groupFoot);
+            combinedWeight += graph.VertexWorkWeight(groupFoot);
         }
-        if (combined_weight > params_.maxWeight_) {
+        if (combinedWeight > params_.maxWeight_) {
             continue;
         }
 
@@ -514,11 +514,11 @@ VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::AllParentsContraction(
         if (shouldSkip) {
             continue;
         }
-        VWorkwT<GraphTIn> combined_weight = graph.VertexWorkWeight(groupFoot);
+        VWorkwT<GraphTIn> combinedWeight = graph.VertexWorkWeight(groupFoot);
         for (const VertexType &groupHead : graph.Parents(groupFoot)) {
-            combined_weight += graph.VertexWorkWeight(groupHead);
+            combinedWeight += graph.VertexWorkWeight(groupHead);
         }
-        if (combined_weight > params_.maxWeight_) {
+        if (combinedWeight > params_.maxWeight_) {
             continue;
         }
 
@@ -721,11 +721,11 @@ VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::SomeChildrenContraction(
                 }
             }
 
-            const VWorkwT<GraphTIn> t_dist = topDist[*chldIterStart];
-            const VWorkwT<GraphTIn> b_dist = botDist[*chldIterStart];
+            const VWorkwT<GraphTIn> tDist = topDist[*chldIterStart];
+            const VWorkwT<GraphTIn> bDist = botDist[*chldIterStart];
             auto chldIterEnd = chldIterStart;
-            while (chldIterEnd != childrenPriority.cend() && t_dist == topDist[*chldIterEnd]
-                   && b_dist == botDist[*chldIterEnd]) {
+            while (chldIterEnd != childrenPriority.cend() && tDist == topDist[*chldIterEnd]
+                   && bDist == botDist[*chldIterEnd]) {
                 if constexpr (HasTypedVerticesV<GraphTIn>) {
                     if (graph.VertexType(groupHead) != graph.VertexType(*chldIterEnd)) {
                         break;
@@ -908,10 +908,10 @@ VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::SomeParentsContraction(
                 }
             }
 
-            const VWorkwT<GraphTIn> t_dist = topDist[*parIterStart];
-            const VWorkwT<GraphTIn> b_dist = botDist[*parIterStart];
+            const VWorkwT<GraphTIn> tDist = topDist[*parIterStart];
+            const VWorkwT<GraphTIn> bDist = botDist[*parIterStart];
             auto parIterEnd = parIterStart;
-            while (parIterEnd != parentsPriority.cend() && t_dist == topDist[*parIterEnd] && b_dist == botDist[*parIterEnd]) {
+            while (parIterEnd != parentsPriority.cend() && tDist == topDist[*parIterEnd] && bDist == botDist[*parIterEnd]) {
                 if constexpr (HasTypedVerticesV<GraphTIn>) {
                     if (graph.VertexType(groupFoot) != graph.VertexType(*parIterEnd)) {
                         break;
