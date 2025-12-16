@@ -1796,15 +1796,15 @@ void KlImprover<GraphT, CommCostFunctionT, MemoryConstraintT, windowSize, CostT>
     HeapDatastructure tempHeap = maxGainHeap;    // requires copy constructor
 
     std::cout << "heap current size: " << tempHeap.size() << std::endl;
-    const auto &topVal = tempHeap.GetValue(tempHeap.top());
+    const auto &topVal = tempHeap.GetValue(tempHeap.Top());
     std::cout << "heap top node " << topVal.node_ << " gain " << topVal.gain_ << std::endl;
 
     unsigned count = 0;
-    while (!tempHeap.is_empty() && count++ < 15) {
-        const auto &val = tempHeap.GetValue(tempHeap.top());
+    while (!tempHeap.IsEmpty() && count++ < 15) {
+        const auto &val = tempHeap.GetValue(tempHeap.Top());
         std::cout << "node " << val.node_ << " gain " << val.gain_ << " to proc " << val.toProc_ << " to step " << val.toStep_
                   << std::endl;
-        tempHeap.pop();
+        tempHeap.Pop();
     }
 }
 
