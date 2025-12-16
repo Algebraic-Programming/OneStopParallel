@@ -479,11 +479,11 @@ struct KlHyperTotalCommCostFunction {
                             continue;
                         }
 
-                        const CostT comm_cost = ChangeCommCost(instance_->CommunicationCosts(p, move.fromProc_),
+                        const CostT commCost = ChangeCommCost(instance_->CommunicationCosts(p, move.fromProc_),
                                                                instance_->CommunicationCosts(sourceProc, move.fromProc_),
                                                                commGain);
                         for (unsigned idx = sourceStartIdx; idx < windowBound; idx++) {
-                            affinityTableSource[p][idx] -= comm_cost;
+                            affinityTableSource[p][idx] -= commCost;
                         }
                     }
                 }
@@ -496,11 +496,11 @@ struct KlHyperTotalCommCostFunction {
                             continue;
                         }
 
-                        const CostT comm_cost = ChangeCommCost(instance_->CommunicationCosts(p, move.toProc_),
+                        const CostT commCost = ChangeCommCost(instance_->CommunicationCosts(p, move.toProc_),
                                                                instance_->CommunicationCosts(sourceProc, move.toProc_),
                                                                commGain);
                         for (unsigned idx = sourceStartIdx; idx < windowBound; idx++) {
-                            affinityTableSource[p][idx] += comm_cost;
+                            affinityTableSource[p][idx] += commCost;
                         }
                     }
                 }
@@ -579,10 +579,10 @@ struct KlHyperTotalCommCostFunction {
 
             for (const auto lambdaPair : nodeLambdaMap_.IterateProcEntries(node)) {
                 const auto &lambdaProc = lambdaPair.first;
-                const CostT comm_cost = ChangeCommCost(
+                const CostT commCost = ChangeCommCost(
                     instance_->CommunicationCosts(p, lambdaProc), instance_->CommunicationCosts(nodeProc, lambdaProc), commGain);
                 for (unsigned idx = nodeStartIdx; idx < windowBound; idx++) {
-                    affinityTableNode[p][idx] += comm_cost;
+                    affinityTableNode[p][idx] += commCost;
                 }
             }
         }

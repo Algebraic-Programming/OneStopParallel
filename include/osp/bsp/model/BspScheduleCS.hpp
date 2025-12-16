@@ -384,14 +384,14 @@ class BspScheduleCS : public BspSchedule<GraphT> {
                 }
                 auto iter = requireSending[proc].begin();
                 while (iter != requireSending[proc].end()) {
-                    const auto &[comm_cost, node_to_send, dest_proc] = *iter;
-                    if (comm_cost + sendCost[proc] > maxCommCost || comm_cost + receiveCost[dest_proc] > maxCommCost) {
+                    const auto &[commCost, node_to_send, dest_proc] = *iter;
+                    if (commCost + sendCost[proc] > maxCommCost || commCost + receiveCost[dest_proc] > maxCommCost) {
                         iter++;
                     } else {
                         commSchedule_.emplace(std::make_tuple(node_to_send, proc, dest_proc), step - this->GetStaleness());
                         nodeToProcBeenSent[node_to_send][dest_proc] = true;
-                        sendCost[proc] += comm_cost;
-                        receiveCost[dest_proc] += comm_cost;
+                        sendCost[proc] += commCost;
+                        receiveCost[dest_proc] += commCost;
                         iter = requireSending[proc].erase(iter);
                         if (requireSending[proc].empty()
                             || std::get<0>(*requireSending[proc].rbegin()) + sendCost[proc] > maxCommCost) {

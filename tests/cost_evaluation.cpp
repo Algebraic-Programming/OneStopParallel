@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(TestCostModelsSimpleDag) {
     // Node 1 (P0, cw=2): target_procs={P1} → 2*1 = 2
     // Node 2 (P1, cw=3): target_procs={P1} → 3*0 = 0
     // Node 3 (P1, cw=4): target_procs={P1} → 4*0 = 0
-    // comm_costs = 1+2+0+0 = 3, comm_cost = 3 * (1/2) * 10 = 15
+    // comm_costs = 1+2+0+0 = 3, commCost = 3 * (1/2) * 10 = 15
     // Work = 130, Sync = 3 * 5 = 15
     // Total = 15 + 130 + 15 = 160
     BOOST_CHECK_EQUAL(TotalLambdaCommunicationCost<Graph>()(schedule), 160);

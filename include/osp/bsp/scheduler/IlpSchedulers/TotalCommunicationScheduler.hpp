@@ -528,7 +528,7 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
           */
 
         double commCost = static_cast<double>(instance.CommunicationCosts()) / instance.NumberOfProcessors();
-        model.SetObjective(comm_cost * totalEdgesCut + expr - instance.SynchronisationCosts(), COPT_MINIMIZE);
+        model.SetObjective(commCost * totalEdgesCut + expr - instance.SynchronisationCosts(), COPT_MINIMIZE);
     }
 
   public:
