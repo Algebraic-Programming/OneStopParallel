@@ -180,10 +180,10 @@ template <typename GraphT>
 ReturnStatus RunBspScheduler(const ConfigParser &parser,
                              const boost::property_tree::ptree &algorithm,
                              BspSchedule<GraphT> &schedule) {
-    using vertex_type_t_or_default = std::conditional_t<IsComputationalDagTypedVerticesV<GraphT>, VTypeT<GraphT>, unsigned>;
-    using edge_commw_t_or_default = std::conditional_t<HasEdgeWeightsV<GraphT>, ECommwT<GraphT>, VCommwT<GraphT>>;
+    using VertexTypeTOrDefault = std::conditional_t<IsComputationalDagTypedVerticesV<GraphT>, VTypeT<GraphT>, unsigned>;
+    using EdgeCommwTOrDefault = std::conditional_t<HasEdgeWeightsV<GraphT>, ECommwT<GraphT>, VCommwT<GraphT>>;
     using boost_graph_t
-        = BoostGraph<VWorkwT<GraphT>, VCommwT<GraphT>, VMemwT<GraphT>, vertex_type_t_or_default, edge_commw_t_or_default>;
+        = BoostGraph<VWorkwT<GraphT>, VCommwT<GraphT>, VMemwT<GraphT>, VertexTypeTOrDefault, EdgeCommwTOrDefault>;
 
     const std::string id = algorithm.get_child("id").get_value<std::string>();
 

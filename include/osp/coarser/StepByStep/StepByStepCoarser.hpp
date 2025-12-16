@@ -32,11 +32,11 @@ template <typename GraphT>
 class StepByStepCoarser : public CoarserGenContractionMap<GraphT, GraphT> {
     using VertexIdx = VertexIdxT<GraphT>;
 
-    using vertex_type_t_or_default = std::conditional_t<IsComputationalDagTypedVerticesV<GraphT>, VTypeT<GraphT>, unsigned>;
-    using edge_commw_t_or_default = std::conditional_t<HasEdgeWeightsV<GraphT>, ECommwT<GraphT>, VCommwT<GraphT>>;
+    using VertexTypeTOrDefault = std::conditional_t<IsComputationalDagTypedVerticesV<GraphT>, VTypeT<GraphT>, unsigned>;
+    using EdgeCommwTOrDefault = std::conditional_t<HasEdgeWeightsV<GraphT>, ECommwT<GraphT>, VCommwT<GraphT>>;
 
-    using boost_GraphT
-        = BoostGraph<VWorkwT<GraphT>, VCommwT<GraphT>, VMemwT<GraphT>, vertex_type_t_or_default, edge_commw_t_or_default>;
+    using BoostGraphT
+        = BoostGraph<VWorkwT<GraphT>, VCommwT<GraphT>, VMemwT<GraphT>, VertexTypeTOrDefault, EdgeCommwTOrDefault>;
 
   public:
     enum CoarseningStrategy { EDGE_BY_EDGE, BOTTOM_LEVEL_CLUSTERS };
@@ -44,18 +44,20 @@ class StepByStepCoarser : public CoarserGenContractionMap<GraphT, GraphT> {
     enum ProblemType { SCHEDULING, PEBBLING };
 
     struct EdgeToContract {
-        std::pair<VertexIdx, VertexIdx> edge;
-        VWorkwT<GraphT> work_weight;
-        VCommwT<GraphT> comm_weight;
+        std::pair<VertexIdx, VertexIdx> edge_;
+        VWorkwT<GraphT> workWeight_;
+        VCommwT<GraphT> commWeight_;
 
         EdgeToContract(const VertexIdx source,
                        const VertexIdx target,
-                       const VWorkwT<GraphT> work_weight_,
-                       const VCommwT<GraphT> comm_weight_)
-            : edge(source, target), work_weight(work_weight_), comm_weight(comm_weight_) {}
+                       const VWorkwT<GraphT> workWeight,
+                       const VCommwT<GraphT> commWeight)
+            : edge_(source, target), workWeight_(workWeight), commWeight_(commWeight) {}
 
         bool operator<(const EdgeToContract &other) const {
-            return (work_weight < other.work_weight || (work_weight == other.work_weight && comm_weight < other.comm_weight));
+            return (workWeight_ < other.workWeight_ || (workWeight_ == other.workWeight_ && commWeight_ < other.commWeight_) ||
+            (workWeight_ == other.workWeight_ && commWeight_ == other.commWeight_ && edge_ < other.edge_)
+        );
         }
     };
 
@@ -68,7 +70,7 @@ class StepByStepCoarser : public CoarserGenContractionMap<GraphT, GraphT> {
     unsigned target_nr_of_nodes = 0;
 
     GraphT G_full;
-    boost_GraphT G_coarse;
+    BoostGraphT G_coarse;
 
     std::vector<std::set<VertexIdx>> contains;
 
@@ -513,8 +515,8 @@ template <typename GraphT>
 std::pair<VertexIdxT<GraphT>, VertexIdxT<GraphT>> StepByStepCoarser<GraphT>::PickEdgeToContract(
     const std::vector<EdgeToContract> &candidates) const {
     size_t limit = (candidates.size() + 2) / 3;
-    VWorkwT<GraphT> limitCardinality = candidates[limit].work_weight;
-    while (limit < candidates.size() - 1 && candidates[limit + 1].work_weight == limitCardinality) {
+    VWorkwT<GraphT> limitCardinality = candidates[limit].workWeight_;
+    while (limit < candidates.size() - 1 && candidates[limit + 1].workWeight_ == limitCardinality) {
         ++limit;
     }
 
@@ -526,13 +528,13 @@ std::pair<VertexIdxT<GraphT>, VertexIdxT<GraphT>> StepByStepCoarser<GraphT>::Pic
     EdgeToContract chosen = candidates[0];
     unsigned best = 0;
     for (unsigned idx = 1; idx <= limit; ++idx) {
-        if (candidates[idx].comm_weight > candidates[best].comm_weight) {
+        if (candidates[idx].commWeight_ > candidates[best].commWeight_) {
             best = idx;
         }
     }
 
     chosen = candidates[best];
-    return chosen.edge;
+    return chosen.edge_;
 }
 
 /**
@@ -1009,7 +1011,7 @@ std::vector<VertexIdxT<GraphT>> StepByStepCoarser<GraphT>::GetIntermediateIDs(Ve
         target[node] = new_id[target[node]];
     }
 
-    boost_GraphT temp_dag;
+    BoostGraphT temp_dag;
     temp_dag = Contract(target);
     std::vector<bool> all_valid(temp_dag.NumVertices(), true);
     std::vector<VertexIdx> top_idx = GetFilteredTopOrderIdx(temp_dag, all_valid);
