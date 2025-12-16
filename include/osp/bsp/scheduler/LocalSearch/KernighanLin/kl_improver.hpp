@@ -1746,7 +1746,7 @@ void KlImprover<GraphT, CommCostFunctionT, MemoryConstraintT, windowSize, CostT>
 
         tData.localAffinityTable_.resize(instance_->NumberOfProcessors());
         for (unsigned i = 0; i < instance_->NumberOfProcessors(); ++i) {
-            tData.localAffinityTable_[i].resize(windowSize);
+            tData.localAffinityTable_[i].resize(windowRange_);
         }
     }
 }
