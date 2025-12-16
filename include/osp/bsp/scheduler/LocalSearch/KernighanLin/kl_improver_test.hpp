@@ -63,12 +63,12 @@ class KlImproverTest : public KlImprover<GraphT, CommCostFunctionT, MemoryConstr
 
     auto GetCurrentCost() { return this->threadDataVec_[0].activeScheduleData_.cost_; }
 
-    bool IsFeasible() { return this->threadDataVec_[0].activeScheduleData_.feasible; }
+    bool IsFeasible() { return this->threadDataVec_[0].activeScheduleData_.feasible_; }
 
     void ComputeViolationsTest() { this->activeSchedule_.ComputeViolations(this->threadDataVec_[0].activeScheduleData_); }
 
     NodeSelectionContainer &InsertGainHeapTest(const std::vector<VertexType> &n) {
-        this->threadDataVec_[0].rewardPenaltyStrat_.penalty = 0.0;
+        this->threadDataVec_[0].rewardPenaltyStrat_.penalty_ = 0.0;
         this->threadDataVec_[0].rewardPenaltyStrat_.reward_ = 0.0;
 
         this->threadDataVec_[0].affinityTable_.Initialize(this->activeSchedule_, n.size());
