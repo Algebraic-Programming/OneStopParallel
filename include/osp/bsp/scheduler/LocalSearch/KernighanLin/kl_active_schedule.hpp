@@ -596,7 +596,7 @@ void KlActiveSchedule<GraphT, CostT, MemoryConstraintT>::RemoveEmptyStep(unsigne
             memoryConstraint_.SwapSteps(i, i + 1);
         }
     }
-    vectorSchedule_.DecrementNumberOfSupersteps();
+    vectorSchedule_.numberOfSupersteps_--;
 }
 
 template <typename GraphT, typename CostT, typename MemoryConstraintT>

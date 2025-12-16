@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(AdaptiveAffinityTableTest) {
     std::set<unsigned> actualSelected;
     const auto &selectedNodesVec = table.GetSelectedNodes();
     for (size_t i = 0; i < table.size(); ++i) {
-        actualSelected.Insert(static_cast<unsigned>(selectedNodesVec[i]));
+        actualSelected.insert(static_cast<unsigned>(selectedNodesVec[i]));
     }
     BOOST_CHECK(expectedSelected == actualSelected);
 
