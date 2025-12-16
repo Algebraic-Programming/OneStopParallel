@@ -185,7 +185,7 @@ class OrbitGraphProcessor {
                 nextGroups[groupRemap[i]] = std::move(currentGroups[i]);
             }
         }
-        nextGroups[groupRemap[u]].subgraphs = std::move(newSubgraphs);
+        nextGroups[groupRemap[u]].subgraphs_ = std::move(newSubgraphs);
         currentGroups = std::move(nextGroups);
 
         // Update main contraction map
@@ -255,7 +255,7 @@ class OrbitGraphProcessor {
                     }
 
                     std::vector<std::vector<VertexType>> newSubgraphs;
-                    const bool mergeIsValid = isMergeViable(originalDag, currentGroups[u], currentGroups[v], newSubgraphs);
+                    const bool mergeIsValid = IsMergeViable(originalDag, currentGroups[u], currentGroups[v], newSubgraphs);
 
                     if (!mergeIsValid) {
                         if constexpr (verbose_) {
@@ -583,7 +583,7 @@ class OrbitGraphProcessor {
             return;
         }
 
-        const auto &orbits = hasher.get_orbits();
+        const auto &orbits = hasher.GetOrbits();
 
         contractionMap_.assign(dag.NumVertices(), 0);
         VertexType coarseNodeIdx = 0;
@@ -633,7 +633,7 @@ class OrbitGraphProcessor {
 
         std::vector<double> relAccWorkPerOrbitSize;
         std::vector<size_t> symmetryLevelsToTest
-            = compute_symmetry_levels(relAccWorkPerOrbitSize, workPerOrbitSize, totalWork, orbitSizeCounts);
+            = ComputeSymmetryLevels(relAccWorkPerOrbitSize, workPerOrbitSize, totalWork, orbitSizeCounts);
 
         if constexpr (verbose_) {
             std::cout << "\n--- Orbit Analysis ---\n";
@@ -672,7 +672,7 @@ class OrbitGraphProcessor {
         coarser_util::ConstructCoarseDag(dag, coarseGraph_, contractionMap_);
 
         if (useAdaptiveSymmetryThreshold_) {
-            performCoarseningAdaptiveSymmetry(dag, coarseGraph_, lockThresholdPerType, symmetryLevelsToTest);
+            PerformCoarseningAdaptiveSymmetry(dag, coarseGraph_, lockThresholdPerType, symmetryLevelsToTest);
         } else {
             size_t totalSizeCount = 0U;
             for (const auto &[size, count] : orbitSizeCounts) {
@@ -853,32 +853,32 @@ class OrbitGraphProcessor {
         // Initialize groups: each group corresponds to an orbit.
         for (VertexType i = 0; i < originalDag.NumVertices(); ++i) {
             const VertexType coarseNode = contractionMap_[i];
-            currentGroups[coarseNode].subgraphs.push_back({i});
+            currentGroups[coarseNode].subgraphs_.push_back({i});
         }
 
         if constexpr (HasTypedVerticesV<ConstrGraphT>) {
             if constexpr (verbose_) {
                 std::cout << "Attempting to merge same node types.\n";
             }
-            contract_edges(originalDag, currentCoarseGraph, currentGroups, currentContractionMap, false, false);
-            contract_edges(originalDag, currentCoarseGraph, currentGroups, currentContractionMap, true, false);
+            ContractEdges(originalDag, currentCoarseGraph, currentGroups, currentContractionMap, false, false);
+            ContractEdges(originalDag, currentCoarseGraph, currentGroups, currentContractionMap, true, false);
         }
 
         if constexpr (verbose_) {
             std::cout << "Attempting to merge different node types.\n";
         }
-        contract_edges(originalDag, currentCoarseGraph, currentGroups, currentContractionMap, false, mergeDifferentNodeTypes_);
-        contract_edges(originalDag, currentCoarseGraph, currentGroups, currentContractionMap, true, mergeDifferentNodeTypes_);
+        ContractEdges(originalDag, currentCoarseGraph, currentGroups, currentContractionMap, false, mergeDifferentNodeTypes_);
+        ContractEdges(originalDag, currentCoarseGraph, currentGroups, currentContractionMap, true, mergeDifferentNodeTypes_);
 
         if constexpr (verbose_) {
             std::cout << "Attempting to merge small orbits.\n";
         }
-        mergeSmallOrbits(originalDag, currentCoarseGraph, currentGroups, currentContractionMap, workThreshold_);
+        MergeSmallOrbits(originalDag, currentCoarseGraph, currentGroups, currentContractionMap, workThreshold_);
 
         nonViableCritPathEdgesCache_.clear();
         nonViableEdgesCache_.clear();
 
-        contract_edges(
+        ContractEdges(
             originalDag, currentCoarseGraph, currentGroups, currentContractionMap, true, mergeDifferentNodeTypes_, workThreshold_);
 
         finalCoarseGraph_ = std::move(currentCoarseGraph);
@@ -907,7 +907,7 @@ class OrbitGraphProcessor {
 
         for (VertexType i = 0; i < originalDag.NumVertices(); ++i) {
             const VertexType coarseNode = contractionMap_[i];
-            currentGroups[coarseNode].subgraphs.push_back({i});
+            currentGroups[coarseNode].subgraphs_.push_back({i});
         }
 
         if constexpr (verbose_) {
@@ -923,11 +923,11 @@ class OrbitGraphProcessor {
 
             nonViableEdgesCache_.clear();
 
-            contract_edges_adpative_sym(
+            ContractEdgesAdpativeSym(
                 originalDag, currentCoarseGraph, currentGroups, currentContractionMap, false, isLastLoop, lockThresholdPerType);
 
             if (mergeDifferentNodeTypes_) {
-                contract_edges_adpative_sym(originalDag,
+                ContractEdgesAdpativeSym(originalDag,
                                             currentCoarseGraph,
                                             currentGroups,
                                             currentContractionMap,
@@ -937,7 +937,7 @@ class OrbitGraphProcessor {
             }
 
             nonViableCritPathEdgesCache_.clear();
-            contract_edges_adpative_sym(originalDag,
+            ContractEdgesAdpativeSym(originalDag,
                                         currentCoarseGraph,
                                         currentGroups,
                                         currentContractionMap,
@@ -951,7 +951,7 @@ class OrbitGraphProcessor {
             std::cout << " Merging small orbits with work threshold: " << workThreshold_ << "\n";
         }
         nonViableEdgesCache_.clear();
-        mergeSmallOrbits(originalDag, currentCoarseGraph, currentGroups, currentContractionMap, workThreshold_);
+        MergeSmallOrbits(originalDag, currentCoarseGraph, currentGroups, currentContractionMap, workThreshold_);
 
         finalCoarseGraph_ = std::move(currentCoarseGraph);
         finalContractionMap_ = std::move(currentContractionMap);
@@ -967,9 +967,9 @@ class OrbitGraphProcessor {
         std::cout << "Total final groups: " << finalGroups_.size() << "\n";
         for (size_t i = 0; i < finalGroups_.size(); ++i) {
             const auto &group = finalGroups_[i];
-            std::cout << "  - Group " << i << " (Size: " << group.subgraphs.size() << ")\n";
-            if (!group.subgraphs.empty() && !group.subgraphs[0].empty()) {
-                std::cout << "    - Rep. Subgraph size: " << group.subgraphs[0].size() << " nodes\n";
+            std::cout << "  - Group " << i << " (Size: " << group.subgraphs_.size() << ")\n";
+            if (!group.subgraphs_.empty() && !group.subgraphs_[0].empty()) {
+                std::cout << "    - Rep. Subgraph size: " << group.subgraphs_[0].size() << " nodes\n";
             }
         }
         std::cout << "--------------------------------\n";
@@ -983,12 +983,12 @@ class OrbitGraphProcessor {
                        const Group &groupV,
                        std::vector<std::vector<VertexType>> &outNewSubgraphs) const {
         std::vector<VertexType> allNodes;
-        allNodes.reserve(groupU.subgraphs.size() * (groupU.subgraphs.empty() ? 0 : groupU.subgraphs[0].size())
+        allNodes.reserve(groupU.subgraphs_.size() * (groupU.subgraphs_.empty() ? 0 : groupU.subgraphs_[0].size())
                          + groupV.subgraphs_.size() * (groupV.subgraphs_.empty() ? 0 : groupV.subgraphs_[0].size()));
         for (const auto &sg : groupU.subgraphs_) {
             allNodes.insert(allNodes.end(), sg.begin(), sg.end());
         }
-        for (const auto &sg : groupV.subgraphs) {
+        for (const auto &sg : groupV.subgraphs_) {
             allNodes.insert(allNodes.end(), sg.begin(), sg.end());
         }
 
@@ -1027,7 +1027,7 @@ class OrbitGraphProcessor {
 
                 ConstrGraphT currentSg;
                 CreateInducedSubgraph(originalDag, currentSg, outNewSubgraphs[i]);
-                if (!are_isomorphic_by_merkle_hash(repSg, currentSg)) {
+                if (!AreIsomorphicByMerkleHash(repSg, currentSg)) {
                     return false;
                 }
             }

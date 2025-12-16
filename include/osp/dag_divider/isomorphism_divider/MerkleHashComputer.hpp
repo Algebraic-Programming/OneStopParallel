@@ -83,7 +83,7 @@ class MerkleHashComputer : public HashComputer<VertexIdxT<GraphT>> {
             for (const VertexType &parent : graph.Parents(v)) {
                 parentHashes.push_back(vertexHashes_[parent]);
             }
-            computeHashesHelper(v, parentHashes);
+            ComputeHashesHelper(v, parentHashes);
         }
     }
 

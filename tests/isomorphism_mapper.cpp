@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(MapperMultiPipeline) {
 
     // Rep: Two pipelines {0->1->2} and {3->4->5}
     // All nodes at the same stage have the same work weight.
-    ConstrGraphT repGraph = construct_multi_pipeline_dag<ConstrGraphT>(2, 3);
+    ConstrGraphT repGraph = ConstructMultiPipelineDag<ConstrGraphT>(2, 3);
     std::vector<VertexIdxT<GraphT>> repMap = {10, 11, 12, 20, 21, 22};
 
     // Current: Isomorphic to rep, but the pipelines are swapped and vertex IDs are shuffled.
@@ -222,7 +222,7 @@ BOOST_AUTO_TEST_CASE(MapperShuffledSymmetric) {
     // Structure: {0,1} -> {2,3} -> {4,5}
     // Nodes {0,2,4} have work 10 (left side).
     // Nodes {1,3,5} have work 20 (right side).
-    ConstrGraphT repGraph = construct_ladder_dag<ConstrGraphT>(2);
+    ConstrGraphT repGraph = ConstructLadderDag<ConstrGraphT>(2);
     std::vector<VertexIdxT<GraphT>> repMap = {10, 11, 12, 13, 14, 15};
 
     // Current: Isomorphic to rep, but with shuffled local IDs.

@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(SimpleTransitiveEdge) {
 
 // Test with a graph that has no transitive edges
 BOOST_AUTO_TEST_CASE(NoTransitiveEdges) {
-    const auto dag = construct_ladder_dag<graph_t>(3);    // A ladder graph has no transitive edges
+    const auto dag = ConstructLadderDag<graph_t>(3);    // A ladder graph has no transitive edges
     BOOST_REQUIRE_EQUAL(dag.NumVertices(), 8);
     BOOST_REQUIRE_EQUAL(dag.NumEdges(), 11);
 

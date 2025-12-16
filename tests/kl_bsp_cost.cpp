@@ -847,7 +847,7 @@ BOOST_AUTO_TEST_CASE(TestGridGraphComplexMoves) {
 BOOST_AUTO_TEST_CASE(TestButterflyGraphMoves) {
     // Stages=2 -> 3 levels of 4 nodes each = 12 nodes.
     // Level 0: 0-3. Level 1: 4-7. Level 2: 8-11.
-    Graph dag = osp::construct_butterfly_dag<Graph>(2);
+    Graph dag = osp::ConstructButterflyDag<Graph>(2);
 
     BspArchitecture<Graph> arch;
     arch.SetNumberOfProcessors(2);
@@ -974,7 +974,7 @@ BOOST_AUTO_TEST_CASE(TestButterflyGraphMoves) {
 BOOST_AUTO_TEST_CASE(TestLadderGraphMoves) {
     // Ladder with 5 rungs -> 6 pairs of nodes = 12 nodes.
     // Pairs: (0,1), (2,3), ... (10,11).
-    Graph dag = osp::construct_ladder_dag<Graph>(5);
+    Graph dag = osp::ConstructLadderDag<Graph>(5);
 
     BspArchitecture<Graph> arch;
     arch.SetNumberOfProcessors(2);

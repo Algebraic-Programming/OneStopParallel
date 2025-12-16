@@ -37,8 +37,8 @@ using GraphT = ComputationalDagVectorImplDefUnsignedT;
 
 template <typename GraphT>
 void CheckPartitioning(const GraphT &dag, const OrbitGraphProcessor<GraphT, GraphT> &processor) {
-    const auto &finalCoarseGraph = processor.get_final_coarse_graph();
-    const auto &finalGroups = processor.get_final_groups();
+    const auto &finalCoarseGraph = processor.GetFinalCoarseGraph();
+    const auto &finalGroups = processor.GetFinalGroups();
 
     // Check that the final coarse graph is acyclic
     BOOST_CHECK(IsAcyclic(finalCoarseGraph));
@@ -47,7 +47,7 @@ void CheckPartitioning(const GraphT &dag, const OrbitGraphProcessor<GraphT, Grap
     std::vector<int> vertexCounts(dag.NumVertices(), 0);
     size_t totalVerticesInGroups = 0;
     for (const auto &group : finalGroups) {
-        for (const auto &subgraph : group.subgraphs) {
+        for (const auto &subgraph : group.subgraphs_) {
             totalVerticesInGroups += subgraph.size();
             for (const auto &vertex : subgraph) {
                 BOOST_REQUIRE_LT(vertex, dag.NumVertices());
@@ -67,12 +67,12 @@ void CheckPartitioning(const GraphT &dag, const OrbitGraphProcessor<GraphT, Grap
 //     file_reader::ReadComputationalDagDotFormat("", dag);
 
 //     OrbitGraphProcessor<graph_t, graph_t> processor(2); // Using a symmetry threshold of 2
-//     MerkleHashComputer<graph_t, bwd_merkle_node_hash_func<graph_t>, true> hasher(dag, dag);
-//     processor.discover_isomorphic_groups(dag, hasher);
+//     MerkleHashComputer<graph_t, BwdMerkleNodeHashFunc<graph_t>, true> hasher(dag, dag);
+//     processor.DiscoverIsomorphicGroups(dag, hasher);
 
-//     const auto& coarse_graph = processor.get_coarse_graph();
-//     const auto& final_coarse_graph = processor.get_final_coarse_graph();
-//     const auto& final_groups = processor.get_final_groups();
+//     const auto& coarse_graph = processor.GetCoarseGraph();
+//     const auto& final_coarse_graph = processor.GetFinalCoarseGraph();
+//     const auto& final_groups = processor.GetFinalGroups();
 //     const auto& final_contraction_map = processor.get_final_contraction_map();
 
 //     DotFileWriter writer;
@@ -87,7 +87,7 @@ void CheckPartitioning(const GraphT &dag, const OrbitGraphProcessor<GraphT, Grap
 //     std::vector<unsigned> subgraph_colors(dag.NumVertices());
 //     unsigned current_subgraph_color = 0;
 //     for (const auto& group : final_groups) {
-//         for (const auto& subgraph : group.subgraphs) {
+//         for (const auto& subgraph : group.subgraphs_) {
 //             for (const auto& vertex : subgraph) {
 //                 subgraph_colors[vertex] = current_subgraph_color;
 //             }
@@ -120,20 +120,20 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessorSimpleMerge) {
     // Initial orbits: {0, 2} and {1, 3}. Coarse graph: 0 -> 1
     // With threshold 2, these should be merged.
     OrbitGraphProcessor<GraphT, GraphT> processor;
-    MerkleHashComputer<GraphT, bwd_merkle_node_hash_func<GraphT>, true> hasher(dag, dag);
-    processor.discover_isomorphic_groups(dag, hasher);
+    MerkleHashComputer<GraphT, BwdMerkleNodeHashFunc<GraphT>, true> hasher(dag, dag);
+    processor.DiscoverIsomorphicGroups(dag, hasher);
 
-    const auto &finalCoarseGraph = processor.get_final_coarse_graph();
-    const auto &finalGroups = processor.get_final_groups();
+    const auto &finalCoarseGraph = processor.GetFinalCoarseGraph();
+    const auto &finalGroups = processor.GetFinalGroups();
 
     // Expect a single node in the final coarse graph
     BOOST_CHECK_EQUAL(finalCoarseGraph.NumVertices(), 1);
     BOOST_CHECK_EQUAL(finalGroups.size(), 1);
 
     // The single group should contain two subgraphs: {0,1} and {2,3}
-    BOOST_REQUIRE_EQUAL(finalGroups[0].subgraphs.size(), 2);
-    std::set<int> sg1(finalGroups[0].subgraphs[0].begin(), finalGroups[0].subgraphs[0].end());
-    std::set<int> sg2(finalGroups[0].subgraphs[1].begin(), finalGroups[0].subgraphs[1].end());
+    BOOST_REQUIRE_EQUAL(finalGroups[0].subgraphs_.size(), 2);
+    std::set<int> sg1(finalGroups[0].subgraphs_[0].begin(), finalGroups[0].subgraphs_[0].end());
+    std::set<int> sg2(finalGroups[0].subgraphs_[1].begin(), finalGroups[0].subgraphs_[1].end());
     std::set<int> expectedSgA = {0, 1};
     std::set<int> expectedSgB = {2, 3};
 
@@ -158,11 +158,11 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessorForkJoinNoMerge) {
     // Merging 0 and 1 would result in a group of size 1 ({0,1,2}), which is not viable (threshold 2).
     // Merging 1 and 2 would also result in a group of size 1 ({1,2,3}), not viable.
     OrbitGraphProcessor<GraphT, GraphT> processor;
-    MerkleHashComputer<GraphT, bwd_merkle_node_hash_func<GraphT>, true> hasher(dag, dag);
-    processor.discover_isomorphic_groups(dag, hasher);
+    MerkleHashComputer<GraphT, BwdMerkleNodeHashFunc<GraphT>, true> hasher(dag, dag);
+    processor.DiscoverIsomorphicGroups(dag, hasher);
 
-    const auto &finalCoarseGraph = processor.get_final_coarse_graph();
-    const auto &finalGroups = processor.get_final_groups();
+    const auto &finalCoarseGraph = processor.GetFinalCoarseGraph();
+    const auto &finalGroups = processor.GetFinalGroups();
 
     // Expect no merges, so final graph is same as initial coarse graph.
     BOOST_CHECK_EQUAL(finalCoarseGraph.NumVertices(), 3);
@@ -175,10 +175,10 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessorForkJoinNoMerge) {
     size_t groupOf1Count = 0;
     size_t groupOf2Count = 0;
     for (const auto &group : finalGroups) {
-        if (group.subgraphs.size() == 1) {
+        if (group.subgraphs_.size() == 1) {
             groupOf1Count++;
         }
-        if (group.subgraphs.size() == 2) {
+        if (group.subgraphs_.size() == 2) {
             groupOf2Count++;
         }
     }
@@ -197,8 +197,8 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessorPartitionCheckMediumGraph) {
 
     // Use a higher threshold to encourage more merging on this larger graph
     OrbitGraphProcessor<GraphT, GraphT> processor;
-    MerkleHashComputer<GraphT, bwd_merkle_node_hash_func<GraphT>, true> hasher(dag, dag);
-    processor.discover_isomorphic_groups(dag, hasher);
+    MerkleHashComputer<GraphT, BwdMerkleNodeHashFunc<GraphT>, true> hasher(dag, dag);
+    processor.DiscoverIsomorphicGroups(dag, hasher);
 
     // The main purpose of this test is to ensure the output is a valid partition.
     CheckPartitioning(dag, processor);
@@ -208,23 +208,23 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessorMultiPipelineMerge) {
     // 5 parallel pipelines of 4 nodes each.
     // Initial orbits: 4 groups of 5 identical nodes. Coarse graph: 0->1->2->3
     // With a threshold of 5, the entire graph should merge into a single group.
-    const auto dag = construct_multi_pipeline_dag<GraphT>(5, 4);
+    const auto dag = ConstructMultiPipelineDag<GraphT>(5, 4);
     BOOST_REQUIRE_EQUAL(dag.NumVertices(), 20);
 
     OrbitGraphProcessor<GraphT, GraphT> processor;    // Set threshold to match pipeline count
-    MerkleHashComputer<GraphT, bwd_merkle_node_hash_func<GraphT>, true> hasher(dag, dag);
-    processor.discover_isomorphic_groups(dag, hasher);
+    MerkleHashComputer<GraphT, BwdMerkleNodeHashFunc<GraphT>, true> hasher(dag, dag);
+    processor.DiscoverIsomorphicGroups(dag, hasher);
 
-    const auto &finalCoarseGraph = processor.get_final_coarse_graph();
-    const auto &finalGroups = processor.get_final_groups();
+    const auto &finalCoarseGraph = processor.GetFinalCoarseGraph();
+    const auto &finalGroups = processor.GetFinalGroups();
 
     // Expect a single node in the final coarse graph
     BOOST_CHECK_EQUAL(finalCoarseGraph.NumVertices(), 1);
     BOOST_CHECK_EQUAL(finalGroups.size(), 1);
 
     // The single group should contain 5 subgraphs, each with 4 nodes.
-    BOOST_REQUIRE_EQUAL(finalGroups[0].subgraphs.size(), 5);
-    BOOST_CHECK_EQUAL(finalGroups[0].subgraphs[0].size(), 4);
+    BOOST_REQUIRE_EQUAL(finalGroups[0].subgraphs_.size(), 5);
+    BOOST_CHECK_EQUAL(finalGroups[0].subgraphs_[0].size(), 4);
 
     CheckPartitioning(dag, processor);
 }
@@ -236,15 +236,15 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessorLadderNoMerge) {
     // The coarsening logic will merge some of these, but the core cyclic structure
     // prevents a full merge. The exact number of final nodes is non-trivial,
     // but it should be greater than 1.
-    const auto dag = construct_ladder_dag<GraphT>(10);
+    const auto dag = ConstructLadderDag<GraphT>(10);
     BOOST_REQUIRE_EQUAL(dag.NumVertices(), 22);
 
     OrbitGraphProcessor<GraphT, GraphT> processor;
-    MerkleHashComputer<GraphT, bwd_merkle_node_hash_func<GraphT>, true> hasher(dag, dag);
-    processor.discover_isomorphic_groups(dag, hasher);
+    MerkleHashComputer<GraphT, BwdMerkleNodeHashFunc<GraphT>, true> hasher(dag, dag);
+    processor.DiscoverIsomorphicGroups(dag, hasher);
 
-    const auto &initialCoarseGraph = processor.get_coarse_graph();
-    const auto &finalCoarseGraph = processor.get_final_coarse_graph();
+    const auto &initialCoarseGraph = processor.GetCoarseGraph();
+    const auto &finalCoarseGraph = processor.GetFinalCoarseGraph();
 
     // Expect no merges, so final graph is the same as the initial coarse graph.
     BOOST_CHECK_EQUAL(finalCoarseGraph.NumVertices(), initialCoarseGraph.NumVertices());
@@ -256,14 +256,14 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessorLadderNoMerge) {
 BOOST_AUTO_TEST_CASE(OrbitGraphProcessorAsymmetricNoMerge) {
     // A simple chain where every node is unique.
     // Since all groups are below the threshold, they will all be merged into one.
-    const auto dag = construct_asymmetric_dag<GraphT>(30);
+    const auto dag = ConstructAsymmetricDag<GraphT>(30);
     BOOST_REQUIRE_EQUAL(dag.NumVertices(), 30);
 
     OrbitGraphProcessor<GraphT, GraphT> processor;
-    MerkleHashComputer<GraphT, bwd_merkle_node_hash_func<GraphT>, true> hasher(dag, dag);
-    processor.discover_isomorphic_groups(dag, hasher);
+    MerkleHashComputer<GraphT, BwdMerkleNodeHashFunc<GraphT>, true> hasher(dag, dag);
+    processor.DiscoverIsomorphicGroups(dag, hasher);
 
-    const auto &finalCoarseGraph = processor.get_final_coarse_graph();
+    const auto &finalCoarseGraph = processor.GetFinalCoarseGraph();
 
     // Expect all nodes to be merged into a single coarse node.
     BOOST_CHECK_EQUAL(finalCoarseGraph.NumVertices(), 1);
@@ -278,14 +278,14 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessorBinaryTreeNoMerge) {
     // However, the `critical_path_weight` check prevents merges that would increase the
     // longest path in the coarse graph. This results in the chain being partially, but not
     // fully, collapsed. The expected outcome is 2 final coarse nodes.
-    const auto dag = construct_binary_out_tree<GraphT>(4);
+    const auto dag = ConstructBinaryOutTree<GraphT>(4);
     BOOST_REQUIRE_EQUAL(dag.NumVertices(), (1 << 5) - 1);
 
     OrbitGraphProcessor<GraphT, GraphT> processor;
-    MerkleHashComputer<GraphT, bwd_merkle_node_hash_func<GraphT>, true> hasher(dag, dag);
-    processor.discover_isomorphic_groups(dag, hasher);
+    MerkleHashComputer<GraphT, BwdMerkleNodeHashFunc<GraphT>, true> hasher(dag, dag);
+    processor.DiscoverIsomorphicGroups(dag, hasher);
 
-    const auto &finalCoarseGraph = processor.get_final_coarse_graph();
+    const auto &finalCoarseGraph = processor.GetFinalCoarseGraph();
 
     BOOST_CHECK_EQUAL(finalCoarseGraph.NumVertices(), 3);
 
@@ -293,14 +293,14 @@ BOOST_AUTO_TEST_CASE(OrbitGraphProcessorBinaryTreeNoMerge) {
 }
 
 BOOST_AUTO_TEST_CASE(OrbitGraphProcessorButterflyMerge) {
-    const auto dag = construct_butterfly_dag<GraphT>(3);
+    const auto dag = ConstructButterflyDag<GraphT>(3);
     BOOST_REQUIRE_EQUAL(dag.NumVertices(), (3 + 1) * 8);
 
     OrbitGraphProcessor<GraphT, GraphT> processor;
-    MerkleHashComputer<GraphT, bwd_merkle_node_hash_func<GraphT>, true> hasher(dag, dag);
-    processor.discover_isomorphic_groups(dag, hasher);
+    MerkleHashComputer<GraphT, BwdMerkleNodeHashFunc<GraphT>, true> hasher(dag, dag);
+    processor.DiscoverIsomorphicGroups(dag, hasher);
 
-    const auto &finalCoarseGraph = processor.get_final_coarse_graph();
+    const auto &finalCoarseGraph = processor.GetFinalCoarseGraph();
     BOOST_CHECK_EQUAL(finalCoarseGraph.NumVertices(), 4);
 
     CheckPartitioning(dag, processor);

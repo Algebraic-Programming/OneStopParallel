@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(BspScheduleRecompTest) {
     }
 
     size_t num = 0;
-    for (const auto &pair : mHash.get_orbits()) {
+    for (const auto &pair : mHash.GetOrbits()) {
         num += pair.second.size();
         std::cout << "orbit " << pair.first << ": ";
         for (const auto &v : pair.second) {
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(MerkleHashComputerTestFwBwPrecomp) {
     BOOST_CHECK_EQUAL(mHash.get_vertex_hashes().size(), graphTest.NumVertices());
 
     size_t num = 0;
-    for (const auto &pair : mHash.get_orbits()) {
+    for (const auto &pair : mHash.GetOrbits()) {
         num += pair.second.size();
         std::cout << "orbit " << pair.first << ": ";
         for (const auto &v : pair.second) {
@@ -106,9 +106,9 @@ BOOST_AUTO_TEST_CASE(MerkleIsomorphismTestIdenticalGraphsAreIsomorphic) {
     dag2.AddEdge(vA, vB);
     dag2.AddEdge(vB, vC);
 
-    bool test = are_isomorphic_by_merkle_hash<GraphType, uniform_node_hash_func<VertexType>, true>(dag1, dag2);
+    bool test = AreIsomorphicByMerkleHash<GraphType, uniform_node_hash_func<VertexType>, true>(dag1, dag2);
     BOOST_CHECK(test);
-    test = are_isomorphic_by_merkle_hash<GraphType, uniform_node_hash_func<VertexType>, false>(dag1, dag2);
+    test = AreIsomorphicByMerkleHash<GraphType, uniform_node_hash_func<VertexType>, false>(dag1, dag2);
     BOOST_CHECK(test);
 }
 
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(MerkleIsomorphismTestDifferentVertexCount) {
     GraphType dag2;
     dag2.AddVertex(0, 10, 1);
 
-    BOOST_CHECK_EQUAL(are_isomorphic_by_merkle_hash(dag1, dag2), false);
+    BOOST_CHECK_EQUAL(AreIsomorphicByMerkleHash(dag1, dag2), false);
 }
 
 // Test case 3: Graphs with the same size but different structures should not be isomorphic.
@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(MerkleIsomorphismTestSameSizeDifferentStructure) {
     dag2.AddEdge(v21, v22);
     dag2.AddEdge(v21, v23);
 
-    BOOST_CHECK_EQUAL(are_isomorphic_by_merkle_hash(dag1, dag2), false);
+    BOOST_CHECK_EQUAL(AreIsomorphicByMerkleHash(dag1, dag2), false);
 }
 
 // Test case 4: Structurally identical graphs with different vertex labeling should be isomorphic.
@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE(MerkleIsomorphismTestIsomorphicWithDifferentLabels) {
     dag2.AddEdge(v21, v22);
     dag2.AddEdge(v22, v23);
 
-    BOOST_CHECK(are_isomorphic_by_merkle_hash(dag1, dag2));
+    BOOST_CHECK(AreIsomorphicByMerkleHash(dag1, dag2));
 }
 
 // Test case 5: A more complex example based on your provided DAG.
@@ -214,5 +214,5 @@ BOOST_AUTO_TEST_CASE(MerkleIsomorphismTestComplexIsomorphicGraphs) {
         dag2.AddEdge(n4, n8);
     }
 
-    BOOST_CHECK(are_isomorphic_by_merkle_hash(dag1, dag2));
+    BOOST_CHECK(AreIsomorphicByMerkleHash(dag1, dag2));
 }
