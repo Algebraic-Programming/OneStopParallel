@@ -58,7 +58,7 @@ void TransitiveReductionSparse(const GraphTIn &graphIn, GraphTOut &graphOut) {
 
     // 1. Copy vertices and their properties from graph_in to graph_out.
     for (const auto &vIdx : graphIn.Vertices()) {
-        if constexpr (hasTypedVerticesV<GraphTIn> && IsConstructableCdagTypedVertexV<GraphTOut>) {
+        if constexpr (hasTypedVerticesV<GraphTIn> && isConstructableCdagTypedVertexV<GraphTOut>) {
             graphOut.AddVertex(graphIn.VertexWorkWeight(vIdx),
                                graphIn.VertexCommWeight(vIdx),
                                graphIn.VertexMemWeight(vIdx),
@@ -122,7 +122,7 @@ void TransitiveReductionDense(const GraphTIn &graphIn, GraphTOut &graphOut) {
 
     // 1. Copy vertices and their properties from graph_in to graph_out.
     for (const auto &vIdx : graphIn.Vertices()) {
-        if constexpr (hasTypedVerticesV<GraphTIn> && IsConstructableCdagTypedVertexV<GraphTOut>) {
+        if constexpr (hasTypedVerticesV<GraphTIn> && isConstructableCdagTypedVertexV<GraphTOut>) {
             graphOut.AddVertex(graphIn.VertexWorkWeight(vIdx),
                                graphIn.VertexCommWeight(vIdx),
                                graphIn.VertexMemWeight(vIdx),

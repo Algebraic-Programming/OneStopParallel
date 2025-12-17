@@ -68,7 +68,7 @@ struct NoLocalSearchMemoryConstraint {
 /**
  * @brief A memory constraint module for local memory constraints.
  *
- * @tparam Graph_t The graph type.
+ * @tparam GraphT The graph type.
  */
 template <typename GraphT>
 struct LsLocalMemoryConstraint {

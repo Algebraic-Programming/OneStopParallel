@@ -30,7 +30,7 @@ namespace osp {
  *
  * This class precomputes and stores the list of compatible processors for each node type.
  *
- * @tparam Graph_t The type of the computational DAG.
+ * @tparam GraphT The type of the computational DAG.
  */
 template <typename GraphT>
 class CompatibleProcessorRange {

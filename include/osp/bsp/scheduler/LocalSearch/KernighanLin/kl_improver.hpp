@@ -87,9 +87,9 @@ template <typename GraphT,
           unsigned windowSize = 1,
           typename CostT = double>
 class KlImprover : public ImprovementScheduler<GraphT> {
-    static_assert(isDirectedGraphEdgeDescV<GraphT>, "Graph_t must satisfy the directed_graph concept");
-    static_assert(hasHashableEdgeDescV<GraphT>, "Graph_t must satisfy the HasHashableEdgeDesc concept");
-    static_assert(isComputationalDagV<GraphT>, "Graph_t must satisfy the computational_dag concept");
+    static_assert(isDirectedGraphEdgeDescV<GraphT>, "GraphT must satisfy the directed_graph concept");
+    static_assert(hasHashableEdgeDescV<GraphT>, "GraphT must satisfy the HasHashableEdgeDesc concept");
+    static_assert(isComputationalDagV<GraphT>, "GraphT must satisfy the computational_dag concept");
 
   protected:
     constexpr static unsigned windowRange_ = 2 * windowSize + 1;

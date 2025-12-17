@@ -106,7 +106,7 @@ using VertexIdxT = typename DirectedGraphTraits<T>::VertexIdx;
  * This struct is used when the graph type does not provide its own edge descriptor.
  * It simply holds the source and target vertex indices.
  *
- * @tparam Graph_t The graph type.
+ * @tparam GraphT The graph type.
  */
 template <typename GraphT>
 struct DirectedEdge {

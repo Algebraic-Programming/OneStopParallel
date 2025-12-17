@@ -51,13 +51,13 @@ namespace osp {
 /**
  * @brief Checks if the natural order of the vertices is a topological order.
  *
- * @tparam Graph_t The type of the graph.
+ * @tparam GraphT The type of the graph.
  * @param graph The graph to check.
  * @return true if the vertices are in topological order, false otherwise.
  */
 template <typename GraphT>
 bool CheckNodesInTopologicalOrder(const GraphT &graph) {
-    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "GraphT must satisfy the directed_graph concept");
 
     for (const auto &node : graph.Vertices()) {
         for (const auto &child : graph.Children(node)) {
@@ -126,7 +126,7 @@ std::vector<VertexIdxT<GraphT>> GetTopOrderGorder(const GraphT &graph) {
     // Generating modified Gorder topological order cf. "Speedup Graph Processing by Graph Ordering" by Hao Wei, Jeffrey
     // Xu Yu, Can Lu, and Xuemin Lin
 
-    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "GraphT must satisfy the directed_graph concept");
 
     using VertexType = VertexIdxT<GraphT>;
 
@@ -192,7 +192,7 @@ std::vector<VertexIdxT<GraphT>> GetTopOrderGorder(const GraphT &graph) {
 
 template <typename GraphT>
 std::vector<VertexIdxT<GraphT>> GetFilteredTopOrder(const std::vector<bool> &valid, const GraphT &graph) {
-    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "GraphT must satisfy the directed_graph concept");
 
     std::vector<VertexIdxT<GraphT>> filteredOrder;
     for (const auto &node : GetTopOrder(graph)) {
@@ -211,7 +211,7 @@ std::vector<VertexIdxT<GraphT>> GetFilteredTopOrder(const std::vector<bool> &val
  * provides the required interface for managing vertices during topological sorting.
  *
  * @tparam T The type of the container wrapper.
- * @tparam Graph_t The type of the graph.
+ * @tparam GraphT The type of the graph.
  */
 template <typename T, typename GraphT>
 struct IsContainerWrapper {
@@ -314,16 +314,16 @@ struct TopSortIterator {
  * @brief Provides a view for iterating over the vertices of a directed graph in topological order.
  *
  * This class supports two modes of iteration:
- * 1. If the graph type `Graph_t` has a predefined topological order (determined by the
+ * 1. If the graph type `GraphT` has a predefined topological order (determined by the
  *    `hasVerticesInTopOrderV<` trait), the iteration will directly use the graph's vertices.
  * 2. Otherwise, it performs a topological sort using a depth-first search (DFS) stack wrapper.
  *
- * @tparam Graph_t The type of the directed graph. Must satisfy the `is_directed_graph` concept.
+ * @tparam GraphT The type of the directed graph. Must satisfy the `is_directed_graph` concept.
  *
  */
 template <typename GraphT>
 class TopSortView {
-    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "GraphT must satisfy the directed_graph concept");
 
     const GraphT &graph_;
     DfsStackWrapper<GraphT> vertexContainer_;
@@ -357,12 +357,12 @@ class TopSortView {
  * This class is designed to work with graphs that satisfy the `directed_graph` concept. It uses a DFS-based
  * approach to generate a topological ordering of the vertices in the graph.
  *
- * @tparam Graph_t The type of the graph, which must satisfy the `is_directed_graph` concept.
+ * @tparam GraphT The type of the graph, which must satisfy the `is_directed_graph` concept.
  *
  */
 template <typename GraphT>
 class DfsTopSortView {
-    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "GraphT must satisfy the directed_graph concept");
 
     const GraphT &graph_;
     DfsStackWrapper<GraphT> vertexContainer_;
@@ -384,12 +384,12 @@ class DfsTopSortView {
  * This class is designed to work with graphs that satisfy the `directed_graph` concept. It uses a BFS-based
  * approach to generate a topological ordering of the vertices in the graph.
  *
- * @tparam Graph_t The type of the graph, which must satisfy the `is_directed_graph` concept.
+ * @tparam GraphT The type of the graph, which must satisfy the `is_directed_graph` concept.
  *
  */
 template <typename GraphT>
 class BfsTopSortView {
-    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "GraphT must satisfy the directed_graph concept");
 
     const GraphT &graph_;
     BfsQueueWrapper<GraphT> vertexContainer_;
@@ -406,7 +406,7 @@ class BfsTopSortView {
 
 template <typename GraphT>
 std::vector<VertexIdxT<GraphT>> BfsTopSort(const GraphT &graph) {
-    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "GraphT must satisfy the directed_graph concept");
     std::vector<VertexIdxT<GraphT>> topSort;
 
     for (const auto &node : BfsTopSortView(graph)) {
@@ -417,7 +417,7 @@ std::vector<VertexIdxT<GraphT>> BfsTopSort(const GraphT &graph) {
 
 template <typename GraphT>
 std::vector<VertexIdxT<GraphT>> DfsTopSort(const GraphT &graph) {
-    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "GraphT must satisfy the directed_graph concept");
     std::vector<VertexIdxT<GraphT>> topSort;
 
     for (const auto &node : DfsTopSortView(graph)) {
@@ -467,7 +467,7 @@ struct PriorityQueueWrapper {
 
 template <typename GraphT, typename PriorityEvalF, typename T>
 class PriorityTopSortView {
-    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "GraphT must satisfy the directed_graph concept");
 
     const GraphT &graph_;
     using Container = PriorityQueueWrapper<GraphT, PriorityEvalF, T>;
@@ -486,7 +486,7 @@ class PriorityTopSortView {
 
 template <typename GraphT>
 class LocalityTopSortView {
-    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "GraphT must satisfy the directed_graph concept");
 
     const GraphT &graph_;
 
@@ -508,7 +508,7 @@ class LocalityTopSortView {
 
 template <typename GraphT>
 std::vector<VertexIdxT<GraphT>> GetTopOrderMinIndex(const GraphT &graph) {
-    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "GraphT must satisfy the directed_graph concept");
 
     using VertexType = VertexIdxT<GraphT>;
 
@@ -529,7 +529,7 @@ std::vector<VertexIdxT<GraphT>> GetTopOrderMinIndex(const GraphT &graph) {
 
 template <typename GraphT>
 class MaxChildrenTopSortView {
-    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "GraphT must satisfy the directed_graph concept");
 
     const GraphT &graph_;
 
@@ -555,7 +555,7 @@ class MaxChildrenTopSortView {
 
 template <typename GraphT>
 std::vector<VertexIdxT<GraphT>> GetTopOrderMaxChildren(const GraphT &graph) {
-    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "GraphT must satisfy the directed_graph concept");
 
     using VertexType = VertexIdxT<GraphT>;
 
@@ -576,7 +576,7 @@ std::vector<VertexIdxT<GraphT>> GetTopOrderMaxChildren(const GraphT &graph) {
 
 template <typename GraphT>
 class RandomTopSortView {
-    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "GraphT must satisfy the directed_graph concept");
 
     const GraphT &graph_;
 
@@ -607,7 +607,7 @@ class RandomTopSortView {
 
 template <typename GraphT>
 std::vector<VertexIdxT<GraphT>> GetTopOrderRandom(const GraphT &graph) {
-    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "GraphT must satisfy the directed_graph concept");
 
     using VertexType = VertexIdxT<GraphT>;
 
@@ -628,7 +628,7 @@ std::vector<VertexIdxT<GraphT>> GetTopOrderRandom(const GraphT &graph) {
 
 template <typename GraphT, typename PrioT>
 class PriorityVecTopSortView {
-    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "GraphT must satisfy the directed_graph concept");
 
     const GraphT &graph_;
 

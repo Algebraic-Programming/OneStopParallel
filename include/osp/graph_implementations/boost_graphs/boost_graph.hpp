@@ -371,7 +371,7 @@ static_assert(osp::isComputationalDagTypedVerticesEdgeDescV<BoostGraphIntT>,
 static_assert(osp::isConstructableCdagVertexV<BoostGraphIntT>,
               "BoostGraphIntT must satisfy the is_constructable_cdag_vertex concept");
 
-static_assert(osp::IsConstructableCdagTypedVertexV<BoostGraphIntT>,
+static_assert(osp::isConstructableCdagTypedVertexV<BoostGraphIntT>,
               "BoostGraphIntT must satisfy the is_constructable_cdag_typed_vertex concept");
 
 static_assert(osp::isConstructableCdagEdgeV<BoostGraphIntT>, "BoostGraphIntT must satisfy the is_constructable_cdag_edge concept");

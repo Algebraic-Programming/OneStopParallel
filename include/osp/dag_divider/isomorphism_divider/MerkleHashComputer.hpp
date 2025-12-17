@@ -38,7 +38,7 @@ namespace osp {
  * and the sorted hashes of its parents (or children, depending on the `forward` template parameter).
  * This allows for the identification of structurally isomorphic subgraphs.
  *
- * @tparam Graph_t The type of the graph, must satisfy the `directed_graph` concept.
+ * @tparam GraphT The type of the graph, must satisfy the `directed_graph` concept.
  * @tparam NodeHashFuncT A functor that computes a hash for a single node.
  *                       Defaults to `UniformNodeHashFunc`.
  * @tparam forward If true, hashes are computed based on parents (top-down).
@@ -46,7 +46,7 @@ namespace osp {
  */
 template <typename GraphT, typename NodeHashFuncT = UniformNodeHashFunc<VertexIdxT<GraphT>>, bool forward = true>
 class MerkleHashComputer : public HashComputer<VertexIdxT<GraphT>> {
-    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "GraphT must satisfy the directed_graph concept");
     static_assert(std::is_invocable_r<std::size_t, NodeHashFuncT, VertexIdxT<GraphT>>::value,
                   "NodeHashFuncT must be invocable with one VertexIdxT<GraphT> argument and return std::size_t.");
 

@@ -53,7 +53,7 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
                                                  or isMemoryConstraintScheduleV<MemoryConstraintT>;
 
     static_assert(not useMemoryConstraint_ or std::is_same_v<GraphT, typename MemoryConstraintT::GraphImplT>,
-                  "Graph_t must be the same as MemoryConstraintT::GraphImplT.");
+                  "GraphT must be the same as MemoryConstraintT::GraphImplT.");
 
     MemoryConstraintT memoryConstraint_;
     double maxPercentIdleProcessors_;

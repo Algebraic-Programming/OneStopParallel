@@ -67,7 +67,7 @@ class OrbitGraphProcessor {
     static_assert(isComputationalDagV<ConstrGraphT>, "ConstrGraphT must be a computational DAG");
     static_assert(isConstructableCdagV<ConstrGraphT>, "ConstrGraphT must satisfy the constructable_cdag_vertex concept");
     static_assert(std::is_same_v<VertexIdxT<GraphT>, VertexIdxT<ConstrGraphT>>,
-                  "Graph_t and ConstrGraphT must have the same VertexIdx types");
+                  "GraphT and ConstrGraphT must have the same VertexIdx types");
 
     using VertexType = VertexIdxT<GraphT>;
 

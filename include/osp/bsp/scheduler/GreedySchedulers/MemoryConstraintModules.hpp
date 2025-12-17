@@ -55,7 +55,7 @@ struct NoMemoryConstraint {
 /**
  * @brief A memory constraint module for local memory constraints.
  *
- * @tparam Graph_t The graph type.
+ * @tparam GraphT The graph type.
  */
 template <typename GraphT>
 struct LocalMemoryConstraint {
@@ -99,13 +99,13 @@ struct LocalMemoryConstraint {
 /**
  * @brief A memory constraint module for local memory constraints.
  *
- * @tparam Graph_t The graph type.
+ * @tparam GraphT The graph type.
  */
 
 /**
  * @brief A memory constraint module for persistent and transient memory constraints.
  *
- * @tparam Graph_t The graph type.
+ * @tparam GraphT The graph type.
  */
 template <typename GraphT>
 struct PersistentTransientMemoryConstraint {

@@ -34,13 +34,13 @@ namespace file_writer {
  * with outgoing edges becomes a hyperedge source. The format is compatible with the
  * `ReadComputationalDagHyperdagFormatDB` reader.
  *
- * @tparam Graph_t The type of the graph, which must satisfy the ComputationalDag concept.
+ * @tparam GraphT The type of the graph, which must satisfy the ComputationalDag concept.
  * @param os The output stream to write to.
  * @param graph The computational DAG to write.
  */
 template <typename GraphT>
 void WriteComputationalDagHyperdagFormatDb(std::ostream &os, const GraphT &graph, const bool writeCommentLines = false) {
-    static_assert(isComputationalDagV<GraphT>, "Graph_t must be a computational DAG");
+    static_assert(isComputationalDagV<GraphT>, "GraphT must be a computational DAG");
 
     const auto numVertices = graph.NumVertices();
     unsigned numHyperedges = 0;
@@ -98,7 +98,7 @@ void WriteComputationalDagHyperdagFormatDb(std::ostream &os, const GraphT &graph
 /**
  * @brief Writes a computational DAG to a file in the HyperdagDB format.
  *
- * @tparam Graph_t The type of the graph, which must satisfy the ComputationalDag concept.
+ * @tparam GraphT The type of the graph, which must satisfy the ComputationalDag concept.
  * @param filename The path to the output file.
  * @param graph The computational DAG to write.
  * @return true if writing was successful, false otherwise.

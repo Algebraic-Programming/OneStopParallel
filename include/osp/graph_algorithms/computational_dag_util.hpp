@@ -27,8 +27,8 @@ namespace osp {
 
 template <typename GraphT>
 VMemwT<GraphT> MaxMemoryWeight(const GraphT &graph) {
-    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
-    static_assert(hasVertexWeightsV<GraphT>, "Graph_t must have vertex weights");
+    static_assert(isDirectedGraphV<GraphT>, "GraphT must satisfy the directed_graph concept");
+    static_assert(hasVertexWeightsV<GraphT>, "GraphT must have vertex weights");
 
     VMemwT<GraphT> maxMemoryWeight = 0;
 
@@ -40,9 +40,9 @@ VMemwT<GraphT> MaxMemoryWeight(const GraphT &graph) {
 
 template <typename GraphT>
 VMemwT<GraphT> MaxMemoryWeight(const VTypeT<GraphT> &nodeType, const GraphT &graph) {
-    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
-    static_assert(hasVertexWeightsV<GraphT>, "Graph_t must have vertex weights");
-    static_assert(hasTypedVerticesV<GraphT>, "Graph_t must have typed vertices");
+    static_assert(isDirectedGraphV<GraphT>, "GraphT must satisfy the directed_graph concept");
+    static_assert(hasVertexWeightsV<GraphT>, "GraphT must have vertex weights");
+    static_assert(hasTypedVerticesV<GraphT>, "GraphT must have typed vertices");
 
     VMemwT<GraphT> maxMemoryWeight = 0;
 
@@ -56,7 +56,7 @@ VMemwT<GraphT> MaxMemoryWeight(const VTypeT<GraphT> &nodeType, const GraphT &gra
 
 template <typename GraphT, typename VertexIterator>
 VWorkwT<GraphT> SumOfVerticesWorkWeights(VertexIterator begin, VertexIterator end, const GraphT &graph) {
-    static_assert(hasVertexWeightsV<GraphT>, "Graph_t must have vertex weights");
+    static_assert(hasVertexWeightsV<GraphT>, "GraphT must have vertex weights");
 
     return std::accumulate(
         begin, end, 0, [&](const auto sum, const VertexIdxT<GraphT> &v) { return sum + graph.VertexWorkWeight(v); });
@@ -64,7 +64,7 @@ VWorkwT<GraphT> SumOfVerticesWorkWeights(VertexIterator begin, VertexIterator en
 
 template <typename GraphT>
 VWorkwT<GraphT> SumOfVerticesWorkWeights(const GraphT &graph) {
-    static_assert(hasVertexWeightsV<GraphT>, "Graph_t must have vertex weights");
+    static_assert(hasVertexWeightsV<GraphT>, "GraphT must have vertex weights");
 
     return std::accumulate(graph.Vertices().begin(),
                            graph.Vertices().end(),
@@ -79,7 +79,7 @@ VWorkwT<GraphT> SumOfVerticesWorkWeights(const std::initializer_list<VertexIdxT<
 
 template <typename VertexIterator, typename GraphT>
 VCommwT<GraphT> SumOfVerticesCommunicationWeights(VertexIterator begin, VertexIterator end, const GraphT &graph) {
-    static_assert(hasVertexWeightsV<GraphT>, "Graph_t must have vertex weights");
+    static_assert(hasVertexWeightsV<GraphT>, "GraphT must have vertex weights");
     return std::accumulate(
         begin, end, 0, [&](const auto sum, const VertexIdxT<GraphT> &v) { return sum + graph.VertexCommWeight(v); });
 }
@@ -113,7 +113,7 @@ VWorkwT<SubGraphT> SumOfCompatibleWorkWeights(const SubGraphT &graph, const Inst
 
 template <typename GraphT>
 VCommwT<GraphT> SumOfVerticesCommunicationWeights(const GraphT &graph) {
-    static_assert(hasVertexWeightsV<GraphT>, "Graph_t must have vertex weights");
+    static_assert(hasVertexWeightsV<GraphT>, "GraphT must have vertex weights");
 
     return std::accumulate(graph.Vertices().begin(),
                            graph.Vertices().end(),
@@ -128,7 +128,7 @@ VCommwT<GraphT> SumOfVerticesCommunicationWeights(const std::initializer_list<Ve
 
 template <typename EdgeIterator, typename GraphT>
 ECommwT<GraphT> SumOfEdgesCommunicationWeights(EdgeIterator begin, EdgeIterator end, const GraphT &graph) {
-    static_assert(hasEdgeWeightsV<GraphT>, "Graph_t must have edge weights");
+    static_assert(hasEdgeWeightsV<GraphT>, "GraphT must have edge weights");
     return std::accumulate(
         begin, end, 0, [&](const auto sum, const EdgeDescT<GraphT> &e) { return sum + graph.EdgeCommWeight(e); });
 }
@@ -140,8 +140,8 @@ ECommwT<GraphT> SumOfEdgesCommunicationWeights(const std::initializer_list<EdgeD
 
 template <typename GraphT>
 VWorkwT<GraphT> CriticalPathWeight(const GraphT &graph) {
-    static_assert(isDirectedGraphEdgeDescV<GraphT>, "Graph_t must satisfy the directed_graph concept");
-    static_assert(hasVertexWeightsV<GraphT>, "Graph_t must have vertex weights");
+    static_assert(isDirectedGraphEdgeDescV<GraphT>, "GraphT must satisfy the directed_graph concept");
+    static_assert(hasVertexWeightsV<GraphT>, "GraphT must have vertex weights");
 
     if (graph.NumVertices() == 0) {
         return 0;

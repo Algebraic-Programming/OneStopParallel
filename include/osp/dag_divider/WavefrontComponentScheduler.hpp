@@ -143,7 +143,7 @@ class WavefrontComponentScheduler : public AbstractWavefrontScheduler<GraphT, Co
     }
 };
 
-template <typename Graph_t>
-using WavefrontComponentSchedulerDefIntT = WavefrontComponentScheduler<Graph_t, BoostGraphIntT>;
+template <typename GraphT>
+using WavefrontComponentSchedulerDefIntT = WavefrontComponentScheduler<GraphT, BoostGraphIntT>;
 
 }    // namespace osp

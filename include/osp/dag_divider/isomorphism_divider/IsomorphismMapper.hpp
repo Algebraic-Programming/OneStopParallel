@@ -35,7 +35,7 @@ namespace osp {
  * This class uses a backtracking algorithm pruned by Merkle hashes to
  * efficiently find the vertex-to-vertex mapping.
  *
- * @tparam Graph_t The original graph type (for global vertex IDs).
+ * @tparam GraphT The original graph type (for global vertex IDs).
  * @tparam ConstrGraphT The subgraph/contracted graph type.
  */
 template <typename GraphT, typename ConstrGraphT>

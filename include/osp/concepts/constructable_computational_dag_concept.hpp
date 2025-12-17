@@ -127,7 +127,7 @@ struct IsConstructableCdagTypedVertex<
     : std::conjunction<IsConstructableCdagVertex<T>, IsModifiableCdagTypedVertex<T>> {};    // for default node type
 
 template <typename T>
-inline constexpr bool IsConstructableCdagTypedVertexV = IsConstructableCdagTypedVertex<T>::value;
+inline constexpr bool isConstructableCdagTypedVertexV = IsConstructableCdagTypedVertex<T>::value;
 
 /**
  * @brief Concept to check if edges can be added (unweighted).

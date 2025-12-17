@@ -55,7 +55,7 @@ namespace osp {
  * This class provides a unified interface to access and modify these components, facilitating
  * the development of scheduling algorithms that need to query problem constraints and properties.
  *
- * @tparam Graph_t The type of the computational DAG, which must satisfy the `is_computational_dag` concept.
+ * @tparam GraphT The type of the computational DAG, which must satisfy the `is_computational_dag` concept.
  */
 template <typename GraphT>
 class BspInstance {

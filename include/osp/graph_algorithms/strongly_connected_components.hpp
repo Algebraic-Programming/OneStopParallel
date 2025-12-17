@@ -33,13 +33,13 @@ namespace osp {
  * Tarjan's algorithm performs a single depth-first search to find all strongly connected components.
  * It has a time complexity of O(V + E), where V is the number of vertices and E is the number of edges.
  *
- * @tparam Graph_t The type of the graph, which must satisfy the `directed_graph` concept.
+ * @tparam GraphT The type of the graph, which must satisfy the `directed_graph` concept.
  * @param graph The input directed graph.
  * @return A vector of vectors, where each inner vector contains the vertices of a strongly connected component.
  */
 template <typename GraphT>
 std::vector<std::vector<VertexIdxT<GraphT>>> StronglyConnectedComponents(const GraphT &graph) {
-    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "GraphT must satisfy the directed_graph concept");
 
     using VertexType = VertexIdxT<GraphT>;
     const auto numVertices = graph.NumVertices();

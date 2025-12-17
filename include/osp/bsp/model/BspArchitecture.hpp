@@ -261,13 +261,13 @@ class BspArchitecture {
           processorTypes_(other.ProcessorTypes()),
           sendCosts_(other.SendCostsVector()) {
         static_assert(std::is_same_v<VMemwT<GraphT>, VMemwT<GraphTOther>>,
-                      "BspArchitecture: Graph_t and Graph_t_other have the same memory weight type.");
+                      "BspArchitecture: GraphT and Graph_t_other have the same memory weight type.");
 
         static_assert(std::is_same_v<VCommwT<GraphT>, VCommwT<GraphTOther>>,
-                      "BspArchitecture: Graph_t and Graph_t_other have the same communication weight type.");
+                      "BspArchitecture: GraphT and Graph_t_other have the same communication weight type.");
 
         static_assert(std::is_same_v<VTypeT<GraphT>, VTypeT<GraphTOther>>,
-                      "BspArchitecture: Graph_t and Graph_t_other have the same processor type.");
+                      "BspArchitecture: GraphT and Graph_t_other have the same processor type.");
     }
 
     /**

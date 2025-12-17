@@ -47,7 +47,7 @@ namespace osp {
  * dynamically switch between a standard BSP scheduler and a specialized TrimmedGroupScheduler
  * for these trimmed groups.
  *
- * @tparam Graph_t The type of the input computational DAG.
+ * @tparam GraphT The type of the input computational DAG.
  * @tparam ConstrGraphT The type of the constructable computational DAG used for internal representations.
  */
 template <typename GraphT, typename ConstrGraphT>
@@ -56,7 +56,7 @@ class IsomorphicSubgraphScheduler {
     static_assert(isComputationalDagV<ConstrGraphT>, "ConstrGraphT must be a computational DAG");
     static_assert(isConstructableCdagV<ConstrGraphT>, "ConstrGraphT must satisfy the constructable_cdag_vertex concept");
     static_assert(std::is_same_v<VertexIdxT<GraphT>, VertexIdxT<ConstrGraphT>>,
-                  "Graph_t and ConstrGraphT must have the same VertexIdx types");
+                  "GraphT and ConstrGraphT must have the same VertexIdx types");
 
   private:
     static constexpr bool verbose_ = false;

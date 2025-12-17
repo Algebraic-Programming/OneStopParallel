@@ -41,7 +41,7 @@ namespace osp {
 /**
  * @brief Default implementation to get the source vertex of an edge.
  *
- * @tparam Graph_t The graph type.
+ * @tparam GraphT The graph type.
  * @param edge The edge descriptor.
  * @return The source vertex index.
  */
@@ -53,7 +53,7 @@ inline VertexIdxT<GraphT> Source(const DirectedEdge<GraphT> &edge, const GraphT 
 /**
  * @brief Default implementation to get the target vertex of an edge.
  *
- * @tparam Graph_t The graph type.
+ * @tparam GraphT The graph type.
  * @param edge The edge descriptor.
  * @return The target vertex index.
  */
@@ -65,7 +65,7 @@ inline VertexIdxT<GraphT> Target(const DirectedEdge<GraphT> &edge, const GraphT 
 /**
  * @brief Get a view of all edges in the graph.
  *
- * @tparam Graph_t The graph type.
+ * @tparam GraphT The graph type.
  * @param graph The graph instance.
  * @return An `edge_view` allowing iteration over all edges.
  */
@@ -77,7 +77,7 @@ inline EdgeView<GraphT> Edges(const GraphT &graph) {
 /**
  * @brief Get a view of outgoing edges from a vertex.
  *
- * @tparam Graph_t The graph type.
+ * @tparam GraphT The graph type.
  * @param u The source vertex index.
  * @param graph The graph instance.
  * @return An `out_edge_view` allowing iteration over outgoing edges from `u`.
@@ -90,7 +90,7 @@ inline OutEdgeView<GraphT> OutEdges(VertexIdxT<GraphT> u, const GraphT &graph) {
 /**
  * @brief Get a view of incoming edges to a vertex.
  *
- * @tparam Graph_t The graph type.
+ * @tparam GraphT The graph type.
  * @param v The target vertex index.
  * @param graph The graph instance.
  * @return An `in_edge_view` allowing iteration over incoming edges to `v`.

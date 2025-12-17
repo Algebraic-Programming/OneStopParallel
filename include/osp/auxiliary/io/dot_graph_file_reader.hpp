@@ -113,7 +113,7 @@ void ParseDotNode(const std::string &line, GraphT &g) {
         }
     }
 
-    if constexpr (IsConstructableCdagTypedVertexV<GraphT>) {
+    if constexpr (isConstructableCdagTypedVertexV<GraphT>) {
         g.AddVertex(workWeight, commWeight, memWeight, type);
     } else {
         g.AddVertex(workWeight, commWeight, memWeight);

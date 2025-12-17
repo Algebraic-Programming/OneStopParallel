@@ -66,14 +66,14 @@ std::vector<std::string> TestGraphs() {
  *
  * Nodes at the same stage in different pipelines are identical (same work weight).
  *
- * @tparam Graph_t The graph type to construct, must be a constructable computational DAG.
+ * @tparam GraphT The graph type to construct, must be a constructable computational DAG.
  * @param num_pipelines The number of parallel pipelines.
  * @param pipeline_len The length of each pipeline.
- * @return A Graph_t object representing the DAG.
+ * @return A GraphT object representing the DAG.
  */
 template <typename GraphT>
 inline GraphT ConstructMultiPipelineDag(unsigned numPipelines, unsigned pipelineLen) {
-    static_assert(isConstructableCdagV<GraphT>, "Graph_t must be a constructable computational DAG");
+    static_assert(isConstructableCdagV<GraphT>, "GraphT must be a constructable computational DAG");
     GraphT dag;
     if (numPipelines == 0 || pipelineLen == 0) {
         return dag;
@@ -100,13 +100,13 @@ inline GraphT ConstructMultiPipelineDag(unsigned numPipelines, unsigned pipeline
  * Each rung is a complete bipartite graph K(2,2) connecting to the next rung.
  * All "left" side nodes are identical, and all "right" side nodes are identical.
  *
- * @tparam Graph_t The graph type to construct.
+ * @tparam GraphT The graph type to construct.
  * @param num_rungs The number of rungs in the ladder.
- * @return A Graph_t object representing the DAG.
+ * @return A GraphT object representing the DAG.
  */
 template <typename GraphT>
 inline GraphT ConstructLadderDag(unsigned numRungs) {
-    static_assert(isConstructableCdagV<GraphT>, "Graph_t must be a constructable computational DAG");
+    static_assert(isConstructableCdagV<GraphT>, "GraphT must be a constructable computational DAG");
     GraphT dag;
     if (numRungs == 0) {
         return dag;
@@ -136,13 +136,13 @@ inline GraphT ConstructLadderDag(unsigned numRungs) {
  * Creates a simple chain where each node has a unique work weight,
  * ensuring no two nodes will be in the same initial orbit.
  *
- * @tparam Graph_t The graph type to construct.
+ * @tparam GraphT The graph type to construct.
  * @param num_nodes The number of nodes in the chain.
- * @return A Graph_t object representing the DAG.
+ * @return A GraphT object representing the DAG.
  */
 template <typename GraphT>
 inline GraphT ConstructAsymmetricDag(unsigned numNodes) {
-    static_assert(isConstructableCdagV<GraphT>, "Graph_t must be a constructable computational DAG");
+    static_assert(isConstructableCdagV<GraphT>, "GraphT must be a constructable computational DAG");
     GraphT dag;
     for (unsigned i = 0; i < numNodes; ++i) {
         dag.AddVertex(10 * (i + 1), 1, 1);
@@ -155,13 +155,13 @@ inline GraphT ConstructAsymmetricDag(unsigned numNodes) {
 
 /**
  * @brief Constructs a complete binary tree that fans out from a single source.
- * @tparam Graph_t The graph type to construct.
+ * @tparam GraphT The graph type to construct.
  * @param height The height of the tree. A height of 0 is a single node. Total nodes: 2^(height+1) - 1.
- * @return A Graph_t object representing the out-tree.
+ * @return A GraphT object representing the out-tree.
  */
 template <typename GraphT>
 inline GraphT ConstructBinaryOutTree(unsigned height) {
-    static_assert(isConstructableCdagV<GraphT>, "Graph_t must be a constructable computational DAG");
+    static_assert(isConstructableCdagV<GraphT>, "GraphT must be a constructable computational DAG");
     GraphT dag;
     unsigned numNodes = (1U << (height + 1)) - 1;
     if (numNodes == 0) {
@@ -181,13 +181,13 @@ inline GraphT ConstructBinaryOutTree(unsigned height) {
 
 /**
  * @brief Constructs a complete binary tree that fans into a single sink (root).
- * @tparam Graph_t The graph type to construct.
+ * @tparam GraphT The graph type to construct.
  * @param height The height of the tree. A height of 0 is a single node. Total nodes: 2^(height+1) - 1.
- * @return A Graph_t object representing the in-tree.
+ * @return A GraphT object representing the in-tree.
  */
 template <typename GraphT>
 inline GraphT ConstructBinaryInTree(unsigned height) {
-    static_assert(isConstructableCdagV<GraphT>, "Graph_t must be a constructable computational DAG");
+    static_assert(isConstructableCdagV<GraphT>, "GraphT must be a constructable computational DAG");
     GraphT dag;
     unsigned numNodes = (1U << (height + 1)) - 1;
     if (numNodes == 0) {
@@ -207,14 +207,14 @@ inline GraphT ConstructBinaryInTree(unsigned height) {
 
 /**
  * @brief Constructs a 2D grid graph.
- * @tparam Graph_t The graph type to construct.
+ * @tparam GraphT The graph type to construct.
  * @param rows The number of rows in the grid.
  * @param cols The number of columns in the grid.
- * @return A Graph_t object representing the grid.
+ * @return A GraphT object representing the grid.
  */
 template <typename GraphT>
 inline GraphT ConstructGridDag(unsigned rows, unsigned cols) {
-    static_assert(isConstructableCdagV<GraphT>, "Graph_t must be a constructable computational DAG");
+    static_assert(isConstructableCdagV<GraphT>, "GraphT must be a constructable computational DAG");
     GraphT dag;
     if (rows == 0 || cols == 0) {
         return dag;
@@ -239,13 +239,13 @@ inline GraphT ConstructGridDag(unsigned rows, unsigned cols) {
 
 /**
  * @brief Constructs a butterfly graph, similar to FFT communication patterns.
- * @tparam Graph_t The graph type to construct.
+ * @tparam GraphT The graph type to construct.
  * @param stages The number of stages (log2 of the number of inputs). Total nodes: (stages+1) * 2^stages.
- * @return A Graph_t object representing the butterfly graph.
+ * @return A GraphT object representing the butterfly graph.
  */
 template <typename GraphT>
 inline GraphT ConstructButterflyDag(unsigned stages) {
-    static_assert(isConstructableCdagV<GraphT>, "Graph_t must be a constructable computational DAG");
+    static_assert(isConstructableCdagV<GraphT>, "GraphT must be a constructable computational DAG");
     GraphT dag;
     if (stages == 0) {
         return dag;

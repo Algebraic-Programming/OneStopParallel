@@ -30,12 +30,12 @@ namespace osp {
  * The iteration order is lexicographical with respect to (source, target) pairs, determined by
  * the order of vertices and their adjacency lists.
  *
- * @tparam Graph_t The type of the graph, which must satisfy the `is_directed_graph_v` concept.
+ * @tparam GraphT The type of the graph, which must satisfy the `is_directed_graph_v` concept.
  */
 template <typename GraphT>
 class EdgeView {
   private:
-    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "GraphT must satisfy the directed_graph concept");
 
     const GraphT &graph_;
 
@@ -165,13 +165,13 @@ class EdgeView {
  * This class provides an iterator-based view to iterate over either outgoing or incoming edges
  * of a given vertex. It is a lightweight, non-owning view.
  *
- * @tparam Graph_t The type of the graph, which must satisfy the `is_directed_graph_v` concept.
+ * @tparam GraphT The type of the graph, which must satisfy the `is_directed_graph_v` concept.
  * @tparam IsOutgoing If true, iterates over outgoing edges; otherwise, incoming edges.
  */
 template <typename GraphT, bool isOutgoing>
 class IncidentEdgeView {
   private:
-    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "GraphT must satisfy the directed_graph concept");
 
     const GraphT &graph_;
     VertexIdxT<GraphT> anchorVertex_;

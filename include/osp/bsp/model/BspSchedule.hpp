@@ -42,13 +42,13 @@ namespace osp {
  * - Compute costs associated with the schedule.
  * - Manipulate the schedule, including updating assignments and merging supersteps.
  *
- * This class is templated on `Graph_t`, which must satisfy the `computational_dag_concept`.
+ * This class is templated on `GraphT`, which must satisfy the `computational_dag_concept`.
  * Moreover, the work and communication weights of the nodes must be of the same type in order to properly compute the cost.
  *
  * It interacts closely with `BspInstance` to access problem-specific data and constraints. In fact, a `BspSchedule` object is
  * tied to a `BspInstance` object.
  *
- * @tparam Graph_t The type of the computational DAG, which must satisfy `is_computational_dag_v`.
+ * @tparam GraphT The type of the computational DAG, which must satisfy `is_computational_dag_v`.
  * @see BspInstance
  * @see IBspSchedule
  * @see IBspScheduleEval

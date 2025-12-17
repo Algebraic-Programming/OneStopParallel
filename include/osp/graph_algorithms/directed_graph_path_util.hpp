@@ -39,7 +39,7 @@ namespace osp {
  * This function performs a Breadth-First Search (BFS) starting from the `src`
  * vertex to determine if the `dest` vertex is reachable.
  *
- * @tparam Graph_t The type of the graph.
+ * @tparam GraphT The type of the graph.
  * @param src The source vertex.
  * @param dest The destination vertex.
  * @param graph The graph to search in.
@@ -47,7 +47,7 @@ namespace osp {
  */
 template <typename GraphT>
 bool HasPath(const VertexIdxT<GraphT> src, const VertexIdxT<GraphT> dest, const GraphT &graph) {
-    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "GraphT must satisfy the directed_graph concept");
 
     for (const auto &child : BfsView(graph, src)) {
         if (child == dest) {
@@ -60,7 +60,7 @@ bool HasPath(const VertexIdxT<GraphT> src, const VertexIdxT<GraphT> dest, const 
 
 template <typename GraphT>
 std::size_t LongestPath(const std::set<VertexIdxT<GraphT>> &vertices, const GraphT &graph) {
-    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "GraphT must satisfy the directed_graph concept");
 
     using VertexType = VertexIdxT<GraphT>;
 
@@ -109,7 +109,7 @@ std::size_t LongestPath(const std::set<VertexIdxT<GraphT>> &vertices, const Grap
 
 template <typename GraphT>
 std::size_t LongestPath(const GraphT &graph) {
-    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "GraphT must satisfy the directed_graph concept");
 
     using VertexType = VertexIdxT<GraphT>;
 
@@ -142,7 +142,7 @@ std::size_t LongestPath(const GraphT &graph) {
 
 template <typename GraphT>
 std::vector<VertexIdxT<GraphT>> LongestChain(const GraphT &graph) {
-    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "GraphT must satisfy the directed_graph concept");
 
     using VertexType = VertexIdxT<GraphT>;
 
@@ -193,7 +193,7 @@ template <typename GraphT, typename T = unsigned>
 std::vector<T> GetBottomNodeDistance(const GraphT &graph) {
     static_assert(std::is_integral_v<T>, "T must be of integral type");
 
-    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "GraphT must satisfy the directed_graph concept");
 
     std::vector<T> bottomDistance(graph.NumVertices(), 0);
 
@@ -212,7 +212,7 @@ template <typename GraphT, typename T = unsigned>
 std::vector<T> GetTopNodeDistance(const GraphT &graph) {
     static_assert(std::is_integral_v<T>, "T must be of integral type");
 
-    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "GraphT must satisfy the directed_graph concept");
 
     std::vector<T> topDistance(graph.NumVertices(), 0);
 
@@ -228,7 +228,7 @@ std::vector<T> GetTopNodeDistance(const GraphT &graph) {
 
 template <typename GraphT>
 std::vector<std::vector<VertexIdxT<GraphT>>> ComputeWavefronts(const GraphT &graph) {
-    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "GraphT must satisfy the directed_graph concept");
 
     std::vector<std::vector<VertexIdxT<GraphT>>> wavefronts;
     std::vector<VertexIdxT<GraphT>> parentsVisited(graph.NumVertices(), 0);
@@ -264,7 +264,7 @@ std::vector<std::vector<VertexIdxT<GraphT>>> ComputeWavefronts(const GraphT &gra
 
 template <typename GraphT>
 std::vector<int> GetStrictPosetIntegerMap(unsigned const noise, double const poissonParam, const GraphT &graph) {
-    static_assert(isDirectedGraphEdgeDescV<GraphT>, "Graph_t must satisfy the directed_graph_edge_desc concept");
+    static_assert(isDirectedGraphEdgeDescV<GraphT>, "GraphT must satisfy the directed_graph_edge_desc concept");
 
     if (noise > static_cast<unsigned>(std::numeric_limits<int>::max())) {
         throw std::overflow_error("Overflow in get_strict_poset_integer_map");

@@ -46,7 +46,7 @@ void CreateInducedSubgraph(const GraphTIn &dag,
 
     for (const auto &node : extraSources) {
         localIdx[node] = dagOut.NumVertices();
-        if constexpr (IsConstructableCdagTypedVertexV<GraphTOut> and hasTypedVerticesV<GraphTIn>) {
+        if constexpr (isConstructableCdagTypedVertexV<GraphTOut> and hasTypedVerticesV<GraphTIn>) {
             // add extra source with type
             dagOut.AddVertex(0, dag.VertexCommWeight(node), dag.VertexMemWeight(node), dag.VertexType(node));
         } else {
@@ -58,7 +58,7 @@ void CreateInducedSubgraph(const GraphTIn &dag,
     for (const auto &node : selectedNodes) {
         localIdx[node] = dagOut.NumVertices();
 
-        if constexpr (IsConstructableCdagTypedVertexV<GraphTOut> and hasTypedVerticesV<GraphTIn>) {
+        if constexpr (isConstructableCdagTypedVertexV<GraphTOut> and hasTypedVerticesV<GraphTIn>) {
             // add vertex with type
             dagOut.AddVertex(
                 dag.VertexWorkWeight(node), dag.VertexCommWeight(node), dag.VertexMemWeight(node), dag.VertexType(node));
@@ -98,7 +98,7 @@ void CreateInducedSubgraph(const GraphTIn &dag, GraphTOut &dagOut, const std::ve
 
 template <typename GraphT>
 bool CheckOrderedIsomorphism(const GraphT &first, const GraphT &second) {
-    static_assert(isDirectedGraphV<GraphT>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "GraphT must satisfy the directed_graph concept");
 
     if (first.NumVertices() != second.NumVertices() || first.NumEdges() != second.NumEdges()) {
         return false;
@@ -181,7 +181,7 @@ std::vector<GraphTOut> CreateInducedSubgraphs(const GraphTIn &dagIn, const std::
     for (const auto node : dagIn.Vertices()) {
         localIdx[node] = splitDags[partitionIDs[node]].NumVertices();
 
-        if constexpr (IsConstructableCdagTypedVertexV<GraphTOut> and hasTypedVerticesV<GraphTIn>) {
+        if constexpr (isConstructableCdagTypedVertexV<GraphTOut> and hasTypedVerticesV<GraphTIn>) {
             splitDags[partitionIDs[node]].AddVertex(
                 dagIn.VertexWorkWeight(node), dagIn.VertexCommWeight(node), dagIn.VertexMemWeight(node), dagIn.VertexType(node));
         } else {
@@ -231,7 +231,7 @@ std::unordered_map<VertexIdxT<GraphTIn>, VertexIdxT<GraphTOut>> CreateInducedSub
     for (const auto &node : selectedNodes) {
         localIdx[node] = dagOut.NumVertices();
 
-        if constexpr (IsConstructableCdagTypedVertexV<GraphTOut> and hasTypedVerticesV<GraphTIn>) {
+        if constexpr (isConstructableCdagTypedVertexV<GraphTOut> and hasTypedVerticesV<GraphTIn>) {
             // add vertex with type
             dagOut.AddVertex(
                 dag.VertexWorkWeight(node), dag.VertexCommWeight(node), dag.VertexMemWeight(node), dag.VertexType(node));

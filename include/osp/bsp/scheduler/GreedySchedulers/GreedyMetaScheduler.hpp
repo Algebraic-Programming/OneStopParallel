@@ -36,7 +36,7 @@ namespace osp {
  * The ComputeSchedule() method iterates through a list of schedulers, computes a schedule using each one,
  * and returns the schedule with the minimum cost.
  *
- * @tparam Graph_t The graph type representing the computational DAG.
+ * @tparam GraphT The graph type representing the computational DAG.
  * @tparam CostModel The cost model functor to evaluate schedules. Defaults to LazyCommunicationCost.
  */
 template <typename GraphT, typename CostModel = LazyCommunicationCost<GraphT>>
