@@ -1291,7 +1291,7 @@ std::vector<std::vector<std::vector<VertexIdxT<GraphT>>>> PebblingSchedule<Graph
 
     std::vector<std::vector<std::vector<VertexIdx>>> topOrders(numProcs, std::vector<std::vector<VertexIdx>>(numSupsteps));
 
-    std::vector<std::vector<std::deque<VertexIdx>>> Q(numProcs, std::vector<std::deque<VertexIdx>>(numSupsteps));
+    std::vector<std::vector<std::deque<VertexIdx>>> queue(numProcs, std::vector<std::deque<VertexIdx>>(numSupsteps));
     std::vector<std::vector<std::vector<VertexIdx>>> nodesUpdated(numProcs, std::vector<std::vector<VertexIdx>>(numSupsteps));
     std::vector<unsigned> nrPred(n);
     std::vector<unsigned> predDone(n, 0);
@@ -1306,21 +1306,21 @@ std::vector<std::vector<std::vector<VertexIdxT<GraphT>>>> PebblingSchedule<Graph
         }
         nrPred[node] = predecessors;
         if (predecessors == 0 && externalSources_.find(node) == externalSources_.end()) {
-            Q[schedule.AssignedProcessor(node)][schedule.AssignedSuperstep(node)].push_back(node);
+            queue[schedule.AssignedProcessor(node)][schedule.AssignedSuperstep(node)].push_back(node);
         }
     }
     for (unsigned proc = 0; proc < numProcs; ++proc) {
         for (unsigned step = 0; step < numSupsteps; ++step) {
-            while (!Q[proc][step].empty()) {
-                VertexIdx node = Q[proc][step].front();
-                Q[proc][step].pop_front();
+            while (!queue[proc][step].empty()) {
+                VertexIdx node = queue[proc][step].front();
+                queue[proc][step].pop_front();
                 topOrders[proc][step].push_back(node);
                 for (VertexIdx succ : schedule.GetInstance().GetComputationalDag().Children(node)) {
                     if (schedule.AssignedProcessor(node) == schedule.AssignedProcessor(succ)
                         && schedule.AssignedSuperstep(node) == schedule.AssignedSuperstep(succ)) {
                         ++predDone[succ];
                         if (predDone[succ] == nrPred[succ]) {
-                            Q[proc][step].push_front(succ);
+                            queue[proc][step].push_front(succ);
                         }
                     }
                 }
