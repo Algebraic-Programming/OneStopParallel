@@ -696,11 +696,11 @@ VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::SomeChildrenContraction(
             continue;
         }
 
-        auto cmp_chld = [&topDist, &botDist](const VertexType &lhs, const VertexType &rhs) {
+        auto cmpChld = [&topDist, &botDist](const VertexType &lhs, const VertexType &rhs) {
             return (topDist[lhs] < topDist[rhs]) || ((topDist[lhs] == topDist[rhs]) && (botDist[lhs] > botDist[rhs]))
                    || ((topDist[lhs] == topDist[rhs]) && (botDist[lhs] == botDist[rhs]) && (lhs < rhs));
         };
-        std::set<VertexType, decltype(cmp_chld)> childrenPriority(cmp_chld);
+        std::set<VertexType, decltype(cmpChld)> childrenPriority(cmpChld);
         for (const VertexType &chld : graph.Children(groupHead)) {
             if (vertexPoset[chld] == vertexPoset[groupHead] + 1) {
                 childrenPriority.emplace(chld);
@@ -710,8 +710,8 @@ VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::SomeChildrenContraction(
             continue;
         }
 
-        std::vector<std::pair<typename std::set<VertexType, decltype(cmp_chld)>::const_iterator,
-                              typename std::set<VertexType, decltype(cmp_chld)>::const_iterator>>
+        std::vector<std::pair<typename std::set<VertexType, decltype(cmpChld)>::const_iterator,
+                              typename std::set<VertexType, decltype(cmpChld)>::const_iterator>>
             admissbleChildrenGroups;
         for (auto chldIterStart = childrenPriority.cbegin(); chldIterStart != childrenPriority.cend();) {
             if constexpr (hasTypedVerticesV<GraphTIn>) {
@@ -883,11 +883,11 @@ VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::SomeParentsContraction(
             continue;
         }
 
-        auto cmp_par = [&topDist, &botDist](const VertexType &lhs, const VertexType &rhs) {
+        auto cmpPar = [&topDist, &botDist](const VertexType &lhs, const VertexType &rhs) {
             return (botDist[lhs] < botDist[rhs]) || ((botDist[lhs] == botDist[rhs]) && (topDist[lhs] > topDist[rhs]))
                    || ((botDist[lhs] == botDist[rhs]) && (topDist[lhs] == topDist[rhs]) && (lhs < rhs));
         };
-        std::set<VertexType, decltype(cmp_par)> parentsPriority(cmp_par);
+        std::set<VertexType, decltype(cmpPar)> parentsPriority(cmpPar);
         for (const VertexType &par : graph.Parents(groupFoot)) {
             if (vertexPoset[par] + 1 == vertexPoset[groupFoot]) {
                 parentsPriority.emplace(par);
@@ -897,8 +897,8 @@ VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::SomeParentsContraction(
             continue;
         }
 
-        std::vector<std::pair<typename std::set<VertexType, decltype(cmp_par)>::const_iterator,
-                              typename std::set<VertexType, decltype(cmp_par)>::const_iterator>>
+        std::vector<std::pair<typename std::set<VertexType, decltype(cmpPar)>::const_iterator,
+                              typename std::set<VertexType, decltype(cmpPar)>::const_iterator>>
             admissbleParentGroups;
         for (auto parIterStart = parentsPriority.cbegin(); parIterStart != parentsPriority.cend();) {
             if constexpr (hasTypedVerticesV<GraphTIn>) {

@@ -55,15 +55,15 @@ class BspScheduleCoarser : public CoarserGenContractionMap<GraphTIn, GraphTOut> 
     //                        std::vector<VertexIdxT<GraphTOut>> &reverse_vertex_map) override {
 
     virtual std::vector<VertexIdxT<GraphTOut>> GenerateVertexContractionMap(const GraphTIn &dagIn) override {
-        using VertexType_in = VertexIdxT<GraphTIn>;
-        using VertexType_out = VertexIdxT<GraphTOut>;
+        using VertexTypeIn = VertexIdxT<GraphTIn>;
+        using VertexTypeOut = VertexIdxT<GraphTOut>;
 
         assert(&dagIn == &schedule_->GetInstance().GetComputationalDag());
         assert(schedule_->SatisfiesPrecedenceConstraints());
 
         SetSchedule<GraphTIn> setSchedule(*schedule_);
-        std::vector<VertexType_out> reverseVertexMap(dagIn.NumVertices(), 0);
-        std::vector<std::vector<VertexType_in>> vertexMap;
+        std::vector<VertexTypeOut> reverseVertexMap(dagIn.NumVertices(), 0);
+        std::vector<std::vector<VertexTypeIn>> vertexMap;
 
         bool scheduleRespectsTypes = true;
 
@@ -74,7 +74,7 @@ class BspScheduleCoarser : public CoarserGenContractionMap<GraphTIn, GraphTOut> 
                     VMemwT<GraphTIn> totalMemory = 0;
                     VCommwT<GraphTIn> totalCommunication = 0;
 
-                    vertexMap.push_back(std::vector<VertexType_in>());
+                    vertexMap.push_back(std::vector<VertexTypeIn>());
 
                     VTypeT<GraphTIn> type = dagIn.VertexType(*(setSchedule.stepProcessorVertices_[step][proc].begin()));
                     bool homogeneousTypes = true;
