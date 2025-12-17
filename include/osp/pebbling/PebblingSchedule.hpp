@@ -1292,7 +1292,7 @@ std::vector<std::vector<std::vector<VertexIdxT<GraphT>>>> PebblingSchedule<Graph
     std::vector<std::vector<std::vector<VertexIdx>>> topOrders(numProcs, std::vector<std::vector<VertexIdx>>(numSupsteps));
 
     std::vector<std::vector<std::deque<VertexIdx>>> Q(numProcs, std::vector<std::deque<VertexIdx>>(numSupsteps));
-    std::vector<std::vector<std::vector<VertexIdx>>> NodesUpdated(numProcs, std::vector<std::vector<VertexIdx>>(numSupsteps));
+    std::vector<std::vector<std::vector<VertexIdx>>> nodesUpdated(numProcs, std::vector<std::vector<VertexIdx>>(numSupsteps));
     std::vector<unsigned> nrPred(n);
     std::vector<unsigned> predDone(n, 0);
     for (VertexIdx node = 0; node < n; ++node) {
@@ -1780,10 +1780,10 @@ void PebblingSchedule<GraphT>::FixForceEvicts(const std::vector<std::tuple<Verte
                  ++itr) {
                 if (itr->node == node) {
                     if (where.second > 0) {
-                        auto previous_step = itr;
-                        --previous_step;
+                        auto previousStep = itr;
+                        --previousStep;
                         for (VertexIdx toEvict : itr->nodesEvictedAfter) {
-                            previous_step->nodesEvictedAfter.push_back(toEvict);
+                            previousStep->nodesEvictedAfter.push_back(toEvict);
                         }
                     } else {
                         for (VertexIdx toEvict : itr->nodesEvictedAfter) {

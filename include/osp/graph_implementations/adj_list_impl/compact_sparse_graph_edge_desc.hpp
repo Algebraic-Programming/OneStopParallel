@@ -643,10 +643,10 @@ struct IsCompactSparseGraphReorder<CompactSparseGraphEdgeDesc<false,
                                                                  VertexTypeTemplateType>,
                                    void> : std::true_type {};
 
-static_assert(IsCompactSparseGraphV<CompactSparseGraphEdgeDesc<true>>);
-static_assert(IsCompactSparseGraphV<CompactSparseGraphEdgeDesc<false>>);
-static_assert(!IsCompactSparseGraphReorderV<CompactSparseGraphEdgeDesc<true>>);
-static_assert(IsCompactSparseGraphReorderV<CompactSparseGraphEdgeDesc<false>>);
+static_assert(isCompactSparseGraphV<CompactSparseGraphEdgeDesc<true>>);
+static_assert(isCompactSparseGraphV<CompactSparseGraphEdgeDesc<false>>);
+static_assert(!isCompactSparseGraphReorderV<CompactSparseGraphEdgeDesc<true>>);
+static_assert(isCompactSparseGraphReorderV<CompactSparseGraphEdgeDesc<false>>);
 
 static_assert(hasVertexWeightsV<CompactSparseGraphEdgeDesc<true, true>>,
               "CompactSparseGraphEdgeDesc must satisfy the has_vertex_weights concept");

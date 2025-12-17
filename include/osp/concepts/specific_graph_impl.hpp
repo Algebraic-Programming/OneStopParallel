@@ -38,7 +38,7 @@ template <typename T, typename = void>
 struct IsCompactSparseGraph : std::false_type {};
 
 template <typename T>
-inline constexpr bool IsCompactSparseGraphV = IsCompactSparseGraph<T>::value;
+inline constexpr bool isCompactSparseGraphV = IsCompactSparseGraph<T>::value;
 
 /**
  * @brief Trait to check if a graph type is a `CompactSparseGraph` that supports reordering.
@@ -49,6 +49,6 @@ template <typename T, typename = void>
 struct IsCompactSparseGraphReorder : std::false_type {};
 
 template <typename T>
-inline constexpr bool IsCompactSparseGraphReorderV = IsCompactSparseGraphReorder<T>::value;
+inline constexpr bool isCompactSparseGraphReorderV = IsCompactSparseGraphReorder<T>::value;
 
 }    // namespace osp

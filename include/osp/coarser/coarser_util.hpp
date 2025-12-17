@@ -230,7 +230,7 @@ template <typename GraphTIn,
           typename VMemAccMethod = AccSum<VMemwT<GraphTIn>>,
           typename ECommAccMethod = AccSum<ECommwT<GraphTIn>>>
 bool ConstructCoarseDag(const GraphTIn &dagIn, GraphTOut &coarsenedDag, std::vector<VertexIdxT<GraphTOut>> &vertexContractionMap) {
-    if constexpr (IsCompactSparseGraphReorderV<GraphTOut>) {
+    if constexpr (isCompactSparseGraphReorderV<GraphTOut>) {
         static_assert(isDirectedGraphV<GraphTIn> && isDirectedGraphV<GraphTOut>,
                       "Graph types need to satisfy the is_directed_graph concept.");
         static_assert(isComputationalDagV<GraphTIn>, "GraphTIn must be a computational DAG");
