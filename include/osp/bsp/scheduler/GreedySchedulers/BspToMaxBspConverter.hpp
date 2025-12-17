@@ -32,7 +32,7 @@ class GreedyBspToMaxBspConverter {
                   "GreedyBspToMaxBspConverter requires work and comm. weights to have the same type.");
 
   protected:
-    using vertexIdx = VertexIdxT<GraphT>;
+    using VertexIdx = VertexIdxT<GraphT>;
     using CostType = VWorkwT<GraphT>;
     using KeyTriple = std::tuple<VertexIdxT<GraphT>, unsigned int, unsigned int>;
 
@@ -59,13 +59,13 @@ MaxBspScheduleCS<GraphT> GreedyBspToMaxBspConverter<GraphT>::Convert(const BspSc
 
     // Initialize data structures
     std::vector<double> priorities;
-    std::vector<std::vector<std::deque<vertexIdx>>> procList = CreateSuperstepLists(schedule, priorities);
+    std::vector<std::vector<std::deque<VertexIdx>>> procList = CreateSuperstepLists(schedule, priorities);
     std::vector<std::vector<CostType>> workRemainingProcSuperstep(schedule.GetInstance().NumberOfProcessors(),
                                                                    std::vector<CostType>(schedule.NumberOfSupersteps(), 0));
-    std::vector<vertexIdx> nodesRemainingSuperstep(schedule.NumberOfSupersteps(), 0);
+    std::vector<VertexIdx> nodesRemainingSuperstep(schedule.NumberOfSupersteps(), 0);
 
     MaxBspScheduleCS<GraphT> scheduleMax(schedule.GetInstance());
-    for (vertexIdx node = 0; node < schedule.GetInstance().NumberOfVertices(); node++) {
+    for (VertexIdx node = 0; node < schedule.GetInstance().NumberOfVertices(); node++) {
         workRemainingProcSuperstep[schedule.AssignedProcessor(node)][schedule.AssignedSuperstep(node)]
             += dag.VertexWorkWeight(node);
         ++nodesRemainingSuperstep[schedule.AssignedSuperstep(node)];
@@ -124,7 +124,7 @@ MaxBspScheduleCS<GraphT> GreedyBspToMaxBspConverter<GraphT>::Convert(const BspSc
                 break;
             }
 
-            vertexIdx chosenNode = procList[chosenProc][step].front();
+            VertexIdx chosenNode = procList[chosenProc][step].front();
             procList[chosenProc][step].pop_front();
             workDoneOnProc[chosenProc] += dag.VertexWorkWeight(chosenNode);
             workRemainingProcSuperstep[chosenProc][step] -= dag.VertexWorkWeight(chosenNode);
@@ -147,7 +147,7 @@ MaxBspScheduleCS<GraphT> GreedyBspToMaxBspConverter<GraphT>::Convert(const BspSc
                 }
                 while (!procList[proc][step].empty()
                        && workDoneOnProc[proc] + dag.VertexWorkWeight(procList[proc][step].front()) <= maxWorkDone) {
-                    vertexIdx node = procList[proc][step].front();
+                    VertexIdx node = procList[proc][step].front();
                     procList[proc][step].pop_front();
                     workDoneOnProc[proc] += dag.VertexWorkWeight(node);
                     workRemainingProcSuperstep[proc][step] -= dag.VertexWorkWeight(node);
@@ -253,7 +253,7 @@ MaxBspScheduleCS<GraphT> GreedyBspToMaxBspConverter<GraphT>::Convert(const BspSc
         recOnProc.clear();
         recOnProc.resize(schedule.GetInstance().NumberOfProcessors(), 0);
 
-        std::set<std::pair<vertexIdx, unsigned>> lateArrivingNodes;
+        std::set<std::pair<VertexIdx, unsigned>> lateArrivingNodes;
         for (const std::pair<KeyTriple, unsigned> &entry : freeCommStepsForSuperstep[step]) {
             scheduleMax.AddCommunicationScheduleEntry(entry.first, currentStep - 1);
             CostType commCost
@@ -308,15 +308,15 @@ MaxBspScheduleCS<GraphT> GreedyBspToMaxBspConverter<GraphT>::Convert(const BspSc
 
         for (unsigned proc = 0; proc < schedule.GetInstance().NumberOfProcessors(); ++proc) {
             CostType workSoFar = 0;
-            std::set<vertexIdx> broughtForward;
-            for (vertexIdx node : procList[proc][step + 1]) {
+            std::set<VertexIdx> broughtForward;
+            for (VertexIdx node : procList[proc][step + 1]) {
                 if (workSoFar + dag.VertexWorkWeight(node) > workLimit) {
                     continue;
                 }
 
                 bool hasDependency = false;
 
-                for (const vertexIdx &parent : dag.Parents(node)) {
+                for (const VertexIdx &parent : dag.Parents(node)) {
                     if (schedule.AssignedProcessor(node) != schedule.AssignedProcessor(parent)
                         && lateArrivingNodes.find(std::make_pair(parent, proc)) != lateArrivingNodes.end()) {
                         hasDependency = true;
@@ -344,8 +344,8 @@ MaxBspScheduleCS<GraphT> GreedyBspToMaxBspConverter<GraphT>::Convert(const BspSc
                 }
             }
 
-            std::deque<vertexIdx> remaining;
-            for (vertexIdx node : procList[proc][step + 1]) {
+            std::deque<VertexIdx> remaining;
+            for (VertexIdx node : procList[proc][step + 1]) {
                 if (broughtForward.find(node) == broughtForward.end()) {
                     remaining.push_back(node);
                 }
@@ -366,10 +366,10 @@ template <typename GraphT>
 std::vector<std::vector<std::deque<VertexIdxT<GraphT>>>> GreedyBspToMaxBspConverter<GraphT>::CreateSuperstepLists(
     const BspScheduleCS<GraphT> &schedule, std::vector<double> &priorities) const {
     const GraphT &dag = schedule.GetInstance().GetComputationalDag();
-    std::vector<vertexIdx> topOrder = GetTopOrder(dag);
+    std::vector<VertexIdx> topOrder = GetTopOrder(dag);
     priorities.clear();
     priorities.resize(dag.NumVertices());
-    std::vector<vertexIdx> localInDegree(dag.NumVertices(), 0);
+    std::vector<VertexIdx> localInDegree(dag.NumVertices(), 0);
 
     // compute for each node the amount of dependent send cost in the same superstep
     std::vector<CostType> commDependency(dag.NumVertices(), 0);
@@ -383,7 +383,7 @@ std::vector<std::vector<std::deque<VertexIdxT<GraphT>>>> GreedyBspToMaxBspConver
 
     // assign priority to nodes - based on their own work/comm ratio, and that of its successors in the same proc/supstep
     for (auto itr = topOrder.rbegin(); itr != topOrder.rend(); ++itr) {
-        vertexIdx node = *itr;
+        VertexIdx node = *itr;
         double base = static_cast<double>(dag.VertexWorkWeight(node));
         if (commDependency[node] > 0) {
             base /= static_cast<double>(2 * commDependency[node]);
@@ -391,7 +391,7 @@ std::vector<std::vector<std::deque<VertexIdxT<GraphT>>>> GreedyBspToMaxBspConver
 
         double successors = 0;
         unsigned numChildren = 0;
-        for (const vertexIdx &child : dag.Children(node)) {
+        for (const VertexIdx &child : dag.Children(node)) {
             if (schedule.AssignedProcessor(node) == schedule.AssignedProcessor(child)
                 && schedule.AssignedSuperstep(node) == schedule.AssignedSuperstep(child)) {
                 ++numChildren;
@@ -406,20 +406,20 @@ std::vector<std::vector<std::deque<VertexIdxT<GraphT>>>> GreedyBspToMaxBspConver
     }
 
     // create lists for each processor-superstep pair, in a topological order, sorted by priority
-    std::vector<std::vector<std::deque<vertexIdx>>> superstepLists(
-        schedule.GetInstance().NumberOfProcessors(), std::vector<std::deque<vertexIdx>>(schedule.NumberOfSupersteps()));
+    std::vector<std::vector<std::deque<VertexIdx>>> superstepLists(
+        schedule.GetInstance().NumberOfProcessors(), std::vector<std::deque<VertexIdx>>(schedule.NumberOfSupersteps()));
 
-    std::set<std::pair<double, vertexIdx>> free;
-    for (vertexIdx node = 0; node < schedule.GetInstance().NumberOfVertices(); node++) {
+    std::set<std::pair<double, VertexIdx>> free;
+    for (VertexIdx node = 0; node < schedule.GetInstance().NumberOfVertices(); node++) {
         if (localInDegree[node] == 0) {
             free.emplace(priorities[node], node);
         }
     }
     while (!free.empty()) {
-        vertexIdx node = free.begin()->second;
+        VertexIdx node = free.begin()->second;
         free.erase(free.begin());
         superstepLists[schedule.AssignedProcessor(node)][schedule.AssignedSuperstep(node)].push_back(node);
-        for (const vertexIdx &child : dag.Children(node)) {
+        for (const VertexIdx &child : dag.Children(node)) {
             if (schedule.AssignedProcessor(node) == schedule.AssignedProcessor(child)
                 && schedule.AssignedSuperstep(node) == schedule.AssignedSuperstep(child)) {
                 if (--localInDegree[child] == 0) {
