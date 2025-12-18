@@ -54,20 +54,20 @@ BOOST_AUTO_TEST_CASE(TestFull) {
 
     GreedyBspScheduler<graph> greedy;
     BspSchedule<graph> bspInitial(instance);
-    BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, greedy.ComputeSchedule(bsp_initial));
+    BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, greedy.ComputeSchedule(bspInitial));
 
     std::vector<VMemwT<graph> > minimumMemoryRequiredVector = PebblingSchedule<graph>::MinimumMemoryRequiredPerNodeType(instance);
-    VMemwT<graph> maxRequired = *std::max_element(minimum_memory_required_vector.begin(), minimum_memory_required_vector.end());
-    instance.GetArchitecture().SetMemoryBound(max_required);
+    VMemwT<graph> maxRequired = *std::max_element(minimumMemoryRequiredVector.begin(), minimumMemoryRequiredVector.end());
+    instance.GetArchitecture().SetMemoryBound(maxRequired);
 
-    PebblingSchedule<graph> initialSol(bsp_initial, PebblingSchedule<graph>::CacheEvictionStrategy::FORESIGHT);
+    PebblingSchedule<graph> initialSol(bspInitial, PebblingSchedule<graph>::CacheEvictionStrategy::FORESIGHT);
     BOOST_CHECK(initialSol.IsValid());
 
     MultiProcessorPebbling<graph> mpp;
     mpp.SetTimeLimitSeconds(10);
     PebblingSchedule<graph> schedule(instance);
-    mpp.computePebblingWithInitialSolution(initial_sol, schedule);
-    schedule.cleanSchedule();
+    mpp.ComputePebblingWithInitialSolution(initialSol, schedule);
+    schedule.CleanSchedule();
     BOOST_CHECK(schedule.IsValid());
 };
 
@@ -93,13 +93,13 @@ BOOST_AUTO_TEST_CASE(TestPartial) {
     BOOST_CHECK(status);
 
     std::vector<VMemwT<graph> > minimumMemoryRequiredVector = PebblingSchedule<graph>::MinimumMemoryRequiredPerNodeType(instance);
-    VMemwT<graph> maxRequired = *std::max_element(minimum_memory_required_vector.begin(), minimum_memory_required_vector.end());
-    instance.GetArchitecture().SetMemoryBound(max_required);
+    VMemwT<graph> maxRequired = *std::max_element(minimumMemoryRequiredVector.begin(), minimumMemoryRequiredVector.end());
+    instance.GetArchitecture().SetMemoryBound(maxRequired);
 
     PebblingPartialILP<graph> mpp;
-    mpp.setMinSize(15);
-    mpp.setSecondsForSubILP(5);
+    mpp.SetMinSize(15);
+    mpp.SetSecondsForSubIlp(5);
     PebblingSchedule<graph> schedule(instance);
-    mpp.computePebbling(schedule);
+    mpp.ComputePebbling(schedule);
     BOOST_CHECK(schedule.IsValid());
 };

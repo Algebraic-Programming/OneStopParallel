@@ -242,9 +242,7 @@ class PebblingSchedule {
         return nodesSentDown_[proc][supstep];
     }
 
-    const std::vector<VertexIdx> &GetNodesSentUp(unsigned proc, unsigned supstep) const {
-        return nodesSentUp_[proc][supstep];
-    }
+    const std::vector<VertexIdx> &GetNodesSentUp(unsigned proc, unsigned supstep) const { return nodesSentUp_[proc][supstep]; }
 
     void SetNeedsBlueAtEnd(const std::set<VertexIdx> &nodes) { needsBlueAtEnd_ = nodes; }
 
@@ -294,8 +292,8 @@ VWorkwT<GraphT> PebblingSchedule<GraphT>::ComputeCost() const {
         for (unsigned proc = 0; proc < instance_->GetArchitecture().NumberOfProcessors(); ++proc) {
             CostType sendUp = 0;
             for (VertexIdx node : nodesSentUp_[proc][step]) {
-                sendUp
-                    += instance_->GetComputationalDag().VertexCommWeight(node) * instance_->GetArchitecture().CommunicationCosts();
+                sendUp += instance_->GetComputationalDag().VertexCommWeight(node)
+                          * instance_->GetArchitecture().CommunicationCosts();
             }
 
             if (sendUp > maxSendUp) {
@@ -310,8 +308,8 @@ VWorkwT<GraphT> PebblingSchedule<GraphT>::ComputeCost() const {
         for (unsigned proc = 0; proc < instance_->GetArchitecture().NumberOfProcessors(); ++proc) {
             CostType sendDown = 0;
             for (VertexIdx node : nodesSentDown_[proc][step]) {
-                sendDown
-                    += instance_->GetComputationalDag().VertexCommWeight(node) * instance_->GetArchitecture().CommunicationCosts();
+                sendDown += instance_->GetComputationalDag().VertexCommWeight(node)
+                            * instance_->GetArchitecture().CommunicationCosts();
             }
 
             if (sendDown > maxSendDown) {
@@ -327,7 +325,8 @@ VWorkwT<GraphT> PebblingSchedule<GraphT>::ComputeCost() const {
 template <typename GraphT>
 VWorkwT<GraphT> PebblingSchedule<GraphT>::ComputeAsynchronousCost() const {
     std::vector<CostType> currentTimeAtProcessor(instance_->GetArchitecture().NumberOfProcessors(), 0);
-    std::vector<CostType> timeWhenNodeGetsBlue(instance_->GetComputationalDag().NumVertices(), std::numeric_limits<CostType>::max());
+    std::vector<CostType> timeWhenNodeGetsBlue(instance_->GetComputationalDag().NumVertices(),
+                                               std::numeric_limits<CostType>::max());
     if (needToLoadInputs_) {
         for (VertexIdx node = 0; node < instance_->NumberOfVertices(); ++node) {
             if (instance_->GetComputationalDag().InDegree(node) == 0) {
@@ -1101,7 +1100,8 @@ void PebblingSchedule<GraphT>::SetMemoryMovement(CacheEvictionStrategy evictRule
                     memUsed[proc] -= instance_->GetComputationalDag().VertexMemWeight(node);
                     inMem[proc].erase(node);
                     nodesEvictedInComm_[proc][superstep].push_back(node);
-                    if ((instance_->GetComputationalDag().OutDegree(node) == 0 || needsBlueAtEnd_.find(node) != needsBlueAtEnd_.end())
+                    if ((instance_->GetComputationalDag().OutDegree(node) == 0
+                         || needsBlueAtEnd_.find(node) != needsBlueAtEnd_.end())
                         && !inSlowMem[node]) {
                         inSlowMem[node] = true;
                         nodesSentUp_[proc][superstep].push_back(node);
@@ -1778,15 +1778,15 @@ void PebblingSchedule<GraphT>::FixForceEvicts(const std::vector<std::tuple<Verte
             for (auto itr = testSchedule.computeStepsForProcSuperstep_[proc][where.first].begin();
                  itr != testSchedule.computeStepsForProcSuperstep_[proc][where.first].end();
                  ++itr) {
-                if (itr->node == node) {
+                if (itr->node_ == node) {
                     if (where.second > 0) {
                         auto previousStep = itr;
                         --previousStep;
-                        for (VertexIdx toEvict : itr->nodesEvictedAfter) {
-                            previousStep->nodesEvictedAfter.push_back(toEvict);
+                        for (VertexIdx toEvict : itr->nodesEvictedAfter_) {
+                            previousStep->nodesEvictedAfter_.push_back(toEvict);
                         }
                     } else {
-                        for (VertexIdx toEvict : itr->nodesEvictedAfter) {
+                        for (VertexIdx toEvict : itr->nodesEvictedAfter_) {
                             testSchedule.nodesEvictedInComm_[proc][where.first - 1].push_back(toEvict);
                         }
                     }
@@ -1844,18 +1844,18 @@ void PebblingSchedule<GraphT>::TryToMergeSupersteps() {
                 testSchedule.computeStepsForProcSuperstep_[proc][nextStep].clear();
 
                 testSchedule.nodesSentUp_[proc][step].insert(testSchedule.nodesSentUp_[proc][step].end(),
-                                                            testSchedule.nodesSentUp_[proc][nextStep].begin(),
-                                                            testSchedule.nodesSentUp_[proc][nextStep].end());
+                                                             testSchedule.nodesSentUp_[proc][nextStep].begin(),
+                                                             testSchedule.nodesSentUp_[proc][nextStep].end());
                 testSchedule.nodesSentUp_[proc][nextStep].clear();
 
                 testSchedule.nodesSentDown_[proc][prevStep].insert(testSchedule.nodesSentDown_[proc][prevStep].end(),
-                                                                  testSchedule.nodesSentDown_[proc][step].begin(),
-                                                                  testSchedule.nodesSentDown_[proc][step].end());
+                                                                   testSchedule.nodesSentDown_[proc][step].begin(),
+                                                                   testSchedule.nodesSentDown_[proc][step].end());
                 testSchedule.nodesSentDown_[proc][step].clear();
 
                 testSchedule.nodesEvictedInComm_[proc][step].insert(testSchedule.nodesEvictedInComm_[proc][step].end(),
-                                                                   testSchedule.nodesEvictedInComm_[proc][nextStep].begin(),
-                                                                   testSchedule.nodesEvictedInComm_[proc][nextStep].end());
+                                                                    testSchedule.nodesEvictedInComm_[proc][nextStep].begin(),
+                                                                    testSchedule.nodesEvictedInComm_[proc][nextStep].end());
                 testSchedule.nodesEvictedInComm_[proc][nextStep].clear();
             }
 

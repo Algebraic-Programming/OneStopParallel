@@ -53,7 +53,7 @@ class MultiProcessorPebbling : public Scheduler<GraphT> {
         std::string writeSolutionsPathCb_;
         std::string solutionFilePrefixCb_;
 
-        void Callback() override;
+        void callback() override;
     };
 
     WriteSolutionCallback solutionCallback_;
@@ -388,7 +388,7 @@ ReturnStatus MultiProcessorPebbling<GraphT>::ComputePebblingWithInitialSolution(
         SetupAsyncVariablesConstraintsObjective(instance);
     }
 
-    setInitialSolution(instance, computeSteps, sendUpSteps, sendDownSteps, nodesEvictedAfterStep);
+    SetInitialSolution(instance, computeSteps, sendUpSteps, sendDownSteps, nodesEvictedAfterStep);
 
     if (verbose_) {
         std::cout << "Initial solution set." << std::endl;
@@ -837,8 +837,8 @@ void MultiProcessorPebbling<GraphT>::SetupBspVariablesConstraintsObjective(const
     }
 
     const unsigned m = static_cast<unsigned>(instance.NumberOfProcessors()
-                                             * (sumOfVerticesWorkWeights(instance.GetComputationalDag())
-                                                + sumOfVerticesCommunicationWeights(instance.GetComputationalDag())));
+                                             * (SumOfVerticesWorkWeights(instance.GetComputationalDag())
+                                                + SumOfVerticesCommunicationWeights(instance.GetComputationalDag())));
 
     for (unsigned t = 1; t < maxTime_; t++) {
         for (unsigned processor = 0; processor < instance.NumberOfProcessors(); processor++) {
@@ -963,8 +963,8 @@ void MultiProcessorPebbling<GraphT>::SetupAsyncVariablesConstraintsObjective(con
     VarArray getsBlue = model_.AddVars(static_cast<int>(instance.NumberOfVertices()), COPT_CONTINUOUS, "gets_blue");
 
     const unsigned m = static_cast<unsigned>(instance.NumberOfProcessors()
-                                             * (sumOfVerticesWorkWeights(instance.GetComputationalDag())
-                                                + sumOfVerticesCommunicationWeights(instance.GetComputationalDag())));
+                                             * (SumOfVerticesWorkWeights(instance.GetComputationalDag())
+                                                + SumOfVerticesCommunicationWeights(instance.GetComputationalDag())));
 
     for (unsigned t = 0; t < maxTime_; t++) {
         for (unsigned processor = 0; processor < instance.NumberOfProcessors(); processor++) {
@@ -1051,7 +1051,7 @@ void MultiProcessorPebbling<GraphT>::SetupAsyncVariablesConstraintsObjective(con
 }
 
 template <typename GraphT>
-void MultiProcessorPebbling<GraphT>::WriteSolutionCallback::Callback() {
+void MultiProcessorPebbling<GraphT>::WriteSolutionCallback::callback() {
     if (Where() == COPT_CBCONTEXT_MIPSOL && counter_ < maxNumberSolution_ && GetIntInfo(COPT_CBINFO_HASINCUMBENT)) {
         try {
             if (GetDblInfo(COPT_CBINFO_BESTOBJ) < bestObj_ && 0.0 < GetDblInfo(COPT_CBINFO_BESTBND)) {
@@ -1114,8 +1114,8 @@ void MultiProcessorPebbling<GraphT>::ConstructPebblingScheduleFromSolution(Pebbl
                     && hasRed_[node][processor][static_cast<int>(step)].Get(COPT_DBLINFO_VALUE) <= .01
                     && !ignoreRed[node][processor]) {
                     for (size_t previousStep = step - 1; previousStep < step; --previousStep) {
-                        if (!nodesComputed_[processor][previousStep].empty() || !nodesSentUp_[processor][previousStep].empty()
-                            || !nodesSentDown_[processor][previousStep].empty() || previousStep == 0) {
+                        if (!nodesComputed[processor][previousStep].empty() || !nodesSentUp[processor][previousStep].empty()
+                            || !nodesSentDown[processor][previousStep].empty() || previousStep == 0) {
                             evictedAfter[processor][previousStep].insert(node);
                             emptyStep[previousStep] = false;
                             break;
@@ -1125,12 +1125,12 @@ void MultiProcessorPebbling<GraphT>::ConstructPebblingScheduleFromSolution(Pebbl
 
                 if (computeExists_[node][processor][step]
                     && compute_[node][processor][static_cast<int>(step)].Get(COPT_DBLINFO_VALUE) >= .99) {
-                    nodesComputed_[processor][step].emplace(topOrderPosition[node], node);
+                    nodesComputed[processor][step].emplace(topOrderPosition[node], node);
                     emptyStep[step] = false;
-                    ignoreRed_[node][processor] = false;
+                    ignoreRed[node][processor] = false;
 
                     // implicit eviction in case of mergesteps - never having "hasRed=1"
-                    if (step + 1 < max_time && hasRed_[node][processor][static_cast<int>(step) + 1].Get(COPT_DBLINFO_VALUE) <= .01) {
+                    if (step + 1 < maxTime_ && hasRed_[node][processor][static_cast<int>(step) + 1].Get(COPT_DBLINFO_VALUE) <= .01) {
                         evictedAfter[processor][step].insert(node);
                     }
                 }
@@ -1149,12 +1149,12 @@ void MultiProcessorPebbling<GraphT>::ConstructPebblingScheduleFromSolution(Pebbl
                     }
 
                     if (keepStep) {
-                        nodesSentDown_[processor][step].push_back(node);
+                        nodesSentDown[processor][step].push_back(node);
                         emptyStep[step] = false;
                         stepTypeOnProc[processor][step] = 3;
-                        ignoreRed_[node][processor] = false;
+                        ignoreRed[node][processor] = false;
                     } else {
-                        ignoreRed_[node][processor] = true;
+                        ignoreRed[node][processor] = true;
                     }
 
                     sentDownAlready[node][processor] = true;
@@ -1162,7 +1162,7 @@ void MultiProcessorPebbling<GraphT>::ConstructPebblingScheduleFromSolution(Pebbl
 
                 if (sendUpExists_[node][processor][step]
                     && sendUp_[node][processor][static_cast<int>(step)].Get(COPT_DBLINFO_VALUE) >= .99
-                    && !sent_down_already[node][processor]) {
+                    && !sentDownAlready[node][processor]) {
                     nodesSentUp[processor][step].push_back(node);
                     emptyStep[step] = false;
                     stepTypeOnProc[processor][step] = 2;
@@ -1354,23 +1354,23 @@ void MultiProcessorPebbling<GraphT>::ConstructPebblingScheduleFromSolution(Pebbl
 
             // actually process the superstep
             for (unsigned proc = 0; proc < instance.NumberOfProcessors(); proc++) {
-                computeStepsPerSupstep_[proc].push_back(std::vector<VertexIdx>());
-                nodesEvictedAfterCompute_[proc].push_back(std::vector<std::vector<VertexIdx>>());
-                nodesSentUpInSupstep_[proc].push_back(std::vector<VertexIdx>());
-                nodesSentDownInSupstep_[proc].push_back(std::vector<VertexIdx>());
-                nodesEvictedInCommPhase_[proc].push_back(std::vector<VertexIdx>());
+                computeStepsPerSupstep[proc].push_back(std::vector<VertexIdx>());
+                nodesEvictedAfterCompute[proc].push_back(std::vector<std::vector<VertexIdx>>());
+                nodesSentUpInSupstep[proc].push_back(std::vector<VertexIdx>());
+                nodesSentDownInSupstep[proc].push_back(std::vector<VertexIdx>());
+                nodesEvictedInCommPhase[proc].push_back(std::vector<VertexIdx>());
 
                 while (stepIdxOnProc[proc] < idxLimitOnProc[proc] && stepTypeOnProc[proc][stepIdxOnProc[proc]] <= 1) {
-                    for (auto indexAndNode : computeSteps[proc][stepIdxOnProc[proc]]) {
-                        computeStepsPerSupstep_[proc][superstepIndex].push_back(indexAndNode.second);
-                        nodesEvictedAfterCompute_[proc][superstepIndex].push_back(std::vector<VertexIdx>());
+                    for (auto indexAndNode : nodesComputed[proc][stepIdxOnProc[proc]]) {
+                        computeStepsPerSupstep[proc][superstepIndex].push_back(indexAndNode.second);
+                        nodesEvictedAfterCompute[proc][superstepIndex].push_back(std::vector<VertexIdx>());
                     }
-                    for (VertexIdx node : nodesEvictedAfterStep[proc][stepIdxOnProc[proc]]) {
-                        if (!nodesEvictedAfterCompute_[proc][superstepIndex].empty()) {
-                            nodesEvictedAfterCompute_[proc][superstepIndex].back().push_back(node);
+                    for (VertexIdx node : evictedAfter[proc][stepIdxOnProc[proc]]) {
+                        if (!nodesEvictedAfterCompute[proc][superstepIndex].empty()) {
+                            nodesEvictedAfterCompute[proc][superstepIndex].back().push_back(node);
                         } else {
                             // can only happen in special case: eviction in the very beginning
-                            nodesEvictedInCommPhase_[proc][superstepIndex].push_back(node);
+                            nodesEvictedInCommPhase[proc][superstepIndex].push_back(node);
                         }
                     }
 
@@ -1378,14 +1378,14 @@ void MultiProcessorPebbling<GraphT>::ConstructPebblingScheduleFromSolution(Pebbl
                 }
                 while (stepIdxOnProc[proc] < idxLimitOnProc[proc] && stepTypeOnProc[proc][stepIdxOnProc[proc]] != 1) {
                     for (VertexIdx node : nodesSentUp[proc][stepIdxOnProc[proc]]) {
-                        nodesSentUpInSupstep_[proc][superstepIndex].push_back(node);
+                        nodesSentUpInSupstep[proc][superstepIndex].push_back(node);
                         alreadyHasBlue[node] = true;
                     }
                     for (VertexIdx node : nodesSentDown[proc][stepIdxOnProc[proc]]) {
-                        nodesSentDownInSupstep_[proc][superstepIndex].push_back(node);
+                        nodesSentDownInSupstep[proc][superstepIndex].push_back(node);
                     }
                     for (VertexIdx node : evictedAfter[proc][stepIdxOnProc[proc]]) {
-                        nodesEvictedInCommPhase_[proc][superstepIndex].push_back(node);
+                        nodesEvictedInCommPhase[proc][superstepIndex].push_back(node);
                     }
 
                     ++stepIdxOnProc[proc];
@@ -1403,11 +1403,11 @@ void MultiProcessorPebbling<GraphT>::ConstructPebblingScheduleFromSolution(Pebbl
               << ", best lower bound: " << model_.GetDblAttr(COPT_DBLATTR_BESTBND) << std::endl;
 
     schedule = PebblingSchedule<GraphT>(instance,
-                                        computeStepsPerSupstep_,
-                                        nodesEvictedAfterCompute_,
-                                        nodesSentUpInSupstep_,
-                                        nodesSentDownInSupstep_,
-                                        nodesEvictedInCommPhase_,
+                                        computeStepsPerSupstep,
+                                        nodesEvictedAfterCompute,
+                                        nodesSentUpInSupstep,
+                                        nodesSentDownInSupstep,
+                                        nodesEvictedInCommPhase,
                                         needsBlueAtEnd_,
                                         hasRedInBeginning_,
                                         needToLoadInputs_);
@@ -1443,11 +1443,11 @@ void MultiProcessorPebbling<GraphT>::SetInitialSolution(
     unsigned step = 0, newStepIdx = 0;
     for (; step < computeSteps[0].size(); ++step) {
         for (VertexIdx node = 0; node < n; ++node) {
-            if (hasBlueExists[node][newStepIdx]) {
-                model_.SetMipStart(hasBlue[node][static_cast<int>(newStepIdx)], static_cast<int>(inSlowMem[node]));
+            if (hasBlueExists_[node][newStepIdx]) {
+                model_.SetMipStart(hasBlue_[node][static_cast<int>(newStepIdx)], static_cast<int>(inSlowMem[node]));
             }
             for (unsigned proc = 0; proc < instance.NumberOfProcessors(); ++proc) {
-                model_.SetMipStart(hasRed[node][proc][static_cast<int>(newStepIdx)], static_cast<int>(inFastMem[node][proc]));
+                model_.SetMipStart(hasRed_[node][proc][static_cast<int>(newStepIdx)], static_cast<int>(inFastMem[node][proc]));
             }
         }
 
@@ -1489,12 +1489,12 @@ void MultiProcessorPebbling<GraphT>::SetInitialSolution(
                 if (skipStep) {
                     ++newStepIdx;
                     for (VertexIdx node = 0; node < n; ++node) {
-                        if (hasBlueExists[node][newStepIdx]) {
-                            model_.SetMipStart(hasBlue[node][static_cast<int>(newStepIdx)], static_cast<int>(in_slow_mem[node]));
+                        if (hasBlueExists_[node][newStepIdx]) {
+                            model_.SetMipStart(hasBlue_[node][static_cast<int>(newStepIdx)], static_cast<int>(inSlowMem[node]));
                         }
                         for (unsigned proc = 0; proc < instance.NumberOfProcessors(); ++proc) {
-                            model_.SetMipStart(hasRed[node][proc][static_cast<int>(newStepIdx)],
-                                               static_cast<int>(in_fast_mem[node][proc]));
+                            model_.SetMipStart(hasRed_[node][proc][static_cast<int>(newStepIdx)],
+                                               static_cast<int>(inFastMem[node][proc]));
                         }
                     }
                 }
@@ -1504,77 +1504,77 @@ void MultiProcessorPebbling<GraphT>::SetInitialSolution(
         for (unsigned proc = 0; proc < instance.NumberOfProcessors(); ++proc) {
             std::vector<bool> valueOfNode(n, false);
             for (VertexIdx node : computeSteps[proc][step]) {
-                value_of_node[node] = true;
-                if (computeExists[node][proc][newStepIdx]) {
-                    model_.SetMipStart(compute[node][proc][static_cast<int>(newStepIdx)], 1);
+                valueOfNode[node] = true;
+                if (computeExists_[node][proc][newStepIdx]) {
+                    model_.SetMipStart(compute_[node][proc][static_cast<int>(newStepIdx)], 1);
                 }
-                in_fast_mem[node][proc] = true;
+                inFastMem[node][proc] = true;
             }
             for (VertexIdx node : computeSteps[proc][step]) {
-                if (!value_of_node[node]) {
-                    if (computeExists[node][proc][newStepIdx]) {
-                        model_.SetMipStart(compute[node][proc][static_cast<int>(newStepIdx)], 0);
+                if (!valueOfNode[node]) {
+                    if (computeExists_[node][proc][newStepIdx]) {
+                        model_.SetMipStart(compute_[node][proc][static_cast<int>(newStepIdx)], 0);
                     }
                 } else {
-                    value_of_node[node] = false;
+                    valueOfNode[node] = false;
                 }
             }
 
             for (VertexIdx node : sendUpSteps[proc][step]) {
-                value_of_node[node] = true;
-                if (sendUpExists[node][proc][newStepIdx]) {
-                    model_.SetMipStart(sendUp[node][proc][static_cast<int>(newStepIdx)], 1);
+                valueOfNode[node] = true;
+                if (sendUpExists_[node][proc][newStepIdx]) {
+                    model_.SetMipStart(sendUp_[node][proc][static_cast<int>(newStepIdx)], 1);
                 }
-                in_slow_mem[node] = true;
+                inSlowMem[node] = true;
             }
             for (VertexIdx node : sendUpSteps[proc][step]) {
-                if (!value_of_node[node]) {
-                    if (sendUpExists[node][proc][newStepIdx]) {
-                        model_.SetMipStart(sendUp[node][proc][static_cast<int>(newStepIdx)], 0);
+                if (!valueOfNode[node]) {
+                    if (sendUpExists_[node][proc][newStepIdx]) {
+                        model_.SetMipStart(sendUp_[node][proc][static_cast<int>(newStepIdx)], 0);
                     }
                 } else {
-                    value_of_node[node] = false;
+                    valueOfNode[node] = false;
                 }
             }
 
             for (VertexIdx node : sendDownSteps[proc][step]) {
-                value_of_node[node] = true;
-                if (sendDownExists[node][proc][newStepIdx]) {
-                    model_.SetMipStart(sendDown[node][proc][static_cast<int>(newStepIdx)], 1);
+                valueOfNode[node] = true;
+                if (sendDownExists_[node][proc][newStepIdx]) {
+                    model_.SetMipStart(sendDown_[node][proc][static_cast<int>(newStepIdx)], 1);
                 }
-                in_fast_mem[node][proc] = true;
+                inFastMem[node][proc] = true;
             }
             for (VertexIdx node : sendDownSteps[proc][step]) {
-                if (!value_of_node[node]) {
-                    if (sendDownExists[node][proc][newStepIdx]) {
-                        model_.SetMipStart(sendDown[node][proc][static_cast<int>(newStepIdx)], 0);
+                if (!valueOfNode[node]) {
+                    if (sendDownExists_[node][proc][newStepIdx]) {
+                        model_.SetMipStart(sendDown_[node][proc][static_cast<int>(newStepIdx)], 0);
                     }
                 } else {
-                    value_of_node[node] = false;
+                    valueOfNode[node] = false;
                 }
             }
 
             for (VertexIdx node : nodesEvictedAfterStep[proc][step]) {
-                in_fast_mem[node][proc] = false;
+                inFastMem[node][proc] = false;
             }
         }
         ++newStepIdx;
     }
     for (; newStepIdx < maxTime_; ++newStepIdx) {
         for (VertexIdx node = 0; node < n; ++node) {
-            if (hasBlueExists[node][newStepIdx]) {
-                model_.SetMipStart(hasBlue[node][static_cast<int>(newStepIdx)], static_cast<int>(inSlowMem[node]));
+            if (hasBlueExists_[node][newStepIdx]) {
+                model_.SetMipStart(hasBlue_[node][static_cast<int>(newStepIdx)], static_cast<int>(inSlowMem[node]));
             }
             for (unsigned proc = 0; proc < instance.NumberOfProcessors(); ++proc) {
-                model_.SetMipStart(hasRed[node][proc][static_cast<int>(newStepIdx)], 0);
-                if (computeExists[node][proc][newStepIdx]) {
-                    model_.SetMipStart(compute[node][proc][static_cast<int>(newStepIdx)], 0);
+                model_.SetMipStart(hasRed_[node][proc][static_cast<int>(newStepIdx)], 0);
+                if (computeExists_[node][proc][newStepIdx]) {
+                    model_.SetMipStart(compute_[node][proc][static_cast<int>(newStepIdx)], 0);
                 }
-                if (sendUpExists[node][proc][newStepIdx]) {
-                    model_.SetMipStart(sendUp[node][proc][static_cast<int>(newStepIdx)], 0);
+                if (sendUpExists_[node][proc][newStepIdx]) {
+                    model_.SetMipStart(sendUp_[node][proc][static_cast<int>(newStepIdx)], 0);
                 }
-                if (sendDownExists[node][proc][newStepIdx]) {
-                    model_.SetMipStart(sendDown[node][proc][static_cast<int>(newStepIdx)], 0);
+                if (sendDownExists_[node][proc][newStepIdx]) {
+                    model_.SetMipStart(sendDown_[node][proc][static_cast<int>(newStepIdx)], 0);
                 }
             }
         }
@@ -1645,9 +1645,9 @@ bool MultiProcessorPebbling<GraphT>::HasEmptyStep(const BspInstance<GraphT> &ins
         bool empty = true;
         for (VertexIdx node = 0; node < instance.NumberOfVertices(); node++) {
             for (unsigned processor = 0; processor < instance.NumberOfProcessors(); processor++) {
-                if ((computeExists[node][processor][step] && compute[node][processor][step].Get(COPT_DBLINFO_VALUE) >= .99)
-                    || (sendUpExists[node][processor][step] && sendUp[node][processor][step].Get(COPT_DBLINFO_VALUE) >= .99)
-                    || (sendDownExists[node][processor][step] && sendDown[node][processor][step].Get(COPT_DBLINFO_VALUE) >= .99)) {
+                if ((computeExists_[node][processor][step] && compute_[node][processor][step].Get(COPT_DBLINFO_VALUE) >= .99)
+                    || (sendUpExists_[node][processor][step] && sendUp_[node][processor][step].Get(COPT_DBLINFO_VALUE) >= .99)
+                    || (sendDownExists_[node][processor][step] && sendDown_[node][processor][step].Get(COPT_DBLINFO_VALUE) >= .99)) {
                     empty = false;
                 }
             }

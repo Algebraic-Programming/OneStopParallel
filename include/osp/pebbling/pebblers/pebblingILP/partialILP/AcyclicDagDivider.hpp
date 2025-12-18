@@ -153,7 +153,7 @@ std::vector<unsigned> AcyclicDagDivider<GraphT>::ComputePartitioning(const BspIn
                 std::vector<unsigned> assignment = ilpCost < heuristicCost ? ilpAssignment : heuristicAssignment;
 
                 // split DAG according to labels
-                std::vector<GraphT> splitDags = create_induced_subgraphs<GraphT, GraphT>(dag, assignment);
+                std::vector<GraphT> splitDags = CreateInducedSubgraphs<GraphT, GraphT>(dag, assignment);
                 /*std::cout<<"SPLIT DONE: "<<dag.NumberOfVertices()<<" nodes to ";
                 for(auto sdag : splitDags)
                     std::cout<<sdag.NumberOfVertices()<<" + ";
@@ -184,7 +184,7 @@ std::vector<unsigned> AcyclicDagDivider<GraphT>::ComputePartitioning(const BspIn
         }
 
         subDags = newDagList;
-        originalId = original_id_updated;
+        originalId = originalIdUpdated;
     }
 
     // output final cost
@@ -231,7 +231,7 @@ std::vector<unsigned> AcyclicDagDivider<GraphT>::GetTopologicalSplit(const Graph
         }
     }
 
-    while (nodesRemaining > min_and_max.second) {
+    while (nodesRemaining > minAndMax.second) {
         unsigned bestCost = UINT_MAX;
         unsigned bestEnd = index;
 
@@ -254,8 +254,8 @@ std::vector<unsigned> AcyclicDagDivider<GraphT>::GetTopologicalSplit(const Graph
                 }
 
                 for (const auto &pred : g.Parents(node)) {
-                    if (last_node_idx_in_hyperedge[pred] > end) {
-                        extra_cost += G.VertexCommWeight(pred);
+                    if (lastNodeIdxInHyperedge[pred] > end) {
+                        extraCost += g.VertexCommWeight(pred);
                     }
                 }
             }
@@ -266,7 +266,7 @@ std::vector<unsigned> AcyclicDagDivider<GraphT>::GetTopologicalSplit(const Graph
             }
 
             ++end;
-            if (!ignoreSourcesInSize_ || !is_original_source[end]) {
+            if (!ignoreSourcesInSize_ || !isOriginalSource[end]) {
                 ++newlyAddedNodes;
             }
         }
