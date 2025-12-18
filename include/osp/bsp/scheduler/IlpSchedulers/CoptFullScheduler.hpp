@@ -885,9 +885,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
     };
 
     virtual void ComputeScheduleBase(const BspScheduleRecomp<GraphT> &schedule, Model &model) {
-        if (timeLimitSeconds_ > 0) {
-            model.SetDblParam(COPT_DBLPARAM_TIMELIMIT, timeLimitSeconds_);
-        }
+        model.SetDblParam(COPT_DBLPARAM_TIMELIMIT, timeLimitSeconds_);
         model.SetIntParam(COPT_INTPARAM_THREADS, 128);
 
         model.SetIntParam(COPT_INTPARAM_STRONGBRANCHING, 1);

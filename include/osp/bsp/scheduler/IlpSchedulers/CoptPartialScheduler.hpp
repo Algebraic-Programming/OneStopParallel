@@ -660,7 +660,7 @@ void CoptPartialScheduler<GraphT>::SetupVertexMaps(const BspScheduleCS<GraphT> &
     fixedCommSteps_.clear();
     sourcePresentBefore_.clear();
 
-    std::vector<std::vector<unsigned>> firstAt = schedule.getFirstPresence();
+    std::vector<std::vector<unsigned>> firstAt = schedule.GetFirstPresence();
 
     maxNumberSupersteps_ = endSuperstep_ - startSuperstep_ + 3;
 

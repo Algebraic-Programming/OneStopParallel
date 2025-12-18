@@ -445,13 +445,17 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
                             Expr expr1, expr2;
                             assert(maxNumberSupersteps_ <= std::numeric_limits<int>::max());
                             for (unsigned step = 0; step < maxNumberSupersteps_; step++) {
-                                expr1 += nodeToProcessorSuperstepVar_[ep.source][p1][static_cast<int>(step)];
-                                expr2 += nodeToProcessorSuperstepVar_[ep.target][p2][static_cast<int>(step)];
+                                expr1 += nodeToProcessorSuperstepVar_[Source(ep, instance.GetComputationalDag())][p1]
+                                                                     [static_cast<int>(step)];
+                                expr2 += nodeToProcessorSuperstepVar_[Target(ep, instance.GetComputationalDag())][p2]
+                                                                     [static_cast<int>(step)];
                             }
                             model_.AddConstr(edgeVars_[p1][p2][edgeId] >= expr1 + expr2 - 1.001);
 
-                            totalEdgesCut += edgeVars_[p1][p2][edgeId] * instance.GetComputationalDag().VertexCommWeight(ep.source)
-                                             * instance.SendCosts(p1, p2);
+                            totalEdgesCut
+                                += edgeVars_[p1][p2][edgeId]
+                                   * instance.GetComputationalDag().VertexCommWeight(Source(ep, instance.GetComputationalDag()))
+                                   * instance.SendCosts(p1, p2);
 
                             edgeId++;
                         }
@@ -469,20 +473,23 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
                 for (unsigned p1 = 0; p1 < instance.NumberOfProcessors(); p1++) {
                     Expr expr1, expr2;
                     for (unsigned step = 0; step < maxNumberSupersteps_; step++) {
-                        expr1 += nodeToProcessorSuperstepVar_[ep.source][p1][static_cast<int>(step)];
+                        expr1
+                            += nodeToProcessorSuperstepVar_[Source(ep, instance.GetComputationalDag())][p1][static_cast<int>(step)];
                     }
 
                     for (unsigned p2 = 0; p2 < instance.NumberOfProcessors(); p2++) {
                         if (p1 != p2) {
                             for (unsigned step = 0; step < maxNumberSupersteps_; step++) {
-                                expr2 += nodeToProcessorSuperstepVar_[ep.target][p2][static_cast<int>(step)];
+                                expr2 += nodeToProcessorSuperstepVar_[Target(ep, instance.GetComputationalDag())][p2]
+                                                                     [static_cast<int>(step)];
                             }
                         }
                     }
                     model_.AddConstr(edgeVars_[0][0][edgeId] >= expr1 + expr2 - 1.001);
                 }
 
-                totalEdgesCut += instance.GetComputationalDag().VertexCommWeight(ep.source) * edgeVars_[0][0][edgeId];
+                totalEdgesCut += instance.GetComputationalDag().VertexCommWeight(Source(ep, instance.GetComputationalDag()))
+                                 * edgeVars_[0][0][edgeId];
 
                 edgeId++;
             }
@@ -606,6 +613,7 @@ class TotalCommunicationScheduler : public Scheduler<GraphT> {
             LoadInitialSchedule();
         }
 
+        model_.SetDblParam(COPT_DBLPARAM_TIMELIMIT, timeLimitSeconds_);
         model_.SetIntParam(COPT_INTPARAM_THREADS, 128);
         model_.SetIntParam(COPT_INTPARAM_STRONGBRANCHING, 1);
         model_.SetIntParam(COPT_INTPARAM_LPMETHOD, 1);
