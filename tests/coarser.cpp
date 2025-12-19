@@ -387,10 +387,10 @@ BOOST_AUTO_TEST_CASE(CoarserFunndelBfsTest) {
     TestCoarserSameGraph<GraphT>(coarser);
 
     FunnelBfs<GraphT, GraphT>::FunnelBfsParameters params{std::numeric_limits<VWorkwT<GraphT>>::max(),
-                                                           std::numeric_limits<VMemwT<GraphT>>::max(),
-                                                           std::numeric_limits<unsigned>::max(),
-                                                           false,
-                                                           true};
+                                                          std::numeric_limits<VMemwT<GraphT>>::max(),
+                                                          std::numeric_limits<unsigned>::max(),
+                                                          false,
+                                                          true};
 
     FunnelBfs<GraphT, GraphT> coarserParams(params);
 

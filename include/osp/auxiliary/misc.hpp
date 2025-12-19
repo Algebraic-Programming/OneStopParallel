@@ -51,9 +51,7 @@ struct Pair {
 
     explicit Pair(const T1 a = T1(), const T2 b = T2()) : a_(a), b_(b) {}
 
-    bool operator<(const Pair<T1, T2> &other) const {
-        return (a_ < other.a_ || (a_ == other.a_ && b_ < other.b_));
-    }
+    bool operator<(const Pair<T1, T2> &other) const { return (a_ < other.a_ || (a_ == other.a_ && b_ < other.b_)); }
 
     std::ostream &operator<<(std::ostream &os) const {
         return os << ("(" + std::to_string(a_) + ", " + std::to_string(b_) + ")");

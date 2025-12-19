@@ -174,8 +174,7 @@ BOOST_AUTO_TEST_CASE(UnionFindWeightStructure) {
     BOOST_CHECK_EQUAL(testUniverse.GetMemoryOfComponentByName("e"), 2);
     BOOST_CHECK_EQUAL(testUniverse.GetMemoryOfComponentByName("b"), 7);
 
-    std::vector<std::pair<std::vector<std::string>, unsigned>> componentsNWeights
-        = testUniverse.GetConnectedComponentsAndWeights();
+    std::vector<std::pair<std::vector<std::string>, unsigned>> componentsNWeights = testUniverse.GetConnectedComponentsAndWeights();
     unsigned totalCompWeights = 0;
     unsigned totalElements = 0;
     for (auto &[comp, wt] : componentsNWeights) {
@@ -279,8 +278,7 @@ BOOST_AUTO_TEST_CASE(UnionFindStructureWeightCompCount) {
     BOOST_CHECK((std::get<2>(compNWeightNMemory[0]) == 4 && std::get<2>(compNWeightNMemory[1]) == 5)
                 || (std::get<2>(compNWeightNMemory[0]) == 5 && std::get<2>(compNWeightNMemory[1]) == 4));
 
-    std::vector<std::pair<std::vector<std::string>, unsigned>> componentsNWeights
-        = testUniverse.GetConnectedComponentsAndWeights();
+    std::vector<std::pair<std::vector<std::string>, unsigned>> componentsNWeights = testUniverse.GetConnectedComponentsAndWeights();
     unsigned totalCompWeights = 0;
     unsigned totalElements = 0;
     for (auto &[comp, wt] : componentsNWeights) {
@@ -361,8 +359,7 @@ BOOST_AUTO_TEST_CASE(UnionFindStructureWeightChainsCompCount) {
     BOOST_CHECK_EQUAL(testUniverse.FindOriginByName("e"), testUniverse.FindOriginByName("h"));
     BOOST_CHECK_EQUAL(testUniverse.FindOriginByName("b"), testUniverse.FindOriginByName("i"));
 
-    std::vector<std::pair<std::vector<std::string>, unsigned>> componentsNWeights
-        = testUniverse.GetConnectedComponentsAndWeights();
+    std::vector<std::pair<std::vector<std::string>, unsigned>> componentsNWeights = testUniverse.GetConnectedComponentsAndWeights();
     unsigned totalCompWeights = 0;
     unsigned totalElements = 0;
     for (auto &[comp, wt] : componentsNWeights) {

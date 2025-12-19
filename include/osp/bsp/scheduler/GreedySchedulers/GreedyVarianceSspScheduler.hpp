@@ -608,11 +608,11 @@ class GreedyVarianceSspScheduler : public MaxBspScheduler<GraphT> {
             if (free > (p * maxPercentIdleProcessors_)
                 && ((!increaseParallelismInNewSuperstep_)
                     || GetNrParallelizableNodes(instance,
-                                                   stale,
-                                                   nrOldReadyNodesPerType,
-                                                   nrReadyStaleNodesPerType[(supstepIdx + 1) % stale],
-                                                   procReady[(supstepIdx + 1) % stale],
-                                                   nrProcsPerType)
+                                                stale,
+                                                nrOldReadyNodesPerType,
+                                                nrReadyStaleNodesPerType[(supstepIdx + 1) % stale],
+                                                procReady[(supstepIdx + 1) % stale],
+                                                nrProcsPerType)
                            >= std::min(std::min(p, static_cast<unsigned>(1.2 * (p - free))),
                                        p - free + static_cast<unsigned>(0.5 * free)))) {
                 endSupStep = true;

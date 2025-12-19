@@ -202,12 +202,12 @@ class EtfScheduler : public Scheduler<GraphT> {
      * @return A triple containing the best EST, the node index, and the processor index.
      */
     TvPair GetBestESTforNodes(const BspInstance<GraphT> &instance,
-                               CSchedule<GraphT> &schedule,
-                               const std::vector<VertexIdxT<GraphT>> &nodeList,
-                               const std::vector<VWorkwT<GraphT>> &procAvailableFrom,
-                               std::vector<VWorkwT<GraphT>> &send,
-                               std::vector<VWorkwT<GraphT>> &rec,
-                               unsigned &bestProc) const {
+                              CSchedule<GraphT> &schedule,
+                              const std::vector<VertexIdxT<GraphT>> &nodeList,
+                              const std::vector<VWorkwT<GraphT>> &procAvailableFrom,
+                              std::vector<VWorkwT<GraphT>> &send,
+                              std::vector<VWorkwT<GraphT>> &rec,
+                              unsigned &bestProc) const {
         VWorkwT<GraphT> bestEST = std::numeric_limits<VWorkwT<GraphT>>::max();
         VertexIdxT<GraphT> bestNode = 0;
         std::vector<VWorkwT<GraphT>> bestSend, bestRec;

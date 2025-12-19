@@ -385,8 +385,7 @@ BOOST_AUTO_TEST_CASE(BspLockingLocalTest) {
 }
 
 BOOST_AUTO_TEST_CASE(VarianceLocalTest) {
-    VarianceFillup<ComputationalDagEdgeIdxVectorImplDefT, LocalMemoryConstraint<ComputationalDagEdgeIdxVectorImplDefT>>
-        test;
+    VarianceFillup<ComputationalDagEdgeIdxVectorImplDefT, LocalMemoryConstraint<ComputationalDagEdgeIdxVectorImplDefT>> test;
     RunTestLocalMemory(&test);
 }
 
@@ -405,16 +404,13 @@ BOOST_AUTO_TEST_CASE(VarianceLocalTest) {
 // };
 
 BOOST_AUTO_TEST_CASE(GreedyBspSchedulerPersistentTransientTest) {
-    GreedyBspScheduler<ComputationalDagEdgeIdxVectorImplDefT,
-                       PersistentTransientMemoryConstraint<ComputationalDagEdgeIdxVectorImplDefT>>
+    GreedyBspScheduler<ComputationalDagEdgeIdxVectorImplDefT, PersistentTransientMemoryConstraint<ComputationalDagEdgeIdxVectorImplDefT>>
         test;
     RunTestPersistentTransientMemory(&test);
 }
 
 BOOST_AUTO_TEST_CASE(EtfSchedulerPersistentTransientTest) {
-    EtfScheduler<ComputationalDagEdgeIdxVectorImplDefT,
-                 PersistentTransientMemoryConstraint<ComputationalDagEdgeIdxVectorImplDefT>>
-        test;
+    EtfScheduler<ComputationalDagEdgeIdxVectorImplDefT, PersistentTransientMemoryConstraint<ComputationalDagEdgeIdxVectorImplDefT>> test;
     RunTestPersistentTransientMemory(&test);
 }
 

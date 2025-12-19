@@ -62,9 +62,7 @@ std::vector<IntegralType> DivisorsList(IntegralType num) {
         }
     }
     const std::size_t beginIndx = divs.back() * divs.back() == num ? divs.size() - 2U : divs.size() - 1U;
-    for (std::size_t indx = beginIndx;
-         indx != std::numeric_limits<std::size_t>::max();
-         --indx) {
+    for (std::size_t indx = beginIndx; indx != std::numeric_limits<std::size_t>::max(); --indx) {
         divs.emplace_back(num / divs[indx]);
     }
 

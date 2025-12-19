@@ -928,23 +928,23 @@ class OrbitGraphProcessor {
 
             if (mergeDifferentNodeTypes_) {
                 ContractEdgesAdpativeSym(originalDag,
-                                            currentCoarseGraph,
-                                            currentGroups,
-                                            currentContractionMap,
-                                            mergeDifferentNodeTypes_,
-                                            isLastLoop,
-                                            lockThresholdPerType);
+                                         currentCoarseGraph,
+                                         currentGroups,
+                                         currentContractionMap,
+                                         mergeDifferentNodeTypes_,
+                                         isLastLoop,
+                                         lockThresholdPerType);
             }
 
             nonViableCritPathEdgesCache_.clear();
             ContractEdgesAdpativeSym(originalDag,
-                                        currentCoarseGraph,
-                                        currentGroups,
-                                        currentContractionMap,
-                                        mergeDifferentNodeTypes_,
-                                        isLastLoop,
-                                        lockThresholdPerType,
-                                        criticalPathThreshold_);
+                                     currentCoarseGraph,
+                                     currentGroups,
+                                     currentContractionMap,
+                                     mergeDifferentNodeTypes_,
+                                     isLastLoop,
+                                     lockThresholdPerType,
+                                     criticalPathThreshold_);
         }
 
         if constexpr (verbose_) {

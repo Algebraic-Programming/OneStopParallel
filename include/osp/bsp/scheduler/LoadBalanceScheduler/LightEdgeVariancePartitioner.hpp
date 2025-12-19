@@ -258,8 +258,7 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
                     }
                 }
 
-                for (auto vertexPriorPairIter = procReadyPrior[proc].begin();
-                     vertexPriorPairIter != procReadyPrior[proc].end();
+                for (auto vertexPriorPairIter = procReadyPrior[proc].begin(); vertexPriorPairIter != procReadyPrior[proc].end();
                      vertexPriorPairIter++) {
                     if (assignedANode) {
                         break;
@@ -280,8 +279,7 @@ class LightEdgeVariancePartitioner : public VariancePartitioner<GraphT, Interpol
                         assignedANode = true;
                     }
                 }
-                for (auto vertexPriorPairIter = allReady.begin(); vertexPriorPairIter != allReady.cend();
-                     vertexPriorPairIter++) {
+                for (auto vertexPriorPairIter = allReady.begin(); vertexPriorPairIter != allReady.cend(); vertexPriorPairIter++) {
                     if (assignedANode) {
                         break;
                     }

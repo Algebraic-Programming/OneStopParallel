@@ -975,16 +975,16 @@ BOOST_AUTO_TEST_CASE(GraphTypeCopyContruction) {
     BOOST_CHECK_EQUAL(graph.NumVertices(), 8);
 
     CompactSparseGraph<true,
-                         true,
-                         true,
-                         true,
-                         true,
-                         VertexIdx,
-                         std::size_t,
-                         ComputationalDagEdgeIdxVectorImplDefT::VertexWorkWeightType,
-                         ComputationalDagEdgeIdxVectorImplDefT::VertexCommWeightType,
-                         ComputationalDagEdgeIdxVectorImplDefT::VertexMemWeightType,
-                         ComputationalDagEdgeIdxVectorImplDefT::VertexTypeType>
+                       true,
+                       true,
+                       true,
+                       true,
+                       VertexIdx,
+                       std::size_t,
+                       ComputationalDagEdgeIdxVectorImplDefT::VertexWorkWeightType,
+                       ComputationalDagEdgeIdxVectorImplDefT::VertexCommWeightType,
+                       ComputationalDagEdgeIdxVectorImplDefT::VertexMemWeightType,
+                       ComputationalDagEdgeIdxVectorImplDefT::VertexTypeType>
         copyGraph(graph);
     BOOST_CHECK_EQUAL(copyGraph.NumVertices(), 8);
     BOOST_CHECK_EQUAL(copyGraph.NumEdges(), 9);
@@ -1037,16 +1037,16 @@ BOOST_AUTO_TEST_CASE(GraphTypeCopyContruction) {
     }
 
     CompactSparseGraph<false,
-                         true,
-                         true,
-                         true,
-                         true,
-                         VertexIdx,
-                         std::size_t,
-                         ComputationalDagEdgeIdxVectorImplDefT::VertexWorkWeightType,
-                         ComputationalDagEdgeIdxVectorImplDefT::VertexCommWeightType,
-                         ComputationalDagEdgeIdxVectorImplDefT::VertexMemWeightType,
-                         ComputationalDagEdgeIdxVectorImplDefT::VertexTypeType>
+                       true,
+                       true,
+                       true,
+                       true,
+                       VertexIdx,
+                       std::size_t,
+                       ComputationalDagEdgeIdxVectorImplDefT::VertexWorkWeightType,
+                       ComputationalDagEdgeIdxVectorImplDefT::VertexCommWeightType,
+                       ComputationalDagEdgeIdxVectorImplDefT::VertexMemWeightType,
+                       ComputationalDagEdgeIdxVectorImplDefT::VertexTypeType>
         reorderGraph(graph);
     BOOST_CHECK_EQUAL(reorderGraph.NumVertices(), 8);
     BOOST_CHECK_EQUAL(reorderGraph.NumEdges(), 9);

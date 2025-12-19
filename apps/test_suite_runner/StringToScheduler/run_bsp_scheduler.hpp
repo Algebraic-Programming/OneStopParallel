@@ -182,8 +182,7 @@ ReturnStatus RunBspScheduler(const ConfigParser &parser,
                              BspSchedule<GraphT> &schedule) {
     using VertexTypeTOrDefault = std::conditional_t<isComputationalDagTypedVerticesV<GraphT>, VTypeT<GraphT>, unsigned>;
     using EdgeCommwTOrDefault = std::conditional_t<hasEdgeWeightsV<GraphT>, ECommwT<GraphT>, VCommwT<GraphT>>;
-    using BoostGraphT
-        = BoostGraph<VWorkwT<GraphT>, VCommwT<GraphT>, VMemwT<GraphT>, VertexTypeTOrDefault, EdgeCommwTOrDefault>;
+    using BoostGraphT = BoostGraph<VWorkwT<GraphT>, VCommwT<GraphT>, VMemwT<GraphT>, VertexTypeTOrDefault, EdgeCommwTOrDefault>;
 
     const std::string id = algorithm.get_child("id").get_value<std::string>();
 

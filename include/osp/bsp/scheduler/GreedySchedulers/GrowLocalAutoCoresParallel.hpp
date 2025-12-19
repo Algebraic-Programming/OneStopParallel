@@ -565,8 +565,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                 if constexpr (hasVerticesInTopOrderV<GraphT>) {
                     IncrementScheduleSupersteps(schedule, startNodes[thr], startNodes[thr + 1], supstepIncr[thr]);
                 } else {
-                    IncrementScheduleSuperstepsTopOrder(
-                        schedule, topOrder, startNodes[thr], startNodes[thr + 1], supstepIncr[thr]);
+                    IncrementScheduleSuperstepsTopOrder(schedule, topOrder, startNodes[thr], startNodes[thr + 1], supstepIncr[thr]);
                 }
             }
         }

@@ -724,8 +724,7 @@ VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::SomeChildrenContraction(
             const VWorkwT<GraphTIn> tDist = topDist[*chldIterStart];
             const VWorkwT<GraphTIn> bDist = botDist[*chldIterStart];
             auto chldIterEnd = chldIterStart;
-            while (chldIterEnd != childrenPriority.cend() && tDist == topDist[*chldIterEnd]
-                   && bDist == botDist[*chldIterEnd]) {
+            while (chldIterEnd != childrenPriority.cend() && tDist == topDist[*chldIterEnd] && bDist == botDist[*chldIterEnd]) {
                 if constexpr (hasTypedVerticesV<GraphTIn>) {
                     if (graph.VertexType(groupHead) != graph.VertexType(*chldIterEnd)) {
                         break;

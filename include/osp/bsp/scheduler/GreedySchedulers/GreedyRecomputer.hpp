@@ -127,7 +127,7 @@ ReturnStatus GreedyRecomputer<GraphT>::ComputeRecompSchedule(BspScheduleCS<Graph
 
                 // check how much comm cost we save by removing comm schedule entry
                 CostType commInduced = g.VertexCommWeight(node)
-                                        * initialSchedule.GetInstance().GetArchitecture().CommunicationCosts(fromProc, toProc);
+                                       * initialSchedule.GetInstance().GetArchitecture().CommunicationCosts(fromProc, toProc);
 
                 CostType newMaxComm = 0;
                 for (unsigned proc = 0; proc < p; ++proc) {
@@ -161,8 +161,8 @@ ReturnStatus GreedyRecomputer<GraphT>::ComputeRecompSchedule(BspScheduleCS<Graph
                 for (unsigned compStep = firstComputable[node][toProc]; compStep <= *neededOnProc[node][toProc].begin();
                      ++compStep) {
                     CostType increase = workCost[toProc][compStep] + g.VertexWorkWeight(node) > maxWork[compStep]
-                                             ? workCost[toProc][compStep] + g.VertexWorkWeight(node) - maxWork[compStep]
-                                             : 0;
+                                            ? workCost[toProc][compStep] + g.VertexWorkWeight(node) - maxWork[compStep]
+                                            : 0;
 
                     if (increase < smallestIncrease) {
                         bestStep = compStep;

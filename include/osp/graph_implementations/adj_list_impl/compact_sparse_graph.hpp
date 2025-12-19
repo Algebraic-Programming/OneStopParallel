@@ -949,18 +949,9 @@ template <bool keepVertexOrder,
           typename CommWeightType,
           typename MemWeightType,
           typename VertexTypeTemplateType>
-struct IsCompactSparseGraph<CompactSparseGraph<keepVertexOrder,
-                                                 useWorkWeights,
-                                                 useCommWeights,
-                                                 useMemWeights,
-                                                 useVertTypes,
-                                                 VertT,
-                                                 EdgeT,
-                                                 WorkWeightType,
-                                                 CommWeightType,
-                                                 MemWeightType,
-                                                 VertexTypeTemplateType>,
-                            void> : std::true_type {};
+struct IsCompactSparseGraph<
+    CompactSparseGraph<keepVertexOrder, useWorkWeights, useCommWeights, useMemWeights, useVertTypes, VertT, EdgeT, WorkWeightType, CommWeightType, MemWeightType, VertexTypeTemplateType>,
+    void> : std::true_type {};
 
 template <bool useWorkWeights,
           bool useCommWeights,
@@ -972,29 +963,18 @@ template <bool useWorkWeights,
           typename CommWeightType,
           typename MemWeightType,
           typename VertexTypeTemplateType>
-struct IsCompactSparseGraphReorder<CompactSparseGraph<false,
-                                                        useWorkWeights,
-                                                        useCommWeights,
-                                                        useMemWeights,
-                                                        useVertTypes,
-                                                        VertT,
-                                                        EdgeT,
-                                                        WorkWeightType,
-                                                        CommWeightType,
-                                                        MemWeightType,
-                                                        VertexTypeTemplateType>,
-                                   void> : std::true_type {};
+struct IsCompactSparseGraphReorder<
+    CompactSparseGraph<false, useWorkWeights, useCommWeights, useMemWeights, useVertTypes, VertT, EdgeT, WorkWeightType, CommWeightType, MemWeightType, VertexTypeTemplateType>,
+    void> : std::true_type {};
 
 static_assert(isCompactSparseGraphV<CompactSparseGraph<true>>);
 static_assert(isCompactSparseGraphV<CompactSparseGraph<false>>);
 static_assert(!isCompactSparseGraphReorderV<CompactSparseGraph<true>>);
 static_assert(isCompactSparseGraphReorderV<CompactSparseGraph<false>>);
 
-static_assert(hasVertexWeightsV<CompactSparseGraph<true, true>>,
-              "CompactSparseGraph must satisfy the has_vertex_weights concept");
+static_assert(hasVertexWeightsV<CompactSparseGraph<true, true>>, "CompactSparseGraph must satisfy the has_vertex_weights concept");
 
-static_assert(hasVertexWeightsV<CompactSparseGraph<false, true>>,
-              "CompactSparseGraph must satisfy the has_vertex_weights concept");
+static_assert(hasVertexWeightsV<CompactSparseGraph<false, true>>, "CompactSparseGraph must satisfy the has_vertex_weights concept");
 
 static_assert(isDirectedGraphV<CompactSparseGraph<false, false, false, false, false>>,
               "CompactSparseGraph must satisfy the directed_graph concept");

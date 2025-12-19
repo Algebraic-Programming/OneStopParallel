@@ -371,7 +371,7 @@ struct KlHyperTotalCommCostFunction {
                                 const unsigned targetWindowBound = EndIdx(targetStep, endStep);
                                 auto &affinityTableTarget = threadData.affinityTable_.At(target);
                                 const CostT commAff = instance_->CommunicationCosts(sourceProc, targetProc)
-                                                       * graph_->VertexCommWeight(source) * commMultiplier_;
+                                                      * graph_->VertexCommWeight(source) * commMultiplier_;
                                 for (const unsigned p : procRange_->CompatibleProcessorsVertex(target)) {
                                     if (p == targetProc) {
                                         continue;
@@ -480,8 +480,8 @@ struct KlHyperTotalCommCostFunction {
                         }
 
                         const CostT commCost = ChangeCommCost(instance_->CommunicationCosts(p, move.fromProc_),
-                                                               instance_->CommunicationCosts(sourceProc, move.fromProc_),
-                                                               commGain);
+                                                              instance_->CommunicationCosts(sourceProc, move.fromProc_),
+                                                              commGain);
                         for (unsigned idx = sourceStartIdx; idx < windowBound; idx++) {
                             affinityTableSource[p][idx] -= commCost;
                         }
@@ -497,8 +497,8 @@ struct KlHyperTotalCommCostFunction {
                         }
 
                         const CostT commCost = ChangeCommCost(instance_->CommunicationCosts(p, move.toProc_),
-                                                               instance_->CommunicationCosts(sourceProc, move.toProc_),
-                                                               commGain);
+                                                              instance_->CommunicationCosts(sourceProc, move.toProc_),
+                                                              commGain);
                         for (unsigned idx = sourceStartIdx; idx < windowBound; idx++) {
                             affinityTableSource[p][idx] += commCost;
                         }

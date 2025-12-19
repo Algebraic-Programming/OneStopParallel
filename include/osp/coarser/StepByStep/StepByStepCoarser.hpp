@@ -35,8 +35,7 @@ class StepByStepCoarser : public CoarserGenContractionMap<GraphT, GraphT> {
     using VertexTypeTOrDefault = std::conditional_t<isComputationalDagTypedVerticesV<GraphT>, VTypeT<GraphT>, unsigned>;
     using EdgeCommwTOrDefault = std::conditional_t<hasEdgeWeightsV<GraphT>, ECommwT<GraphT>, VCommwT<GraphT>>;
 
-    using BoostGraphT
-        = BoostGraph<VWorkwT<GraphT>, VCommwT<GraphT>, VMemwT<GraphT>, VertexTypeTOrDefault, EdgeCommwTOrDefault>;
+    using BoostGraphT = BoostGraph<VWorkwT<GraphT>, VCommwT<GraphT>, VMemwT<GraphT>, VertexTypeTOrDefault, EdgeCommwTOrDefault>;
 
   public:
     enum CoarseningStrategy { EDGE_BY_EDGE, BOTTOM_LEVEL_CLUSTERS };
@@ -55,9 +54,8 @@ class StepByStepCoarser : public CoarserGenContractionMap<GraphT, GraphT> {
             : edge_(source, target), workWeight_(workWeight), commWeight_(commWeight) {}
 
         bool operator<(const EdgeToContract &other) const {
-            return (workWeight_ < other.workWeight_ || (workWeight_ == other.workWeight_ && commWeight_ < other.commWeight_) ||
-            (workWeight_ == other.workWeight_ && commWeight_ == other.commWeight_ && edge_ < other.edge_)
-        );
+            return (workWeight_ < other.workWeight_ || (workWeight_ == other.workWeight_ && commWeight_ < other.commWeight_)
+                    || (workWeight_ == other.workWeight_ && commWeight_ == other.commWeight_ && edge_ < other.edge_));
         }
     };
 
@@ -892,8 +890,7 @@ void StepByStepCoarser<GraphT>::MergeSourcesInPebbling() {
                 }
 
                 // check if we want to merge sourceA and sourceB
-                double simDiff = (onlyA.size() + onlyB.size() == 0) ? 0.0001
-                                                                       : static_cast<double>(onlyA.size() + onlyB.size());
+                double simDiff = (onlyA.size() + onlyB.size() == 0) ? 0.0001 : static_cast<double>(onlyA.size() + onlyB.size());
                 double ratio = static_cast<double>(both.size()) / simDiff;
 
                 if (ratio > 2) {
@@ -929,11 +926,11 @@ GraphT StepByStepCoarser<GraphT>::Contract(const std::vector<VertexIdxT<GraphT>>
 
     for (VertexIdx node = 0; node < gFull_.NumVertices(); ++node) {
         gContracted.SetVertexWorkWeight(newVertexId[node],
-                                         gContracted.VertexWorkWeight(newVertexId[node]) + gFull_.VertexWorkWeight(node));
+                                        gContracted.VertexWorkWeight(newVertexId[node]) + gFull_.VertexWorkWeight(node));
         gContracted.SetVertexCommWeight(newVertexId[node],
-                                         gContracted.VertexCommWeight(newVertexId[node]) + gFull_.VertexCommWeight(node));
+                                        gContracted.VertexCommWeight(newVertexId[node]) + gFull_.VertexCommWeight(node));
         gContracted.SetVertexMemWeight(newVertexId[node],
-                                        gContracted.VertexMemWeight(newVertexId[node]) + gFull_.VertexMemWeight(node));
+                                       gContracted.VertexMemWeight(newVertexId[node]) + gFull_.VertexMemWeight(node));
         gContracted.SetVertexType(newVertexId[node], gFull_.VertexType(node));
     }
 
@@ -950,7 +947,7 @@ GraphT StepByStepCoarser<GraphT>::Contract(const std::vector<VertexIdxT<GraphT>>
 
                 if (pair.second) {
                     gContracted.SetEdgeCommWeight(pair.first,
-                                                   gContracted.EdgeCommWeight(pair.first) + gFull_.EdgeCommWeight(outEdge));
+                                                  gContracted.EdgeCommWeight(pair.first) + gFull_.EdgeCommWeight(outEdge));
                 } else {
                     gContracted.AddEdge(newVertexId[node], newVertexId[succ], gFull_.EdgeCommWeight(outEdge));
                 }

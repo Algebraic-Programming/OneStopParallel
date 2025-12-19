@@ -196,8 +196,8 @@ void HillClimbingScheduler<GraphT>::Init() {
     moveOptions_.resize(numDirections_);
     movePointer_.clear();
     movePointer_.resize(numDirections_,
-                       std::vector<std::vector<typename std::list<std::pair<VertexIdx, unsigned>>::iterator>>(
-                           n, std::vector<typename std::list<std::pair<VertexIdx, unsigned>>::iterator>(p)));
+                        std::vector<std::vector<typename std::list<std::pair<VertexIdx, unsigned>>::iterator>>(
+                            n, std::vector<typename std::list<std::pair<VertexIdx, unsigned>>::iterator>(p)));
 
     // Value use lists
     succSteps_.clear();
@@ -277,11 +277,11 @@ void HillClimbingScheduler<GraphT>::Init() {
                         sent_[step][schedule_->AssignedProcessor(pred)]
                             += schedule_->GetInstance().GetComputationalDag().VertexCommWeight(pred)
                                * schedule_->GetInstance().GetArchitecture().SendCosts(schedule_->AssignedProcessor(pred),
-                                                                                     schedule_->AssignedProcessor(node));
+                                                                                      schedule_->AssignedProcessor(node));
                         received_[step][schedule_->AssignedProcessor(node)]
                             += schedule_->GetInstance().GetComputationalDag().VertexCommWeight(pred)
                                * schedule_->GetInstance().GetArchitecture().SendCosts(schedule_->AssignedProcessor(pred),
-                                                                                     schedule_->AssignedProcessor(node));
+                                                                                      schedule_->AssignedProcessor(node));
                     }
                 }
             }
@@ -653,7 +653,8 @@ int HillClimbingScheduler<GraphT>::MoveCostChange(const VertexIdx node, unsigned
     const CostType maxBeforeAddition = (where == 0) ? maxAfterRemoval : workCostList_[newStep].rbegin()->first;
     if (workCost_[newStep][proc] + schedule_->GetInstance().GetComputationalDag().VertexWorkWeight(node) > maxBeforeAddition) {
         if (newStep == 0 || schedule_->GetStaleness() == 1) {    // incorporate immediately into cost change
-            change += static_cast<int>(workCost_[newStep][proc] + schedule_->GetInstance().GetComputationalDag().VertexWorkWeight(node))
+            change += static_cast<int>(workCost_[newStep][proc]
+                                       + schedule_->GetInstance().GetComputationalDag().VertexWorkWeight(node))
                       - static_cast<int>(maxBeforeAddition);
         } else {
             newWorkCost[newStep] = workCost_[newStep][proc] + schedule_->GetInstance().GetComputationalDag().VertexWorkWeight(node);
@@ -730,16 +731,16 @@ int HillClimbingScheduler<GraphT>::MoveCostChange(const VertexIdx node, unsigned
                                     -static_cast<int>(schedule_->GetInstance().GetComputationalDag().VertexCommWeight(pred)
                                                       * schedule_->GetInstance().GetArchitecture().SendCosts(
                                                           schedule_->AssignedProcessor(pred), proc)));
-                sentInc.emplace_back(
-                    newStep - schedule_->GetStaleness(),
-                    schedule_->AssignedProcessor(pred),
-                    static_cast<int>(schedule_->GetInstance().GetComputationalDag().VertexCommWeight(pred)
-                                     * schedule_->GetInstance().GetArchitecture().SendCosts(schedule_->AssignedProcessor(pred), proc)));
-                recInc.emplace_back(
-                    newStep - schedule_->GetStaleness(),
-                    proc,
-                    static_cast<int>(schedule_->GetInstance().GetComputationalDag().VertexCommWeight(pred)
-                                     * schedule_->GetInstance().GetArchitecture().SendCosts(schedule_->AssignedProcessor(pred), proc)));
+                sentInc.emplace_back(newStep - schedule_->GetStaleness(),
+                                     schedule_->AssignedProcessor(pred),
+                                     static_cast<int>(schedule_->GetInstance().GetComputationalDag().VertexCommWeight(pred)
+                                                      * schedule_->GetInstance().GetArchitecture().SendCosts(
+                                                          schedule_->AssignedProcessor(pred), proc)));
+                recInc.emplace_back(newStep - schedule_->GetStaleness(),
+                                    proc,
+                                    static_cast<int>(schedule_->GetInstance().GetComputationalDag().VertexCommWeight(pred)
+                                                     * schedule_->GetInstance().GetArchitecture().SendCosts(
+                                                         schedule_->AssignedProcessor(pred), proc)));
             }
         }
     } else {
@@ -780,16 +781,16 @@ int HillClimbingScheduler<GraphT>::MoveCostChange(const VertexIdx node, unsigned
             skip = (schedule_->AssignedProcessor(pred) == proc)
                    || ((firstUse != succSteps_[pred][proc].end()) && (firstUse->first <= newStep));
             if (!skip) {
-                sentInc.emplace_back(
-                    newStep - schedule_->GetStaleness(),
-                    schedule_->AssignedProcessor(pred),
-                    static_cast<int>(schedule_->GetInstance().GetComputationalDag().VertexCommWeight(pred)
-                                     * schedule_->GetInstance().GetArchitecture().SendCosts(schedule_->AssignedProcessor(pred), proc)));
-                recInc.emplace_back(
-                    newStep - schedule_->GetStaleness(),
-                    proc,
-                    static_cast<int>(schedule_->GetInstance().GetComputationalDag().VertexCommWeight(pred)
-                                     * schedule_->GetInstance().GetArchitecture().SendCosts(schedule_->AssignedProcessor(pred), proc)));
+                sentInc.emplace_back(newStep - schedule_->GetStaleness(),
+                                     schedule_->AssignedProcessor(pred),
+                                     static_cast<int>(schedule_->GetInstance().GetComputationalDag().VertexCommWeight(pred)
+                                                      * schedule_->GetInstance().GetArchitecture().SendCosts(
+                                                          schedule_->AssignedProcessor(pred), proc)));
+                recInc.emplace_back(newStep - schedule_->GetStaleness(),
+                                    proc,
+                                    static_cast<int>(schedule_->GetInstance().GetComputationalDag().VertexCommWeight(pred)
+                                                     * schedule_->GetInstance().GetArchitecture().SendCosts(
+                                                         schedule_->AssignedProcessor(pred), proc)));
                 if (firstUse != succSteps_[pred][proc].end()) {
                     sentInc.emplace_back(firstUse->first - schedule_->GetStaleness(),
                                          schedule_->AssignedProcessor(pred),
@@ -934,7 +935,8 @@ void HillClimbingScheduler<GraphT>::ExecuteMove(const VertexIdx node,
 
     for (const auto &update : toUpdate) {
         commCostList_[update.first].erase(commCostPointer_[update.first][update.second]);
-        commCost_[update.first][update.second] = std::max(sent_[update.first][update.second], received_[update.first][update.second]);
+        commCost_[update.first][update.second]
+            = std::max(sent_[update.first][update.second], received_[update.first][update.second]);
         commCostPointer_[update.first][update.second]
             = commCostList_[update.first].insert(std::make_pair(commCost_[update.first][update.second], update.second)).first;
     }

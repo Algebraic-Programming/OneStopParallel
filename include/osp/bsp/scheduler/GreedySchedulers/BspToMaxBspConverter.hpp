@@ -61,7 +61,7 @@ MaxBspScheduleCS<GraphT> GreedyBspToMaxBspConverter<GraphT>::Convert(const BspSc
     std::vector<double> priorities;
     std::vector<std::vector<std::deque<VertexIdx>>> procList = CreateSuperstepLists(schedule, priorities);
     std::vector<std::vector<CostType>> workRemainingProcSuperstep(schedule.GetInstance().NumberOfProcessors(),
-                                                                   std::vector<CostType>(schedule.NumberOfSupersteps(), 0));
+                                                                  std::vector<CostType>(schedule.NumberOfSupersteps(), 0));
     std::vector<VertexIdx> nodesRemainingSuperstep(schedule.NumberOfSupersteps(), 0);
 
     MaxBspScheduleCS<GraphT> scheduleMax(schedule.GetInstance());
@@ -73,9 +73,9 @@ MaxBspScheduleCS<GraphT> GreedyBspToMaxBspConverter<GraphT>::Convert(const BspSc
     }
 
     std::vector<std::vector<CostType>> sendCommRemainingProcSuperstep(schedule.GetInstance().NumberOfProcessors(),
-                                                                       std::vector<CostType>(schedule.NumberOfSupersteps(), 0));
-    std::vector<std::vector<CostType>> recCommRemainingProcSuperstep(schedule.GetInstance().NumberOfProcessors(),
                                                                       std::vector<CostType>(schedule.NumberOfSupersteps(), 0));
+    std::vector<std::vector<CostType>> recCommRemainingProcSuperstep(schedule.GetInstance().NumberOfProcessors(),
+                                                                     std::vector<CostType>(schedule.NumberOfSupersteps(), 0));
 
     std::vector<std::set<std::pair<KeyTriple, unsigned>>> freeCommStepsForSuperstep(schedule.NumberOfSupersteps());
     std::vector<std::vector<std::pair<KeyTriple, unsigned>>> dependentCommStepsForNode(schedule.GetInstance().NumberOfVertices());
@@ -84,7 +84,7 @@ MaxBspScheduleCS<GraphT> GreedyBspToMaxBspConverter<GraphT>::Convert(const BspSc
             dependentCommStepsForNode[std::get<0>(key)].emplace_back(key, val);
 
             CostType commCost = dag.VertexCommWeight(std::get<0>(key))
-                                 * schedule.GetInstance().GetArchitecture().SendCosts(std::get<1>(key), std::get<2>(key));
+                                * schedule.GetInstance().GetArchitecture().SendCosts(std::get<1>(key), std::get<2>(key));
             sendCommRemainingProcSuperstep[std::get<1>(key)][val] += commCost;
             recCommRemainingProcSuperstep[std::get<2>(key)][val] += commCost;
         } else {
@@ -156,8 +156,8 @@ MaxBspScheduleCS<GraphT> GreedyBspToMaxBspConverter<GraphT>::Convert(const BspSc
                     for (const std::pair<KeyTriple, unsigned> &entry : dependentCommStepsForNode[node]) {
                         newlyFreedCommSteps.push_back(entry);
                         CostType commCost = dag.VertexCommWeight(node)
-                                              * schedule.GetInstance().GetArchitecture().SendCosts(std::get<1>(entry.first),
-                                                                                                   std::get<2>(entry.first));
+                                            * schedule.GetInstance().GetArchitecture().SendCosts(std::get<1>(entry.first),
+                                                                                                 std::get<2>(entry.first));
                         sendSumOfNewlyFreeOnProc[std::get<1>(entry.first)] += commCost;
                         recSumOfNewlyFreeOnProc[std::get<2>(entry.first)] += commCost;
                     }
@@ -194,10 +194,10 @@ MaxBspScheduleCS<GraphT> GreedyBspToMaxBspConverter<GraphT>::Convert(const BspSc
                 maxWorkRemaining = std::max(maxWorkRemaining, workRemainingProcSuperstep[proc][step]);
                 maxCommRemaining = std::max(maxCommRemaining, sendCommRemainingProcSuperstep[proc][step]);
                 maxCommRemaining = std::max(maxCommRemaining, recCommRemainingProcSuperstep[proc][step]);
-                commAfterReduction = std::max(
-                    commAfterReduction, sendCommRemainingProcSuperstep[proc][step] - sendSumOfNewlyFreeOnProc[proc]);
-                commAfterReduction = std::max(
-                    commAfterReduction, recCommRemainingProcSuperstep[proc][step] - recSumOfNewlyFreeOnProc[proc]);
+                commAfterReduction
+                    = std::max(commAfterReduction, sendCommRemainingProcSuperstep[proc][step] - sendSumOfNewlyFreeOnProc[proc]);
+                commAfterReduction
+                    = std::max(commAfterReduction, recCommRemainingProcSuperstep[proc][step] - recSumOfNewlyFreeOnProc[proc]);
             }
             CostType commReduction
                 = (maxCommRemaining - commAfterReduction) * schedule.GetInstance().GetArchitecture().CommunicationCosts();
@@ -219,8 +219,8 @@ MaxBspScheduleCS<GraphT> GreedyBspToMaxBspConverter<GraphT>::Convert(const BspSc
                     freeCommStepsForSuperstep[step].insert(entry);
 
                     CostType commCost = dag.VertexCommWeight(std::get<0>(entry.first))
-                                          * schedule.GetInstance().GetArchitecture().SendCosts(std::get<1>(entry.first),
-                                                                                               std::get<2>(entry.first));
+                                        * schedule.GetInstance().GetArchitecture().SendCosts(std::get<1>(entry.first),
+                                                                                             std::get<2>(entry.first));
                     sendCommRemainingProcSuperstep[std::get<1>(entry.first)][step] -= commCost;
                     recCommRemainingProcSuperstep[std::get<2>(entry.first)][step] -= commCost;
                 }
@@ -290,7 +290,7 @@ MaxBspScheduleCS<GraphT> GreedyBspToMaxBspConverter<GraphT>::Convert(const BspSc
 
         CostType workLimit = maxCommAfter;
         if (maxCommTogether + maxWorkDone <= maxCommAfter + std::max(maxWorkDone, maxCommCurrent)
-                                                   + schedule.GetInstance().GetArchitecture().SynchronisationCosts()) {
+                                                 + schedule.GetInstance().GetArchitecture().SynchronisationCosts()) {
             workLimit = maxCommTogether;
             for (const std::pair<KeyTriple, unsigned> &entry : commInCurrentStep) {
                 if (currentStep - 1 >= scheduleMax.NumberOfSupersteps()) {
@@ -323,8 +323,7 @@ MaxBspScheduleCS<GraphT> GreedyBspToMaxBspConverter<GraphT>::Convert(const BspSc
                     }
 
                     if (schedule.AssignedProcessor(node) == schedule.AssignedProcessor(parent)
-                        && schedule.AssignedSuperstep(parent) == step + 1
-                        && broughtForward.find(parent) == broughtForward.end()) {
+                        && schedule.AssignedSuperstep(parent) == step + 1 && broughtForward.find(parent) == broughtForward.end()) {
                         hasDependency = true;
                     }
                 }

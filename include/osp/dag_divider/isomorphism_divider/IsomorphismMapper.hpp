@@ -41,7 +41,7 @@ namespace osp {
 template <typename GraphT, typename ConstrGraphT>
 class IsomorphismMapper {
     using VertexC = VertexIdxT<ConstrGraphT>;    // Local vertex ID
-    using VertexG = VertexIdxT<GraphT>;            // Global vertex ID
+    using VertexG = VertexIdxT<GraphT>;          // Global vertex ID
 
     const ConstrGraphT &repGraph_;
     const MerkleHashComputer<ConstrGraphT> repHasher_;
