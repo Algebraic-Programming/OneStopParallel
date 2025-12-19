@@ -55,13 +55,13 @@ BOOST_AUTO_TEST_CASE(test_recomputer) {
 
     BspScheduleRecomp<graph> schedule(instance1);
     GreedyRecomputer<graph> scheduler;
-    scheduler.computeRecompSchedule(schedule_init_cs1, schedule);
+    scheduler.computeRecompScheduleBasic(schedule_init_cs1, schedule);
     BOOST_CHECK(schedule.satisfiesConstraints());
     BOOST_CHECK(schedule.computeCosts() < schedule_init_cs1.computeCosts());
     std::cout << "Cost decrease by greedy recomp: " << schedule_init_cs1.computeCosts() << " -> " << schedule.computeCosts()
               << std::endl;
 
-    // non-toy instance
+    // non-toy instances
 
     BspInstance<graph> instance2;
     instance2.setNumberOfProcessors(4);
@@ -75,22 +75,36 @@ BOOST_AUTO_TEST_CASE(test_recomputer) {
         cwd = cwd.parent_path();
         std::cout << cwd << std::endl;
     }
+    std::vector<std::string> larger_files{"data/spaa/large/instance_CG_N24_K22_nzP0d2.hdag",
+                                        "data/spaa/large/instance_exp_N50_K12_nzP0d15.hdag",
+                                        "data/spaa/large/instance_kNN_N45_K15_nzP0d16.hdag",
+                                        "data/spaa/large/instance_spmv_N120_nzP0d18.hdag"};
 
-    bool status = file_reader::readComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_bicgstab.hdag").string(),
-                                                                    instance2.getComputationalDag());
+    for (std::string filename : larger_files) {
+        bool status = file_reader::readComputationalDagHyperdagFormatDB(
+        (cwd / filename).string(), instance2.getComputationalDag());
 
-    BOOST_CHECK(status);
 
-    BspSchedule<graph> schedule_init2(instance2);
-    BspLocking<graph> greedy;
-    greedy.computeSchedule(schedule_init2);
-    BOOST_CHECK(schedule_init2.satisfiesPrecedenceConstraints());
-    BspScheduleCS<graph> schedule_init_cs2(schedule_init2);
-    BOOST_CHECK(schedule_init_cs2.hasValidCommSchedule());
+        BOOST_CHECK(status);
 
-    scheduler.computeRecompSchedule(schedule_init_cs2, schedule);
-    BOOST_CHECK(schedule.satisfiesConstraints());
-    BOOST_CHECK(schedule.computeCosts() < schedule_init_cs2.computeCosts());
-    std::cout << "Cost decrease by greedy recomp: " << schedule_init_cs2.computeCosts() << " -> " << schedule.computeCosts()
-              << std::endl;
+        BspSchedule<graph> schedule_init2(instance2);
+        BspLocking<graph> greedy;
+        greedy.computeSchedule(schedule_init2);
+        BOOST_CHECK(schedule_init2.satisfiesPrecedenceConstraints());
+        BspScheduleCS<graph> schedule_init_cs2(schedule_init2);
+        BOOST_CHECK(schedule_init_cs2.hasValidCommSchedule());
+        BspScheduleCS<graph> schedule_init_cs3 = schedule_init_cs2;
+
+        scheduler.computeRecompScheduleBasic(schedule_init_cs2, schedule);
+        BOOST_CHECK(schedule.satisfiesConstraints());
+        BOOST_CHECK(schedule.computeCosts() <= schedule_init_cs2.computeCosts());
+        std::cout << "Cost decrease by greedy recomp (basic): " << schedule_init_cs2.computeCosts() << " -> " << schedule.computeCosts()
+                    << std::endl;
+
+        scheduler.computeRecompScheduleAdvanced(schedule_init_cs3, schedule);
+        BOOST_CHECK(schedule.satisfiesConstraints());
+        BOOST_CHECK(schedule.computeCosts() < schedule_init_cs3.computeCosts());
+        std::cout << "Cost decrease by greedy recomp (advanced): " << schedule_init_cs3.computeCosts() << " -> " << schedule.computeCosts()
+                    << std::endl;
+    }
 }
