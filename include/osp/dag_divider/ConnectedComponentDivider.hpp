@@ -27,156 +27,156 @@ limitations under the License.
 
 namespace osp {
 
-template <typename Graph_t, typename Constr_Graph_t>
-class ConnectedComponentDivider : public IDagDivider<Graph_t> {
-    static_assert(is_computational_dag_v<Graph_t>, "Graph must be a computational DAG");
-    static_assert(is_computational_dag_v<Constr_Graph_t>, "Constr_Graph_t must be a computational DAG");
-    static_assert(is_constructable_cdag_v<Constr_Graph_t>, "Constr_Graph_t must satisfy the constructable_cdag_vertex concept");
-    static_assert(std::is_same_v<vertex_idx_t<Graph_t>, vertex_idx_t<Constr_Graph_t>>,
-                  "Graph_t and Constr_Graph_t must have the same vertex_idx types");
+template <typename GraphT, typename ConstrGraphT>
+class ConnectedComponentDivider : public IDagDivider<GraphT> {
+    static_assert(isComputationalDagV<GraphT>, "Graph must be a computational DAG");
+    static_assert(isComputationalDagV<ConstrGraphT>, "ConstrGraphT must be a computational DAG");
+    static_assert(isConstructableCdagV<ConstrGraphT>, "ConstrGraphT must satisfy the constructable_cdag_vertex concept");
+    static_assert(std::is_same_v<VertexIdxT<GraphT>, VertexIdxT<ConstrGraphT>>,
+                  "GraphT and ConstrGraphT must have the same VertexIdx types");
 
   private:
-    using vertex_idx = vertex_idx_t<Graph_t>;
+    using VertexIdx = VertexIdxT<GraphT>;
 
-    std::vector<Constr_Graph_t> sub_dags;
+    std::vector<ConstrGraphT> subDags_;
 
     // For each component: local_idx -> global vertex
-    std::vector<std::vector<vertex_idx>> vertex_mapping;
+    std::vector<std::vector<VertexIdx>> vertexMapping_;
 
     // Global vertex -> local index
-    std::vector<vertex_idx> vertex_map;
+    std::vector<VertexIdx> vertexMap_;
 
     // Global vertex -> component id
-    std::vector<unsigned> component;
+    std::vector<unsigned> component_;
 
   public:
-    inline std::vector<Constr_Graph_t> &get_sub_dags() { return sub_dags; }
+    inline std::vector<ConstrGraphT> &GetSubDags() { return subDags_; }
 
-    inline const std::vector<Constr_Graph_t> &get_sub_dags() const { return sub_dags; }
+    inline const std::vector<ConstrGraphT> &GetSubDags() const { return subDags_; }
 
-    inline const std::vector<std::vector<vertex_idx>> &get_vertex_mapping() const { return vertex_mapping; }
+    inline const std::vector<std::vector<VertexIdx>> &GetVertexMapping() const { return vertexMapping_; }
 
-    inline const std::vector<unsigned> &get_component() const { return component; }
+    inline const std::vector<unsigned> &GetComponent() const { return component_; }
 
-    inline const std::vector<vertex_idx> &get_vertex_map() const { return vertex_map; }
+    inline const std::vector<VertexIdx> &GetVertexMap() const { return vertexMap_; }
 
-    virtual std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> divide(const Graph_t &dag) override {
-        if (dag.num_vertices() == 0) {
+    virtual std::vector<std::vector<std::vector<VertexIdxT<GraphT>>>> Divide(const GraphT &dag) override {
+        if (dag.NumVertices() == 0) {
             return {};
         }
 
-        bool has_more_than_one_connected_component = compute_connected_components(dag);
+        bool hasMoreThanOneConnectedComponent = ComputeConnectedComponents(dag);
 
-        std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> vertex_maps(1);
+        std::vector<std::vector<std::vector<VertexIdxT<GraphT>>>> vertexMaps(1);
 
-        if (has_more_than_one_connected_component) {
-            vertex_maps[0].resize(sub_dags.size());
-            for (unsigned i = 0; i < sub_dags.size(); ++i) {
-                vertex_maps[0][i].resize(sub_dags[i].num_vertices());
+        if (hasMoreThanOneConnectedComponent) {
+            vertexMaps[0].resize(subDags_.size());
+            for (unsigned i = 0; i < subDags_.size(); ++i) {
+                vertexMaps[0][i].resize(subDags_[i].NumVertices());
             }
 
-            for (const auto &v : dag.vertices()) {
-                vertex_maps[0][component[v]][vertex_map[v]] = v;
+            for (const auto &v : dag.Vertices()) {
+                vertexMaps[0][component_[v]][vertexMap_[v]] = v;
             }
         } else {
-            sub_dags.resize(1);
-            sub_dags[0] = dag;
-            vertex_mapping.resize(1);
-            vertex_mapping[0].resize(dag.num_vertices());
-            vertex_map.resize(dag.num_vertices());
+            subDags_.resize(1);
+            subDags_[0] = dag;
+            vertexMapping_.resize(1);
+            vertexMapping_[0].resize(dag.NumVertices());
+            vertexMap_.resize(dag.NumVertices());
 
-            vertex_maps[0].resize(1);
-            vertex_maps[0][0].resize(dag.num_vertices());
-            for (const auto &v : dag.vertices()) {
-                vertex_maps[0][0][v] = v;
-                vertex_map[v] = v;
-                vertex_mapping[0][v] = v;
+            vertexMaps[0].resize(1);
+            vertexMaps[0][0].resize(dag.NumVertices());
+            for (const auto &v : dag.Vertices()) {
+                vertexMaps[0][0][v] = v;
+                vertexMap_[v] = v;
+                vertexMapping_[0][v] = v;
             }
         }
 
-        return vertex_maps;
+        return vertexMaps;
     }
 
-    std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> compute_vertex_maps(const Graph_t &dag) {
-        std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> vertex_maps(1);
+    std::vector<std::vector<std::vector<VertexIdxT<GraphT>>>> ComputeVertexMaps(const GraphT &dag) {
+        std::vector<std::vector<std::vector<VertexIdxT<GraphT>>>> vertexMaps(1);
 
-        vertex_maps[0].resize(sub_dags.size());
-        for (unsigned i = 0; i < sub_dags.size(); ++i) {
-            vertex_maps[0][i].resize(sub_dags[i].num_vertices());
+        vertexMaps[0].resize(subDags_.size());
+        for (unsigned i = 0; i < subDags_.size(); ++i) {
+            vertexMaps[0][i].resize(subDags_[i].NumVertices());
         }
 
-        for (const auto &v : dag.vertices()) {
-            vertex_maps[0][component[v]][vertex_map[v]] = v;
+        for (const auto &v : dag.Vertices()) {
+            vertexMaps[0][component_[v]][vertexMap_[v]] = v;
         }
 
-        return vertex_maps;
+        return vertexMaps;
     }
 
-    bool compute_connected_components(const Graph_t &dag) {
+    bool ComputeConnectedComponents(const GraphT &dag) {
         // Clear previous state
-        sub_dags.clear();
-        vertex_mapping.clear();
-        vertex_map.clear();
-        component.assign(dag.num_vertices(), std::numeric_limits<unsigned>::max());
+        subDags_.clear();
+        vertexMapping_.clear();
+        vertexMap_.clear();
+        component_.assign(dag.NumVertices(), std::numeric_limits<unsigned>::max());
 
-        if (dag.num_vertices() == 0) {
+        if (dag.NumVertices() == 0) {
             return false;
         }
 
-        unsigned component_id = 0;
-        for (const auto &v : dag.vertices()) {
-            if (component[v] == std::numeric_limits<unsigned>::max()) {
-                component[v] = component_id;
+        unsigned componentId = 0;
+        for (const auto &v : dag.Vertices()) {
+            if (component_[v] == std::numeric_limits<unsigned>::max()) {
+                component_[v] = componentId;
 
                 // BFS for weakly connected component
-                std::queue<vertex_idx> q;
+                std::queue<VertexIdx> q;
                 q.push(v);
 
                 while (!q.empty()) {
-                    vertex_idx current = q.front();
+                    VertexIdx current = q.front();
                     q.pop();
 
-                    for (const auto &child : dag.children(current)) {
-                        if (component[child] == std::numeric_limits<unsigned>::max()) {
+                    for (const auto &child : dag.Children(current)) {
+                        if (component_[child] == std::numeric_limits<unsigned>::max()) {
                             q.push(child);
-                            component[child] = component_id;
+                            component_[child] = componentId;
                         }
                     }
 
-                    for (const auto &parent : dag.parents(current)) {
-                        if (component[parent] == std::numeric_limits<unsigned>::max()) {
+                    for (const auto &parent : dag.Parents(current)) {
+                        if (component_[parent] == std::numeric_limits<unsigned>::max()) {
                             q.push(parent);
-                            component[parent] = component_id;
+                            component_[parent] = componentId;
                         }
                     }
                 }
 
-                ++component_id;
+                ++componentId;
             }
         }
 
-        if (component_id == 1) {
+        if (componentId == 1) {
             // Single component: no need to build sub_dags or maps
             return false;
         }
 
-        sub_dags = create_induced_subgraphs<Graph_t, Constr_Graph_t>(dag, component);
+        subDags_ = CreateInducedSubgraphs<GraphT, ConstrGraphT>(dag, component_);
 
         // Create the mappings between global and local vertex indices.
-        vertex_mapping.resize(sub_dags.size());
-        vertex_map.resize(dag.num_vertices());
+        vertexMapping_.resize(subDags_.size());
+        vertexMap_.resize(dag.NumVertices());
 
-        std::vector<vertex_idx> current_index_in_subdag(sub_dags.size(), 0);
-        for (const auto &v : dag.vertices()) {
-            unsigned comp_id = component[v];
-            vertex_idx local_idx = current_index_in_subdag[comp_id]++;
-            vertex_map[v] = local_idx;
+        std::vector<VertexIdx> currentIndexInSubdag(subDags_.size(), 0);
+        for (const auto &v : dag.Vertices()) {
+            unsigned compId = component_[v];
+            VertexIdx localIdx = currentIndexInSubdag[compId]++;
+            vertexMap_[v] = localIdx;
 
-            if (vertex_mapping[comp_id].empty()) {
-                vertex_mapping[comp_id].resize(sub_dags[comp_id].num_vertices());
+            if (vertexMapping_[compId].empty()) {
+                vertexMapping_[compId].resize(subDags_[compId].NumVertices());
             }
 
-            vertex_mapping[comp_id][local_idx] = v;
+            vertexMapping_[compId][localIdx] = v;
         }
 
         return true;

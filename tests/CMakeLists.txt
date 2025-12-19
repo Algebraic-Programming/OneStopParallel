@@ -52,8 +52,6 @@ _add_test( directed_graph_util )
 
 _add_test( directed_graph_top_sort )
 
-#_add_test( kl )
-
 _add_test( kl_total )
 
 _add_test( kl_lambda )
@@ -128,6 +126,8 @@ _add_test( random_graph_gen )
 _add_test( permutations )
 
 _add_test( bit_mask )
+
+_add_test( hash_pair )
 
 ## io
 _add_test( filereader DATA )

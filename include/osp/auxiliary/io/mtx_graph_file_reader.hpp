@@ -32,9 +32,9 @@ limitations under the License.
 namespace osp {
 namespace file_reader {
 
-template <typename Graph_t>
-bool readComputationalDagMartixMarketFormat(std::ifstream &infile, Graph_t &graph) {
-    using vertex_t = vertex_idx_t<Graph_t>;
+template <typename GraphT>
+bool ReadComputationalDagMartixMarketFormat(std::ifstream &infile, GraphT &graph) {
+    using VertexT = VertexIdxT<GraphT>;
 
     std::string line;
 
@@ -62,29 +62,29 @@ bool readComputationalDagMartixMarketFormat(std::ifstream &infile, Graph_t &grap
         return false;
     }
 
-    int M_row = 0, M_col = 0, nEntries = 0;
+    int mRow = 0, mCol = 0, nEntries = 0;
 
-    std::istringstream header_stream(line);
-    if (!(header_stream >> M_row >> M_col >> nEntries) || M_row <= 0 || M_col <= 0 || M_row != M_col) {
+    std::istringstream headerStream(line);
+    if (!(headerStream >> mRow >> mCol >> nEntries) || mRow <= 0 || mCol <= 0 || mRow != mCol) {
         std::cerr << "Error: Invalid header or non-square matrix.\n";
         return false;
     }
 
-    if (static_cast<unsigned long long>(M_row) > std::numeric_limits<vertex_t>::max()) {
+    if (static_cast<unsigned long long>(mRow) > std::numeric_limits<VertexT>::max()) {
         std::cerr << "Error: Matrix dimension too large for vertex type.\n";
         return false;
     }
 
-    const vertex_t num_nodes = static_cast<vertex_t>(M_row);
-    std::vector<int> node_work_wts(num_nodes, 0);
-    std::vector<int> node_comm_wts(num_nodes, 1);
+    const VertexT numNodes = static_cast<VertexT>(mRow);
+    std::vector<int> nodeWorkWts(numNodes, 0);
+    std::vector<int> nodeCommWts(numNodes, 1);
 
-    for (vertex_t i = 0; i < num_nodes; ++i) {
-        graph.add_vertex(1, 1, 1);
+    for (VertexT i = 0; i < numNodes; ++i) {
+        graph.AddVertex(1, 1, 1);
     }
 
-    int entries_read = 0;
-    while (entries_read < nEntries && std::getline(infile, line)) {
+    int entriesRead = 0;
+    while (entriesRead < nEntries && std::getline(infile, line)) {
         if (line.empty() || line[0] == '%') {
             continue;
         }
@@ -93,11 +93,11 @@ bool readComputationalDagMartixMarketFormat(std::ifstream &infile, Graph_t &grap
             return false;
         }
 
-        std::istringstream entry_stream(line);
+        std::istringstream entryStream(line);
         int row = -1, col = -1;
         double val = 0.0;
 
-        if (!(entry_stream >> row >> col >> val)) {
+        if (!(entryStream >> row >> col >> val)) {
             std::cerr << "Error: Malformed matrix entry.\n";
             return false;
         }
@@ -105,12 +105,12 @@ bool readComputationalDagMartixMarketFormat(std::ifstream &infile, Graph_t &grap
         row -= 1;
         col -= 1;    // Convert to 0-based
 
-        if (row < 0 || col < 0 || row >= M_row || col >= M_col) {
+        if (row < 0 || col < 0 || row >= mRow || col >= mCol) {
             std::cerr << "Error: Matrix entry out of bounds.\n";
             return false;
         }
 
-        if (static_cast<vertex_t>(row) >= num_nodes || static_cast<vertex_t>(col) >= num_nodes) {
+        if (static_cast<VertexT>(row) >= numNodes || static_cast<VertexT>(col) >= numNodes) {
             std::cerr << "Error: Index exceeds vertex type limit.\n";
             return false;
         }
@@ -121,22 +121,22 @@ bool readComputationalDagMartixMarketFormat(std::ifstream &infile, Graph_t &grap
         }
 
         if (row != col) {
-            graph.add_edge(static_cast<vertex_t>(col), static_cast<vertex_t>(row));
-            node_work_wts[static_cast<vertex_t>(row)] += 1;
+            graph.AddEdge(static_cast<VertexT>(col), static_cast<VertexT>(row));
+            nodeWorkWts[static_cast<VertexT>(row)] += 1;
         }
 
-        ++entries_read;
+        ++entriesRead;
     }
 
-    if (entries_read != nEntries) {
+    if (entriesRead != nEntries) {
         std::cerr << "Error: Incomplete matrix entries.\n";
         return false;
     }
 
-    for (vertex_t i = 0; i < num_nodes; ++i) {
-        graph.set_vertex_work_weight(i, static_cast<v_workw_t<Graph_t>>(node_work_wts[i]));
-        graph.set_vertex_comm_weight(i, static_cast<v_commw_t<Graph_t>>(node_comm_wts[i]));
-        graph.set_vertex_mem_weight(i, static_cast<v_memw_t<Graph_t>>(node_work_wts[i]));
+    for (VertexT i = 0; i < numNodes; ++i) {
+        graph.SetVertexWorkWeight(i, static_cast<VWorkwT<GraphT>>(nodeWorkWts[i]));
+        graph.SetVertexCommWeight(i, static_cast<VCommwT<GraphT>>(nodeCommWts[i]));
+        graph.SetVertexMemWeight(i, static_cast<VMemwT<GraphT>>(nodeWorkWts[i]));
     }
 
     while (std::getline(infile, line)) {
@@ -149,15 +149,15 @@ bool readComputationalDagMartixMarketFormat(std::ifstream &infile, Graph_t &grap
     return true;
 }
 
-template <typename Graph_t>
-bool readComputationalDagMartixMarketFormat(const std::string &filename, Graph_t &graph) {
+template <typename GraphT>
+bool ReadComputationalDagMartixMarketFormat(const std::string &filename, GraphT &graph) {
     // Ensure the file is .mtx format
     if (std::filesystem::path(filename).extension() != ".mtx") {
         std::cerr << "Error: Only .mtx files are accepted.\n";
         return false;
     }
 
-    if (!isPathSafe(filename)) {
+    if (!IsPathSafe(filename)) {
         std::cerr << "Error: Unsafe file path (potential traversal attack).\n";
         return false;
     }
@@ -178,7 +178,7 @@ bool readComputationalDagMartixMarketFormat(const std::string &filename, Graph_t
         return false;
     }
 
-    return readComputationalDagMartixMarketFormat(infile, graph);
+    return ReadComputationalDagMartixMarketFormat(infile, graph);
 }
 
 // bool readProblem(const std::string &filename, DAG &G, BSPproblem &params, bool NoNUMA = true);
@@ -186,16 +186,16 @@ bool readComputationalDagMartixMarketFormat(const std::string &filename, Graph_t
 // std::pair<bool, BspInstance> readBspInstance(const std::string &filename);
 
 // std::pair<bool, ComputationalDag>
-// readComputationalDagMartixMarketFormat(const std::string &filename,
+// ReadComputationalDagMartixMarketFormat(const std::string &filename,
 //                                        std::unordered_map<std::pair<VertexType, VertexType>, double, pair_hash> &mtx);
 
 // std::pair<bool, ComputationalDag>
-// readComputationalDagMartixMarketFormat(std::ifstream &infile,
+// ReadComputationalDagMartixMarketFormat(std::ifstream &infile,
 //                                        std::unordered_map<std::pair<VertexType, VertexType>, double, pair_hash> &mtx);
 
-// std::pair<bool, ComputationalDag> readComputationalDagMartixMarketFormat(const std::string &filename);
+// std::pair<bool, ComputationalDag> ReadComputationalDagMartixMarketFormat(const std::string &filename);
 
-// std::pair<bool, ComputationalDag> readComputationalDagMartixMarketFormat(std::ifstream &infile);
+// std::pair<bool, ComputationalDag> ReadComputationalDagMartixMarketFormat(std::ifstream &infile);
 
 // std::pair<bool, ComputationalDag> readCombinedSptrsvSpmvDagMartixMarket(const std::string &firstFilename, const std::string &secondFilename);
 
@@ -203,9 +203,9 @@ bool readComputationalDagMartixMarketFormat(const std::string &filename, Graph_t
 
 // std::pair<bool, csr_graph> readComputationalDagMartixMarketFormat_csr(std::ifstream &infile);
 
-// std::pair<bool, BspArchitecture> readBspArchitecture(const std::string &filename);
+// std::pair<bool, BspArchitecture> ReadBspArchitecture(const std::string &filename);
 
-// std::pair<bool, BspArchitecture> readBspArchitecture(std::ifstream &infile);
+// std::pair<bool, BspArchitecture> ReadBspArchitecture(std::ifstream &infile);
 
 // std::pair<bool, BspSchedule> readBspSchdeuleTxtFormat(const BspInstance &instance, const std::string &filename);
 

@@ -25,20 +25,20 @@ limitations under the License.
 
 namespace osp {
 
-template <typename integral_type>
-integral_type intSqrtFloor(integral_type num) {
-    static_assert(std::is_integral_v<integral_type>);
+template <typename IntegralType>
+IntegralType IntSqrtFloor(IntegralType num) {
+    static_assert(std::is_integral_v<IntegralType>);
     assert(num > 0);
 
-    integral_type sqrt = 1;
-    integral_type numCopy = num;
+    IntegralType sqrt = 1;
+    IntegralType numCopy = num;
     while (numCopy >= 4) {
         sqrt *= 2;
         numCopy /= 4;
     }
-    integral_type power2 = sqrt / 2;
+    IntegralType power2 = sqrt / 2;
     while (power2 > 0) {
-        integral_type sum = sqrt + power2;
+        IntegralType sum = sqrt + power2;
         if (sum * sum <= num) {
             sqrt = sum;
         }
@@ -48,22 +48,21 @@ integral_type intSqrtFloor(integral_type num) {
     return sqrt;
 }
 
-template <typename integral_type>
-std::vector<integral_type> divisorsList(integral_type num) {
-    static_assert(std::is_integral_v<integral_type>);
+template <typename IntegralType>
+std::vector<IntegralType> DivisorsList(IntegralType num) {
+    static_assert(std::is_integral_v<IntegralType>);
     assert(num > 0);
 
-    std::vector<integral_type> divs;
+    std::vector<IntegralType> divs;
 
-    integral_type ub = intSqrtFloor<integral_type>(num);
-    for (integral_type div = 1; div <= ub; ++div) {
+    IntegralType ub = IntSqrtFloor<IntegralType>(num);
+    for (IntegralType div = 1; div <= ub; ++div) {
         if (num % div == 0) {
             divs.emplace_back(div);
         }
     }
-    for (std::size_t indx = divs.back() * divs.back() == num ? divs.size() - 2U : divs.size() - 1U;
-         indx != std::numeric_limits<std::size_t>::max();
-         --indx) {
+    const std::size_t beginIndx = divs.back() * divs.back() == num ? divs.size() - 2U : divs.size() - 1U;
+    for (std::size_t indx = beginIndx; indx != std::numeric_limits<std::size_t>::max(); --indx) {
         divs.emplace_back(num / divs[indx]);
     }
 

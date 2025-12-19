@@ -23,95 +23,95 @@ limitations under the License.
 
 namespace osp {
 
-template <typename Graph_t>
-std::vector<std::vector<vertex_idx_t<Graph_t>>> heavy_edge_preprocess(const Graph_t &graph,
-                                                                      const double heavy_is_x_times_median,
-                                                                      const double min_percent_components_retained,
-                                                                      const double bound_component_weight_percent) {
-    static_assert(is_computational_dag_edge_desc_v<Graph_t>,
+template <typename GraphT>
+std::vector<std::vector<VertexIdxT<GraphT>>> HeavyEdgePreprocess(const GraphT &graph,
+                                                                 const double heavyIsXTimesMedian,
+                                                                 const double minPercentComponentsRetained,
+                                                                 const double boundComponentWeightPercent) {
+    static_assert(isComputationalDagEdgeDescV<GraphT>,
                   "HeavyEdgePreProcess can only be used with computational DAGs with edge weights.");
 
-    using VertexType = vertex_idx_t<Graph_t>;
-    using EdgeType = edge_desc_t<Graph_t>;
+    using VertexType = VertexIdxT<GraphT>;
+    using EdgeType = EdgeDescT<GraphT>;
 
     // Initialising the union find structure
-    union_find_universe_t<Graph_t> uf_structure;
-    for (const VertexType &vert : graph.vertices()) {
-        uf_structure.add_object(vert, graph.vertex_work_weight(vert));
+    UnionFindUniverseT<GraphT> ufStructure;
+    for (const VertexType &vert : graph.Vertices()) {
+        ufStructure.AddObject(vert, graph.VertexWorkWeight(vert));
     }
 
     // Making edge comunications list
-    std::vector<e_commw_t<Graph_t>> edge_communications;
-    edge_communications.reserve(graph.num_edges());
-    for (const auto &edge : edges(graph)) {
-        if constexpr (has_edge_weights_v<Graph_t>) {
-            edge_communications.emplace_back(graph.edge_comm_weight(edge));
+    std::vector<ECommwT<GraphT>> edgeCommunications;
+    edgeCommunications.reserve(graph.NumEdges());
+    for (const auto &edge : Edges(graph)) {
+        if constexpr (hasEdgeWeightsV<GraphT>) {
+            edgeCommunications.emplace_back(graph.EdgeCommWeight(edge));
         } else {
-            edge_communications.emplace_back(graph.vertex_comm_weight(source(edge, graph)));
+            edgeCommunications.emplace_back(graph.VertexCommWeight(Source(edge, graph)));
         }
     }
 
     // Computing the median and setting it to at least one
-    e_commw_t<Graph_t> median_edge_weight = 1;
-    if (not edge_communications.empty()) {
-        auto median_it = edge_communications.begin();
-        std::advance(median_it, edge_communications.size() / 2);
-        std::nth_element(edge_communications.begin(), median_it, edge_communications.end());
-        median_edge_weight = std::max(edge_communications[edge_communications.size() / 2], static_cast<e_commw_t<Graph_t>>(1));
+    ECommwT<GraphT> medianEdgeWeight = 1;
+    if (not edgeCommunications.empty()) {
+        auto medianIt = edgeCommunications.begin();
+        std::advance(medianIt, edgeCommunications.size() / 2);
+        std::nth_element(edgeCommunications.begin(), medianIt, edgeCommunications.end());
+        medianEdgeWeight = std::max(edgeCommunications[edgeCommunications.size() / 2], static_cast<ECommwT<GraphT>>(1));
     }
 
     // Making edge list
-    e_commw_t<Graph_t> minimal_edge_weight = static_cast<e_commw_t<Graph_t>>(heavy_is_x_times_median * median_edge_weight);
-    std::vector<EdgeType> edge_list;
-    edge_list.reserve(graph.num_edges());
-    for (const auto &edge : edges(graph)) {
-        if constexpr (has_edge_weights_v<Graph_t>) {
-            if (graph.edge_comm_weight(edge) > minimal_edge_weight) {
-                edge_list.emplace_back(edge);
+    ECommwT<GraphT> minimalEdgeWeight = static_cast<ECommwT<GraphT>>(heavyIsXTimesMedian * medianEdgeWeight);
+    std::vector<EdgeType> edgeList;
+    edgeList.reserve(graph.NumEdges());
+    for (const auto &edge : Edges(graph)) {
+        if constexpr (hasEdgeWeightsV<GraphT>) {
+            if (graph.EdgeCommWeight(edge) > minimalEdgeWeight) {
+                edgeList.emplace_back(edge);
             }
         } else {
-            if (graph.vertex_comm_weight(source(edge, graph)) > minimal_edge_weight) {
-                edge_list.emplace_back(edge);
+            if (graph.VertexCommWeight(Source(edge, graph)) > minimalEdgeWeight) {
+                edgeList.emplace_back(edge);
             }
         }
     }
 
-    if constexpr (has_edge_weights_v<Graph_t>) {
+    if constexpr (hasEdgeWeightsV<GraphT>) {
         // Sorting edge list
-        std::sort(edge_list.begin(), edge_list.end(), [graph](const EdgeType &left, const EdgeType &right) {
-            return graph.edge_comm_weight(left) > graph.edge_comm_weight(right);
+        std::sort(edgeList.begin(), edgeList.end(), [graph](const EdgeType &left, const EdgeType &right) {
+            return graph.EdgeCommWeight(left) > graph.EdgeCommWeight(right);
         });
     } else {
-        std::sort(edge_list.begin(), edge_list.end(), [graph](const EdgeType &left, const EdgeType &right) {
-            return graph.vertex_comm_weight(source(left, graph)) > graph.vertex_comm_weight(source(right, graph));
+        std::sort(edgeList.begin(), edgeList.end(), [graph](const EdgeType &left, const EdgeType &right) {
+            return graph.VertexCommWeight(Source(left, graph)) > graph.VertexCommWeight(Source(right, graph));
         });
     }
 
     // Computing max component size
-    v_workw_t<Graph_t> max_component_size = 0;
-    for (const VertexType &vert : graph.vertices()) {
-        max_component_size += graph.vertex_work_weight(vert);
+    VWorkwT<GraphT> maxComponentSize = 0;
+    for (const VertexType &vert : graph.Vertices()) {
+        maxComponentSize += graph.VertexWorkWeight(vert);
     }
 
-    max_component_size = static_cast<v_workw_t<Graph_t>>(max_component_size * bound_component_weight_percent);
+    maxComponentSize = static_cast<VWorkwT<GraphT>>(maxComponentSize * boundComponentWeightPercent);
 
     // Joining heavy edges
-    for (const EdgeType &edge : edge_list) {
-        if (static_cast<double>(uf_structure.get_number_of_connected_components()) - 1.0
-            < min_percent_components_retained * static_cast<double>(graph.num_vertices())) {
+    for (const EdgeType &edge : edgeList) {
+        if (static_cast<double>(ufStructure.GetNumberOfConnectedComponents()) - 1.0
+            < minPercentComponentsRetained * static_cast<double>(graph.NumVertices())) {
             break;
         }
 
-        v_workw_t<Graph_t> weight_comp_a = uf_structure.get_weight_of_component_by_name(source(edge, graph));
-        v_workw_t<Graph_t> weight_comp_b = uf_structure.get_weight_of_component_by_name(target(edge, graph));
-        if (weight_comp_a + weight_comp_b > max_component_size) {
+        VWorkwT<GraphT> weightCompA = ufStructure.GetWeightOfComponentByName(Source(edge, graph));
+        VWorkwT<GraphT> weightCompB = ufStructure.GetWeightOfComponentByName(Target(edge, graph));
+        if (weightCompA + weightCompB > maxComponentSize) {
             continue;
         }
 
-        uf_structure.join_by_name(source(edge, graph), target(edge, graph));
+        ufStructure.JoinByName(Source(edge, graph), Target(edge, graph));
     }
 
-    return uf_structure.get_connected_components();
+    return ufStructure.GetConnectedComponents();
 }
 
 }    // namespace osp

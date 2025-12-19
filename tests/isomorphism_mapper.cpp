@@ -28,126 +28,126 @@ limitations under the License.
 
 using namespace osp;
 
-BOOST_AUTO_TEST_SUITE(IsomorphismMapperTestSuite)
+BOOST_AUTO_TEST_SUITE(isomorphism_mapper_test_suite)
 
-using graph_t = computational_dag_vector_impl_def_t;
-using constr_graph_t = computational_dag_vector_impl_def_t;
+using GraphT = ComputationalDagVectorImplDefUnsignedT;
+using ConstrGraphT = ComputationalDagVectorImplDefUnsignedT;
 
-BOOST_AUTO_TEST_CASE(Mapper_SimpleChain) {
+BOOST_AUTO_TEST_CASE(MapperSimpleChain) {
     // Rep: 0 -> 1 -> 2
-    constr_graph_t rep_graph;
-    rep_graph.add_vertex(10, 1, 1);
-    rep_graph.add_vertex(20, 1, 1);
-    rep_graph.add_vertex(30, 1, 1);
-    rep_graph.add_edge(0, 1);
-    rep_graph.add_edge(1, 2);
-    std::vector<vertex_idx_t<graph_t>> rep_map = {100, 101, 102};
+    ConstrGraphT repGraph;
+    repGraph.AddVertex(10, 1, 1);
+    repGraph.AddVertex(20, 1, 1);
+    repGraph.AddVertex(30, 1, 1);
+    repGraph.AddEdge(0, 1);
+    repGraph.AddEdge(1, 2);
+    std::vector<VertexIdxT<GraphT>> repMap = {100, 101, 102};
 
     // Current: 2 -> 0 -> 1 (isomorphic, but different local IDs)
-    constr_graph_t current_graph;
-    current_graph.add_vertex(20, 1, 1);    // local 0 (work 20)
-    current_graph.add_vertex(30, 1, 1);    // local 1 (work 30)
-    current_graph.add_vertex(10, 1, 1);    // local 2 (work 10)
-    current_graph.add_edge(2, 0);
-    current_graph.add_edge(0, 1);
-    std::vector<vertex_idx_t<graph_t>> current_map = {201, 202, 200};
+    ConstrGraphT currentGraph;
+    currentGraph.AddVertex(20, 1, 1);    // local 0 (work 20)
+    currentGraph.AddVertex(30, 1, 1);    // local 1 (work 30)
+    currentGraph.AddVertex(10, 1, 1);    // local 2 (work 10)
+    currentGraph.AddEdge(2, 0);
+    currentGraph.AddEdge(0, 1);
+    std::vector<VertexIdxT<GraphT>> currentMap = {201, 202, 200};
 
-    IsomorphismMapper<graph_t, constr_graph_t> mapper(rep_graph);
-    auto result_map_local = mapper.find_mapping(current_graph);
+    IsomorphismMapper<GraphT, ConstrGraphT> mapper(repGraph);
+    auto resultMapLocal = mapper.FindMapping(currentGraph);
 
     // Translate local map to global map for the test
-    std::unordered_map<vertex_idx_t<graph_t>, vertex_idx_t<graph_t>> result_map;
-    for (const auto &[curr_local, rep_local] : result_map_local) {
-        result_map[current_map[curr_local]] = rep_map[rep_local];
+    std::unordered_map<VertexIdxT<GraphT>, VertexIdxT<GraphT>> resultMap;
+    for (const auto &[curr_local, rep_local] : resultMapLocal) {
+        resultMap[currentMap[curr_local]] = repMap[rep_local];
     }
 
-    BOOST_REQUIRE_EQUAL(result_map.size(), 3);
+    BOOST_REQUIRE_EQUAL(resultMap.size(), 3);
     // current global ID -> rep global ID
     // 200 (work 10) -> 100 (work 10)
     // 201 (work 20) -> 101 (work 20)
     // 202 (work 30) -> 102 (work 30)
-    BOOST_CHECK_EQUAL(result_map.at(200), 100);
-    BOOST_CHECK_EQUAL(result_map.at(201), 101);
-    BOOST_CHECK_EQUAL(result_map.at(202), 102);
+    BOOST_CHECK_EQUAL(resultMap.at(200), 100);
+    BOOST_CHECK_EQUAL(resultMap.at(201), 101);
+    BOOST_CHECK_EQUAL(resultMap.at(202), 102);
 }
 
-BOOST_AUTO_TEST_CASE(Mapper_ForkJoin) {
+BOOST_AUTO_TEST_CASE(MapperForkJoin) {
     // Rep: 0 -> {1,2} -> 3
-    constr_graph_t rep_graph;
-    rep_graph.add_vertex(10, 1, 1);
-    rep_graph.add_vertex(20, 1, 1);
-    rep_graph.add_vertex(20, 1, 1);
-    rep_graph.add_vertex(30, 1, 1);
-    rep_graph.add_edge(0, 1);
-    rep_graph.add_edge(0, 2);
-    rep_graph.add_edge(1, 3);
-    rep_graph.add_edge(2, 3);
-    std::vector<vertex_idx_t<graph_t>> rep_map = {10, 11, 12, 13};
+    ConstrGraphT repGraph;
+    repGraph.AddVertex(10, 1, 1);
+    repGraph.AddVertex(20, 1, 1);
+    repGraph.AddVertex(20, 1, 1);
+    repGraph.AddVertex(30, 1, 1);
+    repGraph.AddEdge(0, 1);
+    repGraph.AddEdge(0, 2);
+    repGraph.AddEdge(1, 3);
+    repGraph.AddEdge(2, 3);
+    std::vector<VertexIdxT<GraphT>> repMap = {10, 11, 12, 13};
 
     // Current: 3 -> {0,2} -> 1
-    constr_graph_t current_graph;
-    current_graph.add_vertex(20, 1, 1);    // local 0
-    current_graph.add_vertex(30, 1, 1);    // local 1
-    current_graph.add_vertex(20, 1, 1);    // local 2
-    current_graph.add_vertex(10, 1, 1);    // local 3
-    current_graph.add_edge(3, 0);
-    current_graph.add_edge(3, 2);
-    current_graph.add_edge(0, 1);
-    current_graph.add_edge(2, 1);
-    std::vector<vertex_idx_t<graph_t>> current_map = {21, 23, 22, 20};
+    ConstrGraphT currentGraph;
+    currentGraph.AddVertex(20, 1, 1);    // local 0
+    currentGraph.AddVertex(30, 1, 1);    // local 1
+    currentGraph.AddVertex(20, 1, 1);    // local 2
+    currentGraph.AddVertex(10, 1, 1);    // local 3
+    currentGraph.AddEdge(3, 0);
+    currentGraph.AddEdge(3, 2);
+    currentGraph.AddEdge(0, 1);
+    currentGraph.AddEdge(2, 1);
+    std::vector<VertexIdxT<GraphT>> currentMap = {21, 23, 22, 20};
 
-    IsomorphismMapper<graph_t, constr_graph_t> mapper(rep_graph);
-    auto result_map_local = mapper.find_mapping(current_graph);
+    IsomorphismMapper<GraphT, ConstrGraphT> mapper(repGraph);
+    auto resultMapLocal = mapper.FindMapping(currentGraph);
 
-    std::unordered_map<vertex_idx_t<graph_t>, vertex_idx_t<graph_t>> result_map;
-    for (const auto &[curr_local, rep_local] : result_map_local) {
-        result_map[current_map[curr_local]] = rep_map[rep_local];
+    std::unordered_map<VertexIdxT<GraphT>, VertexIdxT<GraphT>> resultMap;
+    for (const auto &[curr_local, rep_local] : resultMapLocal) {
+        resultMap[currentMap[curr_local]] = repMap[rep_local];
     }
 
-    BOOST_REQUIRE_EQUAL(result_map.size(), 4);
+    BOOST_REQUIRE_EQUAL(resultMap.size(), 4);
     // current global ID -> rep global ID
     // 20 (work 10) -> 10 (work 10)
     // 23 (work 30) -> 13 (work 30)
-    BOOST_CHECK_EQUAL(result_map.at(20), 10);
-    BOOST_CHECK_EQUAL(result_map.at(23), 13);
+    BOOST_CHECK_EQUAL(resultMap.at(20), 10);
+    BOOST_CHECK_EQUAL(resultMap.at(23), 13);
 
     // The two middle nodes are symmetric. The mapping could be either way.
     // current {21, 22} -> rep {11, 12}
-    bool mapping1 = (result_map.at(21) == 11 && result_map.at(22) == 12);
-    bool mapping2 = (result_map.at(21) == 12 && result_map.at(22) == 11);
+    bool mapping1 = (resultMap.at(21) == 11 && resultMap.at(22) == 12);
+    bool mapping2 = (resultMap.at(21) == 12 && resultMap.at(22) == 11);
     BOOST_CHECK(mapping1 || mapping2);
 }
 
-BOOST_AUTO_TEST_CASE(Mapper_DisconnectedComponents) {
+BOOST_AUTO_TEST_CASE(MapperDisconnectedComponents) {
     // Rep: {0->1}, {2->3}. Two identical but disconnected components.
-    constr_graph_t rep_graph;
-    rep_graph.add_vertex(10, 1, 1);
-    rep_graph.add_vertex(20, 1, 1);    // 0, 1
-    rep_graph.add_vertex(10, 1, 1);
-    rep_graph.add_vertex(20, 1, 1);    // 2, 3
-    rep_graph.add_edge(0, 1);
-    rep_graph.add_edge(2, 3);
-    std::vector<vertex_idx_t<graph_t>> rep_map = {10, 11, 12, 13};
+    ConstrGraphT repGraph;
+    repGraph.AddVertex(10, 1, 1);
+    repGraph.AddVertex(20, 1, 1);    // 0, 1
+    repGraph.AddVertex(10, 1, 1);
+    repGraph.AddVertex(20, 1, 1);    // 2, 3
+    repGraph.AddEdge(0, 1);
+    repGraph.AddEdge(2, 3);
+    std::vector<VertexIdxT<GraphT>> repMap = {10, 11, 12, 13};
 
     // Current: {2->3}, {0->1}. Same components, but different local IDs.
-    constr_graph_t current_graph;
-    current_graph.add_vertex(10, 1, 1);
-    current_graph.add_vertex(20, 1, 1);    // 0, 1
-    current_graph.add_vertex(10, 1, 1);
-    current_graph.add_vertex(20, 1, 1);    // 2, 3
-    current_graph.add_edge(2, 3);
-    current_graph.add_edge(0, 1);
-    std::vector<vertex_idx_t<graph_t>> current_map = {22, 23, 20, 21};
+    ConstrGraphT currentGraph;
+    currentGraph.AddVertex(10, 1, 1);
+    currentGraph.AddVertex(20, 1, 1);    // 0, 1
+    currentGraph.AddVertex(10, 1, 1);
+    currentGraph.AddVertex(20, 1, 1);    // 2, 3
+    currentGraph.AddEdge(2, 3);
+    currentGraph.AddEdge(0, 1);
+    std::vector<VertexIdxT<GraphT>> currentMap = {22, 23, 20, 21};
 
-    IsomorphismMapper<graph_t, constr_graph_t> mapper(rep_graph);
-    auto result_map_local = mapper.find_mapping(current_graph);
+    IsomorphismMapper<GraphT, ConstrGraphT> mapper(repGraph);
+    auto resultMapLocal = mapper.FindMapping(currentGraph);
 
-    std::unordered_map<vertex_idx_t<graph_t>, vertex_idx_t<graph_t>> result_map;
-    for (const auto &[curr_local, rep_local] : result_map_local) {
-        result_map[current_map[curr_local]] = rep_map[rep_local];
+    std::unordered_map<VertexIdxT<GraphT>, VertexIdxT<GraphT>> resultMap;
+    for (const auto &[curr_local, rep_local] : resultMapLocal) {
+        resultMap[currentMap[curr_local]] = repMap[rep_local];
     }
 
-    BOOST_REQUIRE_EQUAL(result_map.size(), 4);
+    BOOST_REQUIRE_EQUAL(resultMap.size(), 4);
 
     // The two components are symmetric. The mapping could be component {0,1} -> {0,1}
     // and {2,3} -> {2,3}, OR component {0,1} -> {2,3} and {2,3} -> {0,1}.
@@ -155,65 +155,65 @@ BOOST_AUTO_TEST_CASE(Mapper_DisconnectedComponents) {
     // Mapping Option 1:
     // rep {10,11} -> current {20,21}
     // rep {12,13} -> current {22,23}
-    bool mapping1 = (result_map.at(20) == 12 && result_map.at(21) == 13 && result_map.at(22) == 10 && result_map.at(23) == 11);
+    bool mapping1 = (resultMap.at(20) == 12 && resultMap.at(21) == 13 && resultMap.at(22) == 10 && resultMap.at(23) == 11);
 
     // Mapping Option 2:
     // rep {10,11} -> current {22,23}
     // rep {12,13} -> current {20,21}
-    bool mapping2 = (result_map.at(22) == 12 && result_map.at(23) == 13 && result_map.at(20) == 10 && result_map.at(21) == 11);
+    bool mapping2 = (resultMap.at(22) == 12 && resultMap.at(23) == 13 && resultMap.at(20) == 10 && resultMap.at(21) == 11);
 
     BOOST_CHECK(mapping1 || mapping2);
 }
 
-BOOST_AUTO_TEST_CASE(Mapper_MultiPipeline) {
+BOOST_AUTO_TEST_CASE(MapperMultiPipeline) {
     // This test checks the mapping of a graph that is composed of multiple
     // isomorphic disconnected components (two parallel pipelines).
 
     // Rep: Two pipelines {0->1->2} and {3->4->5}
     // All nodes at the same stage have the same work weight.
-    constr_graph_t rep_graph = construct_multi_pipeline_dag<constr_graph_t>(2, 3);
-    std::vector<vertex_idx_t<graph_t>> rep_map = {10, 11, 12, 20, 21, 22};
+    ConstrGraphT repGraph = ConstructMultiPipelineDag<ConstrGraphT>(2, 3);
+    std::vector<VertexIdxT<GraphT>> repMap = {10, 11, 12, 20, 21, 22};
 
     // Current: Isomorphic to rep, but the pipelines are swapped and vertex IDs are shuffled.
     // Pipeline 1 (local IDs 0,1,2) corresponds to rep pipeline 2 (global 20,21,22)
     // Pipeline 2 (local IDs 3,4,5) corresponds to rep pipeline 1 (global 10,11,12)
-    constr_graph_t current_graph;
-    current_graph.add_vertex(10, 1, 1);    // local 0, stage 0
-    current_graph.add_vertex(20, 1, 1);    // local 1, stage 1
-    current_graph.add_vertex(30, 1, 1);    // local 2, stage 2
-    current_graph.add_vertex(10, 1, 1);    // local 3, stage 0
-    current_graph.add_vertex(20, 1, 1);    // local 4, stage 1
-    current_graph.add_vertex(30, 1, 1);    // local 5, stage 2
-    current_graph.add_edge(0, 1);
-    current_graph.add_edge(1, 2);    // First pipeline
-    current_graph.add_edge(3, 4);
-    current_graph.add_edge(4, 5);    // Second pipeline
-    std::vector<vertex_idx_t<graph_t>> current_map = {120, 121, 122, 110, 111, 112};
+    ConstrGraphT currentGraph;
+    currentGraph.AddVertex(10, 1, 1);    // local 0, stage 0
+    currentGraph.AddVertex(20, 1, 1);    // local 1, stage 1
+    currentGraph.AddVertex(30, 1, 1);    // local 2, stage 2
+    currentGraph.AddVertex(10, 1, 1);    // local 3, stage 0
+    currentGraph.AddVertex(20, 1, 1);    // local 4, stage 1
+    currentGraph.AddVertex(30, 1, 1);    // local 5, stage 2
+    currentGraph.AddEdge(0, 1);
+    currentGraph.AddEdge(1, 2);    // First pipeline
+    currentGraph.AddEdge(3, 4);
+    currentGraph.AddEdge(4, 5);    // Second pipeline
+    std::vector<VertexIdxT<GraphT>> currentMap = {120, 121, 122, 110, 111, 112};
 
-    IsomorphismMapper<graph_t, constr_graph_t> mapper(rep_graph);
-    auto result_map_local = mapper.find_mapping(current_graph);
+    IsomorphismMapper<GraphT, ConstrGraphT> mapper(repGraph);
+    auto resultMapLocal = mapper.FindMapping(currentGraph);
 
-    std::unordered_map<vertex_idx_t<graph_t>, vertex_idx_t<graph_t>> result_map;
-    for (const auto &[curr_local, rep_local] : result_map_local) {
-        result_map[current_map[curr_local]] = rep_map[rep_local];
+    std::unordered_map<VertexIdxT<GraphT>, VertexIdxT<GraphT>> resultMap;
+    for (const auto &[curr_local, rep_local] : resultMapLocal) {
+        resultMap[currentMap[curr_local]] = repMap[rep_local];
     }
 
-    BOOST_REQUIRE_EQUAL(result_map.size(), 6);
+    BOOST_REQUIRE_EQUAL(resultMap.size(), 6);
 
     // The two pipelines are symmetric, so the mapping can go either way.
 
     // Mapping Option 1: current pipeline 1 -> rep pipeline 1, current pipeline 2 -> rep pipeline 2
-    bool mapping1 = (result_map.at(110) == 10 && result_map.at(111) == 11 && result_map.at(112) == 12 && result_map.at(120) == 20
-                     && result_map.at(121) == 21 && result_map.at(122) == 22);
+    bool mapping1 = (resultMap.at(110) == 10 && resultMap.at(111) == 11 && resultMap.at(112) == 12 && resultMap.at(120) == 20
+                     && resultMap.at(121) == 21 && resultMap.at(122) == 22);
 
     // Mapping Option 2: current pipeline 1 -> rep pipeline 2, current pipeline 2 -> rep pipeline 1
-    bool mapping2 = (result_map.at(110) == 20 && result_map.at(111) == 21 && result_map.at(112) == 22 && result_map.at(120) == 10
-                     && result_map.at(121) == 11 && result_map.at(122) == 12);
+    bool mapping2 = (resultMap.at(110) == 20 && resultMap.at(111) == 21 && resultMap.at(112) == 22 && resultMap.at(120) == 10
+                     && resultMap.at(121) == 11 && resultMap.at(122) == 12);
 
     BOOST_CHECK(mapping1 || mapping2);
 }
 
-BOOST_AUTO_TEST_CASE(Mapper_ShuffledSymmetric) {
+BOOST_AUTO_TEST_CASE(MapperShuffledSymmetric) {
     // This test uses a symmetric graph (a ladder) and shuffles the vertex IDs
     // of the 'current' graph to ensure the mapper correctly finds the structural
     // isomorphism, not just a naive index-based mapping.
@@ -222,45 +222,45 @@ BOOST_AUTO_TEST_CASE(Mapper_ShuffledSymmetric) {
     // Structure: {0,1} -> {2,3} -> {4,5}
     // Nodes {0,2,4} have work 10 (left side).
     // Nodes {1,3,5} have work 20 (right side).
-    constr_graph_t rep_graph = construct_ladder_dag<constr_graph_t>(2);
-    std::vector<vertex_idx_t<graph_t>> rep_map = {10, 11, 12, 13, 14, 15};
+    ConstrGraphT repGraph = ConstructLadderDag<ConstrGraphT>(2);
+    std::vector<VertexIdxT<GraphT>> repMap = {10, 11, 12, 13, 14, 15};
 
     // Current: Isomorphic to rep, but with shuffled local IDs.
     // A naive mapping of local IDs (0->0, 1->1, etc.) would be incorrect
     // because the work weights would not match.
-    constr_graph_t current_graph;
-    current_graph.add_vertex(20, 1, 1);    // local 0 (work 20, right)
-    current_graph.add_vertex(10, 1, 1);    // local 1 (work 10, left)
-    current_graph.add_vertex(20, 1, 1);    // local 2 (work 20, right)
-    current_graph.add_vertex(10, 1, 1);    // local 3 (work 10, left)
-    current_graph.add_vertex(20, 1, 1);    // local 4 (work 20, right)
-    current_graph.add_vertex(10, 1, 1);    // local 5 (work 10, left)
+    ConstrGraphT currentGraph;
+    currentGraph.AddVertex(20, 1, 1);    // local 0 (work 20, right)
+    currentGraph.AddVertex(10, 1, 1);    // local 1 (work 10, left)
+    currentGraph.AddVertex(20, 1, 1);    // local 2 (work 20, right)
+    currentGraph.AddVertex(10, 1, 1);    // local 3 (work 10, left)
+    currentGraph.AddVertex(20, 1, 1);    // local 4 (work 20, right)
+    currentGraph.AddVertex(10, 1, 1);    // local 5 (work 10, left)
     // Edges for {5,0} -> {3,2} -> {1,4}
-    current_graph.add_edge(5, 3);
-    current_graph.add_edge(5, 2);    // Rung 1
-    current_graph.add_edge(0, 3);
-    current_graph.add_edge(0, 2);
+    currentGraph.AddEdge(5, 3);
+    currentGraph.AddEdge(5, 2);    // Rung 1
+    currentGraph.AddEdge(0, 3);
+    currentGraph.AddEdge(0, 2);
 
-    current_graph.add_edge(3, 1);
-    current_graph.add_edge(3, 4);    // Rung 2
-    current_graph.add_edge(2, 1);
-    current_graph.add_edge(2, 4);
+    currentGraph.AddEdge(3, 1);
+    currentGraph.AddEdge(3, 4);    // Rung 2
+    currentGraph.AddEdge(2, 1);
+    currentGraph.AddEdge(2, 4);
 
-    std::vector<vertex_idx_t<graph_t>> current_map = {111, 114, 113, 112, 115, 110};
+    std::vector<VertexIdxT<GraphT>> currentMap = {111, 114, 113, 112, 115, 110};
 
-    IsomorphismMapper<graph_t, constr_graph_t> mapper(rep_graph);
-    auto result_map_local = mapper.find_mapping(current_graph);
+    IsomorphismMapper<GraphT, ConstrGraphT> mapper(repGraph);
+    auto resultMapLocal = mapper.FindMapping(currentGraph);
 
-    std::unordered_map<vertex_idx_t<graph_t>, vertex_idx_t<graph_t>> result_map;
-    for (const auto &[curr_local, rep_local] : result_map_local) {
-        result_map[current_map[curr_local]] = rep_map[rep_local];
+    std::unordered_map<VertexIdxT<GraphT>, VertexIdxT<GraphT>> resultMap;
+    for (const auto &[curr_local, rep_local] : resultMapLocal) {
+        resultMap[currentMap[curr_local]] = repMap[rep_local];
     }
 
-    BOOST_REQUIRE_EQUAL(result_map.size(), 6);
+    BOOST_REQUIRE_EQUAL(resultMap.size(), 6);
     // Check that structurally identical nodes are mapped, regardless of their original IDs.
     // E.g., current global 110 (from local 5, work 10) must map to a rep node with work 10.
-    BOOST_CHECK_EQUAL(result_map.at(110), 10);    // current 5 (work 10) -> rep 0 (work 10)
-    BOOST_CHECK_EQUAL(result_map.at(111), 11);    // current 0 (work 20) -> rep 1 (work 20)
+    BOOST_CHECK_EQUAL(resultMap.at(110), 10);    // current 5 (work 10) -> rep 0 (work 10)
+    BOOST_CHECK_EQUAL(resultMap.at(111), 11);    // current 0 (work 20) -> rep 1 (work 20)
 }
 
 BOOST_AUTO_TEST_SUITE_END()

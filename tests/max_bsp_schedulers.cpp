@@ -34,13 +34,13 @@ limitations under the License.
 
 using namespace osp;
 
-std::vector<std::string> test_architectures() { return {"data/machine_params/p3.arch"}; }
+std::vector<std::string> TestArchitectures() { return {"data/machine_params/p3.arch"}; }
 
-template <typename Graph_t>
-void run_test(Scheduler<Graph_t> *test_scheduler) {
+template <typename GraphT>
+void RunTest(Scheduler<GraphT> *testScheduler) {
     // static_assert(std::is_base_of<Scheduler, T>::value, "Class is not a scheduler!");
-    std::vector<std::string> filenames_graph = tiny_spaa_graphs();
-    std::vector<std::string> filenames_architectures = test_architectures();
+    std::vector<std::string> filenamesGraph = TinySpaaGraphs();
+    std::vector<std::string> filenamesArchitectures = TestArchitectures();
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -50,41 +50,41 @@ void run_test(Scheduler<Graph_t> *test_scheduler) {
         std::cout << cwd << std::endl;
     }
 
-    for (auto &filename_graph : filenames_graph) {
-        for (auto &filename_machine : filenames_architectures) {
-            std::string name_graph = filename_graph.substr(filename_graph.find_last_of("/\\") + 1);
-            name_graph = name_graph.substr(0, name_graph.find_last_of("."));
-            std::string name_machine = filename_machine.substr(filename_machine.find_last_of("/\\") + 1);
-            name_machine = name_machine.substr(0, name_machine.rfind("."));
+    for (auto &filenameGraph : filenamesGraph) {
+        for (auto &filenameMachine : filenamesArchitectures) {
+            std::string nameGraph = filenameGraph.substr(filenameGraph.find_last_of("/\\") + 1);
+            nameGraph = nameGraph.substr(0, nameGraph.find_last_of("."));
+            std::string nameMachine = filenameMachine.substr(filenameMachine.find_last_of("/\\") + 1);
+            nameMachine = nameMachine.substr(0, nameMachine.rfind("."));
 
-            std::cout << std::endl << "Scheduler: " << test_scheduler->getScheduleName() << std::endl;
-            std::cout << "Graph: " << name_graph << std::endl;
-            std::cout << "Architecture: " << name_machine << std::endl;
+            std::cout << std::endl << "Scheduler: " << testScheduler->GetScheduleName() << std::endl;
+            std::cout << "Graph: " << nameGraph << std::endl;
+            std::cout << "Architecture: " << nameMachine << std::endl;
 
-            BspInstance<Graph_t> instance;
+            BspInstance<GraphT> instance;
 
-            bool status_graph = file_reader::readGraph((cwd / filename_graph).string(), instance.getComputationalDag());
-            bool status_architecture
-                = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.getArchitecture());
+            bool statusGraph = file_reader::ReadGraph((cwd / filenameGraph).string(), instance.GetComputationalDag());
+            bool statusArchitecture
+                = file_reader::ReadBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
 
-            if (!status_graph || !status_architecture) {
+            if (!statusGraph || !statusArchitecture) {
                 std::cout << "Reading files failed." << std::endl;
                 BOOST_CHECK(false);
             }
 
-            BspSchedule<Graph_t> schedule(instance);
-            const auto result = test_scheduler->computeSchedule(schedule);
+            BspSchedule<GraphT> schedule(instance);
+            const auto result = testScheduler->ComputeSchedule(schedule);
 
-            BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
-            BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+            BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
+            BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
         }
     }
 }
 
-template <typename Graph_t>
-void run_test_max_bsp(MaxBspScheduler<Graph_t> *test_scheduler) {
-    std::vector<std::string> filenames_graph = tiny_spaa_graphs();
-    std::vector<std::string> filenames_architectures = test_architectures();
+template <typename GraphT>
+void RunTestMaxBsp(MaxBspScheduler<GraphT> *testScheduler) {
+    std::vector<std::string> filenamesGraph = TinySpaaGraphs();
+    std::vector<std::string> filenamesArchitectures = TestArchitectures();
 
     // Locate project root
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -92,53 +92,53 @@ void run_test_max_bsp(MaxBspScheduler<Graph_t> *test_scheduler) {
         cwd = cwd.parent_path();
     }
 
-    for (auto &filename_graph : filenames_graph) {
-        for (auto &filename_machine : filenames_architectures) {
-            std::string name_graph = filename_graph.substr(filename_graph.find_last_of("/\\") + 1);
-            name_graph = name_graph.substr(0, name_graph.find_last_of("."));
-            std::string name_machine = filename_machine.substr(filename_machine.find_last_of("/\\") + 1);
-            name_machine = name_machine.substr(0, name_machine.rfind("."));
+    for (auto &filenameGraph : filenamesGraph) {
+        for (auto &filenameMachine : filenamesArchitectures) {
+            std::string nameGraph = filenameGraph.substr(filenameGraph.find_last_of("/\\") + 1);
+            nameGraph = nameGraph.substr(0, nameGraph.find_last_of("."));
+            std::string nameMachine = filenameMachine.substr(filenameMachine.find_last_of("/\\") + 1);
+            nameMachine = nameMachine.substr(0, nameMachine.rfind("."));
 
             std::cout << std::endl
-                      << "Scheduler (MaxBsp): " << test_scheduler->getScheduleName() << std::endl
-                      << "Graph: " << name_graph << std::endl
-                      << "Architecture: " << name_machine << std::endl;
+                      << "Scheduler (MaxBsp): " << testScheduler->GetScheduleName() << std::endl
+                      << "Graph: " << nameGraph << std::endl
+                      << "Architecture: " << nameMachine << std::endl;
 
-            computational_dag_edge_idx_vector_impl_def_int_t graph;
-            BspArchitecture<Graph_t> arch;
+            ComputationalDagEdgeIdxVectorImplDefIntT graph;
+            BspArchitecture<GraphT> arch;
 
-            bool status_graph = file_reader::readGraph((cwd / filename_graph).string(), graph);
-            bool status_architecture = file_reader::readBspArchitecture((cwd / filename_machine).string(), arch);
+            bool statusGraph = file_reader::ReadGraph((cwd / filenameGraph).string(), graph);
+            bool statusArchitecture = file_reader::ReadBspArchitecture((cwd / filenameMachine).string(), arch);
 
-            BOOST_REQUIRE_MESSAGE(status_graph, "Failed to read graph: " << filename_graph);
-            BOOST_REQUIRE_MESSAGE(status_architecture, "Failed to read architecture: " << filename_machine);
+            BOOST_REQUIRE_MESSAGE(statusGraph, "Failed to read graph: " << filenameGraph);
+            BOOST_REQUIRE_MESSAGE(statusArchitecture, "Failed to read architecture: " << filenameMachine);
 
-            BspInstance<Graph_t> instance(graph, arch);
+            BspInstance<GraphT> instance(graph, arch);
 
-            MaxBspSchedule<Graph_t> schedule(instance);
+            MaxBspSchedule<GraphT> schedule(instance);
 
-            const auto result = test_scheduler->computeSchedule(schedule);
+            const auto result = testScheduler->ComputeSchedule(schedule);
 
-            BOOST_CHECK_EQUAL(result, RETURN_STATUS::OSP_SUCCESS);
-            BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+            BOOST_CHECK_EQUAL(result, ReturnStatus::OSP_SUCCESS);
+            BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
         }
     }
 }
 
-// Tests computeSchedule(BspSchedule&) → staleness = 1
-BOOST_AUTO_TEST_CASE(GreedyVarianceSspScheduler_test_vector_impl) {
-    GreedyVarianceSspScheduler<computational_dag_vector_impl_def_t> test;
-    run_test(&test);
+// Tests ComputeSchedule(BspSchedule&) → staleness = 1
+BOOST_AUTO_TEST_CASE(GreedyVarianceSspSchedulerTestVectorImpl) {
+    GreedyVarianceSspScheduler<ComputationalDagVectorImplDefUnsignedT> test;
+    RunTest(&test);
 }
 
-// Tests computeSchedule(BspSchedule&) → staleness = 1 (different graph impl)
-BOOST_AUTO_TEST_CASE(GreedyVarianceSspScheduler_test_edge_idx_impl) {
-    GreedyVarianceSspScheduler<computational_dag_edge_idx_vector_impl_def_t> test;
-    run_test(&test);
+// Tests ComputeSchedule(BspSchedule&) → staleness = 1 (different graph impl)
+BOOST_AUTO_TEST_CASE(GreedyVarianceSspSchedulerTestEdgeIdxImpl) {
+    GreedyVarianceSspScheduler<ComputationalDagEdgeIdxVectorImplDefT> test;
+    RunTest(&test);
 }
 
-// Tests computeSchedule(MaxBspSchedule&) → staleness = 2
-BOOST_AUTO_TEST_CASE(GreedyVarianceSspScheduler_MaxBspSchedule_large_test) {
-    GreedyVarianceSspScheduler<computational_dag_edge_idx_vector_impl_def_int_t> test;
-    run_test_max_bsp(&test);
+// Tests ComputeSchedule(MaxBspSchedule&) → staleness = 2
+BOOST_AUTO_TEST_CASE(GreedyVarianceSspSchedulerMaxBspScheduleLargeTest) {
+    GreedyVarianceSspScheduler<ComputationalDagEdgeIdxVectorImplDefIntT> test;
+    RunTestMaxBsp(&test);
 }

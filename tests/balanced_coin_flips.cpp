@@ -25,33 +25,33 @@ limitations under the License.
 
 using namespace osp;
 
-bool thue_morse_gen(long unsigned int n) {
+bool ThueMorseGen(long unsigned int n) {
     // std::bitset<sizeof(n)*CHAR_BIT> bits(n);
-    unsigned long int bin_sum = 0;
+    unsigned long int binSum = 0;
     while (n != 0) {
-        bin_sum += n % 2;
+        binSum += n % 2;
         n /= 2;
     }
-    return bool(bin_sum % 2);    // (bits.count()%2);
+    return bool(binSum % 2);    // (bits.count()%2);
 }
 
-BOOST_AUTO_TEST_CASE(Random_Biased_Coin) {
+BOOST_AUTO_TEST_CASE(RandomBiasedCoin) {
     std::cout << "True: " << true << " False: " << false << std::endl;
-    Biased_Random Coin;
+    BiasedRandom coin;
     std::cout << "Biased Coin: ";
     for (int i = 0; i < 200; i++) {
-        std::cout << Coin.get_flip();
+        std::cout << coin.GetFlip();
     }
     std::cout << std::endl << std::endl;
 }
 
-BOOST_AUTO_TEST_CASE(Thue__Morse) {
-    Thue_Morse_Sequence Coin(0);
+BOOST_AUTO_TEST_CASE(ThueMorse) {
+    ThueMorseSequence coin(0);
 
     std::vector<bool> beginning({0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1});
     std::vector<bool> generated;
     for (long unsigned i = 0; i < beginning.size(); i++) {
-        bool next = Coin.get_flip();
+        bool next = coin.GetFlip();
         generated.emplace_back(next);
         // std::cout << next;
     }
@@ -59,120 +59,120 @@ BOOST_AUTO_TEST_CASE(Thue__Morse) {
 
     BOOST_CHECK(beginning == generated);
 
-    Thue_Morse_Sequence Test_Coin_in_seq(0);
+    ThueMorseSequence testCoinInSeq(0);
     for (unsigned i = 0; i < 200; i++) {
-        BOOST_CHECK_EQUAL(Test_Coin_in_seq.get_flip(), thue_morse_gen(i));
+        BOOST_CHECK_EQUAL(testCoinInSeq.GetFlip(), ThueMorseGen(i));
         // std::cout << "hi " << i << std::endl;
     }
 
     for (int i = 0; i < 100; i++) {
-        unsigned ind = static_cast<unsigned>(randInt(1048575));
-        Thue_Morse_Sequence Test_Coin_random(ind);
-        BOOST_CHECK_EQUAL(Test_Coin_random.get_flip(), thue_morse_gen(ind));
+        unsigned ind = static_cast<unsigned>(RandInt(1048575));
+        ThueMorseSequence testCoinRandom(ind);
+        BOOST_CHECK_EQUAL(testCoinRandom.GetFlip(), ThueMorseGen(ind));
         // std::cout << "bye " << i << std::endl;
     }
 }
 
-BOOST_AUTO_TEST_CASE(Repeater_Coin) {
-    Repeat_Chance Coin;
+BOOST_AUTO_TEST_CASE(RepeaterCoin) {
+    RepeatChance coin;
     std::cout << "Repeater Coin: ";
     for (int i = 0; i < 200; i++) {
-        std::cout << Coin.get_flip();
+        std::cout << coin.GetFlip();
     }
     std::cout << std::endl << std::endl;
 }
 
-BOOST_AUTO_TEST_CASE(Random_Biased_Coin_with_side_bias_1_1) {
-    Biased_Random_with_side_bias Coin({1, 1});
-    int true_count = 0;
-    int false_count = 0;
+BOOST_AUTO_TEST_CASE(RandomBiasedCoinWithSideBias11) {
+    BiasedRandomWithSideBias coin({1, 1});
+    int trueCount = 0;
+    int falseCount = 0;
     std::cout << "Biased Coin with side bias 1:1 : ";
     for (int i = 0; i < 200; i++) {
-        bool flip = Coin.get_flip();
+        bool flip = coin.GetFlip();
         if (flip) {
-            true_count++;
+            trueCount++;
         } else {
-            false_count++;
+            falseCount++;
         }
         std::cout << flip;
     }
     std::cout << std::endl;
-    std::cout << "True count: " << true_count << " False count: " << false_count << std::endl;
+    std::cout << "True count: " << trueCount << " False count: " << falseCount << std::endl;
     std::cout << std::endl;
 }
 
-BOOST_AUTO_TEST_CASE(Random_Biased_Coin_with_side_bias_1_0) {
-    Biased_Random_with_side_bias Coin({1, 0});
-    int true_count = 0;
-    int false_count = 0;
+BOOST_AUTO_TEST_CASE(RandomBiasedCoinWithSideBias10) {
+    BiasedRandomWithSideBias coin({1, 0});
+    int trueCount = 0;
+    int falseCount = 0;
     std::cout << "Biased Coin with side bias 1:0 : ";
     for (int i = 0; i < 200; i++) {
-        bool flip = Coin.get_flip();
+        bool flip = coin.GetFlip();
         if (flip) {
-            true_count++;
+            trueCount++;
         } else {
-            false_count++;
+            falseCount++;
         }
         std::cout << flip;
     }
     std::cout << std::endl;
-    std::cout << "True count: " << true_count << " False count: " << false_count << std::endl;
+    std::cout << "True count: " << trueCount << " False count: " << falseCount << std::endl;
     std::cout << std::endl;
 }
 
-BOOST_AUTO_TEST_CASE(Random_Biased_Coin_with_side_bias_0_1) {
-    Biased_Random_with_side_bias Coin({0, 1});
-    int true_count = 0;
-    int false_count = 0;
+BOOST_AUTO_TEST_CASE(RandomBiasedCoinWithSideBias01) {
+    BiasedRandomWithSideBias coin({0, 1});
+    int trueCount = 0;
+    int falseCount = 0;
     std::cout << "Biased Coin with side bias 0:1 : ";
     for (int i = 0; i < 200; i++) {
-        bool flip = Coin.get_flip();
+        bool flip = coin.GetFlip();
         if (flip) {
-            true_count++;
+            trueCount++;
         } else {
-            false_count++;
+            falseCount++;
         }
         std::cout << flip;
     }
     std::cout << std::endl;
-    std::cout << "True count: " << true_count << " False count: " << false_count << std::endl;
+    std::cout << "True count: " << trueCount << " False count: " << falseCount << std::endl;
     std::cout << std::endl;
 }
 
-BOOST_AUTO_TEST_CASE(Random_Biased_Coin_with_side_bias_3_2) {
-    Biased_Random_with_side_bias Coin({3, 2});
-    int true_count = 0;
-    int false_count = 0;
+BOOST_AUTO_TEST_CASE(RandomBiasedCoinWithSideBias32) {
+    BiasedRandomWithSideBias coin({3, 2});
+    int trueCount = 0;
+    int falseCount = 0;
     std::cout << "Biased Coin with side bias 3:2 : ";
     for (int i = 0; i < 200; i++) {
-        bool flip = Coin.get_flip();
+        bool flip = coin.GetFlip();
         if (flip) {
-            true_count++;
+            trueCount++;
         } else {
-            false_count++;
+            falseCount++;
         }
         std::cout << flip;
     }
     std::cout << std::endl;
-    std::cout << "True count: " << true_count << " False count: " << false_count << std::endl;
+    std::cout << "True count: " << trueCount << " False count: " << falseCount << std::endl;
     std::cout << std::endl;
 }
 
-BOOST_AUTO_TEST_CASE(Random_Biased_Coin_with_side_bias_3_1) {
-    Biased_Random_with_side_bias Coin({3, 1});
-    int true_count = 0;
-    int false_count = 0;
+BOOST_AUTO_TEST_CASE(RandomBiasedCoinWithSideBias31) {
+    BiasedRandomWithSideBias coin({3, 1});
+    int trueCount = 0;
+    int falseCount = 0;
     std::cout << "Biased Coin with side bias 3:1 : ";
     for (int i = 0; i < 200; i++) {
-        bool flip = Coin.get_flip();
+        bool flip = coin.GetFlip();
         if (flip) {
-            true_count++;
+            trueCount++;
         } else {
-            false_count++;
+            falseCount++;
         }
         std::cout << flip;
     }
     std::cout << std::endl;
-    std::cout << "True count: " << true_count << " False count: " << false_count << std::endl;
+    std::cout << "True count: " << trueCount << " False count: " << falseCount << std::endl;
     std::cout << std::endl;
 }

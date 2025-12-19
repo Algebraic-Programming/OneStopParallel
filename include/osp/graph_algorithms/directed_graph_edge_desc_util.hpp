@@ -26,47 +26,45 @@ limitations under the License.
 
 namespace osp {
 
-template <typename Graph_t>
-std::pair<edge_desc_t<Graph_t>, bool> edge_desc(const vertex_idx_t<Graph_t> &src,
-                                                const vertex_idx_t<Graph_t> &dest,
-                                                const Graph_t &graph) {
-    static_assert(is_directed_graph_edge_desc_v<Graph_t>, "Graph_t must satisfy the directed_graph edge desc concept");
+template <typename GraphT>
+std::pair<EdgeDescT<GraphT>, bool> EdgeDesc(const VertexIdxT<GraphT> &src, const VertexIdxT<GraphT> &dest, const GraphT &graph) {
+    static_assert(isDirectedGraphEdgeDescV<GraphT>, "GraphT must satisfy the directed_graph edge desc concept");
 
-    for (const auto &edge : out_edges(src, graph)) {
-        if (target(edge, graph) == dest) {
+    for (const auto &edge : OutEdges(src, graph)) {
+        if (Target(edge, graph) == dest) {
             return {edge, true};
         }
     }
-    return {edge_desc_t<Graph_t>(), false};
+    return {EdgeDescT<GraphT>(), false};
 }
 
-template <typename Graph_t>
-std::unordered_set<edge_desc_t<Graph_t>> long_edges_in_triangles(const Graph_t &graph) {
-    static_assert(is_directed_graph_edge_desc_v<Graph_t>, "Graph_t must satisfy the directed_graph edge desc concept");
-    static_assert(has_hashable_edge_desc_v<Graph_t>, "Graph_t must satisfy the has_hashable_edge_desc concept");
+template <typename GraphT>
+std::unordered_set<EdgeDescT<GraphT>> LongEdgesInTriangles(const GraphT &graph) {
+    static_assert(isDirectedGraphEdgeDescV<GraphT>, "GraphT must satisfy the directed_graph edge desc concept");
+    static_assert(hasHashableEdgeDescV<GraphT>, "GraphT must satisfy the HasHashableEdgeDesc concept");
 
-    std::unordered_set<edge_desc_t<Graph_t>> long_edges;
+    std::unordered_set<EdgeDescT<GraphT>> longEdges;
 
-    for (const auto &vertex : graph.vertices()) {
-        std::unordered_set<vertex_idx_t<Graph_t>> children_set;
+    for (const auto &vertex : graph.Vertices()) {
+        std::unordered_set<VertexIdxT<GraphT>> childrenSet;
 
-        for (const auto &v : graph.children(vertex)) {
-            children_set.emplace(v);
+        for (const auto &v : graph.Children(vertex)) {
+            childrenSet.emplace(v);
         }
 
-        for (const auto &edge : out_edges(vertex, graph)) {
-            const auto &child = target(edge, graph);
+        for (const auto &edge : OutEdges(vertex, graph)) {
+            const auto &child = Target(edge, graph);
 
-            for (const auto &parent : graph.parents(child)) {
-                if (children_set.find(parent) != children_set.cend()) {
-                    long_edges.emplace(edge);
+            for (const auto &parent : graph.Parents(child)) {
+                if (childrenSet.find(parent) != childrenSet.cend()) {
+                    longEdges.emplace(edge);
                     break;
                 }
             }
         }
     }
 
-    return long_edges;
+    return longEdges;
 }
 
 }    // namespace osp

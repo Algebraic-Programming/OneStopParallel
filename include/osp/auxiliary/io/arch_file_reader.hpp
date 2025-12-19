@@ -27,8 +27,8 @@ limitations under the License.
 namespace osp {
 namespace file_reader {
 
-template <typename Graph_t>
-bool readBspArchitecture(std::ifstream &infile, BspArchitecture<Graph_t> &architecture) {
+template <typename GraphT>
+bool ReadBspArchitecture(std::ifstream &infile, BspArchitecture<GraphT> &architecture) {
     std::string line;
 
     // Skip comment lines
@@ -40,50 +40,50 @@ bool readBspArchitecture(std::ifstream &infile, BspArchitecture<Graph_t> &archit
 
     // Parse architecture parameters
     unsigned p = 0;
-    int g = 0, L = 0;
-    int mem_type = -1;
-    int M = 0;
+    int g = 0, l = 0;
+    int memType = -1;
+    int m = 0;
 
     std::istringstream iss(line);
-    if (!(iss >> p >> g >> L)) {
+    if (!(iss >> p >> g >> l)) {
         std::cerr << "Error: Failed to parse p, g, L.\n";
         return false;
     }
 
     // Try to read optional mem_type and M
-    if (!(iss >> mem_type >> M)) {
-        mem_type = -1;    // Memory info not present
+    if (!(iss >> memType >> m)) {
+        memType = -1;    // Memory info not present
     }
 
-    architecture.setNumberOfProcessors(p);
-    architecture.setCommunicationCosts(static_cast<v_commw_t<Graph_t>>(g));
-    architecture.setSynchronisationCosts(static_cast<v_commw_t<Graph_t>>(L));
+    architecture.SetNumberOfProcessors(p);
+    architecture.SetCommunicationCosts(static_cast<VCommwT<GraphT>>(g));
+    architecture.SetSynchronisationCosts(static_cast<VCommwT<GraphT>>(l));
 
-    if (0 <= mem_type && mem_type <= 3) {
-        using memw_t = v_memw_t<Graph_t>;
-        switch (mem_type) {
+    if (0 <= memType && memType <= 3) {
+        using MemwT = VMemwT<GraphT>;
+        switch (memType) {
             case 0:
-                architecture.setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::NONE);
+                architecture.SetMemoryConstraintType(MemoryConstraintType::NONE);
                 break;
             case 1:
-                architecture.setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::LOCAL);
-                architecture.setMemoryBound(static_cast<memw_t>(M));
+                architecture.SetMemoryConstraintType(MemoryConstraintType::LOCAL);
+                architecture.SetMemoryBound(static_cast<MemwT>(m));
                 break;
             case 2:
-                architecture.setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::GLOBAL);
-                architecture.setMemoryBound(static_cast<memw_t>(M));
+                architecture.SetMemoryConstraintType(MemoryConstraintType::GLOBAL);
+                architecture.SetMemoryBound(static_cast<MemwT>(m));
                 break;
             case 3:
-                architecture.setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::PERSISTENT_AND_TRANSIENT);
-                architecture.setMemoryBound(static_cast<memw_t>(M));
+                architecture.SetMemoryConstraintType(MemoryConstraintType::PERSISTENT_AND_TRANSIENT);
+                architecture.SetMemoryBound(static_cast<MemwT>(m));
                 break;
             default:
                 std::cerr << "Invalid memory type.\n";
                 return false;
         }
-    } else if (mem_type == -1) {
+    } else if (memType == -1) {
         std::cout << "No memory type specified. Assuming \"NONE\".\n";
-        architecture.setMemoryConstraintType(MEMORY_CONSTRAINT_TYPE::NONE);
+        architecture.SetMemoryConstraintType(MemoryConstraintType::NONE);
     } else {
         std::cerr << "Invalid memory type.\n";
         return false;
@@ -120,7 +120,7 @@ bool readBspArchitecture(std::ifstream &infile, BspArchitecture<Graph_t> &archit
             return false;
         }
 
-        architecture.SetSendCosts(fromProc, toProc, static_cast<v_commw_t<Graph_t>>(value));
+        architecture.SetSendCosts(fromProc, toProc, static_cast<VCommwT<GraphT>>(value));
     }
 
     // Ensure there are no remaining non-comment lines
@@ -134,15 +134,15 @@ bool readBspArchitecture(std::ifstream &infile, BspArchitecture<Graph_t> &archit
     return true;
 }
 
-template <typename Graph_t>
-bool readBspArchitecture(const std::string &filename, BspArchitecture<Graph_t> &architecture) {
+template <typename GraphT>
+bool ReadBspArchitecture(const std::string &filename, BspArchitecture<GraphT> &architecture) {
     std::ifstream infile(filename);
     if (!infile.is_open()) {
         std::cerr << "Unable to open machine parameter file: " << filename << '\n';
         return false;
     }
 
-    return readBspArchitecture(infile, architecture);
+    return ReadBspArchitecture(infile, architecture);
 }
 
 }    // namespace file_reader

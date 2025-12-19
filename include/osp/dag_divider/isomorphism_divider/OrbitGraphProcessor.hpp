@@ -42,7 +42,7 @@ namespace osp {
  * It then partitions the DAG by grouping all nodes with the same hash into an "orbit".
  * A coarse graph is constructed where each node represents one such orbit.
  */
-template <typename Graph_t, typename Constr_Graph_t>
+template <typename GraphT, typename ConstrGraphT>
 class OrbitGraphProcessor {
   public:
     /**
@@ -63,159 +63,160 @@ class OrbitGraphProcessor {
         NATURAL_BREAKS
     };
 
-    static_assert(is_computational_dag_v<Graph_t>, "Graph must be a computational DAG");
-    static_assert(is_computational_dag_v<Constr_Graph_t>, "Constr_Graph_t must be a computational DAG");
-    static_assert(is_constructable_cdag_v<Constr_Graph_t>, "Constr_Graph_t must satisfy the constructable_cdag_vertex concept");
-    static_assert(std::is_same_v<vertex_idx_t<Graph_t>, vertex_idx_t<Constr_Graph_t>>,
-                  "Graph_t and Constr_Graph_t must have the same vertex_idx types");
+    static_assert(isComputationalDagV<GraphT>, "Graph must be a computational DAG");
+    static_assert(isComputationalDagV<ConstrGraphT>, "ConstrGraphT must be a computational DAG");
+    static_assert(isConstructableCdagV<ConstrGraphT>, "ConstrGraphT must satisfy the constructable_cdag_vertex concept");
+    static_assert(std::is_same_v<VertexIdxT<GraphT>, VertexIdxT<ConstrGraphT>>,
+                  "GraphT and ConstrGraphT must have the same VertexIdx types");
 
-    using VertexType = vertex_idx_t<Graph_t>;
+    using VertexType = VertexIdxT<GraphT>;
 
-    static constexpr bool verbose = false;
+    static constexpr bool verbose_ = false;
 
     // Represents a group of isomorphic subgraphs, corresponding to a single node in a coarse graph.
     struct Group {
         // Each vector of vertices represents one of the isomorphic subgraphs in this group.
-        std::vector<std::vector<VertexType>> subgraphs;
+        std::vector<std::vector<VertexType>> subgraphs_;
 
-        inline size_t size() const { return subgraphs.size(); }
+        inline size_t size() const { return subgraphs_.size(); }
     };
 
   private:
     // Results from the first (orbit) coarsening step
-    Constr_Graph_t coarse_graph_;
-    std::vector<VertexType> contraction_map_;
+    ConstrGraphT coarseGraph_;
+    std::vector<VertexType> contractionMap_;
 
     // Results from the second (custom) coarsening step
-    Constr_Graph_t final_coarse_graph_;
-    std::vector<VertexType> final_contraction_map_;
-    std::vector<Group> final_groups_;
-    size_t current_symmetry;
+    ConstrGraphT finalCoarseGraph_;
+    std::vector<VertexType> finalContractionMap_;
+    std::vector<Group> finalGroups_;
+    size_t currentSymmetry_;
 
-    size_t min_symmetry_ = 2;    // min symmetry threshold
-    v_workw_t<Constr_Graph_t> work_threshold_ = 0;
-    v_workw_t<Constr_Graph_t> critical_path_threshold_ = 0;
-    bool merge_different_node_types_ = true;
-    double lock_orbit_ratio = 0.5;
+    size_t minSymmetry_ = 2;    // min symmetry threshold
+    VWorkwT<ConstrGraphT> workThreshold_ = 0;
+    VWorkwT<ConstrGraphT> criticalPathThreshold_ = 0;
+    bool mergeDifferentNodeTypes_ = true;
+    double lockOrbitRatio_ = 0.5;
 
-    SymmetryLevelHeuristic symmetry_level_heuristic_ = SymmetryLevelHeuristic::NATURAL_BREAKS;
-    std::vector<double> work_percentiles_ = {0.50, 0.75};
-    double natural_breaks_count_percentage_ = 0.2;
+    SymmetryLevelHeuristic symmetryLevelHeuristic_ = SymmetryLevelHeuristic::NATURAL_BREAKS;
+    std::vector<double> workPercentiles_ = {0.50, 0.75};
+    double naturalBreaksCountPercentage_ = 0.2;
 
-    bool use_adaptive_symmetry_threshold_ = true;
+    bool useAdaptiveSymmetryThreshold_ = true;
 
     struct PairHasher {
         template <class T1, class T2>
         std::size_t operator()(const std::pair<T1, T2> &p) const {
             auto h1 = std::hash<T1>{}(p.first);
             auto h2 = std::hash<T2>{}(p.second);
-            return h1 ^ (h2 << 1);
+            HashCombine(h1, h2);
+            return h1;
         }
     };
 
-    std::unordered_set<std::pair<VertexType, VertexType>, PairHasher> non_viable_edges_cache_;
-    std::unordered_set<std::pair<VertexType, VertexType>, PairHasher> non_viable_crit_path_edges_cache_;
+    std::unordered_set<std::pair<VertexType, VertexType>, PairHasher> nonViableEdgesCache_;
+    std::unordered_set<std::pair<VertexType, VertexType>, PairHasher> nonViableCritPathEdgesCache_;
 
     /**
      * @brief Simulates the merge of node v into u and returns the resulting temporary graph.
      */
-    std::pair<Constr_Graph_t, std::vector<VertexType>> simulate_merge(VertexType u,
-                                                                      VertexType v,
-                                                                      const Constr_Graph_t &current_coarse_graph) const {
-        std::vector<VertexType> temp_contraction_map(current_coarse_graph.num_vertices());
-        VertexType new_idx = 0;
-        for (VertexType i = 0; i < static_cast<VertexType>(temp_contraction_map.size()); ++i) {
+    std::pair<ConstrGraphT, std::vector<VertexType>> SimulateMerge(VertexType u,
+                                                                   VertexType v,
+                                                                   const ConstrGraphT &currentCoarseGraph) const {
+        std::vector<VertexType> tempContractionMap(currentCoarseGraph.NumVertices());
+        VertexType newIdx = 0;
+        for (VertexType i = 0; i < static_cast<VertexType>(tempContractionMap.size()); ++i) {
             if (i != v) {
-                temp_contraction_map[i] = new_idx++;
+                tempContractionMap[i] = newIdx++;
             }
         }
-        temp_contraction_map[v] = temp_contraction_map[u];
+        tempContractionMap[v] = tempContractionMap[u];
 
-        Constr_Graph_t temp_coarse_graph;
-        coarser_util::construct_coarse_dag(current_coarse_graph, temp_coarse_graph, temp_contraction_map);
+        ConstrGraphT tempCoarseGraph;
+        coarser_util::ConstructCoarseDag(currentCoarseGraph, tempCoarseGraph, tempContractionMap);
 
-        return {std::move(temp_coarse_graph), std::move(temp_contraction_map)};
+        return {std::move(tempCoarseGraph), std::move(tempContractionMap)};
     }
 
     /**
      * @brief Commits a merge operation by updating the graph state.
      */
-    void commit_merge(VertexType u,
-                      VertexType v,
-                      Constr_Graph_t &&next_coarse_graph,
-                      const std::vector<VertexType> &group_remap,
-                      std::vector<std::vector<VertexType>> &&new_subgraphs,
-                      Constr_Graph_t &current_coarse_graph,
-                      std::vector<Group> &current_groups,
-                      std::vector<VertexType> &current_contraction_map) {
-        current_coarse_graph = std::move(next_coarse_graph);
+    void CommitMerge(VertexType u,
+                     VertexType v,
+                     ConstrGraphT &&nextCoarseGraph,
+                     const std::vector<VertexType> &groupRemap,
+                     std::vector<std::vector<VertexType>> &&newSubgraphs,
+                     ConstrGraphT &currentCoarseGraph,
+                     std::vector<Group> &currentGroups,
+                     std::vector<VertexType> &currentContractionMap) {
+        currentCoarseGraph = std::move(nextCoarseGraph);
 
         // Update caches for new vertex indices
-        std::unordered_set<std::pair<VertexType, VertexType>, PairHasher> next_non_viable_edges;
-        for (const auto &non_viable_edge : non_viable_edges_cache_) {
-            const VertexType old_u = non_viable_edge.first;
-            const VertexType old_v = non_viable_edge.second;
-            const VertexType new_u = group_remap[old_u];
-            const VertexType new_v = group_remap[old_v];
+        std::unordered_set<std::pair<VertexType, VertexType>, PairHasher> nextNonViableEdges;
+        for (const auto &nonViableEdge : nonViableEdgesCache_) {
+            const VertexType oldU = nonViableEdge.first;
+            const VertexType oldV = nonViableEdge.second;
+            const VertexType newU = groupRemap[oldU];
+            const VertexType newV = groupRemap[oldV];
 
-            if (old_u != v && old_v != v && new_u != new_v) {
-                next_non_viable_edges.insert({new_u, new_v});
+            if (oldU != v && oldV != v && newU != newV) {
+                nextNonViableEdges.insert({newU, newV});
             }
         }
-        non_viable_edges_cache_ = std::move(next_non_viable_edges);
+        nonViableEdgesCache_ = std::move(nextNonViableEdges);
 
-        std::unordered_set<std::pair<VertexType, VertexType>, PairHasher> next_non_viable_crit_path_edges;
-        for (const auto &non_viable_edge : non_viable_crit_path_edges_cache_) {
-            const VertexType old_u = non_viable_edge.first;
-            const VertexType old_v = non_viable_edge.second;
-            const VertexType new_u = group_remap[old_u];
-            const VertexType new_v = group_remap[old_v];
+        std::unordered_set<std::pair<VertexType, VertexType>, PairHasher> nextNonViableCritPathEdges;
+        for (const auto &nonViableEdge : nonViableCritPathEdgesCache_) {
+            const VertexType oldU = nonViableEdge.first;
+            const VertexType oldV = nonViableEdge.second;
+            const VertexType newU = groupRemap[oldU];
+            const VertexType newV = groupRemap[oldV];
 
-            if (old_u != v && old_v != v && new_u != new_v) {
-                next_non_viable_crit_path_edges.insert({new_u, new_v});
+            if (oldU != v && oldV != v && newU != newV) {
+                nextNonViableCritPathEdges.insert({newU, newV});
             }
         }
-        non_viable_crit_path_edges_cache_ = std::move(next_non_viable_crit_path_edges);
+        nonViableCritPathEdgesCache_ = std::move(nextNonViableCritPathEdges);
 
         // Update groups
-        std::vector<Group> next_groups(current_coarse_graph.num_vertices());
-        for (VertexType i = 0; i < static_cast<VertexType>(current_groups.size()); ++i) {
+        std::vector<Group> nextGroups(currentCoarseGraph.NumVertices());
+        for (VertexType i = 0; i < static_cast<VertexType>(currentGroups.size()); ++i) {
             if (i != u && i != v) {
-                next_groups[group_remap[i]] = std::move(current_groups[i]);
+                nextGroups[groupRemap[i]] = std::move(currentGroups[i]);
             }
         }
-        next_groups[group_remap[u]].subgraphs = std::move(new_subgraphs);
-        current_groups = std::move(next_groups);
+        nextGroups[groupRemap[u]].subgraphs_ = std::move(newSubgraphs);
+        currentGroups = std::move(nextGroups);
 
         // Update main contraction map
-        for (VertexType &node_map : current_contraction_map) {
-            node_map = group_remap[node_map];
+        for (VertexType &nodeMap : currentContractionMap) {
+            nodeMap = groupRemap[nodeMap];
         }
     }
 
     /**
      * @brief Merges small orbits based on work threshold (final cleanup pass).
      */
-    void merge_small_orbits(const Graph_t &original_dag,
-                            Constr_Graph_t &current_coarse_graph,
-                            std::vector<Group> &current_groups,
-                            std::vector<VertexType> &current_contraction_map,
-                            const v_workw_t<Constr_Graph_t> work_threshold,
-                            const v_workw_t<Constr_Graph_t> path_threshold = 0) {
+    void MergeSmallOrbits(const GraphT &originalDag,
+                          ConstrGraphT &currentCoarseGraph,
+                          std::vector<Group> &currentGroups,
+                          std::vector<VertexType> &currentContractionMap,
+                          const VWorkwT<ConstrGraphT> workThreshold,
+                          const VWorkwT<ConstrGraphT> pathThreshold = 0) {
         bool changed = true;
         while (changed) {
-            const std::vector<vertex_idx_t<Constr_Graph_t>> vertexPoset
-                = get_top_node_distance<Constr_Graph_t, vertex_idx_t<Constr_Graph_t>>(current_coarse_graph);
-            const std::vector<vertex_idx_t<Constr_Graph_t>> vertexBotPoset
-                = get_bottom_node_distance<Constr_Graph_t, vertex_idx_t<Constr_Graph_t>>(current_coarse_graph);
+            const std::vector<VertexIdxT<ConstrGraphT>> vertexPoset
+                = GetTopNodeDistance<ConstrGraphT, VertexIdxT<ConstrGraphT>>(currentCoarseGraph);
+            const std::vector<VertexIdxT<ConstrGraphT>> vertexBotPoset
+                = GetBottomNodeDistance<ConstrGraphT, VertexIdxT<ConstrGraphT>>(currentCoarseGraph);
 
             changed = false;
-            for (const auto u : current_coarse_graph.vertices()) {
-                for (const auto v : current_coarse_graph.children(u)) {
-                    if constexpr (has_typed_vertices_v<Constr_Graph_t>) {
-                        if (not merge_different_node_types_) {
-                            if (current_coarse_graph.vertex_type(u) != current_coarse_graph.vertex_type(v)) {
-                                if constexpr (verbose) {
+            for (const auto u : currentCoarseGraph.Vertices()) {
+                for (const auto v : currentCoarseGraph.Children(u)) {
+                    if constexpr (hasTypedVerticesV<ConstrGraphT>) {
+                        if (not mergeDifferentNodeTypes_) {
+                            if (currentCoarseGraph.VertexType(u) != currentCoarseGraph.VertexType(v)) {
+                                if constexpr (verbose_) {
                                     std::cout << "  - Merge of " << u << " and " << v << " not viable (different node types)\n";
                                 }
                                 continue;
@@ -223,29 +224,29 @@ class OrbitGraphProcessor {
                         }
                     }
 
-                    if (non_viable_edges_cache_.count({u, v}) || non_viable_crit_path_edges_cache_.count({u, v})) {
-                        if constexpr (verbose) {
+                    if (nonViableEdgesCache_.count({u, v}) || nonViableCritPathEdgesCache_.count({u, v})) {
+                        if constexpr (verbose_) {
                             std::cout << "  - Merge of " << u << " and " << v << " already checked. Skipping.\n";
                         }
                         continue;
                     }
 
-                    const v_workw_t<Constr_Graph_t> u_work_weight = current_coarse_graph.vertex_work_weight(u);
-                    const v_workw_t<Constr_Graph_t> v_work_weight = current_coarse_graph.vertex_work_weight(v);
-                    const v_workw_t<Constr_Graph_t> v_threshold
-                        = work_threshold * static_cast<v_workw_t<Constr_Graph_t>>(current_groups[v].size());
-                    const v_workw_t<Constr_Graph_t> u_threshold
-                        = work_threshold * static_cast<v_workw_t<Constr_Graph_t>>(current_groups[u].size());
+                    const VWorkwT<ConstrGraphT> uWorkWeight = currentCoarseGraph.VertexWorkWeight(u);
+                    const VWorkwT<ConstrGraphT> vWorkWeight = currentCoarseGraph.VertexWorkWeight(v);
+                    const VWorkwT<ConstrGraphT> vThreshold
+                        = workThreshold * static_cast<VWorkwT<ConstrGraphT>>(currentGroups[v].size());
+                    const VWorkwT<ConstrGraphT> uThreshold
+                        = workThreshold * static_cast<VWorkwT<ConstrGraphT>>(currentGroups[u].size());
 
-                    if (u_work_weight > u_threshold && v_work_weight > v_threshold) {
-                        if constexpr (verbose) {
+                    if (uWorkWeight > uThreshold && vWorkWeight > vThreshold) {
+                        if constexpr (verbose_) {
                             std::cout << "  - Merge of " << u << " and " << v << " not viable (work threshold)\n";
                         }
                         continue;
                     }
 
                     if ((vertexPoset[u] + 1 != vertexPoset[v]) && (vertexBotPoset[u] != 1 + vertexBotPoset[v])) {
-                        if constexpr (verbose) {
+                        if constexpr (verbose_) {
                             std::cout << "  - Merge of " << u << " and " << v
                                       << " not viable poset. poste v: " << vertexBotPoset[v] << " poste u: " << vertexBotPoset[u]
                                       << "\n";
@@ -253,46 +254,46 @@ class OrbitGraphProcessor {
                         continue;
                     }
 
-                    std::vector<std::vector<VertexType>> new_subgraphs;
-                    const bool merge_is_valid = is_merge_viable(original_dag, current_groups[u], current_groups[v], new_subgraphs);
+                    std::vector<std::vector<VertexType>> newSubgraphs;
+                    const bool mergeIsValid = IsMergeViable(originalDag, currentGroups[u], currentGroups[v], newSubgraphs);
 
-                    if (!merge_is_valid) {
-                        if constexpr (verbose) {
+                    if (!mergeIsValid) {
+                        if constexpr (verbose_) {
                             std::cout << "  - Merge of " << u << " and " << v << " and " << v
                                       << " not viable (error in is_merge_viable)\n";
                         }
-                        non_viable_edges_cache_.insert({u, v});
+                        nonViableEdgesCache_.insert({u, v});
                         continue;
                     }
 
-                    auto [temp_coarse_graph, temp_contraction_map] = simulate_merge(u, v, current_coarse_graph);
+                    auto [tempCoarseGraph, tempContractionMap] = SimulateMerge(u, v, currentCoarseGraph);
 
-                    if (critical_path_weight(temp_coarse_graph)
-                        > (path_threshold * static_cast<v_workw_t<Constr_Graph_t>>(new_subgraphs.size())
-                           + critical_path_weight(current_coarse_graph))) {
-                        if constexpr (verbose) {
-                            std::cout << "  - Merge of " << u << " and " << v << " increases critical path. Old cirtical path: "
-                                      << critical_path_weight(current_coarse_graph)
-                                      << " new critical path: " << critical_path_weight(temp_coarse_graph) << " + "
-                                      << path_threshold * static_cast<v_workw_t<Constr_Graph_t>>(new_subgraphs.size()) << "\n";
+                    if (CriticalPathWeight(tempCoarseGraph)
+                        > (pathThreshold * static_cast<VWorkwT<ConstrGraphT>>(newSubgraphs.size())
+                           + CriticalPathWeight(currentCoarseGraph))) {
+                        if constexpr (verbose_) {
+                            std::cout << "  - Merge of " << u << " and " << v
+                                      << " increases critical path. Old cirtical path: " << CriticalPathWeight(currentCoarseGraph)
+                                      << " new critical path: " << CriticalPathWeight(tempCoarseGraph) << " + "
+                                      << pathThreshold * static_cast<VWorkwT<ConstrGraphT>>(newSubgraphs.size()) << "\n";
                         }
-                        non_viable_crit_path_edges_cache_.insert({u, v});
+                        nonViableCritPathEdgesCache_.insert({u, v});
                         continue;
                     }
 
-                    if constexpr (verbose) {
+                    if constexpr (verbose_) {
                         std::cout << "  - Merging " << v << " into " << u << ". New coarse graph has "
-                                  << temp_coarse_graph.num_vertices() << " nodes.\n";
+                                  << tempCoarseGraph.NumVertices() << " nodes.\n";
                     }
 
-                    commit_merge(u,
-                                 v,
-                                 std::move(temp_coarse_graph),
-                                 temp_contraction_map,
-                                 std::move(new_subgraphs),
-                                 current_coarse_graph,
-                                 current_groups,
-                                 current_contraction_map);
+                    CommitMerge(u,
+                                v,
+                                std::move(tempCoarseGraph),
+                                tempContractionMap,
+                                std::move(newSubgraphs),
+                                currentCoarseGraph,
+                                currentGroups,
+                                currentContractionMap);
 
                     changed = true;
                     break;
@@ -307,31 +308,31 @@ class OrbitGraphProcessor {
     /**
      * @brief Deprecated non-adaptive merge function.
      */
-    void contract_edges(const Graph_t &original_dag,
-                        Constr_Graph_t &current_coarse_graph,
-                        std::vector<Group> &current_groups,
-                        std::vector<VertexType> &current_contraction_map,
-                        const bool merge_symmetry_narrowing,
-                        const bool merge_different_node_types,
-                        const v_workw_t<Constr_Graph_t> path_threshold = 0) {
+    void ContractEdges(const GraphT &originalDag,
+                       ConstrGraphT &currentCoarseGraph,
+                       std::vector<Group> &currentGroups,
+                       std::vector<VertexType> &currentContractionMap,
+                       const bool mergeSymmetryNarrowing,
+                       const bool mergeDifferentNodeTypes,
+                       const VWorkwT<ConstrGraphT> pathThreshold = 0) {
         bool changed = true;
         while (changed) {
-            const std::vector<vertex_idx_t<Constr_Graph_t>> vertexPoset
-                = get_top_node_distance<Constr_Graph_t, vertex_idx_t<Constr_Graph_t>>(current_coarse_graph);
-            const std::vector<vertex_idx_t<Constr_Graph_t>> vertexBotPoset
-                = get_bottom_node_distance<Constr_Graph_t, vertex_idx_t<Constr_Graph_t>>(current_coarse_graph);
+            const std::vector<VertexIdxT<ConstrGraphT>> vertexPoset
+                = GetTopNodeDistance<ConstrGraphT, VertexIdxT<ConstrGraphT>>(currentCoarseGraph);
+            const std::vector<VertexIdxT<ConstrGraphT>> vertexBotPoset
+                = GetBottomNodeDistance<ConstrGraphT, VertexIdxT<ConstrGraphT>>(currentCoarseGraph);
 
             changed = false;
-            for (const auto &edge : edges(current_coarse_graph)) {
-                VertexType u = source(edge, current_coarse_graph);
-                VertexType v = target(edge, current_coarse_graph);
+            for (const auto &edge : Edges(currentCoarseGraph)) {
+                VertexType u = Source(edge, currentCoarseGraph);
+                VertexType v = Target(edge, currentCoarseGraph);
 
-                if (non_viable_edges_cache_.count({u, v}) || non_viable_crit_path_edges_cache_.count({u, v})) {
+                if (nonViableEdgesCache_.count({u, v}) || nonViableCritPathEdgesCache_.count({u, v})) {
                     continue;
                 }
-                if constexpr (has_typed_vertices_v<Constr_Graph_t>) {
-                    if (not merge_different_node_types) {
-                        if (current_coarse_graph.vertex_type(u) != current_coarse_graph.vertex_type(v)) {
+                if constexpr (hasTypedVerticesV<ConstrGraphT>) {
+                    if (not mergeDifferentNodeTypes) {
+                        if (currentCoarseGraph.VertexType(u) != currentCoarseGraph.VertexType(v)) {
                             continue;
                         }
                     }
@@ -340,46 +341,45 @@ class OrbitGraphProcessor {
                     continue;
                 }
 
-                std::vector<std::vector<VertexType>> new_subgraphs;
-                const std::size_t u_size = current_groups[u].size();
-                const std::size_t v_size = current_groups[v].size();
-                const bool merge_is_valid = is_merge_viable(original_dag, current_groups[u], current_groups[v], new_subgraphs);
-                const std::size_t new_size = new_subgraphs.size();
+                std::vector<std::vector<VertexType>> newSubgraphs;
+                const std::size_t uSize = currentGroups[u].size();
+                const std::size_t vSize = currentGroups[v].size();
+                const bool mergeIsValid = IsMergeViable(originalDag, currentGroups[u], currentGroups[v], newSubgraphs);
+                const std::size_t newSize = newSubgraphs.size();
 
-                const bool merge_viable = (new_size >= current_symmetry);
-                const bool both_below_symmetry_threshold = (u_size < current_symmetry) && (v_size < current_symmetry);
+                const bool mergeViable = (newSize >= currentSymmetry_);
+                const bool bothBelowSymmetryThreshold = (uSize < currentSymmetry_) && (vSize < currentSymmetry_);
 
-                if (!merge_is_valid) {
-                    non_viable_edges_cache_.insert({u, v});
+                if (!mergeIsValid) {
+                    nonViableEdgesCache_.insert({u, v});
                     continue;
                 }
-                if (!merge_viable && !both_below_symmetry_threshold) {
-                    non_viable_edges_cache_.insert({u, v});
+                if (!mergeViable && !bothBelowSymmetryThreshold) {
+                    nonViableEdgesCache_.insert({u, v});
                     continue;
                 }
-                if (not merge_symmetry_narrowing) {
-                    if (new_size < std::min(u_size, v_size)) {
+                if (not mergeSymmetryNarrowing) {
+                    if (newSize < std::min(uSize, vSize)) {
                         continue;
                     }
                 }
 
-                auto [temp_coarse_graph, temp_contraction_map] = simulate_merge(u, v, current_coarse_graph);
+                auto [tempCoarseGraph, tempContractionMap] = SimulateMerge(u, v, currentCoarseGraph);
 
-                if (critical_path_weight(temp_coarse_graph)
-                    > (path_threshold * static_cast<v_workw_t<Constr_Graph_t>>(new_subgraphs.size())
-                       + critical_path_weight(current_coarse_graph))) {
-                    non_viable_crit_path_edges_cache_.insert({u, v});
+                if (CriticalPathWeight(tempCoarseGraph) > (pathThreshold * static_cast<VWorkwT<ConstrGraphT>>(newSubgraphs.size())
+                                                           + CriticalPathWeight(currentCoarseGraph))) {
+                    nonViableCritPathEdgesCache_.insert({u, v});
                     continue;
                 }
 
-                commit_merge(u,
-                             v,
-                             std::move(temp_coarse_graph),
-                             temp_contraction_map,
-                             std::move(new_subgraphs),
-                             current_coarse_graph,
-                             current_groups,
-                             current_contraction_map);
+                CommitMerge(u,
+                            v,
+                            std::move(tempCoarseGraph),
+                            tempContractionMap,
+                            std::move(newSubgraphs),
+                            currentCoarseGraph,
+                            currentGroups,
+                            currentContractionMap);
                 changed = true;
                 break;
             }
@@ -389,37 +389,37 @@ class OrbitGraphProcessor {
     /**
      * @brief Core adaptive merging function.
      */
-    void contract_edges_adpative_sym(const Graph_t &original_dag,
-                                     Constr_Graph_t &current_coarse_graph,
-                                     std::vector<Group> &current_groups,
-                                     std::vector<VertexType> &current_contraction_map,
-                                     const bool merge_different_node_types,
-                                     const bool merge_below_threshold,
-                                     const std::vector<v_workw_t<Graph_t>> &lock_threshold_per_type,
-                                     const v_workw_t<Constr_Graph_t> path_threshold = 0) {
+    void ContractEdgesAdpativeSym(const GraphT &originalDag,
+                                  ConstrGraphT &currentCoarseGraph,
+                                  std::vector<Group> &currentGroups,
+                                  std::vector<VertexType> &currentContractionMap,
+                                  const bool mergeDifferentNodeTypes,
+                                  const bool mergeBelowThreshold,
+                                  const std::vector<VWorkwT<GraphT>> &lockThresholdPerType,
+                                  const VWorkwT<ConstrGraphT> pathThreshold = 0) {
         bool changed = true;
         while (changed) {
-            const std::vector<vertex_idx_t<Constr_Graph_t>> vertexPoset
-                = get_top_node_distance<Constr_Graph_t, vertex_idx_t<Constr_Graph_t>>(current_coarse_graph);
-            const std::vector<vertex_idx_t<Constr_Graph_t>> vertexBotPoset
-                = get_bottom_node_distance<Constr_Graph_t, vertex_idx_t<Constr_Graph_t>>(current_coarse_graph);
+            const std::vector<VertexIdxT<ConstrGraphT>> vertexPoset
+                = GetTopNodeDistance<ConstrGraphT, VertexIdxT<ConstrGraphT>>(currentCoarseGraph);
+            const std::vector<VertexIdxT<ConstrGraphT>> vertexBotPoset
+                = GetBottomNodeDistance<ConstrGraphT, VertexIdxT<ConstrGraphT>>(currentCoarseGraph);
 
             changed = false;
-            for (const auto &edge : edges(current_coarse_graph)) {
-                VertexType u = source(edge, current_coarse_graph);
-                VertexType v = target(edge, current_coarse_graph);
+            for (const auto &edge : Edges(currentCoarseGraph)) {
+                VertexType u = Source(edge, currentCoarseGraph);
+                VertexType v = Target(edge, currentCoarseGraph);
 
-                if (non_viable_edges_cache_.count({u, v}) || non_viable_crit_path_edges_cache_.count({u, v})) {
-                    if constexpr (verbose) {
+                if (nonViableEdgesCache_.count({u, v}) || nonViableCritPathEdgesCache_.count({u, v})) {
+                    if constexpr (verbose_) {
                         std::cout << "  - Merge of " << u << " and " << v << " already checked. Skipping.\n";
                     }
                     continue;
                 }
 
-                if constexpr (has_typed_vertices_v<Constr_Graph_t>) {
-                    if (not merge_different_node_types) {
-                        if (current_coarse_graph.vertex_type(u) != current_coarse_graph.vertex_type(v)) {
-                            if constexpr (verbose) {
+                if constexpr (hasTypedVerticesV<ConstrGraphT>) {
+                    if (not mergeDifferentNodeTypes) {
+                        if (currentCoarseGraph.VertexType(u) != currentCoarseGraph.VertexType(v)) {
+                            if constexpr (verbose_) {
                                 std::cout << "  - Merge of " << u << " and " << v << " not viable (different node types)\n";
                             }
                             continue;
@@ -428,114 +428,112 @@ class OrbitGraphProcessor {
                 }
 
                 if ((vertexPoset[u] + 1 != vertexPoset[v]) && (vertexBotPoset[u] != 1 + vertexBotPoset[v])) {
-                    if constexpr (verbose) {
+                    if constexpr (verbose_) {
                         std::cout << "  - Merge of " << u << " and " << v << " not viable poset. poste v: " << vertexBotPoset[v]
                                   << " poste u: " << vertexBotPoset[u] << "\n";
                     }
                     continue;
                 }
 
-                std::vector<std::vector<VertexType>> new_subgraphs;
-                const std::size_t u_size = current_groups[u].size();
-                const std::size_t v_size = current_groups[v].size();
+                std::vector<std::vector<VertexType>> newSubgraphs;
+                const std::size_t uSize = currentGroups[u].size();
+                const std::size_t vSize = currentGroups[v].size();
 
-                const bool merge_is_valid = is_merge_viable(original_dag, current_groups[u], current_groups[v], new_subgraphs);
-                const std::size_t new_size = new_subgraphs.size();
+                const bool mergeIsValid = IsMergeViable(originalDag, currentGroups[u], currentGroups[v], newSubgraphs);
+                const std::size_t newSize = newSubgraphs.size();
 
-                if (!merge_is_valid) {
-                    if constexpr (verbose) {
+                if (!mergeIsValid) {
+                    if constexpr (verbose_) {
                         std::cout << "  - Merge of " << u << " and " << v << " and " << v
                                   << " not viable (error in is_merge_viable)\n";
                     }
-                    non_viable_edges_cache_.insert({u, v});
+                    nonViableEdgesCache_.insert({u, v});
                     continue;
                 }
 
-                const bool merge_viable = (new_size >= current_symmetry);
-                const bool both_below_minimal_threshold = merge_below_threshold && (u_size < min_symmetry_)
-                                                          && (v_size < min_symmetry_);
+                const bool mergeViable = (newSize >= currentSymmetry_);
+                const bool bothBelowMinimalThreshold = mergeBelowThreshold && (uSize < minSymmetry_) && (vSize < minSymmetry_);
 
-                if (!merge_viable && !both_below_minimal_threshold) {
-                    if constexpr (verbose) {
+                if (!mergeViable && !bothBelowMinimalThreshold) {
+                    if constexpr (verbose_) {
                         std::cout << "  - Merge of " << u << " and " << v << " not viable (Symmetry Threshold)\n";
-                        std::cout << "    - u_sym: " << u_size << ", v_sym: " << v_size << " -> new_sym: " << new_size
-                                  << " (current_threshold: " << current_symmetry << ", global_min_threshold: " << min_symmetry_
+                        std::cout << "    - u_sym: " << uSize << ", v_sym: " << vSize << " -> new_sym: " << newSize
+                                  << " (current_threshold: " << currentSymmetry_ << ", global_min_threshold: " << minSymmetry_
                                   << ")\n";
                     }
-                    non_viable_edges_cache_.insert({u, v});
+                    nonViableEdgesCache_.insert({u, v});
                     continue;
                 }
 
-                v_type_t<Graph_t> u_type = 0;
-                v_type_t<Graph_t> v_type = 0;
-                if (not merge_different_node_types && has_typed_vertices_v<Graph_t>) {
-                    u_type = current_coarse_graph.vertex_type(u);
-                    v_type = current_coarse_graph.vertex_type(v);
+                VTypeT<GraphT> uType = 0;
+                VTypeT<GraphT> vType = 0;
+                if (not mergeDifferentNodeTypes && hasTypedVerticesV<GraphT>) {
+                    uType = currentCoarseGraph.VertexType(u);
+                    vType = currentCoarseGraph.VertexType(v);
                 }
 
-                const bool u_is_significant = (u_size >= min_symmetry_)
-                                              && (current_coarse_graph.vertex_work_weight(u) > lock_threshold_per_type[u_type]);
-                const bool v_is_significant = (v_size >= min_symmetry_)
-                                              && (current_coarse_graph.vertex_work_weight(v) > lock_threshold_per_type[v_type]);
+                const bool uIsSignificant = (uSize >= minSymmetry_)
+                                            && (currentCoarseGraph.VertexWorkWeight(u) > lockThresholdPerType[uType]);
+                const bool vIsSignificant = (vSize >= minSymmetry_)
+                                            && (currentCoarseGraph.VertexWorkWeight(v) > lockThresholdPerType[vType]);
 
-                if (u_is_significant && v_is_significant) {
+                if (uIsSignificant && vIsSignificant) {
                     // Both are significant ---
-                    if (new_size < std::min(u_size, v_size)) {
-                        if constexpr (verbose) {
+                    if (newSize < std::min(uSize, vSize)) {
+                        if constexpr (verbose_) {
                             std::cout << "  - Merge of " << u << " and " << v
                                       << " not viable (Symmetry Narrowing below min of two significant nodes)\n";
-                            std::cout << "    - u_sym: " << u_size << ", v_sym: " << v_size << " -> new_sym: " << new_size << "\n";
+                            std::cout << "    - u_sym: " << uSize << ", v_sym: " << vSize << " -> new_sym: " << newSize << "\n";
                         }
-                        non_viable_edges_cache_.insert({u, v});
+                        nonViableEdgesCache_.insert({u, v});
                         continue;
                     }
-                } else if (u_is_significant || v_is_significant) {
+                } else if (uIsSignificant || vIsSignificant) {
                     // Exactly one is significant ---
-                    const std::size_t significant_node_size = u_is_significant ? u_size : v_size;
+                    const std::size_t significantNodeSize = uIsSignificant ? uSize : vSize;
 
-                    if (new_size < significant_node_size) {
-                        if constexpr (verbose) {
+                    if (newSize < significantNodeSize) {
+                        if constexpr (verbose_) {
                             std::cout << "  - Merge of " << u << " and " << v
                                       << " not viable (Symmetry Narrowing of a single significant node)\n";
-                            std::cout << "    - u_sym: " << u_size << " (sig: " << u_is_significant << ")"
-                                      << ", v_sym: " << v_size << " (sig: " << v_is_significant << ")"
-                                      << " -> new_sym: " << new_size << "\n";
+                            std::cout << "    - u_sym: " << uSize << " (sig: " << uIsSignificant << ")"
+                                      << ", v_sym: " << vSize << " (sig: " << vIsSignificant << ")"
+                                      << " -> new_sym: " << newSize << "\n";
                         }
-                        non_viable_edges_cache_.insert({u, v});
+                        nonViableEdgesCache_.insert({u, v});
                         continue;
                     }
                 }
 
                 // Critical Path Check
-                auto [temp_coarse_graph, temp_contraction_map] = simulate_merge(u, v, current_coarse_graph);
+                auto [tempCoarseGraph, tempContractionMap] = SimulateMerge(u, v, currentCoarseGraph);
 
-                if (critical_path_weight(temp_coarse_graph)
-                    > (path_threshold * static_cast<v_workw_t<Constr_Graph_t>>(new_subgraphs.size())
-                       + critical_path_weight(current_coarse_graph))) {
-                    if constexpr (verbose) {
+                if (CriticalPathWeight(tempCoarseGraph) > (pathThreshold * static_cast<VWorkwT<ConstrGraphT>>(newSubgraphs.size())
+                                                           + CriticalPathWeight(currentCoarseGraph))) {
+                    if constexpr (verbose_) {
                         std::cout << "  - Merge of " << u << " and " << v
-                                  << " increases critical path. Old cirtical path: " << critical_path_weight(current_coarse_graph)
-                                  << " new critical path: " << critical_path_weight(temp_coarse_graph) << " + "
-                                  << path_threshold * static_cast<v_workw_t<Constr_Graph_t>>(new_subgraphs.size()) << "\n";
+                                  << " increases critical path. Old cirtical path: " << CriticalPathWeight(currentCoarseGraph)
+                                  << " new critical path: " << CriticalPathWeight(tempCoarseGraph) << " + "
+                                  << pathThreshold * static_cast<VWorkwT<ConstrGraphT>>(newSubgraphs.size()) << "\n";
                     }
-                    non_viable_crit_path_edges_cache_.insert({u, v});
+                    nonViableCritPathEdgesCache_.insert({u, v});
                     continue;
                 }
 
                 // Commit Merge
-                if constexpr (verbose) {
+                if constexpr (verbose_) {
                     std::cout << "  - Merging " << v << " into " << u << ". New coarse graph has "
-                              << temp_coarse_graph.num_vertices() << " nodes.\n";
+                              << tempCoarseGraph.NumVertices() << " nodes.\n";
                 }
 
-                commit_merge(u,
-                             v,
-                             std::move(temp_coarse_graph),
-                             temp_contraction_map,
-                             std::move(new_subgraphs),
-                             current_coarse_graph,
-                             current_groups,
-                             current_contraction_map);
+                CommitMerge(u,
+                            v,
+                            std::move(tempCoarseGraph),
+                            tempContractionMap,
+                            std::move(newSubgraphs),
+                            currentCoarseGraph,
+                            currentGroups,
+                            currentContractionMap);
 
                 changed = true;
                 break;
@@ -546,121 +544,118 @@ class OrbitGraphProcessor {
   public:
     explicit OrbitGraphProcessor() {}
 
-    void setMergeDifferentNodeTypes(bool flag) { merge_different_node_types_ = flag; }
+    void SetMergeDifferentNodeTypes(bool flag) { mergeDifferentNodeTypes_ = flag; }
 
-    void set_work_threshold(v_workw_t<Constr_Graph_t> work_threshold) { work_threshold_ = work_threshold; }
+    void SetWorkThreshold(VWorkwT<ConstrGraphT> workThreshold) { workThreshold_ = workThreshold; }
 
-    void setCriticalPathThreshold(v_workw_t<Constr_Graph_t> critical_path_threshold) {
-        critical_path_threshold_ = critical_path_threshold;
+    void SetCriticalPathThreshold(VWorkwT<ConstrGraphT> criticalPathThreshold) { criticalPathThreshold_ = criticalPathThreshold; }
+
+    void SetLockRatio(double lockRatio) { lockOrbitRatio_ = lockRatio; }
+
+    void SetSymmetryLevelHeuristic(SymmetryLevelHeuristic heuristic) { symmetryLevelHeuristic_ = heuristic; }
+
+    void SetWorkPercentiles(const std::vector<double> &percentiles) {
+        workPercentiles_ = percentiles;
+        std::sort(workPercentiles_.begin(), workPercentiles_.end());
     }
 
-    void setLockRatio(double lock_ratio) { lock_orbit_ratio = lock_ratio; }
-
-    void setSymmetryLevelHeuristic(SymmetryLevelHeuristic heuristic) { symmetry_level_heuristic_ = heuristic; }
-
-    void setWorkPercentiles(const std::vector<double> &percentiles) {
-        work_percentiles_ = percentiles;
-        std::sort(work_percentiles_.begin(), work_percentiles_.end());
+    void SetUseStaticSymmetryLevel(size_t staticSymmetryLevel) {
+        symmetryLevelHeuristic_ = SymmetryLevelHeuristic::NATURAL_BREAKS;
+        useAdaptiveSymmetryThreshold_ = false;
+        currentSymmetry_ = staticSymmetryLevel;
     }
 
-    void setUseStaticSymmetryLevel(size_t static_symmetry_level) {
-        symmetry_level_heuristic_ = SymmetryLevelHeuristic::NATURAL_BREAKS;
-        use_adaptive_symmetry_threshold_ = false;
-        current_symmetry = static_symmetry_level;
-    }
-
-    void setNaturalBreaksCountPercentage(double percentage) { natural_breaks_count_percentage_ = percentage; }
+    void SetNaturalBreaksCountPercentage(double percentage) { naturalBreaksCountPercentage_ = percentage; }
 
     /**
      * @brief Discovers isomorphic groups (orbits) and constructs a coarse graph.
      */
-    void discover_isomorphic_groups(const Graph_t &dag, const HashComputer<VertexType> &hasher) {
-        coarse_graph_ = Constr_Graph_t();
-        contraction_map_.clear();
-        final_coarse_graph_ = Constr_Graph_t();
-        final_contraction_map_.clear();
-        final_groups_.clear();
-        non_viable_edges_cache_.clear();
-        non_viable_crit_path_edges_cache_.clear();
+    void DiscoverIsomorphicGroups(const GraphT &dag, const HashComputer<VertexType> &hasher) {
+        coarseGraph_ = ConstrGraphT();
+        contractionMap_.clear();
+        finalCoarseGraph_ = ConstrGraphT();
+        finalContractionMap_.clear();
+        finalGroups_.clear();
+        nonViableEdgesCache_.clear();
+        nonViableCritPathEdgesCache_.clear();
 
-        if (dag.num_vertices() == 0) {
+        if (dag.NumVertices() == 0) {
             return;
         }
 
-        const auto &orbits = hasher.get_orbits();
+        const auto &orbits = hasher.GetOrbits();
 
-        contraction_map_.assign(dag.num_vertices(), 0);
-        VertexType coarse_node_idx = 0;
+        contractionMap_.assign(dag.NumVertices(), 0);
+        VertexType coarseNodeIdx = 0;
 
-        for (const auto &hash_vertices_pair : orbits) {
-            const auto &vertices = hash_vertices_pair.second;
+        for (const auto &hashVerticesPair : orbits) {
+            const auto &vertices = hashVerticesPair.second;
             for (const auto v : vertices) {
-                contraction_map_[v] = coarse_node_idx;
+                contractionMap_[v] = coarseNodeIdx;
             }
-            coarse_node_idx++;
+            coarseNodeIdx++;
         }
 
-        std::vector<v_workw_t<Graph_t>> work_per_vertex_type;
-        work_per_vertex_type.resize(merge_different_node_types_ ? 1U : dag.num_vertex_types(), 0);
+        std::vector<VWorkwT<GraphT>> workPerVertexType;
+        workPerVertexType.resize(mergeDifferentNodeTypes_ ? 1U : dag.NumVertexTypes(), 0);
 
-        std::map<size_t, size_t> orbit_size_counts;
-        std::map<size_t, v_workw_t<Graph_t>> work_per_orbit_size;
-        v_workw_t<Graph_t> total_work = 0;
+        std::map<size_t, size_t> orbitSizeCounts;
+        std::map<size_t, VWorkwT<GraphT>> workPerOrbitSize;
+        VWorkwT<GraphT> totalWork = 0;
         for (const auto &[hash, vertices] : orbits) {
-            const size_t orbit_size = vertices.size();
+            const size_t orbitSize = vertices.size();
 
-            if (orbit_size == 1U) {
+            if (orbitSize == 1U) {
                 continue;    // exclude single node orbits from total work
             }
 
-            orbit_size_counts[orbit_size]++;
+            orbitSizeCounts[orbitSize]++;
 
-            v_workw_t<Graph_t> orbit_work = 0;
+            VWorkwT<GraphT> orbitWork = 0;
             for (const auto v : vertices) {
-                orbit_work += dag.vertex_work_weight(v);
+                orbitWork += dag.VertexWorkWeight(v);
             }
 
-            if (not merge_different_node_types_ && has_typed_vertices_v<Graph_t>) {
-                work_per_vertex_type[dag.vertex_type(vertices[0])] += orbit_work;
+            if (not mergeDifferentNodeTypes_ && hasTypedVerticesV<GraphT>) {
+                workPerVertexType[dag.VertexType(vertices[0])] += orbitWork;
             } else {
-                work_per_vertex_type[0] += orbit_work;
+                workPerVertexType[0] += orbitWork;
             }
 
-            work_per_orbit_size[orbit_size] += orbit_work;
-            total_work += orbit_work;
+            workPerOrbitSize[orbitSize] += orbitWork;
+            totalWork += orbitWork;
         }
 
-        std::vector<v_workw_t<Graph_t>> lock_threshold_per_type(work_per_vertex_type.size());
-        for (size_t i = 0; i < work_per_vertex_type.size(); ++i) {
-            lock_threshold_per_type[i] = static_cast<v_workw_t<Graph_t>>(lock_orbit_ratio * work_per_vertex_type[i]);
+        std::vector<VWorkwT<GraphT>> lockThresholdPerType(workPerVertexType.size());
+        for (size_t i = 0; i < workPerVertexType.size(); ++i) {
+            lockThresholdPerType[i] = static_cast<VWorkwT<GraphT>>(lockOrbitRatio_ * workPerVertexType[i]);
         }
 
-        std::vector<double> rel_acc_work_per_orbit_size;
-        std::vector<size_t> symmetry_levels_to_test
-            = compute_symmetry_levels(rel_acc_work_per_orbit_size, work_per_orbit_size, total_work, orbit_size_counts);
+        std::vector<double> relAccWorkPerOrbitSize;
+        std::vector<size_t> symmetryLevelsToTest
+            = ComputeSymmetryLevels(relAccWorkPerOrbitSize, workPerOrbitSize, totalWork, orbitSizeCounts);
 
-        if constexpr (verbose) {
+        if constexpr (verbose_) {
             std::cout << "\n--- Orbit Analysis ---\n";
-            for (auto const &[size, count] : orbit_size_counts) {
-                if (total_work > 0) {
+            for (auto const &[size, count] : orbitSizeCounts) {
+                if (totalWork > 0) {
                     std::cout << "  - Orbits of size " << size << ": " << count << " groups, weight: "
-                              << 100.0 * static_cast<double>(work_per_orbit_size[size]) / static_cast<double>(total_work) << "%\n";
+                              << 100.0 * static_cast<double>(workPerOrbitSize[size]) / static_cast<double>(totalWork) << "%\n";
                 } else {
                     std::cout << "  - Orbits of size " << size << ": " << count << " groups, weight: 0.0%\n";
                 }
             }
             std::cout << "  Cumulative work distribution by orbit size (largest to smallest):\n";
             size_t i = 0;
-            for (auto it = orbit_size_counts.rbegin(); it != orbit_size_counts.rend() && i < rel_acc_work_per_orbit_size.size();
-                 ++it, ++i) {
+            for (auto it = orbitSizeCounts.rbegin(); it != orbitSizeCounts.rend() && i < relAccWorkPerOrbitSize.size(); ++it, ++i) {
                 std::cout << "    - Orbits with size >= " << it->first << ": " << std::fixed << std::setprecision(2)
-                          << rel_acc_work_per_orbit_size[i] * 100 << "%\n";
+                          << relAccWorkPerOrbitSize[i] * 100 << "%\n";
             }
             std::cout << "  Work distribution by vertex type:\n";
-            for (size_t j = 0; j < work_per_vertex_type.size(); ++j) {
-                if (total_work > 0) {
+            for (size_t j = 0; j < workPerVertexType.size(); ++j) {
+                if (totalWork > 0) {
                     std::cout << "    - Vertex type " << j << ": "
-                              << 100.0 * static_cast<double>(work_per_vertex_type[j]) / static_cast<double>(total_work) << "%\n";
+                              << 100.0 * static_cast<double>(workPerVertexType[j]) / static_cast<double>(totalWork) << "%\n";
                 } else {
                     std::cout << "    - Vertex type " << j << ": 0.0%\n";
                 }
@@ -668,70 +663,69 @@ class OrbitGraphProcessor {
 
             std::cout << "--------------------------------\n";
             std::cout << " Symmetry levels to test: " << "\n";
-            for (const auto level : symmetry_levels_to_test) {
+            for (const auto level : symmetryLevelsToTest) {
                 std::cout << "  - " << level << "\n";
             }
             std::cout << "--------------------------------\n";
         }
 
-        coarser_util::construct_coarse_dag(dag, coarse_graph_, contraction_map_);
+        coarser_util::ConstructCoarseDag(dag, coarseGraph_, contractionMap_);
 
-        if (use_adaptive_symmetry_threshold_) {
-            perform_coarsening_adaptive_symmetry(dag, coarse_graph_, lock_threshold_per_type, symmetry_levels_to_test);
+        if (useAdaptiveSymmetryThreshold_) {
+            PerformCoarseningAdaptiveSymmetry(dag, coarseGraph_, lockThresholdPerType, symmetryLevelsToTest);
         } else {
-            size_t total_size_count = 0U;
-            for (const auto &[size, count] : orbit_size_counts) {
-                total_size_count += count;
+            size_t totalSizeCount = 0U;
+            for (const auto &[size, count] : orbitSizeCounts) {
+                totalSizeCount += count;
             }
 
-            for (const auto &[size, count] : orbit_size_counts) {
-                if (size == 1U || size > current_symmetry) {
+            for (const auto &[size, count] : orbitSizeCounts) {
+                if (size == 1U || size > currentSymmetry_) {
                     continue;
                 }
 
-                if (count > total_size_count / 2) {
-                    if constexpr (verbose) {
+                if (count > totalSizeCount / 2) {
+                    if constexpr (verbose_) {
                         std::cout << "Setting current_symmetry to " << size << " because " << count << " orbits of size " << size
                                   << " are more than half of the total number of orbits.\n";
                     }
-                    current_symmetry = size;
+                    currentSymmetry_ = size;
                 }
             }
 
-            perform_coarsening(dag, coarse_graph_);
+            PerformCoarsening(dag, coarseGraph_);
         }
     }
 
   private:
-    std::vector<size_t> compute_symmetry_levels(std::vector<double> &rel_acc_work_per_orbit_size,
-                                                const std::map<size_t, v_workw_t<Graph_t>> work_per_orbit_size,
-                                                const v_workw_t<Graph_t> total_work,
-                                                const std::map<size_t, size_t> orbit_size_counts) {
-        std::vector<size_t> symmetry_levels_to_test;
-        min_symmetry_ = 2;
+    std::vector<size_t> ComputeSymmetryLevels(std::vector<double> &relAccWorkPerOrbitSize,
+                                              const std::map<size_t, VWorkwT<GraphT>> workPerOrbitSize,
+                                              const VWorkwT<GraphT> totalWork,
+                                              const std::map<size_t, size_t> orbitSizeCounts) {
+        std::vector<size_t> symmetryLevelsToTest;
+        minSymmetry_ = 2;
 
-        switch (symmetry_level_heuristic_) {
+        switch (symmetryLevelHeuristic_) {
             case SymmetryLevelHeuristic::PERCENTILE_BASED: {
-                if constexpr (verbose) {
+                if constexpr (verbose_) {
                     std::cout << "Using PERCENTILE_BASED heuristic for symmetry levels.\n";
                 }
-                size_t percentile_idx = 0;
-                v_workw_t<Graph_t> cumulative_work = 0;
-                for (auto it = work_per_orbit_size.rbegin(); it != work_per_orbit_size.rend(); ++it) {
-                    cumulative_work += it->second;
-                    if (total_work == 0) {
+                size_t percentileIdx = 0;
+                VWorkwT<GraphT> cumulativeWork = 0;
+                for (auto it = workPerOrbitSize.rbegin(); it != workPerOrbitSize.rend(); ++it) {
+                    cumulativeWork += it->second;
+                    if (totalWork == 0) {
                         continue;    // Avoid division by zero
                     }
-                    double current_work_ratio = static_cast<double>(cumulative_work) / static_cast<double>(total_work);
-                    rel_acc_work_per_orbit_size.push_back(current_work_ratio);    // For printing
+                    double currentWorkRatio = static_cast<double>(cumulativeWork) / static_cast<double>(totalWork);
+                    relAccWorkPerOrbitSize.push_back(currentWorkRatio);    // For printing
 
-                    if (percentile_idx < work_percentiles_.size() && current_work_ratio >= work_percentiles_[percentile_idx]) {
-                        if (it->first > min_symmetry_) {
-                            symmetry_levels_to_test.push_back(it->first);
+                    if (percentileIdx < workPercentiles_.size() && currentWorkRatio >= workPercentiles_[percentileIdx]) {
+                        if (it->first > minSymmetry_) {
+                            symmetryLevelsToTest.push_back(it->first);
                         }
-                        while (percentile_idx < work_percentiles_.size()
-                               && current_work_ratio >= work_percentiles_[percentile_idx]) {
-                            percentile_idx++;
+                        while (percentileIdx < workPercentiles_.size() && currentWorkRatio >= workPercentiles_[percentileIdx]) {
+                            percentileIdx++;
                         }
                     }
                 }
@@ -739,70 +733,67 @@ class OrbitGraphProcessor {
             }
 
             case SymmetryLevelHeuristic::NATURAL_BREAKS: {
-                if constexpr (verbose) {
+                if constexpr (verbose_) {
                     std::cout << "Using NATURAL_BREAKS heuristic for symmetry levels.\n";
                 }
 
-                size_t total_orbit_groups = 0;
-                for (const auto &[size, count] : orbit_size_counts) {
-                    total_orbit_groups += count;
+                size_t totalOrbitGroups = 0;
+                for (const auto &[size, count] : orbitSizeCounts) {
+                    totalOrbitGroups += count;
                 }
-                size_t count_threshold
-                    = static_cast<size_t>(static_cast<double>(total_orbit_groups) * natural_breaks_count_percentage_);
-                if (count_threshold == 0 && total_orbit_groups > 0) {
-                    count_threshold = 1;    // Ensure threshold is at least 1 if possible
+                size_t countThreshold = static_cast<size_t>(static_cast<double>(totalOrbitGroups) * naturalBreaksCountPercentage_);
+                if (countThreshold == 0 && totalOrbitGroups > 0) {
+                    countThreshold = 1;    // Ensure threshold is at least 1 if possible
                 }
-                if constexpr (verbose) {
-                    std::cout << "  - Total orbit groups: " << total_orbit_groups << ", count threshold: " << count_threshold
-                              << "\n";
+                if constexpr (verbose_) {
+                    std::cout << "  - Total orbit groups: " << totalOrbitGroups << ", count threshold: " << countThreshold << "\n";
                 }
 
-                std::vector<size_t> sorted_sizes;
-                sorted_sizes.reserve(orbit_size_counts.size());
-                for (const auto &[size, count] : orbit_size_counts) {
-                    sorted_sizes.push_back(size);
+                std::vector<size_t> sortedSizes;
+                sortedSizes.reserve(orbitSizeCounts.size());
+                for (const auto &[size, count] : orbitSizeCounts) {
+                    sortedSizes.push_back(size);
                 }
-                std::sort(sorted_sizes.rbegin(), sorted_sizes.rend());    // Sort descending
+                std::sort(sortedSizes.rbegin(), sortedSizes.rend());    // Sort descending
 
-                if (!sorted_sizes.empty()) {
-                    for (size_t i = 0; i < sorted_sizes.size(); ++i) {
-                        const size_t current_size = sorted_sizes[i];
-                        if (current_size < min_symmetry_) {
+                if (!sortedSizes.empty()) {
+                    for (size_t i = 0; i < sortedSizes.size(); ++i) {
+                        const size_t currentSize = sortedSizes[i];
+                        if (currentSize < minSymmetry_) {
                             continue;
                         }
 
                         // Add if this size's count is significant
-                        const size_t current_count = orbit_size_counts.at(current_size);
-                        bool count_significant = (current_count >= count_threshold);
+                        const size_t currentCount = orbitSizeCounts.at(currentSize);
+                        bool countSignificant = (currentCount >= countThreshold);
 
-                        if (count_significant) {
-                            symmetry_levels_to_test.push_back(current_size);
+                        if (countSignificant) {
+                            symmetryLevelsToTest.push_back(currentSize);
                             continue;
                         }
                     }
                 }
 
-                if (symmetry_levels_to_test.empty()) {
-                    size_t max_count = 0;
-                    size_t size_with_max_count = 0;
-                    for (const auto &[size, count] : orbit_size_counts) {
-                        if (count > max_count) {
-                            max_count = count;
-                            size_with_max_count = size;
+                if (symmetryLevelsToTest.empty()) {
+                    size_t maxCount = 0;
+                    size_t sizeWithMaxCount = 0;
+                    for (const auto &[size, count] : orbitSizeCounts) {
+                        if (count > maxCount) {
+                            maxCount = count;
+                            sizeWithMaxCount = size;
                         }
                     }
-                    if (size_with_max_count > 0) {
-                        symmetry_levels_to_test.push_back(size_with_max_count);
+                    if (sizeWithMaxCount > 0) {
+                        symmetryLevelsToTest.push_back(sizeWithMaxCount);
                     }
                 }
 
                 // Verbose print data
-                v_workw_t<Graph_t> cumulative_work = 0;
-                for (auto it = work_per_orbit_size.rbegin(); it != work_per_orbit_size.rend(); ++it) {
-                    cumulative_work += it->second;
-                    if (total_work > 0) {
-                        rel_acc_work_per_orbit_size.push_back(static_cast<double>(cumulative_work)
-                                                              / static_cast<double>(total_work));
+                VWorkwT<GraphT> cumulativeWork = 0;
+                for (auto it = workPerOrbitSize.rbegin(); it != workPerOrbitSize.rend(); ++it) {
+                    cumulativeWork += it->second;
+                    if (totalWork > 0) {
+                        relAccWorkPerOrbitSize.push_back(static_cast<double>(cumulativeWork) / static_cast<double>(totalWork));
                     }
                 }
                 break;
@@ -810,188 +801,175 @@ class OrbitGraphProcessor {
 
             case SymmetryLevelHeuristic::CURRENT_DEFAULT:
             default: {
-                if constexpr (verbose) {
+                if constexpr (verbose_) {
                     std::cout << "Using CURRENT_DEFAULT heuristic for symmetry levels.\n";
                 }
-                double threshold = lock_orbit_ratio;
-                v_workw_t<Graph_t> cumulative_work = 0;
-                for (auto it = work_per_orbit_size.rbegin(); it != work_per_orbit_size.rend(); ++it) {
-                    cumulative_work += it->second;
-                    const double rel_work
-                        = (total_work == 0) ? 0 : static_cast<double>(cumulative_work) / static_cast<double>(total_work);
-                    rel_acc_work_per_orbit_size.push_back(rel_work);    // For printing
+                double threshold = lockOrbitRatio_;
+                VWorkwT<GraphT> cumulativeWork = 0;
+                for (auto it = workPerOrbitSize.rbegin(); it != workPerOrbitSize.rend(); ++it) {
+                    cumulativeWork += it->second;
+                    const double relWork
+                        = (totalWork == 0) ? 0 : static_cast<double>(cumulativeWork) / static_cast<double>(totalWork);
+                    relAccWorkPerOrbitSize.push_back(relWork);    // For printing
 
-                    if (rel_work >= threshold && it->first > min_symmetry_) {
-                        symmetry_levels_to_test.push_back(it->first);
-                        threshold += lock_orbit_ratio * 0.5;
+                    if (relWork >= threshold && it->first > minSymmetry_) {
+                        symmetryLevelsToTest.push_back(it->first);
+                        threshold += lockOrbitRatio_ * 0.5;
                     }
                 }
                 break;
             }
         }
 
-        if (symmetry_levels_to_test.empty()) {
-            symmetry_levels_to_test.push_back(2);
+        if (symmetryLevelsToTest.empty()) {
+            symmetryLevelsToTest.push_back(2);
         }
 
-        min_symmetry_ = symmetry_levels_to_test.back();
+        minSymmetry_ = symmetryLevelsToTest.back();
 
         // De-duplicate and sort descending
-        std::sort(symmetry_levels_to_test.rbegin(), symmetry_levels_to_test.rend());
-        auto last = std::unique(symmetry_levels_to_test.begin(), symmetry_levels_to_test.end());
-        symmetry_levels_to_test.erase(last, symmetry_levels_to_test.end());
+        std::sort(symmetryLevelsToTest.rbegin(), symmetryLevelsToTest.rend());
+        auto last = std::unique(symmetryLevelsToTest.begin(), symmetryLevelsToTest.end());
+        symmetryLevelsToTest.erase(last, symmetryLevelsToTest.end());
 
-        return symmetry_levels_to_test;
+        return symmetryLevelsToTest;
     }
 
     /**
      * @brief Non-adaptive coarsening (deprecated).
      */
-    void perform_coarsening(const Graph_t &original_dag, const Constr_Graph_t &initial_coarse_graph) {
-        final_coarse_graph_ = Constr_Graph_t();
-        final_contraction_map_.clear();
+    void PerformCoarsening(const GraphT &originalDag, const ConstrGraphT &initialCoarseGraph) {
+        finalCoarseGraph_ = ConstrGraphT();
+        finalContractionMap_.clear();
 
-        if (initial_coarse_graph.num_vertices() == 0) {
+        if (initialCoarseGraph.NumVertices() == 0) {
             return;
         }
 
-        Constr_Graph_t current_coarse_graph = initial_coarse_graph;
-        std::vector<Group> current_groups(initial_coarse_graph.num_vertices());
-        std::vector<VertexType> current_contraction_map = contraction_map_;
+        ConstrGraphT currentCoarseGraph = initialCoarseGraph;
+        std::vector<Group> currentGroups(initialCoarseGraph.NumVertices());
+        std::vector<VertexType> currentContractionMap = contractionMap_;
 
         // Initialize groups: each group corresponds to an orbit.
-        for (VertexType i = 0; i < original_dag.num_vertices(); ++i) {
-            const VertexType coarse_node = contraction_map_[i];
-            current_groups[coarse_node].subgraphs.push_back({i});
+        for (VertexType i = 0; i < originalDag.NumVertices(); ++i) {
+            const VertexType coarseNode = contractionMap_[i];
+            currentGroups[coarseNode].subgraphs_.push_back({i});
         }
 
-        if constexpr (has_typed_vertices_v<Constr_Graph_t>) {
-            if constexpr (verbose) {
+        if constexpr (hasTypedVerticesV<ConstrGraphT>) {
+            if constexpr (verbose_) {
                 std::cout << "Attempting to merge same node types.\n";
             }
-            contract_edges(original_dag, current_coarse_graph, current_groups, current_contraction_map, false, false);
-            contract_edges(original_dag, current_coarse_graph, current_groups, current_contraction_map, true, false);
+            ContractEdges(originalDag, currentCoarseGraph, currentGroups, currentContractionMap, false, false);
+            ContractEdges(originalDag, currentCoarseGraph, currentGroups, currentContractionMap, true, false);
         }
 
-        if constexpr (verbose) {
+        if constexpr (verbose_) {
             std::cout << "Attempting to merge different node types.\n";
         }
-        contract_edges(
-            original_dag, current_coarse_graph, current_groups, current_contraction_map, false, merge_different_node_types_);
-        contract_edges(
-            original_dag, current_coarse_graph, current_groups, current_contraction_map, true, merge_different_node_types_);
+        ContractEdges(originalDag, currentCoarseGraph, currentGroups, currentContractionMap, false, mergeDifferentNodeTypes_);
+        ContractEdges(originalDag, currentCoarseGraph, currentGroups, currentContractionMap, true, mergeDifferentNodeTypes_);
 
-        if constexpr (verbose) {
+        if constexpr (verbose_) {
             std::cout << "Attempting to merge small orbits.\n";
         }
-        merge_small_orbits(original_dag, current_coarse_graph, current_groups, current_contraction_map, work_threshold_);
+        MergeSmallOrbits(originalDag, currentCoarseGraph, currentGroups, currentContractionMap, workThreshold_);
 
-        non_viable_crit_path_edges_cache_.clear();
-        non_viable_edges_cache_.clear();
+        nonViableCritPathEdgesCache_.clear();
+        nonViableEdgesCache_.clear();
 
-        contract_edges(original_dag,
-                       current_coarse_graph,
-                       current_groups,
-                       current_contraction_map,
-                       true,
-                       merge_different_node_types_,
-                       work_threshold_);
+        ContractEdges(
+            originalDag, currentCoarseGraph, currentGroups, currentContractionMap, true, mergeDifferentNodeTypes_, workThreshold_);
 
-        final_coarse_graph_ = std::move(current_coarse_graph);
-        final_contraction_map_ = std::move(current_contraction_map);
-        final_groups_ = std::move(current_groups);
+        finalCoarseGraph_ = std::move(currentCoarseGraph);
+        finalContractionMap_ = std::move(currentContractionMap);
+        finalGroups_ = std::move(currentGroups);
 
-        if constexpr (verbose) {
-            print_final_groups_summary();
+        if constexpr (verbose_) {
+            PrintFinalGroupsSummary();
         }
     }
 
-    void perform_coarsening_adaptive_symmetry(const Graph_t &original_dag,
-                                              const Constr_Graph_t &initial_coarse_graph,
-                                              const std::vector<v_workw_t<Graph_t>> &lock_threshold_per_type,
-                                              const std::vector<size_t> &symmetry_levels_to_test) {
-        final_coarse_graph_ = Constr_Graph_t();
-        final_contraction_map_.clear();
+    void PerformCoarseningAdaptiveSymmetry(const GraphT &originalDag,
+                                           const ConstrGraphT &initialCoarseGraph,
+                                           const std::vector<VWorkwT<GraphT>> &lockThresholdPerType,
+                                           const std::vector<size_t> &symmetryLevelsToTest) {
+        finalCoarseGraph_ = ConstrGraphT();
+        finalContractionMap_.clear();
 
-        if (initial_coarse_graph.num_vertices() == 0) {
+        if (initialCoarseGraph.NumVertices() == 0) {
             return;
         }
 
-        Constr_Graph_t current_coarse_graph = initial_coarse_graph;
-        std::vector<Group> current_groups(initial_coarse_graph.num_vertices());
-        std::vector<VertexType> current_contraction_map = contraction_map_;
+        ConstrGraphT currentCoarseGraph = initialCoarseGraph;
+        std::vector<Group> currentGroups(initialCoarseGraph.NumVertices());
+        std::vector<VertexType> currentContractionMap = contractionMap_;
 
-        for (VertexType i = 0; i < original_dag.num_vertices(); ++i) {
-            const VertexType coarse_node = contraction_map_[i];
-            current_groups[coarse_node].subgraphs.push_back({i});
+        for (VertexType i = 0; i < originalDag.NumVertices(); ++i) {
+            const VertexType coarseNode = contractionMap_[i];
+            currentGroups[coarseNode].subgraphs_.push_back({i});
         }
 
-        if constexpr (verbose) {
-            std::cout << " Starting adaptive symmetry coarsening with critical_path_threshold: " << critical_path_threshold_
-                      << "\n";
+        if constexpr (verbose_) {
+            std::cout << " Starting adaptive symmetry coarsening with critical_path_threshold: " << criticalPathThreshold_ << "\n";
         }
 
-        for (const auto sym : symmetry_levels_to_test) {
-            current_symmetry = sym;
-            const bool is_last_loop = (sym == symmetry_levels_to_test.back());
-            if constexpr (verbose) {
-                std::cout << "  Current symmetry threshold: " << current_symmetry << "\n";
+        for (const auto sym : symmetryLevelsToTest) {
+            currentSymmetry_ = sym;
+            const bool isLastLoop = (sym == symmetryLevelsToTest.back());
+            if constexpr (verbose_) {
+                std::cout << "  Current symmetry threshold: " << currentSymmetry_ << "\n";
             }
 
-            non_viable_edges_cache_.clear();
+            nonViableEdgesCache_.clear();
 
-            contract_edges_adpative_sym(original_dag,
-                                        current_coarse_graph,
-                                        current_groups,
-                                        current_contraction_map,
-                                        false,
-                                        is_last_loop,
-                                        lock_threshold_per_type);
+            ContractEdgesAdpativeSym(
+                originalDag, currentCoarseGraph, currentGroups, currentContractionMap, false, isLastLoop, lockThresholdPerType);
 
-            if (merge_different_node_types_) {
-                contract_edges_adpative_sym(original_dag,
-                                            current_coarse_graph,
-                                            current_groups,
-                                            current_contraction_map,
-                                            merge_different_node_types_,
-                                            is_last_loop,
-                                            lock_threshold_per_type);
+            if (mergeDifferentNodeTypes_) {
+                ContractEdgesAdpativeSym(originalDag,
+                                         currentCoarseGraph,
+                                         currentGroups,
+                                         currentContractionMap,
+                                         mergeDifferentNodeTypes_,
+                                         isLastLoop,
+                                         lockThresholdPerType);
             }
 
-            non_viable_crit_path_edges_cache_.clear();
-            contract_edges_adpative_sym(original_dag,
-                                        current_coarse_graph,
-                                        current_groups,
-                                        current_contraction_map,
-                                        merge_different_node_types_,
-                                        is_last_loop,
-                                        lock_threshold_per_type,
-                                        critical_path_threshold_);
+            nonViableCritPathEdgesCache_.clear();
+            ContractEdgesAdpativeSym(originalDag,
+                                     currentCoarseGraph,
+                                     currentGroups,
+                                     currentContractionMap,
+                                     mergeDifferentNodeTypes_,
+                                     isLastLoop,
+                                     lockThresholdPerType,
+                                     criticalPathThreshold_);
         }
 
-        if constexpr (verbose) {
-            std::cout << " Merging small orbits with work threshold: " << work_threshold_ << "\n";
+        if constexpr (verbose_) {
+            std::cout << " Merging small orbits with work threshold: " << workThreshold_ << "\n";
         }
-        non_viable_edges_cache_.clear();
-        merge_small_orbits(original_dag, current_coarse_graph, current_groups, current_contraction_map, work_threshold_);
+        nonViableEdgesCache_.clear();
+        MergeSmallOrbits(originalDag, currentCoarseGraph, currentGroups, currentContractionMap, workThreshold_);
 
-        final_coarse_graph_ = std::move(current_coarse_graph);
-        final_contraction_map_ = std::move(current_contraction_map);
-        final_groups_ = std::move(current_groups);
+        finalCoarseGraph_ = std::move(currentCoarseGraph);
+        finalContractionMap_ = std::move(currentContractionMap);
+        finalGroups_ = std::move(currentGroups);
 
-        if constexpr (verbose) {
-            print_final_groups_summary();
+        if constexpr (verbose_) {
+            PrintFinalGroupsSummary();
         }
     }
 
-    void print_final_groups_summary() const {
+    void PrintFinalGroupsSummary() const {
         std::cout << "\n--- 📦 Final Groups Summary ---\n";
-        std::cout << "Total final groups: " << final_groups_.size() << "\n";
-        for (size_t i = 0; i < final_groups_.size(); ++i) {
-            const auto &group = final_groups_[i];
-            std::cout << "  - Group " << i << " (Size: " << group.subgraphs.size() << ")\n";
-            if (!group.subgraphs.empty() && !group.subgraphs[0].empty()) {
-                std::cout << "    - Rep. Subgraph size: " << group.subgraphs[0].size() << " nodes\n";
+        std::cout << "Total final groups: " << finalGroups_.size() << "\n";
+        for (size_t i = 0; i < finalGroups_.size(); ++i) {
+            const auto &group = finalGroups_[i];
+            std::cout << "  - Group " << i << " (Size: " << group.subgraphs_.size() << ")\n";
+            if (!group.subgraphs_.empty() && !group.subgraphs_[0].empty()) {
+                std::cout << "    - Rep. Subgraph size: " << group.subgraphs_[0].size() << " nodes\n";
             }
         }
         std::cout << "--------------------------------\n";
@@ -1000,56 +978,56 @@ class OrbitGraphProcessor {
     /**
      * @brief Checks if merging two groups is structurally viable.
      */
-    bool is_merge_viable(const Graph_t &original_dag,
-                         const Group &group_u,
-                         const Group &group_v,
-                         std::vector<std::vector<VertexType>> &out_new_subgraphs) const {
-        std::vector<VertexType> all_nodes;
-        all_nodes.reserve(group_u.subgraphs.size() * (group_u.subgraphs.empty() ? 0 : group_u.subgraphs[0].size())
-                          + group_v.subgraphs.size() * (group_v.subgraphs.empty() ? 0 : group_v.subgraphs[0].size()));
-        for (const auto &sg : group_u.subgraphs) {
-            all_nodes.insert(all_nodes.end(), sg.begin(), sg.end());
+    bool IsMergeViable(const GraphT &originalDag,
+                       const Group &groupU,
+                       const Group &groupV,
+                       std::vector<std::vector<VertexType>> &outNewSubgraphs) const {
+        std::vector<VertexType> allNodes;
+        allNodes.reserve(groupU.subgraphs_.size() * (groupU.subgraphs_.empty() ? 0 : groupU.subgraphs_[0].size())
+                         + groupV.subgraphs_.size() * (groupV.subgraphs_.empty() ? 0 : groupV.subgraphs_[0].size()));
+        for (const auto &sg : groupU.subgraphs_) {
+            allNodes.insert(allNodes.end(), sg.begin(), sg.end());
         }
-        for (const auto &sg : group_v.subgraphs) {
-            all_nodes.insert(all_nodes.end(), sg.begin(), sg.end());
+        for (const auto &sg : groupV.subgraphs_) {
+            allNodes.insert(allNodes.end(), sg.begin(), sg.end());
         }
 
         assert([&]() {
-            std::vector<VertexType> temp_nodes_for_check = all_nodes;
-            std::sort(temp_nodes_for_check.begin(), temp_nodes_for_check.end());
-            return std::unique(temp_nodes_for_check.begin(), temp_nodes_for_check.end()) == temp_nodes_for_check.end();
+            std::vector<VertexType> tempNodesForCheck = allNodes;
+            std::sort(tempNodesForCheck.begin(), tempNodesForCheck.end());
+            return std::unique(tempNodesForCheck.begin(), tempNodesForCheck.end()) == tempNodesForCheck.end();
         }() && "Assumption failed: Vertices in groups being merged are not disjoint.");
 
-        std::sort(all_nodes.begin(), all_nodes.end());
+        std::sort(allNodes.begin(), allNodes.end());
 
-        Constr_Graph_t induced_subgraph;
+        ConstrGraphT inducedSubgraph;
 
-        auto map = create_induced_subgraph_map(original_dag, induced_subgraph, all_nodes);
+        auto map = CreateInducedSubgraphMap(originalDag, inducedSubgraph, allNodes);
         std::vector<VertexType> components;    // local -> component_id
-        size_t num_components = compute_weakly_connected_components(induced_subgraph, components);
-        out_new_subgraphs.assign(num_components, std::vector<VertexType>());
+        size_t numComponents = ComputeWeaklyConnectedComponents(inducedSubgraph, components);
+        outNewSubgraphs.assign(numComponents, std::vector<VertexType>());
 
-        if (all_nodes.empty()) {    // Handle empty graph case
+        if (allNodes.empty()) {    // Handle empty graph case
             return true;
         }
 
-        for (const auto &node : all_nodes) {
-            out_new_subgraphs[components[map[node]]].push_back(node);
+        for (const auto &node : allNodes) {
+            outNewSubgraphs[components[map[node]]].push_back(node);
         }
 
-        if (num_components > 1) {
-            const size_t first_sg_size = out_new_subgraphs[0].size();
-            Constr_Graph_t rep_sg;
-            create_induced_subgraph(original_dag, rep_sg, out_new_subgraphs[0]);
+        if (numComponents > 1) {
+            const size_t firstSgSize = outNewSubgraphs[0].size();
+            ConstrGraphT repSg;
+            CreateInducedSubgraph(originalDag, repSg, outNewSubgraphs[0]);
 
-            for (size_t i = 1; i < num_components; ++i) {
-                if (out_new_subgraphs[i].size() != first_sg_size) {
+            for (size_t i = 1; i < numComponents; ++i) {
+                if (outNewSubgraphs[i].size() != firstSgSize) {
                     return false;
                 }
 
-                Constr_Graph_t current_sg;
-                create_induced_subgraph(original_dag, current_sg, out_new_subgraphs[i]);
-                if (!are_isomorphic_by_merkle_hash(rep_sg, current_sg)) {
+                ConstrGraphT currentSg;
+                CreateInducedSubgraph(originalDag, currentSg, outNewSubgraphs[i]);
+                if (!AreIsomorphicByMerkleHash(repSg, currentSg)) {
                     return false;
                 }
             }
@@ -1058,15 +1036,15 @@ class OrbitGraphProcessor {
     }
 
   public:
-    const Graph_t &get_coarse_graph() const { return coarse_graph_; }
+    const GraphT &GetCoarseGraph() const { return coarseGraph_; }
 
-    const std::vector<VertexType> &get_contraction_map() const { return contraction_map_; }
+    const std::vector<VertexType> &GetContractionMap() const { return contractionMap_; }
 
-    const Graph_t &get_final_coarse_graph() const { return final_coarse_graph_; }
+    const GraphT &GetFinalCoarseGraph() const { return finalCoarseGraph_; }
 
-    const std::vector<VertexType> &get_final_contraction_map() const { return final_contraction_map_; }
+    const std::vector<VertexType> &GetFinalContractionMap() const { return finalContractionMap_; }
 
-    const std::vector<Group> &get_final_groups() const { return final_groups_; }
+    const std::vector<Group> &GetFinalGroups() const { return finalGroups_; }
 };
 
 }    // namespace osp

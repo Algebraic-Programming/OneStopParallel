@@ -32,50 +32,50 @@ namespace file_writer {
  *
  * This function converts a given graph into a hypergraph representation where each node
  * with outgoing edges becomes a hyperedge source. The format is compatible with the
- * `readComputationalDagHyperdagFormatDB` reader.
+ * `ReadComputationalDagHyperdagFormatDB` reader.
  *
- * @tparam Graph_t The type of the graph, which must satisfy the ComputationalDag concept.
+ * @tparam GraphT The type of the graph, which must satisfy the ComputationalDag concept.
  * @param os The output stream to write to.
  * @param graph The computational DAG to write.
  */
-template <typename Graph_t>
-void writeComputationalDagHyperdagFormatDB(std::ostream &os, const Graph_t &graph, const bool write_comment_lines = false) {
-    static_assert(is_computational_dag_v<Graph_t>, "Graph_t must be a computational DAG");
+template <typename GraphT>
+void WriteComputationalDagHyperdagFormatDb(std::ostream &os, const GraphT &graph, const bool writeCommentLines = false) {
+    static_assert(isComputationalDagV<GraphT>, "GraphT must be a computational DAG");
 
-    const auto num_vertices = graph.num_vertices();
-    unsigned num_hyperedges = 0;
-    vertex_idx_t<Graph_t> num_pins = 0;
-    std::vector<vertex_idx_t<Graph_t>> hyperedge_idx_to_node;
+    const auto numVertices = graph.NumVertices();
+    unsigned numHyperedges = 0;
+    VertexIdxT<GraphT> numPins = 0;
+    std::vector<VertexIdxT<GraphT>> hyperedgeIdxToNode;
 
-    for (const auto &u : graph.vertices()) {
-        if (graph.out_degree(u) > 0) {
-            hyperedge_idx_to_node.push_back(u);
-            num_hyperedges++;
-            num_pins += (graph.out_degree(u) + 1);
+    for (const auto &u : graph.Vertices()) {
+        if (graph.OutDegree(u) > 0) {
+            hyperedgeIdxToNode.push_back(u);
+            numHyperedges++;
+            numPins += (graph.OutDegree(u) + 1);
         }
     }
 
     // Header
     os << "%% HyperdagDB format written by OneStopParallel\n";
-    os << num_hyperedges << " " << num_vertices << " " << num_pins << "\n";
+    os << numHyperedges << " " << numVertices << " " << numPins << "\n";
 
     // Hyperedges
-    if (write_comment_lines) {
+    if (writeCommentLines) {
         os << "%% Hyperedges: ID comm_weight mem_weight\n";
     }
-    for (unsigned i = 0; i < num_hyperedges; ++i) {
-        const auto u = hyperedge_idx_to_node[i];
-        os << i << " " << graph.vertex_comm_weight(u) << " " << graph.vertex_mem_weight(u) << "\n";
+    for (unsigned i = 0; i < numHyperedges; ++i) {
+        const auto u = hyperedgeIdxToNode[i];
+        os << i << " " << graph.VertexCommWeight(u) << " " << graph.VertexMemWeight(u) << "\n";
     }
 
     // Vertices
-    if (write_comment_lines) {
+    if (writeCommentLines) {
         os << "%% Vertices: ID work_weight type\n";
     }
-    for (const auto &u : graph.vertices()) {
-        os << u << " " << graph.vertex_work_weight(u);
-        if constexpr (has_typed_vertices_v<Graph_t>) {
-            os << " " << graph.vertex_type(u);
+    for (const auto &u : graph.Vertices()) {
+        os << u << " " << graph.VertexWorkWeight(u);
+        if constexpr (hasTypedVerticesV<GraphT>) {
+            os << " " << graph.VertexType(u);
         } else {
             os << " " << 0;
         }
@@ -83,13 +83,13 @@ void writeComputationalDagHyperdagFormatDB(std::ostream &os, const Graph_t &grap
     }
 
     // Pins
-    if (write_comment_lines) {
+    if (writeCommentLines) {
         os << "%% Pins: HyperedgeID NodeID\n";
     }
-    for (unsigned i = 0; i < num_hyperedges; ++i) {
-        const auto u = hyperedge_idx_to_node[i];
+    for (unsigned i = 0; i < numHyperedges; ++i) {
+        const auto u = hyperedgeIdxToNode[i];
         os << i << " " << u << "\n";    // Source pin
-        for (const auto &v : graph.children(u)) {
+        for (const auto &v : graph.Children(u)) {
             os << i << " " << v << "\n";    // Target pins
         }
     }
@@ -98,21 +98,19 @@ void writeComputationalDagHyperdagFormatDB(std::ostream &os, const Graph_t &grap
 /**
  * @brief Writes a computational DAG to a file in the HyperdagDB format.
  *
- * @tparam Graph_t The type of the graph, which must satisfy the ComputationalDag concept.
+ * @tparam GraphT The type of the graph, which must satisfy the ComputationalDag concept.
  * @param filename The path to the output file.
  * @param graph The computational DAG to write.
  * @return true if writing was successful, false otherwise.
  */
-template <typename Graph_t>
-bool writeComputationalDagHyperdagFormatDB(const std::string &filename,
-                                           const Graph_t &graph,
-                                           const bool write_comment_lines = false) {
+template <typename GraphT>
+bool WriteComputationalDagHyperdagFormatDb(const std::string &filename, const GraphT &graph, const bool writeCommentLines = false) {
     std::ofstream os(filename);
     if (!os.is_open()) {
         std::cerr << "Error: Failed to open file for writing: " << filename << "\n";
         return false;
     }
-    writeComputationalDagHyperdagFormatDB(os, graph, write_comment_lines);
+    WriteComputationalDagHyperdagFormatDb(os, graph, writeCommentLines);
     return true;
 }
 

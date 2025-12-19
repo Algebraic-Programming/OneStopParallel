@@ -34,126 +34,126 @@ namespace osp {
  * smallest number of supersteps.
  *
  */
-template <typename Graph_t>
-class Serial : public Scheduler<Graph_t> {
+template <typename GraphT>
+class Serial : public Scheduler<GraphT> {
   public:
     /**
      * @brief Default constructor for Serial.
      */
-    Serial() : Scheduler<Graph_t>() {}
+    Serial() : Scheduler<GraphT>() {}
 
     /**
      * @brief Default destructor for Serial.
      */
     ~Serial() override = default;
 
-    RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &schedule) override {
-        const auto &instance = schedule.getInstance();
-        const auto &dag = instance.getComputationalDag();
-        const auto num_vertices = dag.num_vertices();
+    ReturnStatus ComputeSchedule(BspSchedule<GraphT> &schedule) override {
+        const auto &instance = schedule.GetInstance();
+        const auto &dag = instance.GetComputationalDag();
+        const auto numVertices = dag.NumVertices();
 
-        if (num_vertices == 0) {
-            return RETURN_STATUS::OSP_SUCCESS;
+        if (numVertices == 0) {
+            return ReturnStatus::OSP_SUCCESS;
         }
 
-        const auto &arch = instance.getArchitecture();
+        const auto &arch = instance.GetArchitecture();
 
         // Select one processor of each type
-        std::vector<unsigned> chosen_procs;
-        if (arch.getNumberOfProcessorTypes() > 0) {
-            std::vector<bool> type_seen(arch.getNumberOfProcessorTypes(), false);
-            for (unsigned p = 0; p < arch.numberOfProcessors(); ++p) {
-                if (!type_seen[arch.processorType(p)]) {
-                    chosen_procs.push_back(p);
-                    type_seen[arch.processorType(p)] = true;
+        std::vector<unsigned> chosenProcs;
+        if (arch.GetNumberOfProcessorTypes() > 0) {
+            std::vector<bool> typeSeen(arch.GetNumberOfProcessorTypes(), false);
+            for (unsigned p = 0; p < arch.NumberOfProcessors(); ++p) {
+                if (!typeSeen[arch.ProcessorType(p)]) {
+                    chosenProcs.push_back(p);
+                    typeSeen[arch.ProcessorType(p)] = true;
                 }
             }
         }
 
-        if (chosen_procs.empty()) {
-            return RETURN_STATUS::ERROR;
+        if (chosenProcs.empty()) {
+            return ReturnStatus::ERROR;
         }
 
-        const unsigned num_node_types = dag.num_vertex_types();
-        std::vector<std::vector<unsigned>> node_type_compatible_processors(num_node_types);
+        const unsigned numNodeTypes = dag.NumVertexTypes();
+        std::vector<std::vector<unsigned>> nodeTypeCompatibleProcessors(numNodeTypes);
 
-        for (v_type_t<Graph_t> type = 0; type < num_node_types; ++type) {
-            for (const auto &p : chosen_procs) {
-                if (instance.isCompatibleType(type, instance.processorType(p))) {
-                    node_type_compatible_processors[type].push_back(p);
+        for (VTypeT<GraphT> type = 0; type < numNodeTypes; ++type) {
+            for (const auto &p : chosenProcs) {
+                if (instance.IsCompatibleType(type, instance.ProcessorType(p))) {
+                    nodeTypeCompatibleProcessors[type].push_back(p);
                 }
             }
         }
 
-        std::vector<vertex_idx_t<Graph_t>> in_degree(num_vertices);
-        std::deque<vertex_idx_t<Graph_t>> ready_nodes;
-        std::deque<vertex_idx_t<Graph_t>> deferred_nodes;
+        std::vector<VertexIdxT<GraphT>> inDegree(numVertices);
+        std::deque<VertexIdxT<GraphT>> readyNodes;
+        std::deque<VertexIdxT<GraphT>> deferredNodes;
 
-        for (const auto &v : dag.vertices()) {
-            schedule.setAssignedProcessor(v, std::numeric_limits<unsigned>::max());
-            schedule.setAssignedSuperstep(v, std::numeric_limits<unsigned>::max());
-            in_degree[v] = dag.in_degree(v);
-            if (in_degree[v] == 0) {
-                ready_nodes.push_back(v);
+        for (const auto &v : dag.Vertices()) {
+            schedule.SetAssignedProcessor(v, std::numeric_limits<unsigned>::max());
+            schedule.SetAssignedSuperstep(v, std::numeric_limits<unsigned>::max());
+            inDegree[v] = dag.InDegree(v);
+            if (inDegree[v] == 0) {
+                readyNodes.push_back(v);
             }
         }
 
-        vertex_idx_t<Graph_t> scheduled_nodes_count = 0;
-        unsigned current_superstep = 0;
+        VertexIdxT<GraphT> scheduledNodesCount = 0;
+        unsigned currentSuperstep = 0;
 
-        while (scheduled_nodes_count < num_vertices) {
-            while (not ready_nodes.empty()) {
-                vertex_idx_t<Graph_t> v = ready_nodes.front();
-                ready_nodes.pop_front();
+        while (scheduledNodesCount < numVertices) {
+            while (not readyNodes.empty()) {
+                VertexIdxT<GraphT> v = readyNodes.front();
+                readyNodes.pop_front();
 
                 bool scheduled = false;
 
-                unsigned v_type = 0;
-                if constexpr (has_typed_vertices_v<Graph_t>) {
-                    v_type = dag.vertex_type(v);
+                unsigned vType = 0;
+                if constexpr (hasTypedVerticesV<GraphT>) {
+                    vType = dag.VertexType(v);
                 }
 
-                for (const auto &p : node_type_compatible_processors[v_type]) {
-                    bool parents_compatible = true;
-                    for (const auto &parent : dag.parents(v)) {
-                        if (schedule.assignedSuperstep(parent) == current_superstep && schedule.assignedProcessor(parent) != p) {
-                            parents_compatible = false;
+                for (const auto &p : nodeTypeCompatibleProcessors[vType]) {
+                    bool parentsCompatible = true;
+                    for (const auto &parent : dag.Parents(v)) {
+                        if (schedule.AssignedSuperstep(parent) == currentSuperstep && schedule.AssignedProcessor(parent) != p) {
+                            parentsCompatible = false;
                             break;
                         }
                     }
 
-                    if (parents_compatible) {
-                        schedule.setAssignedProcessor(v, p);
-                        schedule.setAssignedSuperstep(v, current_superstep);
+                    if (parentsCompatible) {
+                        schedule.SetAssignedProcessor(v, p);
+                        schedule.SetAssignedSuperstep(v, currentSuperstep);
                         scheduled = true;
-                        ++scheduled_nodes_count;
+                        ++scheduledNodesCount;
                         break;
                     }
                 }
 
                 if (not scheduled) {
-                    deferred_nodes.push_back(v);
+                    deferredNodes.push_back(v);
                 } else {
-                    for (const auto &child : dag.children(v)) {
-                        if (--in_degree[child] == 0) {
-                            ready_nodes.push_back(child);
+                    for (const auto &child : dag.Children(v)) {
+                        if (--inDegree[child] == 0) {
+                            readyNodes.push_back(child);
                         }
                     }
                 }
             }
 
-            if (scheduled_nodes_count < num_vertices) {
-                current_superstep++;
-                ready_nodes.insert(ready_nodes.end(), deferred_nodes.begin(), deferred_nodes.end());
-                deferred_nodes.clear();
+            if (scheduledNodesCount < numVertices) {
+                currentSuperstep++;
+                readyNodes.insert(readyNodes.end(), deferredNodes.begin(), deferredNodes.end());
+                deferredNodes.clear();
             }
         }
 
-        schedule.setNumberOfSupersteps(current_superstep + 1);
-        return RETURN_STATUS::OSP_SUCCESS;
+        schedule.SetNumberOfSupersteps(currentSuperstep + 1);
+        return ReturnStatus::OSP_SUCCESS;
     }
 
-    std::string getScheduleName() const override { return "Serial"; }
+    std::string GetScheduleName() const override { return "Serial"; }
 };
 
 }    // namespace osp

@@ -31,10 +31,10 @@ namespace osp {
  * @tparam from_t The original type of elements in the vector.
  * @tparam to_t The target type to cast elements to.
  */
-template <typename from_t, typename to_t>
-class vector_cast_view {
-    using iter = typename std::vector<from_t>::const_iterator;
-    const std::vector<from_t> &vec;
+template <typename FromT, typename ToT>
+class VectorCastView {
+    using Iter = typename std::vector<FromT>::const_iterator;
+    const std::vector<FromT> &vec_;
 
     /**
      * @brief Iterator for vector_cast_view.
@@ -42,70 +42,70 @@ class vector_cast_view {
      * This iterator wraps the underlying vector iterator and performs a static_cast
      * on dereference. It satisfies the RandomAccessIterator concept.
      */
-    struct cast_iterator {
+    struct CastIterator {
         using iterator_category = std::random_access_iterator_tag;
-        using value_type = to_t;
+        using value_type = ToT;
         using difference_type = std::ptrdiff_t;
         using pointer = const value_type *;
         using reference = const value_type &;
 
-        iter current_edge;
+        Iter currentEdge_;
 
-        cast_iterator() = default;
+        CastIterator() = default;
 
-        explicit cast_iterator(iter current_edge_) : current_edge(current_edge_) {}
+        explicit CastIterator(Iter currentEdge) : currentEdge_(currentEdge) {}
 
-        value_type operator*() const { return static_cast<to_t>(*current_edge); }
+        value_type operator*() const { return static_cast<ToT>(*currentEdge_); }
 
-        cast_iterator &operator++() {
-            ++current_edge;
+        CastIterator &operator++() {
+            ++currentEdge_;
             return *this;
         }
 
-        cast_iterator operator++(int) {
-            cast_iterator tmp = *this;
+        CastIterator operator++(int) {
+            CastIterator tmp = *this;
             ++(*this);
             return tmp;
         }
 
-        cast_iterator &operator--() {
-            --current_edge;
+        CastIterator &operator--() {
+            --currentEdge_;
             return *this;
         }
 
-        cast_iterator operator--(int) {
-            cast_iterator tmp = *this;
+        CastIterator operator--(int) {
+            CastIterator tmp = *this;
             --(*this);
             return tmp;
         }
 
-        cast_iterator &operator+=(difference_type n) {
-            current_edge += n;
+        CastIterator &operator+=(difference_type n) {
+            currentEdge_ += n;
             return *this;
         }
 
-        cast_iterator &operator-=(difference_type n) {
-            current_edge -= n;
+        CastIterator &operator-=(difference_type n) {
+            currentEdge_ -= n;
             return *this;
         }
 
-        cast_iterator operator+(difference_type n) const { return cast_iterator(current_edge + n); }
+        CastIterator operator+(difference_type n) const { return CastIterator(currentEdge_ + n); }
 
-        cast_iterator operator-(difference_type n) const { return cast_iterator(current_edge - n); }
+        CastIterator operator-(difference_type n) const { return CastIterator(currentEdge_ - n); }
 
-        difference_type operator-(const cast_iterator &other) const { return current_edge - other.current_edge; }
+        difference_type operator-(const CastIterator &other) const { return currentEdge_ - other.currentEdge_; }
 
-        bool operator==(const cast_iterator &other) const { return current_edge == other.current_edge; }
+        bool operator==(const CastIterator &other) const { return currentEdge_ == other.currentEdge_; }
 
-        bool operator!=(const cast_iterator &other) const { return current_edge != other.current_edge; }
+        bool operator!=(const CastIterator &other) const { return currentEdge_ != other.currentEdge_; }
 
-        bool operator<(const cast_iterator &other) const { return current_edge < other.current_edge; }
+        bool operator<(const CastIterator &other) const { return currentEdge_ < other.currentEdge_; }
 
-        bool operator>(const cast_iterator &other) const { return current_edge > other.current_edge; }
+        bool operator>(const CastIterator &other) const { return currentEdge_ > other.currentEdge_; }
 
-        bool operator<=(const cast_iterator &other) const { return current_edge <= other.current_edge; }
+        bool operator<=(const CastIterator &other) const { return currentEdge_ <= other.currentEdge_; }
 
-        bool operator>=(const cast_iterator &other) const { return current_edge >= other.current_edge; }
+        bool operator>=(const CastIterator &other) const { return currentEdge_ >= other.currentEdge_; }
     };
 
   public:
@@ -115,38 +115,38 @@ class vector_cast_view {
      * @param vec_ The vector to view. The view holds a reference to this vector,
      *             so the vector must outlive the view.
      */
-    explicit vector_cast_view(const std::vector<from_t> &vec_) : vec(vec_) {}
+    explicit VectorCastView(const std::vector<FromT> &vec) : vec_(vec) {}
 
     /**
      * @brief Returns an iterator to the beginning of the view.
      * @return An iterator to the first element.
      */
-    [[nodiscard]] auto begin() const { return cast_iterator(vec.begin()); }
+    [[nodiscard]] auto begin() const { return CastIterator(vec_.begin()); }
 
     /**
      * @brief Returns an iterator to the end of the view.
      * @return An iterator to the element following the last element.
      */
-    [[nodiscard]] auto end() const { return cast_iterator(vec.end()); }
+    [[nodiscard]] auto end() const { return CastIterator(vec_.end()); }
 
     /**
      * @brief Returns the number of elements in the view.
      * @return The number of elements.
      */
-    [[nodiscard]] auto size() const { return vec.size(); }
+    [[nodiscard]] auto size() const { return vec_.size(); }
 
     /**
      * @brief Checks if the view is empty.
      * @return True if the view is empty, false otherwise.
      */
-    [[nodiscard]] bool empty() const { return vec.empty(); }
+    [[nodiscard]] bool empty() const { return vec_.empty(); }
 
     /**
      * @brief Accesses the element at the specified index.
      * @param i The index of the element to access.
      * @return The element at index i, cast to to_t.
      */
-    [[nodiscard]] auto operator[](std::size_t i) const { return static_cast<to_t>(vec[i]); }
+    [[nodiscard]] auto operator[](std::size_t i) const { return static_cast<ToT>(vec_[i]); }
 };
 
 }    // namespace osp

@@ -24,82 +24,86 @@ limitations under the License.
 
 namespace osp {
 
-template <typename Graph_t, typename Graph_t_coarse>
-class SquashAMul : public MultilevelCoarser<Graph_t, Graph_t_coarse> {
+template <typename GraphT, typename GraphTCoarse>
+class SquashAMul : public MultilevelCoarser<GraphT, GraphTCoarse> {
   private:
-    vertex_idx_t<Graph_t> min_nodes{1};
-    Thue_Morse_Sequence thue_coin{};
-    Biased_Random balanced_random{};
+    VertexIdxT<GraphT> minNodes_{1};
+    ThueMorseSequence thueCoin_{};
+    BiasedRandom balancedRandom_{};
 
     // Coarser Params
-    SquashAParams::Parameters params;
+    squash_a_params::Parameters params_;
     // Initial coarser
-    SquashA<Graph_t, Graph_t_coarse> coarser_initial;
+    SquashA<GraphT, GraphTCoarse> coarserInitial_;
     // Subsequent coarser
-    SquashA<Graph_t_coarse, Graph_t_coarse> coarser_secondary;
+    SquashA<GraphTCoarse, GraphTCoarse> coarserSecondary_;
 
-    void updateParams();
+    void UpdateParams();
 
-    RETURN_STATUS run_contractions() override;
+    ReturnStatus RunContractions() override;
 
   public:
-    void setParams(SquashAParams::Parameters params_) { params = params_; };
+    void SetParams(squash_a_params::Parameters params) { params_ = params; };
 
-    void setMinimumNumberVertices(vertex_idx_t<Graph_t> num) { min_nodes = num; };
+    void SetMinimumNumberVertices(VertexIdxT<GraphT> num) { minNodes_ = num; };
 
-    std::string getCoarserName() const { return "SquashA"; };
+    std::string GetCoarserName() const override { return "SquashA"; };
 };
 
-template <typename Graph_t, typename Graph_t_coarse>
-void SquashAMul<Graph_t, Graph_t_coarse>::updateParams() {
-    params.use_structured_poset = thue_coin.get_flip();
-    params.use_top_poset = balanced_random.get_flip();
+template <typename GraphT, typename GraphTCoarse>
+void SquashAMul<GraphT, GraphTCoarse>::UpdateParams() {
+    params_.useStructuredPoset_ = thueCoin_.GetFlip();
+    params_.useTopPoset_ = balancedRandom_.GetFlip();
 
-    coarser_initial.setParams(params);
-    coarser_secondary.setParams(params);
+    coarserInitial_.SetParams(params_);
+    coarserSecondary_.SetParams(params_);
 }
 
-template <typename Graph_t, typename Graph_t_coarse>
-RETURN_STATUS SquashAMul<Graph_t, Graph_t_coarse>::run_contractions() {
-    RETURN_STATUS status = RETURN_STATUS::OSP_SUCCESS;
+template <typename GraphT, typename GraphTCoarse>
+ReturnStatus SquashAMul<GraphT, GraphTCoarse>::RunContractions() {
+    ReturnStatus status = ReturnStatus::OSP_SUCCESS;
 
-    Biased_Random_with_side_bias coin(params.edge_sort_ratio);
+    BiasedRandomWithSideBias coin(params_.edgeSortRatio_);
 
-    bool first_coarsen = true;
-    unsigned no_change_in_a_row = 0;
-    vertex_idx_t<Graph_t> current_num_vertices = MultilevelCoarser<Graph_t, Graph_t_coarse>::getOriginalGraph()->num_vertices();
+    bool firstCoarsen = true;
+    unsigned noChangeInARow = 0;
+    VertexIdxT<GraphT> currentNumVertices;
+    if (MultilevelCoarser<GraphT, GraphTCoarse>::GetOriginalGraph()) {
+        currentNumVertices = MultilevelCoarser<GraphT, GraphTCoarse>::GetOriginalGraph()->NumVertices();
+    } else {
+        return ReturnStatus::ERROR;
+    }
 
-    while (no_change_in_a_row < params.num_rep_without_node_decrease && current_num_vertices > min_nodes) {
-        updateParams();
+    while (noChangeInARow < params_.numRepWithoutNodeDecrease_ && currentNumVertices > minNodes_) {
+        UpdateParams();
 
-        Graph_t_coarse coarsened_dag;
-        std::vector<vertex_idx_t<Graph_t_coarse>> contraction_map;
-        bool coarsen_success;
+        GraphTCoarse coarsenedDag;
+        std::vector<VertexIdxT<GraphTCoarse>> contractionMap;
+        bool coarsenSuccess;
 
-        if (first_coarsen) {
-            coarsen_success = coarser_initial.coarsenDag(
-                *(MultilevelCoarser<Graph_t, Graph_t_coarse>::getOriginalGraph()), coarsened_dag, contraction_map);
-            first_coarsen = false;
+        if (firstCoarsen) {
+            coarsenSuccess = coarserInitial_.CoarsenDag(
+                *(MultilevelCoarser<GraphT, GraphTCoarse>::GetOriginalGraph()), coarsenedDag, contractionMap);
+            firstCoarsen = false;
         } else {
-            coarsen_success = coarser_secondary.coarsenDag(
-                *(MultilevelCoarser<Graph_t, Graph_t_coarse>::dag_history.back()), coarsened_dag, contraction_map);
+            coarsenSuccess = coarserSecondary_.CoarsenDag(
+                *(MultilevelCoarser<GraphT, GraphTCoarse>::dagHistory_.back()), coarsenedDag, contractionMap);
         }
 
-        if (!coarsen_success) {
-            status = RETURN_STATUS::ERROR;
+        if (!coarsenSuccess) {
+            status = ReturnStatus::ERROR;
         }
 
         status = std::max(
-            status,
-            MultilevelCoarser<Graph_t, Graph_t_coarse>::add_contraction(std::move(contraction_map), std::move(coarsened_dag)));
+            status, MultilevelCoarser<GraphT, GraphTCoarse>::AddContraction(std::move(contractionMap), std::move(coarsenedDag)));
 
-        vertex_idx_t<Graph_t> new_num_vertices = MultilevelCoarser<Graph_t, Graph_t_coarse>::dag_history.back()->num_vertices();
+        VertexIdxT<GraphT> newNumVertices = MultilevelCoarser<GraphT, GraphTCoarse>::dagHistory_.back()->NumVertices();
 
-        if (new_num_vertices == current_num_vertices) {
-            no_change_in_a_row++;
+        if (newNumVertices == currentNumVertices) {
+            noChangeInARow++;
         } else {
-            no_change_in_a_row = 0;
-            current_num_vertices = new_num_vertices;
+            noChangeInARow = 0;
+            currentNumVertices = newNumVertices;
         }
     }
 

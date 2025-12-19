@@ -31,14 +31,14 @@ limitations under the License.
 
 namespace osp {
 
-template <typename Graph_t>
-class MaxBspScheduleCS : public BspScheduleCS<Graph_t> {
-    static_assert(is_computational_dag_v<Graph_t>, "BspSchedule can only be used with computational DAGs.");
-    static_assert(std::is_same_v<v_workw_t<Graph_t>, v_commw_t<Graph_t>>,
+template <typename GraphT>
+class MaxBspScheduleCS : public BspScheduleCS<GraphT> {
+    static_assert(isComputationalDagV<GraphT>, "BspSchedule can only be used with computational DAGs.");
+    static_assert(std::is_same_v<VWorkwT<GraphT>, VCommwT<GraphT>>,
                   "BspSchedule requires work and comm. weights to have the same type.");
 
   protected:
-    using vertex_idx = vertex_idx_t<Graph_t>;
+    using VertexIdx = VertexIdxT<GraphT>;
 
   public:
     MaxBspScheduleCS() = delete;
@@ -48,7 +48,7 @@ class MaxBspScheduleCS : public BspScheduleCS<Graph_t> {
      *
      * @param inst The BspInstance for the schedule.
      */
-    MaxBspScheduleCS(const BspInstance<Graph_t> &inst) : BspScheduleCS<Graph_t>(inst) {}
+    MaxBspScheduleCS(const BspInstance<GraphT> &inst) : BspScheduleCS<GraphT>(inst) {}
 
     /**
      * @brief Constructs a BspSchedule object with the specified BspInstance, processor assignment, and superstep
@@ -58,62 +58,62 @@ class MaxBspScheduleCS : public BspScheduleCS<Graph_t> {
      * @param processor_assignment_ The processor assignment for the nodes.
      * @param superstep_assignment_ The superstep assignment for the nodes.
      */
-    MaxBspScheduleCS(const BspInstance<Graph_t> &inst,
-                     const std::vector<unsigned> &processor_assignment_,
-                     const std::vector<unsigned> &superstep_assignment_)
-        : BspScheduleCS<Graph_t>(inst, processor_assignment_, superstep_assignment_) {}
+    MaxBspScheduleCS(const BspInstance<GraphT> &inst,
+                     const std::vector<unsigned> &processorAssignment,
+                     const std::vector<unsigned> &superstepAssignment)
+        : BspScheduleCS<GraphT>(inst, processorAssignment, superstepAssignment) {}
 
-    MaxBspScheduleCS(const BspScheduleCS<Graph_t> &schedule) : BspScheduleCS<Graph_t>(schedule) {}
+    MaxBspScheduleCS(const BspScheduleCS<GraphT> &schedule) : BspScheduleCS<GraphT>(schedule) {}
 
-    MaxBspScheduleCS(BspScheduleCS<Graph_t> &&schedule) : BspScheduleCS<Graph_t>(std::move(schedule)) {}
+    MaxBspScheduleCS(BspScheduleCS<GraphT> &&schedule) : BspScheduleCS<GraphT>(std::move(schedule)) {}
 
-    MaxBspScheduleCS(const MaxBspSchedule<Graph_t> &schedule) : BspScheduleCS<Graph_t>(schedule) {
-        this->setAutoCommunicationSchedule();
+    MaxBspScheduleCS(const MaxBspSchedule<GraphT> &schedule) : BspScheduleCS<GraphT>(schedule) {
+        this->SetAutoCommunicationSchedule();
     }
 
-    MaxBspScheduleCS(MaxBspSchedule<Graph_t> &&schedule) : BspScheduleCS<Graph_t>(std::move(schedule)) {
-        this->setAutoCommunicationSchedule();
+    MaxBspScheduleCS(MaxBspSchedule<GraphT> &&schedule) : BspScheduleCS<GraphT>(std::move(schedule)) {
+        this->SetAutoCommunicationSchedule();
     }
 
-    MaxBspScheduleCS(const MaxBspScheduleCS<Graph_t> &schedule) = default;
-    MaxBspScheduleCS(MaxBspScheduleCS<Graph_t> &&schedule) = default;
+    MaxBspScheduleCS(const MaxBspScheduleCS<GraphT> &schedule) = default;
+    MaxBspScheduleCS(MaxBspScheduleCS<GraphT> &&schedule) = default;
 
-    MaxBspScheduleCS<Graph_t> &operator=(const MaxBspScheduleCS<Graph_t> &schedule) = default;
-    MaxBspScheduleCS<Graph_t> &operator=(MaxBspScheduleCS<Graph_t> &&schedule) = default;
+    MaxBspScheduleCS<GraphT> &operator=(const MaxBspScheduleCS<GraphT> &schedule) = default;
+    MaxBspScheduleCS<GraphT> &operator=(MaxBspScheduleCS<GraphT> &&schedule) = default;
 
-    template <typename Graph_t_other>
-    MaxBspScheduleCS(const BspInstance<Graph_t> &instance_, const MaxBspScheduleCS<Graph_t_other> &schedule)
-        : BspScheduleCS<Graph_t>(instance_, schedule) {}
+    template <typename GraphTOther>
+    MaxBspScheduleCS(const BspInstance<GraphT> &instance, const MaxBspScheduleCS<GraphTOther> &schedule)
+        : BspScheduleCS<GraphT>(instance, schedule) {}
 
     /**
      * @brief Destructor for the BspSchedule class.
      */
     virtual ~MaxBspScheduleCS() = default;
 
-    virtual v_workw_t<Graph_t> computeCosts() const override {
-        std::vector<std::vector<v_commw_t<Graph_t>>> rec(this->getInstance().numberOfProcessors(),
-                                                         std::vector<v_commw_t<Graph_t>>(this->number_of_supersteps, 0));
+    virtual VWorkwT<GraphT> ComputeCosts() const override {
+        std::vector<std::vector<VCommwT<GraphT>>> rec(this->instance_->NumberOfProcessors(),
+                                                      std::vector<VCommwT<GraphT>>(this->NumberOfSupersteps(), 0));
 
-        std::vector<std::vector<v_commw_t<Graph_t>>> send(this->getInstance().numberOfProcessors(),
-                                                          std::vector<v_commw_t<Graph_t>>(this->number_of_supersteps, 0));
+        std::vector<std::vector<VCommwT<GraphT>>> send(this->instance_->NumberOfProcessors(),
+                                                       std::vector<VCommwT<GraphT>>(this->NumberOfSupersteps(), 0));
 
-        this->compute_cs_communication_costs_helper(rec, send);
-        const std::vector<v_commw_t<Graph_t>> max_comm_per_step = cost_helpers::compute_max_comm_per_step(*this, rec, send);
-        const std::vector<v_workw_t<Graph_t>> max_work_per_step = cost_helpers::compute_max_work_per_step(*this);
+        this->ComputeCsCommunicationCostsHelper(rec, send);
+        const std::vector<VCommwT<GraphT>> maxCommPerStep = cost_helpers::ComputeMaxCommPerStep(*this, rec, send);
+        const std::vector<VWorkwT<GraphT>> maxWorkPerStep = cost_helpers::ComputeMaxWorkPerStep(*this);
 
-        v_workw_t<Graph_t> costs = 0U;
-        for (unsigned step = 0U; step < this->number_of_supersteps; step++) {
-            const auto step_comm_cost = (step == 0U) ? static_cast<v_commw_t<Graph_t>>(0) : max_comm_per_step[step - 1U];
-            costs += std::max(step_comm_cost, max_work_per_step[step]);
+        VWorkwT<GraphT> costs = 0U;
+        for (unsigned step = 0U; step < this->NumberOfSupersteps(); step++) {
+            const auto stepCommCost = (step == 0U) ? static_cast<VCommwT<GraphT>>(0) : maxCommPerStep[step - 1U];
+            costs += std::max(stepCommCost, maxWorkPerStep[step]);
 
-            if (step_comm_cost > static_cast<v_commw_t<Graph_t>>(0)) {
-                costs += this->instance->synchronisationCosts();
+            if (stepCommCost > static_cast<VCommwT<GraphT>>(0)) {
+                costs += this->instance_->SynchronisationCosts();
             }
         }
         return costs;
     }
 
-    unsigned virtual getStaleness() const override { return 2; }
+    unsigned virtual GetStaleness() const override { return 2; }
 };
 
 }    // namespace osp

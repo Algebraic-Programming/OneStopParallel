@@ -27,14 +27,14 @@ limitations under the License.
 
 using namespace osp;
 
-using ComputationalDag = computational_dag_edge_idx_vector_impl_def_int_t;
+using ComputationalDag = ComputationalDagEdgeIdxVectorImplDefIntT;
 
-void print_usage(const char *prog_name) {
+void PrintUsage(const char *progName) {
     std::cerr << "Graph Format Converter" << std::endl;
     std::cerr << "----------------------" << std::endl;
     std::cerr << "This tool converts a directed graph from one file format to another. The desired output" << std::endl;
     std::cerr << "format is determined by the file extension of the output file." << std::endl << std::endl;
-    std::cerr << "Usage: " << prog_name << " <input_file> <output_file>" << std::endl << std::endl;
+    std::cerr << "Usage: " << progName << " <input_file> <output_file>" << std::endl << std::endl;
     std::cerr << "Arguments:" << std::endl;
     std::cerr << "  <input_file>   Path to the input graph file." << std::endl << std::endl;
     std::cerr << "  <output_file>  Path for the output graph file. Special values of '.dot' or '.hdag' can be" << std::endl;
@@ -47,71 +47,71 @@ void print_usage(const char *prog_name) {
     std::cerr << "The .hdag format is the HyperdagDB format. A detailed description can be found at:" << std::endl;
     std::cerr << "https://github.com/Algebraic-Programming/HyperDAG_DB" << std::endl << std::endl;
     std::cerr << "Examples:" << std::endl;
-    std::cerr << "  " << prog_name << " my_graph.mtx my_graph.hdag" << std::endl;
-    std::cerr << "  " << prog_name << " my_graph.hdag my_graph.dot" << std::endl;
-    std::cerr << "  " << prog_name << " my_graph.mtx .dot           # Creates my_graph.dot" << std::endl;
-    std::cerr << "  " << prog_name << " my_graph.dot .hdag          # Creates my_graph.hdag" << std::endl;
+    std::cerr << "  " << progName << " my_graph.mtx my_graph.hdag" << std::endl;
+    std::cerr << "  " << progName << " my_graph.hdag my_graph.dot" << std::endl;
+    std::cerr << "  " << progName << " my_graph.mtx .dot           # Creates my_graph.dot" << std::endl;
+    std::cerr << "  " << progName << " my_graph.dot .hdag          # Creates my_graph.hdag" << std::endl;
 }
 
 int main(int argc, char *argv[]) {
     if (argc != 3) {
-        print_usage(argv[0]);
+        PrintUsage(argv[0]);
         return 1;
     }
 
-    std::string input_filename = argv[1];
-    std::string output_filename_arg = argv[2];
+    std::string inputFilename = argv[1];
+    std::string outputFilenameArg = argv[2];
 
-    std::filesystem::path input_path(input_filename);
-    std::string input_ext = input_path.extension().string();
-    std::string output_filename;
+    std::filesystem::path inputPath(inputFilename);
+    std::string inputExt = inputPath.extension().string();
+    std::string outputFilename;
 
-    if (output_filename_arg == ".dot") {
-        if (input_ext == ".dot") {
+    if (outputFilenameArg == ".dot") {
+        if (inputExt == ".dot") {
             std::cerr << "Error: Input file is already a .dot file. Cannot use '.dot' as the output file argument in "
                          "this case."
                       << std::endl;
             return 1;
         }
-        output_filename = std::filesystem::path(input_filename).replace_extension(".dot").string();
-    } else if (output_filename_arg == ".hdag") {
-        if (input_ext == ".hdag") {
+        outputFilename = std::filesystem::path(inputFilename).replace_extension(".dot").string();
+    } else if (outputFilenameArg == ".hdag") {
+        if (inputExt == ".hdag") {
             std::cerr << "Error: Input file is already a .hdag file. Cannot use '.hdag' as the output file argument in "
                          "this case."
                       << std::endl;
             return 1;
         }
-        output_filename = std::filesystem::path(input_filename).replace_extension(".hdag").string();
+        outputFilename = std::filesystem::path(inputFilename).replace_extension(".hdag").string();
     } else {
-        output_filename = output_filename_arg;
+        outputFilename = outputFilenameArg;
     }
 
     ComputationalDag graph;
-    std::cout << "Attempting to read graph from " << input_filename << "..." << std::endl;
-    bool status = file_reader::readGraph(input_filename, graph);
+    std::cout << "Attempting to read graph from " << inputFilename << "..." << std::endl;
+    bool status = file_reader::ReadGraph(inputFilename, graph);
     if (!status) {
         std::cout << "Failed to read graph\n";
         return 1;
     }
 
-    std::cout << "Successfully read graph with " << graph.num_vertices() << " vertices and " << graph.num_edges() << " edges."
+    std::cout << "Successfully read graph with " << graph.NumVertices() << " vertices and " << graph.NumEdges() << " edges."
               << std::endl;
 
-    std::filesystem::path output_path(output_filename);
-    std::string output_ext = output_path.extension().string();
+    std::filesystem::path outputPath(outputFilename);
+    std::string outputExt = outputPath.extension().string();
 
-    if (output_ext == ".dot") {
+    if (outputExt == ".dot") {
         DotFileWriter writer;
-        writer.write_graph(output_filename, graph);
-    } else if (output_ext == ".hdag") {
-        file_writer::writeComputationalDagHyperdagFormatDB(output_filename, graph);
+        writer.WriteGraph(outputFilename, graph);
+    } else if (outputExt == ".hdag") {
+        file_writer::WriteComputationalDagHyperdagFormatDb(outputFilename, graph);
     } else {
-        std::cerr << "Error: Unsupported output file format: " << output_ext << std::endl;
-        print_usage(argv[0]);
+        std::cerr << "Error: Unsupported output file format: " << outputExt << std::endl;
+        PrintUsage(argv[0]);
         return 1;
     }
 
-    std::cout << "Successfully wrote graph to " << output_filename << std::endl;
+    std::cout << "Successfully wrote graph to " << outputFilename << std::endl;
 
     return 0;
 }

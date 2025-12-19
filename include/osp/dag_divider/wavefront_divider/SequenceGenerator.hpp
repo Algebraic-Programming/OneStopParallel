@@ -30,53 +30,53 @@ enum class SequenceMetric { COMPONENT_COUNT, AVAILABLE_PARALLELISM };
  * @class SequenceGenerator
  * @brief Helper to generate a numerical sequence based on a chosen metric.
  */
-template <typename Graph_t>
+template <typename GraphT>
 class SequenceGenerator {
-    using VertexType = vertex_idx_t<Graph_t>;
+    using VertexType = VertexIdxT<GraphT>;
 
   public:
-    SequenceGenerator(const Graph_t &dag, const std::vector<std::vector<VertexType>> &level_sets)
-        : dag_(dag), level_sets_(level_sets) {}
+    SequenceGenerator(const GraphT &dag, const std::vector<std::vector<VertexType>> &levelSets)
+        : dag_(dag), levelSets_(levelSets) {}
 
-    std::vector<double> generate(SequenceMetric metric) const {
+    std::vector<double> Generate(SequenceMetric metric) const {
         switch (metric) {
             case SequenceMetric::AVAILABLE_PARALLELISM:
-                return generate_available_parallelism();
+                return GenerateAvailableParallelism();
             case SequenceMetric::COMPONENT_COUNT:
             default:
-                return generate_component_count();
+                return GenerateComponentCount();
         }
     }
 
   private:
-    std::vector<double> generate_component_count() const {
-        WavefrontStatisticsCollector<Graph_t> collector(dag_, level_sets_);
-        auto fwd_stats = collector.compute_forward();
+    std::vector<double> GenerateComponentCount() const {
+        WavefrontStatisticsCollector<GraphT> collector(dag_, levelSets_);
+        auto fwdStats = collector.ComputeForward();
         std::vector<double> seq;
-        seq.reserve(fwd_stats.size());
-        for (const auto &stat : fwd_stats) {
-            seq.push_back(static_cast<double>(stat.connected_components_vertices.size()));
+        seq.reserve(fwdStats.size());
+        for (const auto &stat : fwdStats) {
+            seq.push_back(static_cast<double>(stat.connectedComponentsVertices_.size()));
         }
         return seq;
     }
 
-    std::vector<double> generate_available_parallelism() const {
+    std::vector<double> GenerateAvailableParallelism() const {
         std::vector<double> seq;
-        seq.reserve(level_sets_.size());
-        double cumulative_work = 0.0;
-        for (size_t i = 0; i < level_sets_.size(); ++i) {
-            double level_work = 0.0;
-            for (const auto &vertex : level_sets_[i]) {
-                level_work += dag_.vertex_work_weight(vertex);
+        seq.reserve(levelSets_.size());
+        double cumulativeWork = 0.0;
+        for (size_t i = 0; i < levelSets_.size(); ++i) {
+            double levelWork = 0.0;
+            for (const auto &vertex : levelSets_[i]) {
+                levelWork += dag_.VertexWorkWeight(vertex);
             }
-            cumulative_work += level_work;
-            seq.push_back(cumulative_work / (static_cast<double>(i) + 1.0));
+            cumulativeWork += levelWork;
+            seq.push_back(cumulativeWork / (static_cast<double>(i) + 1.0));
         }
         return seq;
     }
 
-    const Graph_t &dag_;
-    const std::vector<std::vector<VertexType>> &level_sets_;
+    const GraphT &dag_;
+    const std::vector<std::vector<VertexType>> &levelSets_;
 };
 
 }    // end namespace osp

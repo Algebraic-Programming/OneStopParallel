@@ -27,50 +27,50 @@ limitations under the License.
 using namespace osp;
 using namespace osp::coarser_util;
 
-using GraphType = Compact_Sparse_Graph<true, true, true, true, true>;
+using GraphType = CompactSparseGraph<true, true, true, true, true>;
 
 BOOST_AUTO_TEST_CASE(ContractionMapValidity) {
-    const std::vector<vertex_idx_t<GraphType>> contractionmap1 = {0, 1, 2, 3};
-    BOOST_CHECK(check_valid_contraction_map<GraphType>(contractionmap1));
+    const std::vector<VertexIdxT<GraphType>> contractionmap1 = {0, 1, 2, 3};
+    BOOST_CHECK(CheckValidContractionMap<GraphType>(contractionmap1));
 
-    const std::vector<vertex_idx_t<GraphType>> contractionmap2 = {1, 2, 3};
-    BOOST_CHECK(not check_valid_contraction_map<GraphType>(contractionmap2));
+    const std::vector<VertexIdxT<GraphType>> contractionmap2 = {1, 2, 3};
+    BOOST_CHECK(not CheckValidContractionMap<GraphType>(contractionmap2));
 
-    const std::vector<vertex_idx_t<GraphType>> contractionmap3 = {0, 1, 3, 4};
-    BOOST_CHECK(not check_valid_contraction_map<GraphType>(contractionmap3));
+    const std::vector<VertexIdxT<GraphType>> contractionmap3 = {0, 1, 3, 4};
+    BOOST_CHECK(not CheckValidContractionMap<GraphType>(contractionmap3));
 
-    const std::vector<vertex_idx_t<GraphType>> contractionmap4 = {0, 1, 0, 1};
-    BOOST_CHECK(check_valid_contraction_map<GraphType>(contractionmap4));
+    const std::vector<VertexIdxT<GraphType>> contractionmap4 = {0, 1, 0, 1};
+    BOOST_CHECK(CheckValidContractionMap<GraphType>(contractionmap4));
 
-    const std::vector<vertex_idx_t<GraphType>> contractionmap5 = {2, 1, 2, 0, 1, 1};
-    BOOST_CHECK(check_valid_contraction_map<GraphType>(contractionmap5));
+    const std::vector<VertexIdxT<GraphType>> contractionmap5 = {2, 1, 2, 0, 1, 1};
+    BOOST_CHECK(CheckValidContractionMap<GraphType>(contractionmap5));
 }
 
 BOOST_AUTO_TEST_CASE(ExpansionMapValidity) {
-    const std::vector<std::vector<vertex_idx_t<GraphType>>> expansionmap1 = {{0}, {1}, {2}, {3}};
-    BOOST_CHECK(check_valid_expansion_map<GraphType>(expansionmap1));
+    const std::vector<std::vector<VertexIdxT<GraphType>>> expansionmap1 = {{0}, {1}, {2}, {3}};
+    BOOST_CHECK(CheckValidExpansionMap<GraphType>(expansionmap1));
 
-    const std::vector<std::vector<vertex_idx_t<GraphType>>> expansionmap2 = {{0}, {2}, {3}};
-    BOOST_CHECK(not check_valid_expansion_map<GraphType>(expansionmap2));
+    const std::vector<std::vector<VertexIdxT<GraphType>>> expansionmap2 = {{0}, {2}, {3}};
+    BOOST_CHECK(not CheckValidExpansionMap<GraphType>(expansionmap2));
 
-    const std::vector<std::vector<vertex_idx_t<GraphType>>> expansionmap3 = {
+    const std::vector<std::vector<VertexIdxT<GraphType>>> expansionmap3 = {
         {0, 3}
     };
-    BOOST_CHECK(not check_valid_expansion_map<GraphType>(expansionmap3));
+    BOOST_CHECK(not CheckValidExpansionMap<GraphType>(expansionmap3));
 
-    const std::vector<std::vector<vertex_idx_t<GraphType>>> expansionmap4 = {
+    const std::vector<std::vector<VertexIdxT<GraphType>>> expansionmap4 = {
         {0, 3},
         {2, 1, 4},
         {5}
     };
-    BOOST_CHECK(check_valid_expansion_map<GraphType>(expansionmap4));
+    BOOST_CHECK(CheckValidExpansionMap<GraphType>(expansionmap4));
 
-    const std::vector<std::vector<vertex_idx_t<GraphType>>> expansionmap5 = {{0}, {}, {2}, {3}, {1}};
-    BOOST_CHECK(not check_valid_expansion_map<GraphType>(expansionmap5));
+    const std::vector<std::vector<VertexIdxT<GraphType>>> expansionmap5 = {{0}, {}, {2}, {3}, {1}};
+    BOOST_CHECK(not CheckValidExpansionMap<GraphType>(expansionmap5));
 }
 
 BOOST_AUTO_TEST_CASE(ContractionMapCoarsening) {
-    std::set<std::pair<vertex_idx_t<GraphType>, vertex_idx_t<GraphType>>> edges({
+    std::set<std::pair<VertexIdxT<GraphType>, VertexIdxT<GraphType>>> edges({
         {0, 1},
         {1, 2}
     });
@@ -78,26 +78,26 @@ BOOST_AUTO_TEST_CASE(ContractionMapCoarsening) {
 
     GraphType coarseGraph1;
 
-    std::vector<vertex_idx_t<GraphType>> contractionMap({0, 0, 1, 1, 2, 3});
-    BOOST_CHECK(construct_coarse_dag(graph, coarseGraph1, contractionMap));
-    BOOST_CHECK(contractionMap == std::vector<vertex_idx_t<GraphType>>({0, 0, 1, 1, 2, 3}));
+    std::vector<VertexIdxT<GraphType>> contractionMap({0, 0, 1, 1, 2, 3});
+    BOOST_CHECK(ConstructCoarseDag(graph, coarseGraph1, contractionMap));
+    BOOST_CHECK(contractionMap == std::vector<VertexIdxT<GraphType>>({0, 0, 1, 1, 2, 3}));
 
-    BOOST_CHECK_EQUAL(coarseGraph1.num_vertices(), 4);
-    BOOST_CHECK_EQUAL(coarseGraph1.num_edges(), 1);
+    BOOST_CHECK_EQUAL(coarseGraph1.NumVertices(), 4);
+    BOOST_CHECK_EQUAL(coarseGraph1.NumEdges(), 1);
 
-    BOOST_CHECK_EQUAL(coarseGraph1.out_degree(0), 1);
-    BOOST_CHECK_EQUAL(coarseGraph1.out_degree(1), 0);
-    BOOST_CHECK_EQUAL(coarseGraph1.out_degree(2), 0);
+    BOOST_CHECK_EQUAL(coarseGraph1.OutDegree(0), 1);
+    BOOST_CHECK_EQUAL(coarseGraph1.OutDegree(1), 0);
+    BOOST_CHECK_EQUAL(coarseGraph1.OutDegree(2), 0);
 
-    BOOST_CHECK_EQUAL(coarseGraph1.in_degree(0), 0);
-    BOOST_CHECK_EQUAL(coarseGraph1.in_degree(1), 1);
-    BOOST_CHECK_EQUAL(coarseGraph1.in_degree(2), 0);
+    BOOST_CHECK_EQUAL(coarseGraph1.InDegree(0), 0);
+    BOOST_CHECK_EQUAL(coarseGraph1.InDegree(1), 1);
+    BOOST_CHECK_EQUAL(coarseGraph1.InDegree(2), 0);
 
-    for (const auto &vert : coarseGraph1.children(0)) {
+    for (const auto &vert : coarseGraph1.Children(0)) {
         BOOST_CHECK_EQUAL(vert, 1);
     }
 
-    for (const auto &vert : coarseGraph1.parents(1)) {
+    for (const auto &vert : coarseGraph1.Parents(1)) {
         BOOST_CHECK_EQUAL(vert, 0);
     }
 }

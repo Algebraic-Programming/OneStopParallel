@@ -58,7 +58,7 @@ In addition to [Plots.jl attributes](http://docs.juliaplots.org/latest/attribute
         size --> (bsp_position_force.second * 200, bsp_position_force.first * 200) # Change the size here if not everything is printed
     end
 
-    vw = vertex_weight.(Ref(g), vertices(g))
+    vw = vertex_weight.(Ref(g), Vertices(g))
     m = maximum(vw)
 
     if node_widths !== nothing
@@ -72,7 +72,7 @@ In addition to [Plots.jl attributes](http://docs.juliaplots.org/latest/attribute
         y = make_compact(x, y, vw / m)
     end
 
-    src_offsets = get_src_offsets(g, perm) ./ (m / (2*max_height)) 
+    src_offsets = get_src_offsets(g, perm) ./ (m / (2*max_height))
     dst_offsets = get_dst_offsets(g, perm) ./ (m / (2*max_height))
 
     if label_position ∉ (:inside, :left, :right, :top, :bottom, :node, :legend)
@@ -240,7 +240,7 @@ function sankey_graph(src::Vector, dst::Vector, w)
 
     # Parse src and dst to match all ids in unique_nodes
     parser_dict = Dict(unique_nodes[id]=>id for id = 1:length(unique_nodes))
-    
+
     src = [parser_dict[src_val] for src_val in src]
     dst = [parser_dict[dst_val] for dst_val in dst]
 

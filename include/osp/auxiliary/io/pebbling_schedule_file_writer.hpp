@@ -26,48 +26,48 @@ limitations under the License.
 namespace osp {
 namespace file_writer {
 
-template <typename Graph_t>
-void write_txt(std::ostream &os, const PebblingSchedule<Graph_t> &schedule) {
-    using vertex_idx = vertex_idx_t<Graph_t>;
+template <typename GraphT>
+void WriteTxt(std::ostream &os, const PebblingSchedule<GraphT> &schedule) {
+    using VertexIdx = VertexIdxT<GraphT>;
 
-    os << "%% PebblingSchedule for " << schedule.getInstance().numberOfProcessors() << " processors and "
-       << schedule.numberOfSupersteps() << " supersteps." << std::endl;
+    os << "%% PebblingSchedule for " << schedule.GetInstance().NumberOfProcessors() << " processors and "
+       << schedule.NumberOfSupersteps() << " supersteps." << std::endl;
 
-    for (unsigned step = 0; step < schedule.numberOfSupersteps(); ++step) {
-        for (unsigned proc = 0; proc < schedule.getInstance().numberOfProcessors(); ++proc) {
+    for (unsigned step = 0; step < schedule.NumberOfSupersteps(); ++step) {
+        for (unsigned proc = 0; proc < schedule.GetInstance().NumberOfProcessors(); ++proc) {
             const auto &computeSteps = schedule.GetComputeStepsForProcSuperstep(proc, step);
             for (const auto &computeStep : computeSteps) {
-                os << "Compute " << computeStep.node << " on proc " << proc << " in superstep " << step << std::endl;
-                for (vertex_idx to_evict : computeStep.nodes_evicted_after) {
-                    os << "Evict " << to_evict << " from proc " << proc << " in superstep " << step << std::endl;
+                os << "Compute " << computeStep.node_ << " on proc " << proc << " in superstep " << step << std::endl;
+                for (VertexIdx toEvict : computeStep.nodesEvictedAfter_) {
+                    os << "Evict " << toEvict << " from proc " << proc << " in superstep " << step << std::endl;
                 }
             }
         }
-        for (unsigned proc = 0; proc < schedule.getInstance().numberOfProcessors(); ++proc) {
-            const std::vector<vertex_idx> &nodesSentUp = schedule.GetNodesSentUp(proc, step);
-            for (vertex_idx node : nodesSentUp) {
+        for (unsigned proc = 0; proc < schedule.GetInstance().NumberOfProcessors(); ++proc) {
+            const std::vector<VertexIdx> &nodesSentUp = schedule.GetNodesSentUp(proc, step);
+            for (VertexIdx node : nodesSentUp) {
                 os << "Send up " << node << " from proc " << proc << " in superstep " << step << std::endl;
             }
         }
-        for (unsigned proc = 0; proc < schedule.getInstance().numberOfProcessors(); ++proc) {
-            const std::vector<vertex_idx> &nodesEvictedInComm = schedule.GetNodesEvictedInComm(proc, step);
-            for (vertex_idx node : nodesEvictedInComm) {
+        for (unsigned proc = 0; proc < schedule.GetInstance().NumberOfProcessors(); ++proc) {
+            const std::vector<VertexIdx> &nodesEvictedInComm = schedule.GetNodesEvictedInComm(proc, step);
+            for (VertexIdx node : nodesEvictedInComm) {
                 os << "Evict " << node << " from proc " << proc << " in superstep " << step << std::endl;
             }
         }
-        for (unsigned proc = 0; proc < schedule.getInstance().numberOfProcessors(); ++proc) {
-            const std::vector<vertex_idx> &nodesSentDown = schedule.GetNodesSentDown(proc, step);
-            for (vertex_idx node : nodesSentDown) {
+        for (unsigned proc = 0; proc < schedule.GetInstance().NumberOfProcessors(); ++proc) {
+            const std::vector<VertexIdx> &nodesSentDown = schedule.GetNodesSentDown(proc, step);
+            for (VertexIdx node : nodesSentDown) {
                 os << "Send down " << node << " to proc " << proc << " in superstep " << step << std::endl;
             }
         }
     }
 }
 
-template <typename Graph_t>
-void write_txt(const std::string &filename, const PebblingSchedule<Graph_t> &schedule) {
+template <typename GraphT>
+void WriteTxt(const std::string &filename, const PebblingSchedule<GraphT> &schedule) {
     std::ofstream os(filename);
-    write_txt(os, schedule);
+    WriteTxt(os, schedule);
 }
 
 }    // namespace file_writer

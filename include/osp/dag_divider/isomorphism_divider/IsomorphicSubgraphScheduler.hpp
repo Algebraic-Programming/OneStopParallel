@@ -47,526 +47,519 @@ namespace osp {
  * dynamically switch between a standard BSP scheduler and a specialized TrimmedGroupScheduler
  * for these trimmed groups.
  *
- * @tparam Graph_t The type of the input computational DAG.
- * @tparam Constr_Graph_t The type of the constructable computational DAG used for internal representations.
+ * @tparam GraphT The type of the input computational DAG.
+ * @tparam ConstrGraphT The type of the constructable computational DAG used for internal representations.
  */
-template <typename Graph_t, typename Constr_Graph_t>
+template <typename GraphT, typename ConstrGraphT>
 class IsomorphicSubgraphScheduler {
-    static_assert(is_computational_dag_v<Graph_t>, "Graph must be a computational DAG");
-    static_assert(is_computational_dag_v<Constr_Graph_t>, "Constr_Graph_t must be a computational DAG");
-    static_assert(is_constructable_cdag_v<Constr_Graph_t>, "Constr_Graph_t must satisfy the constructable_cdag_vertex concept");
-    static_assert(std::is_same_v<vertex_idx_t<Graph_t>, vertex_idx_t<Constr_Graph_t>>,
-                  "Graph_t and Constr_Graph_t must have the same vertex_idx types");
+    static_assert(isComputationalDagV<GraphT>, "Graph must be a computational DAG");
+    static_assert(isComputationalDagV<ConstrGraphT>, "ConstrGraphT must be a computational DAG");
+    static_assert(isConstructableCdagV<ConstrGraphT>, "ConstrGraphT must satisfy the constructable_cdag_vertex concept");
+    static_assert(std::is_same_v<VertexIdxT<GraphT>, VertexIdxT<ConstrGraphT>>,
+                  "GraphT and ConstrGraphT must have the same VertexIdx types");
 
   private:
-    static constexpr bool verbose = false;
-    const HashComputer<vertex_idx_t<Graph_t>> *hash_computer_;
+    static constexpr bool verbose_ = false;
+    const HashComputer<VertexIdxT<GraphT>> *hashComputer_;
     size_t symmetry_ = 4;
-    Scheduler<Constr_Graph_t> *bsp_scheduler_;
-    bool use_max_group_size_ = false;
-    unsigned max_group_size_ = 0;
-    bool plot_dot_graphs_ = false;
-    v_workw_t<Constr_Graph_t> work_threshold_ = 10;
-    v_workw_t<Constr_Graph_t> critical_path_threshold_ = 10;
-    double orbit_lock_ratio_ = 0.4;
-    double natural_breaks_count_percentage_ = 0.1;
-    bool merge_different_node_types = true;
-    bool allow_use_trimmed_scheduler = true;
-    bool use_max_bsp = false;
-    bool use_adaptive_symmetry_threshold = true;
+    Scheduler<ConstrGraphT> *bspScheduler_;
+    bool useMaxGroupSize_ = false;
+    unsigned maxGroupSize_ = 0;
+    bool plotDotGraphs_ = false;
+    VWorkwT<ConstrGraphT> workThreshold_ = 10;
+    VWorkwT<ConstrGraphT> criticalPathThreshold_ = 10;
+    double orbitLockRatio_ = 0.4;
+    double naturalBreaksCountPercentage_ = 0.1;
+    bool mergeDifferentNodeTypes_ = true;
+    bool allowUseTrimmedScheduler_ = true;
+    bool useMaxBsp_ = false;
+    bool useAdaptiveSymmetryThreshold_ = true;
 
   public:
-    explicit IsomorphicSubgraphScheduler(Scheduler<Constr_Graph_t> &bsp_scheduler)
-        : hash_computer_(nullptr), bsp_scheduler_(&bsp_scheduler), plot_dot_graphs_(false) {}
+    IsomorphicSubgraphScheduler(Scheduler<ConstrGraphT> &bspScheduler)
+        : hashComputer_(nullptr), bspScheduler_(&bspScheduler), plotDotGraphs_(false) {}
 
-    IsomorphicSubgraphScheduler(Scheduler<Constr_Graph_t> &bsp_scheduler, const HashComputer<vertex_idx_t<Graph_t>> &hash_computer)
-        : hash_computer_(&hash_computer), bsp_scheduler_(&bsp_scheduler), plot_dot_graphs_(false) {}
+    IsomorphicSubgraphScheduler(Scheduler<ConstrGraphT> &bspScheduler, const HashComputer<VertexIdxT<GraphT>> &hashComputer)
+        : hashComputer_(&hashComputer), bspScheduler_(&bspScheduler), plotDotGraphs_(false) {}
 
     virtual ~IsomorphicSubgraphScheduler() {}
 
-    void setMergeDifferentTypes(bool flag) { merge_different_node_types = flag; }
+    void SetMergeDifferentTypes(bool flag) { mergeDifferentNodeTypes_ = flag; }
 
-    void setWorkThreshold(v_workw_t<Constr_Graph_t> work_threshold) { work_threshold_ = work_threshold; }
+    void SetWorkThreshold(VWorkwT<ConstrGraphT> workThreshold) { workThreshold_ = workThreshold; }
 
-    void setCriticalPathThreshold(v_workw_t<Constr_Graph_t> critical_path_threshold) {
-        critical_path_threshold_ = critical_path_threshold;
+    void SetCriticalPathThreshold(VWorkwT<ConstrGraphT> criticalPathThreshold) { criticalPathThreshold_ = criticalPathThreshold; }
+
+    void SetOrbitLockRatio(double orbitLockRatio) { orbitLockRatio_ = orbitLockRatio; }
+
+    void SetNaturalBreaksCountPercentage(double naturalBreaksCountPercentage) {
+        naturalBreaksCountPercentage_ = naturalBreaksCountPercentage;
     }
 
-    void setOrbitLockRatio(double orbit_lock_ratio) { orbit_lock_ratio_ = orbit_lock_ratio; }
+    void SetAllowTrimmedScheduler(bool flag) { allowUseTrimmedScheduler_ = flag; }
 
-    void setNaturalBreaksCountPercentage(double natural_breaks_count_percentage) {
-        natural_breaks_count_percentage_ = natural_breaks_count_percentage;
+    void SetPlotDotGraphs(bool plot) { plotDotGraphs_ = plot; }
+
+    void DisableUseMaxGroupSize() { useMaxGroupSize_ = false; }
+
+    void SetUseMaxBsp(bool flag) { useMaxBsp_ = flag; }
+
+    void EnableUseMaxGroupSize(const unsigned maxGroupSize) {
+        useMaxGroupSize_ = true;
+        maxGroupSize_ = maxGroupSize;
     }
 
-    void setAllowTrimmedScheduler(bool flag) { allow_use_trimmed_scheduler = flag; }
+    void SetEnableAdaptiveSymmetryThreshold() { useAdaptiveSymmetryThreshold_ = true; }
 
-    void set_plot_dot_graphs(bool plot) { plot_dot_graphs_ = plot; }
-
-    void disable_use_max_group_size() { use_max_group_size_ = false; }
-
-    void setUseMaxBsp(bool flag) { use_max_bsp = flag; }
-
-    void enable_use_max_group_size(const unsigned max_group_size) {
-        use_max_group_size_ = true;
-        max_group_size_ = max_group_size;
+    void SetUseStaticSymmetryLevel(size_t staticSymmetryLevel) {
+        useAdaptiveSymmetryThreshold_ = false;
+        symmetry_ = staticSymmetryLevel;
     }
 
-    void setEnableAdaptiveSymmetryThreshold() { use_adaptive_symmetry_threshold = true; }
-
-    void setUseStaticSymmetryLevel(size_t static_symmetry_level) {
-        use_adaptive_symmetry_threshold = false;
-        symmetry_ = static_symmetry_level;
-    }
-
-    std::vector<vertex_idx_t<Graph_t>> compute_partition(const BspInstance<Graph_t> &instance) {
-        OrbitGraphProcessor<Graph_t, Constr_Graph_t> orbit_processor;
-        orbit_processor.set_work_threshold(work_threshold_);
-        orbit_processor.setMergeDifferentNodeTypes(merge_different_node_types);
-        orbit_processor.setCriticalPathThreshold(critical_path_threshold_);
-        orbit_processor.setLockRatio(orbit_lock_ratio_);
-        orbit_processor.setNaturalBreaksCountPercentage(natural_breaks_count_percentage_);
-        if (not use_adaptive_symmetry_threshold) {
-            orbit_processor.setUseStaticSymmetryLevel(symmetry_);
+    std::vector<VertexIdxT<GraphT>> ComputePartition(const BspInstance<GraphT> &instance) {
+        OrbitGraphProcessor<GraphT, ConstrGraphT> orbitProcessor;
+        orbitProcessor.SetWorkThreshold(workThreshold_);
+        orbitProcessor.SetMergeDifferentNodeTypes(mergeDifferentNodeTypes_);
+        orbitProcessor.SetCriticalPathThreshold(criticalPathThreshold_);
+        orbitProcessor.SetLockRatio(orbitLockRatio_);
+        orbitProcessor.SetNaturalBreaksCountPercentage(naturalBreaksCountPercentage_);
+        if (not useAdaptiveSymmetryThreshold_) {
+            orbitProcessor.SetUseStaticSymmetryLevel(symmetry_);
         }
 
-        std::unique_ptr<HashComputer<vertex_idx_t<Graph_t>>> local_hasher;
-        if (!hash_computer_) {
-            local_hasher = std::make_unique<MerkleHashComputer<Graph_t, bwd_merkle_node_hash_func<Graph_t>, true>>(
-                instance.getComputationalDag(), instance.getComputationalDag());
-            hash_computer_ = local_hasher.get();
+        std::unique_ptr<HashComputer<VertexIdxT<GraphT>>> localHasher;
+        if (!hashComputer_) {
+            localHasher = std::make_unique<MerkleHashComputer<GraphT, BwdMerkleNodeHashFunc<GraphT>, true>>(
+                instance.GetComputationalDag(), instance.GetComputationalDag());
+            hashComputer_ = localHasher.get();
         }
 
-        orbit_processor.discover_isomorphic_groups(instance.getComputationalDag(), *hash_computer_);
+        orbitProcessor.DiscoverIsomorphicGroups(instance.GetComputationalDag(), *hashComputer_);
 
-        auto isomorphic_groups = orbit_processor.get_final_groups();
+        auto isomorphicGroups = orbitProcessor.GetFinalGroups();
 
-        std::vector<bool> was_trimmed(isomorphic_groups.size(), false);
-        trim_subgraph_groups(isomorphic_groups, instance, was_trimmed);    // Apply trimming and record which groups were affected
+        std::vector<bool> wasTrimmed(isomorphicGroups.size(), false);
+        TrimSubgraphGroups(isomorphicGroups, instance, wasTrimmed);    // Apply trimming and record which groups were affected
 
-        auto input = prepare_subgraph_scheduling_input(instance, isomorphic_groups, was_trimmed);
+        auto input = PrepareSubgraphSchedulingInput(instance, isomorphicGroups, wasTrimmed);
 
-        EftSubgraphScheduler<Constr_Graph_t> etf_scheduler;
-        SubgraphSchedule subgraph_schedule
-            = etf_scheduler.run(input.instance, input.multiplicities, input.required_proc_types, input.max_num_processors);
-        subgraph_schedule.was_trimmed = std::move(was_trimmed);    // Pass through trimming info
+        EftSubgraphScheduler<ConstrGraphT> etfScheduler;
+        SubgraphSchedule subgraphSchedule
+            = etfScheduler.Run(input.instance_, input.multiplicities_, input.requiredProcTypes_, input.maxNumProcessors_);
+        subgraphSchedule.wasTrimmed_ = std::move(wasTrimmed);    // Pass through trimming info
 
-        std::vector<vertex_idx_t<Graph_t>> partition(instance.numberOfVertices(), 0);
-        schedule_isomorphic_group(instance, isomorphic_groups, subgraph_schedule, partition);
+        std::vector<VertexIdxT<GraphT>> partition(instance.NumberOfVertices(), 0);
+        ScheduleIsomorphicGroup(instance, isomorphicGroups, subgraphSchedule, partition);
 
-        if (plot_dot_graphs_) {
+        if (plotDotGraphs_) {
             auto now = std::chrono::system_clock::now();
-            auto in_time_t = std::chrono::system_clock::to_time_t(now);
+            auto inTimeT = std::chrono::system_clock::to_time_t(now);
             std::stringstream ss;
-            ss << std::put_time(std::localtime(&in_time_t), "%Y%m%d_%H%M%S");
+            ss << std::put_time(std::localtime(&inTimeT), "%Y%m%d_%H%M%S");
             std::string timestamp = ss.str() + "_";
 
             DotFileWriter writer;
-            writer.write_colored_graph(
-                timestamp + "isomorphic_groups.dot", instance.getComputationalDag(), orbit_processor.get_final_contraction_map());
-            writer.write_colored_graph(
-                timestamp + "orbits_colored.dot", instance.getComputationalDag(), orbit_processor.get_contraction_map());
-            writer.write_graph(timestamp + "iso_groups_contracted.dot", input.instance.getComputationalDag());
-            writer.write_colored_graph(timestamp + "graph_partition.dot", instance.getComputationalDag(), partition);
-            Constr_Graph_t corase_graph;
-            coarser_util::construct_coarse_dag(instance.getComputationalDag(), corase_graph, partition);
-            writer.write_graph(timestamp + "block_graph.dot", corase_graph);
+            writer.WriteColoredGraph(
+                timestamp + "isomorphic_groups.dot", instance.GetComputationalDag(), orbitProcessor.GetFinalContractionMap());
+            writer.WriteColoredGraph(
+                timestamp + "orbits_colored.dot", instance.GetComputationalDag(), orbitProcessor.GetContractionMap());
+            writer.WriteGraph(timestamp + "iso_groups_contracted.dot", input.instance_.GetComputationalDag());
+            writer.WriteColoredGraph(timestamp + "graph_partition.dot", instance.GetComputationalDag(), partition);
+            ConstrGraphT coarseGraph;
+            coarser_util::ConstructCoarseDag(instance.GetComputationalDag(), coarseGraph, partition);
+            writer.WriteGraph(timestamp + "block_graph.dot", coarseGraph);
         }
         return partition;
     }
 
   protected:
-    template <typename G_t, typename C_G_t>
-    struct subgraph_scheduler_input {
-        BspInstance<C_G_t> instance;
-        std::vector<unsigned> multiplicities;
-        std::vector<unsigned> max_num_processors;
-        std::vector<std::vector<v_workw_t<G_t>>> required_proc_types;
+    template <typename GT, typename CGT>
+    struct SubgraphSchedulerInput {
+        BspInstance<CGT> instance_;
+        std::vector<unsigned> multiplicities_;
+        std::vector<unsigned> maxNumProcessors_;
+        std::vector<std::vector<VWorkwT<GT>>> requiredProcTypes_;
     };
 
-    void trim_subgraph_groups(std::vector<typename OrbitGraphProcessor<Graph_t, Constr_Graph_t>::Group> &isomorphic_groups,
-                              const BspInstance<Graph_t> &instance,
-                              std::vector<bool> &was_trimmed) {
-        if constexpr (verbose) {
+    void TrimSubgraphGroups(std::vector<typename OrbitGraphProcessor<GraphT, ConstrGraphT>::Group> &isomorphicGroups,
+                            const BspInstance<GraphT> &instance,
+                            std::vector<bool> &wasTrimmed) {
+        if constexpr (verbose_) {
             std::cout << "\n--- Trimming Isomorphic Subgraph Groups ---" << std::endl;
         }
-        for (size_t group_idx = 0; group_idx < isomorphic_groups.size(); ++group_idx) {
-            auto &group = isomorphic_groups[group_idx];
-            const unsigned group_size = static_cast<unsigned>(group.size());
-            if (group_size <= 1) {
+        for (size_t groupIdx = 0; groupIdx < isomorphicGroups.size(); ++groupIdx) {
+            auto &group = isomorphicGroups[groupIdx];
+            const unsigned groupSize = static_cast<unsigned>(group.size());
+            if (groupSize <= 1) {
                 continue;
             }
 
-            unsigned effective_min_proc_type_count = 0;
+            unsigned effectiveMinProcTypeCount = 0;
 
-            if (use_max_group_size_) {
-                if constexpr (verbose) {
-                    std::cout << "Group " << group_idx << " (size " << group_size
-                              << "): Using fixed max_group_size_ = " << max_group_size_ << " for trimming." << std::endl;
+            if (useMaxGroupSize_) {
+                if constexpr (verbose_) {
+                    std::cout << "Group " << groupIdx << " (size " << groupSize
+                              << "): Using fixed max_group_size_ = " << maxGroupSize_ << " for trimming." << std::endl;
                 }
-                effective_min_proc_type_count = max_group_size_;
+                effectiveMinProcTypeCount = maxGroupSize_;
             } else {
                 // Determine if the group consists of a single node type
-                bool is_single_type_group = true;
-                v_type_t<Graph_t> common_node_type = 0;
+                bool isSingleTypeGroup = true;
+                VTypeT<GraphT> commonNodeType = 0;
 
-                if constexpr (has_typed_vertices_v<Graph_t>) {
-                    if (!group.subgraphs.empty() && !group.subgraphs[0].empty()) {
-                        common_node_type = instance.getComputationalDag().vertex_type(group.subgraphs[0][0]);
-                        const auto &rep_subgraph = group.subgraphs[0];
-                        for (const auto &vertex : rep_subgraph) {
-                            if (instance.getComputationalDag().vertex_type(vertex) != common_node_type) {
-                                is_single_type_group = false;
+                if constexpr (hasTypedVerticesV<GraphT>) {
+                    if (!group.subgraphs_.empty() && !group.subgraphs_[0].empty()) {
+                        commonNodeType = instance.GetComputationalDag().VertexType(group.subgraphs_[0][0]);
+                        const auto &repSubgraph = group.subgraphs_[0];
+                        for (const auto &vertex : repSubgraph) {
+                            if (instance.GetComputationalDag().VertexType(vertex) != commonNodeType) {
+                                isSingleTypeGroup = false;
                                 break;
                             }
                         }
                     } else {
-                        is_single_type_group = false;
+                        isSingleTypeGroup = false;
                     }
                 } else {
-                    is_single_type_group = false;
+                    isSingleTypeGroup = false;
                 }
 
-                if (is_single_type_group) {
+                if (isSingleTypeGroup) {
                     // Dynamically determine min_proc_type_count based on compatible processors for this type
-                    unsigned min_compatible_processors = std::numeric_limits<unsigned>::max();
-                    const auto &proc_type_counts = instance.getArchitecture().getProcessorTypeCount();
+                    unsigned minCompatibleProcessors = std::numeric_limits<unsigned>::max();
+                    const auto &procTypeCounts = instance.GetArchitecture().GetProcessorTypeCount();
 
-                    bool found_compatible_processor = false;
-                    for (unsigned proc_type_idx = 0; proc_type_idx < proc_type_counts.size(); ++proc_type_idx) {
-                        if (instance.isCompatibleType(common_node_type, proc_type_idx)) {
-                            min_compatible_processors = std::min(min_compatible_processors, proc_type_counts[proc_type_idx]);
-                            found_compatible_processor = true;
+                    bool foundCompatibleProcessor = false;
+                    for (unsigned procTypeIdx = 0; procTypeIdx < procTypeCounts.size(); ++procTypeIdx) {
+                        if (instance.IsCompatibleType(commonNodeType, procTypeIdx)) {
+                            minCompatibleProcessors = std::min(minCompatibleProcessors, procTypeCounts[procTypeIdx]);
+                            foundCompatibleProcessor = true;
                         }
                     }
-                    if (found_compatible_processor) {
-                        if constexpr (verbose) {
-                            std::cout << "Group " << group_idx << " (size " << group_size << "): Single node type ("
-                                      << common_node_type << "). Min compatible processors: " << min_compatible_processors << "."
+                    if (foundCompatibleProcessor) {
+                        if constexpr (verbose_) {
+                            std::cout << "Group " << groupIdx << " (size " << groupSize << "): Single node type ("
+                                      << commonNodeType << "). Min compatible processors: " << minCompatibleProcessors << "."
                                       << std::endl;
                         }
-                        effective_min_proc_type_count = min_compatible_processors;
+                        effectiveMinProcTypeCount = minCompatibleProcessors;
                     } else {
-                        if constexpr (verbose) {
-                            std::cout << "Group " << group_idx << " (size " << group_size << "): Single node type ("
-                                      << common_node_type << ") but no compatible processors found. Disabling trimming."
+                        if constexpr (verbose_) {
+                            std::cout << "Group " << groupIdx << " (size " << groupSize << "): Single node type ("
+                                      << commonNodeType << ") but no compatible processors found. Disabling trimming."
                                       << std::endl;
                         }
                         // If no compatible processors found for this type, effectively disable trimming for this group.
-                        effective_min_proc_type_count = 1;
+                        effectiveMinProcTypeCount = 1;
                     }
                 } else {
                     // Fallback to a default min_proc_type_count if not a single-type group or no typed vertices.
-                    const auto &type_count = instance.getArchitecture().getProcessorTypeCount();
-                    if (type_count.empty()) {
-                        effective_min_proc_type_count = 0;
+                    const auto &typeCount = instance.GetArchitecture().GetProcessorTypeCount();
+                    if (typeCount.empty()) {
+                        effectiveMinProcTypeCount = 0;
                     }
-                    effective_min_proc_type_count = *std::min_element(type_count.begin(), type_count.end());
-                    if constexpr (verbose) {
-                        std::cout << "Group " << group_idx << " (size " << group_size
+                    effectiveMinProcTypeCount = *std::min_element(typeCount.begin(), typeCount.end());
+                    if constexpr (verbose_) {
+                        std::cout << "Group " << groupIdx << " (size " << groupSize
                                   << "): Multi-type or untyped group. Using default min_proc_type_count: "
-                                  << effective_min_proc_type_count << "." << std::endl;
+                                  << effectiveMinProcTypeCount << "." << std::endl;
                     }
                 }
             }
 
             // Ensure effective_min_proc_type_count is at least 1 for valid GCD calculation.
-            if (effective_min_proc_type_count == 0) {
-                effective_min_proc_type_count = 1;
+            if (effectiveMinProcTypeCount == 0) {
+                effectiveMinProcTypeCount = 1;
             }
 
             // If effective_min_proc_type_count is 1, no trimming is needed as gcd(X, 1) = 1.
-            if (effective_min_proc_type_count <= 1) {
+            if (effectiveMinProcTypeCount <= 1) {
                 continue;
             }
 
-            unsigned gcd = std::gcd(group_size, effective_min_proc_type_count);
+            unsigned gcd = std::gcd(groupSize, effectiveMinProcTypeCount);
 
-            if (gcd < group_size) {
-                if constexpr (verbose) {
-                    std::cout << "  -> Trimming group " << group_idx << ". GCD(" << group_size << ", "
-                              << effective_min_proc_type_count << ") = " << gcd << ". Merging " << group_size / gcd
-                              << " subgraphs at a time." << std::endl;
+            if (gcd < groupSize) {
+                if constexpr (verbose_) {
+                    std::cout << "  -> Trimming group " << groupIdx << ". GCD(" << groupSize << ", " << effectiveMinProcTypeCount
+                              << ") = " << gcd << ". Merging " << groupSize / gcd << " subgraphs at a time." << std::endl;
                 }
 
-                if (allow_use_trimmed_scheduler) {
+                if (allowUseTrimmedScheduler_) {
                     gcd = 1;
                 }
 
-                was_trimmed[group_idx] = true;
-                const unsigned merge_size = group_size / gcd;
-                std::vector<std::vector<vertex_idx_t<Graph_t>>> new_subgraphs;
-                new_subgraphs.reserve(gcd);
+                wasTrimmed[groupIdx] = true;
+                const unsigned mergeSize = groupSize / gcd;
+                std::vector<std::vector<VertexIdxT<GraphT>>> newSubgraphs;
+                newSubgraphs.reserve(gcd);
 
-                size_t original_sg_cursor = 0;
+                size_t originalSgCursor = 0;
 
                 for (unsigned j = 0; j < gcd; ++j) {
-                    std::vector<vertex_idx_t<Graph_t>> merged_sg_vertices;
+                    std::vector<VertexIdxT<GraphT>> mergedSgVertices;
                     // Estimate capacity for efficiency. Assuming subgraphs have similar sizes.
-                    if (!group.subgraphs.empty()) {
-                        merged_sg_vertices.reserve(group.subgraphs[0].size() * merge_size);
+                    if (!group.subgraphs_.empty()) {
+                        mergedSgVertices.reserve(group.subgraphs_[0].size() * mergeSize);
                     }
 
-                    for (unsigned k = 0; k < merge_size; ++k) {
-                        const auto &sg_to_merge_vertices = group.subgraphs[original_sg_cursor];
-                        original_sg_cursor++;
-                        merged_sg_vertices.insert(
-                            merged_sg_vertices.end(), sg_to_merge_vertices.begin(), sg_to_merge_vertices.end());
+                    for (unsigned k = 0; k < mergeSize; ++k) {
+                        const auto &sgToMergeVertices = group.subgraphs_[originalSgCursor];
+                        originalSgCursor++;
+                        mergedSgVertices.insert(mergedSgVertices.end(), sgToMergeVertices.begin(), sgToMergeVertices.end());
                     }
-                    new_subgraphs.push_back(std::move(merged_sg_vertices));
+                    newSubgraphs.push_back(std::move(mergedSgVertices));
                 }
-                group.subgraphs = std::move(new_subgraphs);
+                group.subgraphs_ = std::move(newSubgraphs);
             } else {
-                if constexpr (verbose) {
-                    std::cout << "  -> No trim needed for group " << group_idx << "." << std::endl;
+                if constexpr (verbose_) {
+                    std::cout << "  -> No trim needed for group " << groupIdx << "." << std::endl;
                 }
-                was_trimmed[group_idx] = false;
+                wasTrimmed[groupIdx] = false;
             }
         }
     }
 
-    subgraph_scheduler_input<Graph_t, Constr_Graph_t> prepare_subgraph_scheduling_input(
-        const BspInstance<Graph_t> &original_instance,
-        const std::vector<typename OrbitGraphProcessor<Graph_t, Constr_Graph_t>::Group> &isomorphic_groups,
-        const std::vector<bool> &was_trimmed) {
-        subgraph_scheduler_input<Graph_t, Constr_Graph_t> result;
-        result.instance.getArchitecture() = original_instance.getArchitecture();
-        const unsigned num_proc_types = original_instance.getArchitecture().getNumberOfProcessorTypes();
+    SubgraphSchedulerInput<GraphT, ConstrGraphT> PrepareSubgraphSchedulingInput(
+        const BspInstance<GraphT> &originalInstance,
+        const std::vector<typename OrbitGraphProcessor<GraphT, ConstrGraphT>::Group> &isomorphicGroups,
+        const std::vector<bool> &wasTrimmed) {
+        SubgraphSchedulerInput<GraphT, ConstrGraphT> result;
+        result.instance_.GetArchitecture() = originalInstance.GetArchitecture();
+        const unsigned numProcTypes = originalInstance.GetArchitecture().GetNumberOfProcessorTypes();
 
-        result.multiplicities.resize(isomorphic_groups.size());
-        result.max_num_processors.resize(isomorphic_groups.size());
-        result.required_proc_types.resize(isomorphic_groups.size());
-        std::vector<vertex_idx_t<Constr_Graph_t>> contraction_map(original_instance.numberOfVertices());
+        result.multiplicities_.resize(isomorphicGroups.size());
+        result.maxNumProcessors_.resize(isomorphicGroups.size());
+        result.requiredProcTypes_.resize(isomorphicGroups.size());
+        std::vector<VertexIdxT<ConstrGraphT>> contractionMap(originalInstance.NumberOfVertices());
 
-        size_t coarse_node_idx = 0;
-        for (const auto &group : isomorphic_groups) {
-            result.max_num_processors[coarse_node_idx] = static_cast<unsigned>(group.size() * group.subgraphs[0].size());
-            result.multiplicities[coarse_node_idx] = (was_trimmed[coarse_node_idx] && allow_use_trimmed_scheduler)
-                                                         ? 1
-                                                         : static_cast<unsigned>(group.subgraphs.size());
-            result.required_proc_types[coarse_node_idx].assign(num_proc_types, 0);
+        size_t coarseNodeIdx = 0;
+        for (const auto &group : isomorphicGroups) {
+            result.maxNumProcessors_[coarseNodeIdx] = static_cast<unsigned>(group.size() * group.subgraphs_[0].size());
+            result.multiplicities_[coarseNodeIdx]
+                = (wasTrimmed[coarseNodeIdx] && allowUseTrimmedScheduler_) ? 1 : static_cast<unsigned>(group.subgraphs_.size());
+            result.requiredProcTypes_[coarseNodeIdx].assign(numProcTypes, 0);
 
-            for (const auto &subgraph : group.subgraphs) {
+            for (const auto &subgraph : group.subgraphs_) {
                 for (const auto &vertex : subgraph) {
-                    contraction_map[vertex] = static_cast<vertex_idx_t<Constr_Graph_t>>(coarse_node_idx);
-                    const auto vertex_work = original_instance.getComputationalDag().vertex_work_weight(vertex);
-                    const auto vertex_type = original_instance.getComputationalDag().vertex_type(vertex);
-                    for (unsigned j = 0; j < num_proc_types; ++j) {
-                        if (original_instance.isCompatibleType(vertex_type, j)) {
-                            result.required_proc_types[coarse_node_idx][j] += vertex_work;
+                    contractionMap[vertex] = static_cast<VertexIdxT<ConstrGraphT>>(coarseNodeIdx);
+                    const auto vertexWork = originalInstance.GetComputationalDag().VertexWorkWeight(vertex);
+                    const auto vertexType = originalInstance.GetComputationalDag().VertexType(vertex);
+                    for (unsigned j = 0; j < numProcTypes; ++j) {
+                        if (originalInstance.IsCompatibleType(vertexType, j)) {
+                            result.requiredProcTypes_[coarseNodeIdx][j] += vertexWork;
                         }
                     }
                 }
             }
 
-            ++coarse_node_idx;
+            ++coarseNodeIdx;
         }
-        coarser_util::construct_coarse_dag(
-            original_instance.getComputationalDag(), result.instance.getComputationalDag(), contraction_map);
+        coarser_util::ConstructCoarseDag(
+            originalInstance.GetComputationalDag(), result.instance_.GetComputationalDag(), contractionMap);
 
-        if constexpr (verbose) {
+        if constexpr (verbose_) {
             std::cout << "\n--- Preparing Subgraph Scheduling Input ---\n";
-            std::cout << "Found " << isomorphic_groups.size() << " isomorphic groups to schedule as coarse nodes.\n";
-            for (size_t j = 0; j < isomorphic_groups.size(); ++j) {
-                std::cout << "  - Coarse Node " << j << " (from " << isomorphic_groups[j].subgraphs.size()
+            std::cout << "Found " << isomorphicGroups.size() << " isomorphic groups to schedule as coarse nodes.\n";
+            for (size_t j = 0; j < isomorphicGroups.size(); ++j) {
+                std::cout << "  - Coarse Node " << j << " (from " << isomorphicGroups[j].subgraphs_.size()
                           << " isomorphic subgraphs):\n";
-                std::cout << "    - Multiplicity for scheduling: " << result.multiplicities[j] << "\n";
-                std::cout << "    - Total Work (in coarse graph): " << result.instance.getComputationalDag().vertex_work_weight(j)
+                std::cout << "    - Multiplicity for scheduling: " << result.multiplicities_[j] << "\n";
+                std::cout << "    - Total Work (in coarse graph): " << result.instance_.GetComputationalDag().VertexWorkWeight(j)
                           << "\n";
                 std::cout << "    - Required Processor Types: ";
-                for (unsigned k = 0; k < num_proc_types; ++k) {
-                    std::cout << result.required_proc_types[j][k] << " ";
+                for (unsigned k = 0; k < numProcTypes; ++k) {
+                    std::cout << result.requiredProcTypes_[j][k] << " ";
                 }
                 std::cout << "\n";
-                std::cout << "    - Max number of processors: " << result.max_num_processors[j] << "\n";
+                std::cout << "    - Max number of processors: " << result.maxNumProcessors_[j] << "\n";
             }
         }
         return result;
     }
 
-    void schedule_isomorphic_group(const BspInstance<Graph_t> &instance,
-                                   const std::vector<typename OrbitGraphProcessor<Graph_t, Constr_Graph_t>::Group> &isomorphic_groups,
-                                   const SubgraphSchedule &sub_sched,
-                                   std::vector<vertex_idx_t<Graph_t>> &partition) {
-        vertex_idx_t<Graph_t> current_partition_idx = 0;
+    void ScheduleIsomorphicGroup(const BspInstance<GraphT> &instance,
+                                 const std::vector<typename OrbitGraphProcessor<GraphT, ConstrGraphT>::Group> &isomorphicGroups,
+                                 const SubgraphSchedule &subSched,
+                                 std::vector<VertexIdxT<GraphT>> &partition) {
+        VertexIdxT<GraphT> currentPartitionIdx = 0;
 
-        for (size_t group_idx = 0; group_idx < isomorphic_groups.size(); ++group_idx) {
-            const auto &group = isomorphic_groups[group_idx];
-            if (group.subgraphs.empty()) {
+        for (size_t groupIdx = 0; groupIdx < isomorphicGroups.size(); ++groupIdx) {
+            const auto &group = isomorphicGroups[groupIdx];
+            if (group.subgraphs_.empty()) {
                 continue;
             }
 
             // Schedule the Representative Subgraph to get a BSP schedule pattern ---
-            auto rep_subgraph_vertices_sorted = group.subgraphs[0];
-            std::sort(rep_subgraph_vertices_sorted.begin(), rep_subgraph_vertices_sorted.end());
+            auto repSubgraphVerticesSorted = group.subgraphs_[0];
+            std::sort(repSubgraphVerticesSorted.begin(), repSubgraphVerticesSorted.end());
 
-            BspInstance<Constr_Graph_t> representative_instance;
-            auto rep_global_to_local_map = create_induced_subgraph_map(
-                instance.getComputationalDag(), representative_instance.getComputationalDag(), rep_subgraph_vertices_sorted);
+            BspInstance<ConstrGraphT> representativeInstance;
+            auto repGlobalToLocalMap = CreateInducedSubgraphMap(
+                instance.GetComputationalDag(), representativeInstance.GetComputationalDag(), repSubgraphVerticesSorted);
 
-            representative_instance.getArchitecture() = instance.getArchitecture();
-            const auto &procs_for_group = sub_sched.node_assigned_worker_per_type[group_idx];
-            std::vector<v_memw_t<Constr_Graph_t>> mem_weights(procs_for_group.size(), 0);
-            for (unsigned proc_type = 0; proc_type < procs_for_group.size(); ++proc_type) {
-                mem_weights[proc_type]
-                    = static_cast<v_memw_t<Constr_Graph_t>>(instance.getArchitecture().maxMemoryBoundProcType(proc_type));
+            representativeInstance.GetArchitecture() = instance.GetArchitecture();
+            const auto &procsForGroup = subSched.nodeAssignedWorkerPerType_[groupIdx];
+            std::vector<VMemwT<ConstrGraphT>> memWeights(procsForGroup.size(), 0);
+            for (unsigned procType = 0; procType < procsForGroup.size(); ++procType) {
+                memWeights[procType]
+                    = static_cast<VMemwT<ConstrGraphT>>(instance.GetArchitecture().MaxMemoryBoundProcType(procType));
             }
-            representative_instance.getArchitecture().SetProcessorsConsequTypes(procs_for_group, mem_weights);
-            representative_instance.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());
+            representativeInstance.GetArchitecture().SetProcessorsConsequTypes(procsForGroup, memWeights);
+            representativeInstance.SetNodeProcessorCompatibility(instance.GetProcessorCompatibilityMatrix());
 
             // --- Decide which scheduler to use ---
-            unsigned min_non_zero_procs = std::numeric_limits<unsigned>::max();
-            for (const auto &proc_count : procs_for_group) {
-                if (proc_count > 0) {
-                    min_non_zero_procs = std::min(min_non_zero_procs, proc_count);
+            unsigned minNonZeroProcs = std::numeric_limits<unsigned>::max();
+            for (const auto &procCount : procsForGroup) {
+                if (procCount > 0) {
+                    minNonZeroProcs = std::min(minNonZeroProcs, procCount);
                 }
             }
 
-            bool use_trimmed_scheduler = sub_sched.was_trimmed[group_idx] && min_non_zero_procs > 1 && allow_use_trimmed_scheduler;
+            bool useTrimmedScheduler = subSched.wasTrimmed_[groupIdx] && minNonZeroProcs > 1 && allowUseTrimmedScheduler_;
 
-            Scheduler<Constr_Graph_t> *scheduler_for_group_ptr;
-            std::unique_ptr<Scheduler<Constr_Graph_t>> trimmed_scheduler_owner;
-            if (use_trimmed_scheduler) {
-                if constexpr (verbose) {
-                    std::cout << "Using TrimmedGroupScheduler for group " << group_idx << std::endl;
+            Scheduler<ConstrGraphT> *schedulerForGroupPtr;
+            std::unique_ptr<Scheduler<ConstrGraphT>> trimmedSchedulerOwner;
+            if (useTrimmedScheduler) {
+                if constexpr (verbose_) {
+                    std::cout << "Using TrimmedGroupScheduler for group " << groupIdx << std::endl;
                 }
-                trimmed_scheduler_owner
-                    = std::make_unique<TrimmedGroupScheduler<Constr_Graph_t>>(*bsp_scheduler_, min_non_zero_procs);
-                scheduler_for_group_ptr = trimmed_scheduler_owner.get();
+                trimmedSchedulerOwner = std::make_unique<TrimmedGroupScheduler<ConstrGraphT>>(*bspScheduler_, minNonZeroProcs);
+                schedulerForGroupPtr = trimmedSchedulerOwner.get();
             } else {
-                if constexpr (verbose) {
-                    std::cout << "Using standard BSP scheduler for group " << group_idx << std::endl;
+                if constexpr (verbose_) {
+                    std::cout << "Using standard BSP scheduler for group " << groupIdx << std::endl;
                 }
-                scheduler_for_group_ptr = bsp_scheduler_;
+                schedulerForGroupPtr = bspScheduler_;
             }
 
             // --- Schedule the representative to get the pattern ---
-            BspSchedule<Constr_Graph_t> bsp_schedule(representative_instance);
+            BspSchedule<ConstrGraphT> bspSchedule(representativeInstance);
 
-            if constexpr (verbose) {
-                std::cout << "--- Scheduling representative for group " << group_idx << " ---" << std::endl;
-                std::cout << "  Number of subgraphs in group: " << group.subgraphs.size() << std::endl;
-                const auto &rep_dag = representative_instance.getComputationalDag();
-                std::cout << "  Representative subgraph size: " << rep_dag.num_vertices() << " vertices" << std::endl;
-                std::vector<unsigned> node_type_counts(rep_dag.num_vertex_types(), 0);
-                for (const auto &v : rep_dag.vertices()) {
-                    node_type_counts[rep_dag.vertex_type(v)]++;
+            if constexpr (verbose_) {
+                std::cout << "--- Scheduling representative for group " << groupIdx << " ---" << std::endl;
+                std::cout << "  Number of subgraphs in group: " << group.subgraphs_.size() << std::endl;
+                const auto &repDag = representativeInstance.GetComputationalDag();
+                std::cout << "  Representative subgraph size: " << repDag.NumVertices() << " vertices" << std::endl;
+                std::vector<unsigned> nodeTypeCounts(repDag.NumVertexTypes(), 0);
+                for (const auto &v : repDag.Vertices()) {
+                    nodeTypeCounts[repDag.VertexType(v)]++;
                 }
                 std::cout << "    Node type counts: ";
-                for (size_t type_idx = 0; type_idx < node_type_counts.size(); ++type_idx) {
-                    if (node_type_counts[type_idx] > 0) {
-                        std::cout << "T" << type_idx << ":" << node_type_counts[type_idx] << " ";
+                for (size_t typeIdx = 0; typeIdx < nodeTypeCounts.size(); ++typeIdx) {
+                    if (nodeTypeCounts[typeIdx] > 0) {
+                        std::cout << "T" << typeIdx << ":" << nodeTypeCounts[typeIdx] << " ";
                     }
                 }
                 std::cout << std::endl;
 
-                const auto &sub_arch = representative_instance.getArchitecture();
+                const auto &subArch = representativeInstance.GetArchitecture();
                 std::cout << "  Sub-architecture for scheduling:" << std::endl;
-                std::cout << "    Processors: " << sub_arch.numberOfProcessors() << std::endl;
+                std::cout << "    Processors: " << subArch.NumberOfProcessors() << std::endl;
                 std::cout << "    Processor types counts: ";
-                const auto &type_counts = sub_arch.getProcessorTypeCount();
-                for (size_t type_idx = 0; type_idx < type_counts.size(); ++type_idx) {
-                    std::cout << "T" << type_idx << ":" << type_counts[type_idx] << " ";
+                const auto &typeCounts = subArch.GetProcessorTypeCount();
+                for (size_t typeIdx = 0; typeIdx < typeCounts.size(); ++typeIdx) {
+                    std::cout << "T" << typeIdx << ":" << typeCounts[typeIdx] << " ";
                 }
                 std::cout << std::endl;
-                std::cout << "    Sync cost: " << sub_arch.synchronisationCosts()
-                          << ", Comm cost: " << sub_arch.communicationCosts() << std::endl;
+                std::cout << "    Sync cost: " << subArch.SynchronisationCosts()
+                          << ", Comm cost: " << subArch.CommunicationCosts() << std::endl;
             }
 
-            scheduler_for_group_ptr->computeSchedule(bsp_schedule);
+            schedulerForGroupPtr->ComputeSchedule(bspSchedule);
 
-            if constexpr (verbose) {
+            if constexpr (verbose_) {
                 std::cout << "  Schedule satisfies precedence constraints: ";
-                std::cout << bsp_schedule.satisfiesPrecedenceConstraints() << std::endl;
+                std::cout << bspSchedule.SatisfiesPrecedenceConstraints() << std::endl;
                 std::cout << "  Schedule satisfies node type constraints: ";
-                std::cout << bsp_schedule.satisfiesNodeTypeConstraints() << std::endl;
+                std::cout << bspSchedule.SatisfiesNodeTypeConstraints() << std::endl;
             }
 
-            if (plot_dot_graphs_) {
-                const auto &rep_dag = bsp_schedule.getInstance().getComputationalDag();
-                std::vector<unsigned> colors(rep_dag.num_vertices());
-                std::map<std::pair<unsigned, unsigned>, unsigned> proc_ss_to_color;
-                unsigned next_color = 0;
+            if (plotDotGraphs_) {
+                const auto &repDag = bspSchedule.GetInstance().GetComputationalDag();
+                std::vector<unsigned> colors(repDag.NumVertices());
+                std::map<std::pair<unsigned, unsigned>, unsigned> procSsToColor;
+                unsigned nextColor = 0;
 
-                for (const auto &v : rep_dag.vertices()) {
-                    const auto assignment = std::make_pair(bsp_schedule.assignedProcessor(v), bsp_schedule.assignedSuperstep(v));
-                    if (proc_ss_to_color.find(assignment) == proc_ss_to_color.end()) {
-                        proc_ss_to_color[assignment] = next_color++;
+                for (const auto &v : repDag.Vertices()) {
+                    const auto assignment = std::make_pair(bspSchedule.AssignedProcessor(v), bspSchedule.AssignedSuperstep(v));
+                    if (procSsToColor.find(assignment) == procSsToColor.end()) {
+                        procSsToColor[assignment] = nextColor++;
                     }
-                    colors[v] = proc_ss_to_color[assignment];
+                    colors[v] = procSsToColor[assignment];
                 }
 
                 auto now = std::chrono::system_clock::now();
-                auto in_time_t = std::chrono::system_clock::to_time_t(now);
+                auto inTimeT = std::chrono::system_clock::to_time_t(now);
                 std::stringstream ss;
-                ss << std::put_time(std::localtime(&in_time_t), "%Y%m%d_%H%M%S");
+                ss << std::put_time(std::localtime(&inTimeT), "%Y%m%d_%H%M%S");
                 std::string timestamp = ss.str() + "_";
 
                 DotFileWriter writer;
-                writer.write_colored_graph(timestamp + "iso_group_rep_" + std::to_string(group_idx) + ".dot", rep_dag, colors);
+                writer.WriteColoredGraph(timestamp + "iso_group_rep_" + std::to_string(groupIdx) + ".dot", repDag, colors);
             }
 
-            const bool max_bsp = use_max_bsp && (representative_instance.getComputationalDag().num_edges() == 0)
-                                 && (representative_instance.getComputationalDag().vertex_type(0) == 0);
+            const bool maxBsp = useMaxBsp_ && (representativeInstance.GetComputationalDag().NumEdges() == 0)
+                                && (representativeInstance.GetComputationalDag().VertexType(0) == 0);
 
             // Build data structures for applying the pattern ---
             // Map (superstep, processor) -> relative partition ID
-            std::map<std::pair<unsigned, unsigned>, vertex_idx_t<Graph_t>> sp_proc_to_relative_partition;
-            vertex_idx_t<Graph_t> num_partitions_per_subgraph = 0;
-            for (vertex_idx_t<Graph_t> j = 0; j < static_cast<vertex_idx_t<Graph_t>>(rep_subgraph_vertices_sorted.size()); ++j) {
-                auto sp_pair = std::make_pair(bsp_schedule.assignedSuperstep(j), bsp_schedule.assignedProcessor(j));
+            std::map<std::pair<unsigned, unsigned>, VertexIdxT<GraphT>> spProcToRelativePartition;
+            VertexIdxT<GraphT> numPartitionsPerSubgraph = 0;
+            for (VertexIdxT<GraphT> j = 0; j < static_cast<VertexIdxT<GraphT>>(repSubgraphVerticesSorted.size()); ++j) {
+                auto spPair = std::make_pair(bspSchedule.AssignedSuperstep(j), bspSchedule.AssignedProcessor(j));
 
-                if (max_bsp) {
-                    sp_pair = std::make_pair(j, 0);
+                if (maxBsp) {
+                    spPair = std::make_pair(j, 0);
                 }
 
-                if (sp_proc_to_relative_partition.find(sp_pair) == sp_proc_to_relative_partition.end()) {
-                    sp_proc_to_relative_partition[sp_pair] = num_partitions_per_subgraph++;
+                if (spProcToRelativePartition.find(spPair) == spProcToRelativePartition.end()) {
+                    spProcToRelativePartition[spPair] = numPartitionsPerSubgraph++;
                 }
             }
 
             // Pre-compute hashes for the representative to use for mapping
-            MerkleHashComputer<Constr_Graph_t> rep_hasher(representative_instance.getComputationalDag());
+            MerkleHashComputer<ConstrGraphT> repHasher(representativeInstance.GetComputationalDag());
 
             // Replicate the schedule pattern for ALL subgraphs in the group ---
-            for (vertex_idx_t<Graph_t> i = 0; i < static_cast<vertex_idx_t<Graph_t>>(group.subgraphs.size()); ++i) {
-                auto current_subgraph_vertices_sorted = group.subgraphs[i];
-                std::sort(current_subgraph_vertices_sorted.begin(), current_subgraph_vertices_sorted.end());
+            for (VertexIdxT<GraphT> i = 0; i < static_cast<VertexIdxT<GraphT>>(group.subgraphs_.size()); ++i) {
+                auto currentSubgraphVerticesSorted = group.subgraphs_[i];
+                std::sort(currentSubgraphVerticesSorted.begin(), currentSubgraphVerticesSorted.end());
 
                 // Map from a vertex in the current subgraph to its corresponding local index (0, 1, ...) in the representative's schedule
-                std::unordered_map<vertex_idx_t<Graph_t>, vertex_idx_t<Constr_Graph_t>> current_vertex_to_rep_local_idx;
+                std::unordered_map<VertexIdxT<GraphT>, VertexIdxT<ConstrGraphT>> currentVertexToRepLocalIdx;
 
                 if (i == 0) {    // The first subgraph is the representative itself
-                    current_vertex_to_rep_local_idx = std::move(rep_global_to_local_map);
+                    currentVertexToRepLocalIdx = std::move(repGlobalToLocalMap);
                 } else {    // For other subgraphs, build the isomorphic mapping
-                    Constr_Graph_t current_subgraph_graph;
-                    create_induced_subgraph(
-                        instance.getComputationalDag(), current_subgraph_graph, current_subgraph_vertices_sorted);
+                    ConstrGraphT currentSubgraphGraph;
+                    CreateInducedSubgraph(instance.GetComputationalDag(), currentSubgraphGraph, currentSubgraphVerticesSorted);
 
-                    MerkleHashComputer<Constr_Graph_t> current_hasher(current_subgraph_graph);
+                    MerkleHashComputer<ConstrGraphT> currentHasher(currentSubgraphGraph);
 
-                    for (const auto &[hash, rep_orbit_nodes] : rep_hasher.get_orbits()) {
-                        const auto &current_orbit_nodes = current_hasher.get_orbit_from_hash(hash);
-                        for (size_t k = 0; k < rep_orbit_nodes.size(); ++k) {
+                    for (const auto &[hash, repOrbitNodes] : repHasher.GetOrbits()) {
+                        const auto &currentOrbitNodes = currentHasher.GetOrbitFromHash(hash);
+                        for (size_t k = 0; k < repOrbitNodes.size(); ++k) {
                             // Map: current_subgraph_vertex -> representative_subgraph_local_idx
-                            current_vertex_to_rep_local_idx[current_subgraph_vertices_sorted[current_orbit_nodes[k]]]
-                                = static_cast<vertex_idx_t<Constr_Graph_t>>(rep_orbit_nodes[k]);
+                            currentVertexToRepLocalIdx[currentSubgraphVerticesSorted[currentOrbitNodes[k]]]
+                                = static_cast<VertexIdxT<ConstrGraphT>>(repOrbitNodes[k]);
                         }
                     }
                 }
 
                 // Apply the partition pattern
-                for (const auto &current_vertex : current_subgraph_vertices_sorted) {
-                    const auto rep_local_idx = current_vertex_to_rep_local_idx.at(current_vertex);
-                    auto sp_pair = std::make_pair(bsp_schedule.assignedSuperstep(rep_local_idx),
-                                                  bsp_schedule.assignedProcessor(rep_local_idx));
+                for (const auto &currentVertex : currentSubgraphVerticesSorted) {
+                    const auto repLocalIdx = currentVertexToRepLocalIdx.at(currentVertex);
+                    auto spPair
+                        = std::make_pair(bspSchedule.AssignedSuperstep(repLocalIdx), bspSchedule.AssignedProcessor(repLocalIdx));
 
-                    if (max_bsp) {
-                        sp_pair = std::make_pair(rep_local_idx, 0);
+                    if (maxBsp) {
+                        spPair = std::make_pair(repLocalIdx, 0);
                     }
 
-                    partition[current_vertex] = current_partition_idx + sp_proc_to_relative_partition.at(sp_pair);
+                    partition[currentVertex] = currentPartitionIdx + spProcToRelativePartition.at(spPair);
                 }
-                current_partition_idx += num_partitions_per_subgraph;
+                currentPartitionIdx += numPartitionsPerSubgraph;
             }
         }
     }

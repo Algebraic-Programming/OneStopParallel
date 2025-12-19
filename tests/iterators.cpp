@@ -23,8 +23,8 @@ limitations under the License.
 
 using namespace osp;
 
-BOOST_AUTO_TEST_CASE(integral_range_test) {
-    integral_range<unsigned> range(0, 10);
+BOOST_AUTO_TEST_CASE(IntegralRangeTest) {
+    IntegralRange<unsigned> range(0, 10);
     BOOST_CHECK_EQUAL(range.size(), 10);
 
     int count = 0;
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(integral_range_test) {
     BOOST_CHECK_EQUAL(count, -1);
 
     count = 0;
-    integral_range<unsigned> range2(10);
+    IntegralRange<unsigned> range2(10);
     BOOST_CHECK_EQUAL(range2.size(), 10);
 
     for (auto v : range2) {
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(integral_range_test) {
     BOOST_CHECK_EQUAL(count, -1);
 
     count = 5;
-    integral_range<unsigned> range3(5, 15);
+    IntegralRange<unsigned> range3(5, 15);
     BOOST_CHECK_EQUAL(range3.size(), 10);
 
     for (auto v : range3) {

@@ -22,8 +22,6 @@ limitations under the License.
 #include "osp/auxiliary/io/dot_graph_file_reader.hpp"
 #include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/BspLocking.hpp"
-#include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_total_comm.hpp"
-#include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_total_cut.hpp"
 #include "osp/dag_divider/WavefrontComponentScheduler.hpp"
 #include "osp/dag_divider/wavefront_divider/RecursiveWavefrontDivider.hpp"
 #include "osp/dag_divider/wavefront_divider/ScanWavefrontDivider.hpp"
@@ -32,86 +30,86 @@ limitations under the License.
 
 using namespace osp;
 
-std::vector<std::string> test_graphs_dot() { return {"data/dot/smpl_dot_graph_1.dot"}; }
+std::vector<std::string> TestGraphsDot() { return {"data/dot/smpl_dot_graph_1.dot"}; }
 
-std::vector<std::string> tiny_spaa_graphs() {
+std::vector<std::string> TinySpaaGraphs() {
     return {"data/spaa/tiny/instance_bicgstab.hdag",
             "data/spaa/tiny/instance_CG_N2_K2_nzP0d75.hdag",
             "data/spaa/tiny/instance_CG_N3_K1_nzP0d5.hdag",
             "data/spaa/tiny/instance_CG_N4_K1_nzP0d35.hdag"};
 }
 
-template <typename Graph_t>
-bool check_vertex_maps(const std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> &maps, const Graph_t &dag) {
-    std::unordered_set<vertex_idx_t<Graph_t>> all_vertices;
+template <typename GraphT>
+bool CheckVertexMaps(const std::vector<std::vector<std::vector<VertexIdxT<GraphT>>>> &maps, const GraphT &dag) {
+    std::unordered_set<VertexIdxT<GraphT>> allVertices;
     for (const auto &step : maps) {
         for (const auto &subgraph : step) {
             for (const auto &vertex : subgraph) {
-                all_vertices.insert(vertex);
+                allVertices.insert(vertex);
             }
         }
     }
 
-    return all_vertices.size() == dag.num_vertices();
+    return allVertices.size() == dag.NumVertices();
 }
 
-BOOST_AUTO_TEST_CASE(wavefront_component_divider) {
-    std::vector<std::string> filenames_graph = test_graphs_dot();
+BOOST_AUTO_TEST_CASE(WavefrontComponentDivider) {
+    std::vector<std::string> filenamesGraph = TestGraphsDot();
 
-    const auto project_root = get_project_root();
+    const auto projectRoot = GetProjectRoot();
 
-    using graph_t = computational_dag_edge_idx_vector_impl_def_t;
+    using GraphT = ComputationalDagEdgeIdxVectorImplDefT;
 
-    for (auto &filename_graph : filenames_graph) {
-        BspInstance<graph_t> instance;
-        auto &graph = instance.getComputationalDag();
+    for (auto &filenameGraph : filenamesGraph) {
+        BspInstance<GraphT> instance;
+        auto &graph = instance.GetComputationalDag();
 
-        auto status_graph = file_reader::readComputationalDagDotFormat((project_root / filename_graph).string(), graph);
+        auto statusGraph = file_reader::ReadComputationalDagDotFormat((projectRoot / filenameGraph).string(), graph);
 
-        if (!status_graph) {
+        if (!statusGraph) {
             std::cout << "Reading files failed." << std::endl;
             BOOST_CHECK(false);
         } else {
-            std::cout << "File read:" << filename_graph << std::endl;
+            std::cout << "File read:" << filenameGraph << std::endl;
         }
 
-        ScanWavefrontDivider<graph_t> wavefront;
-        auto maps = wavefront.divide(graph);
+        ScanWavefrontDivider<GraphT> wavefront;
+        auto maps = wavefront.Divide(graph);
 
         if (!maps.empty()) {
-            BOOST_CHECK(check_vertex_maps(maps, graph));
+            BOOST_CHECK(CheckVertexMaps(maps, graph));
         }
     }
 }
 
-BOOST_AUTO_TEST_CASE(wavefront_component_parallelism_divider) {
-    std::vector<std::string> filenames_graph = tiny_spaa_graphs();
+BOOST_AUTO_TEST_CASE(WavefrontComponentParallelismDivider) {
+    std::vector<std::string> filenamesGraph = TinySpaaGraphs();
 
-    const auto project_root = get_project_root();
+    const auto projectRoot = GetProjectRoot();
 
-    using graph_t = computational_dag_edge_idx_vector_impl_def_t;
+    using GraphT = ComputationalDagEdgeIdxVectorImplDefT;
 
-    for (auto &filename_graph : filenames_graph) {
-        BspInstance<graph_t> instance;
-        auto &graph = instance.getComputationalDag();
+    for (auto &filenameGraph : filenamesGraph) {
+        BspInstance<GraphT> instance;
+        auto &graph = instance.GetComputationalDag();
 
-        auto status_graph = file_reader::readComputationalDagHyperdagFormatDB((project_root / filename_graph).string(), graph);
+        auto statusGraph = file_reader::ReadComputationalDagHyperdagFormatDB((projectRoot / filenameGraph).string(), graph);
 
-        if (!status_graph) {
+        if (!statusGraph) {
             std::cout << "Reading files failed." << std::endl;
             BOOST_CHECK(false);
         } else {
-            std::cout << "File read:" << filename_graph << std::endl;
+            std::cout << "File read:" << filenameGraph << std::endl;
         }
 
-        ScanWavefrontDivider<graph_t> wavefront;
-        wavefront.set_metric(SequenceMetric::AVAILABLE_PARALLELISM);
-        wavefront.use_variance_splitter(1.0, 1.0, 1);
+        ScanWavefrontDivider<GraphT> wavefront;
+        wavefront.SetMetric(SequenceMetric::AVAILABLE_PARALLELISM);
+        wavefront.UseVarianceSplitter(1.0, 1.0, 1);
 
-        auto maps = wavefront.divide(graph);
+        auto maps = wavefront.Divide(graph);
 
         if (!maps.empty()) {
-            BOOST_CHECK(check_vertex_maps(maps, graph));
+            BOOST_CHECK(CheckVertexMaps(maps, graph));
         }
     }
 }

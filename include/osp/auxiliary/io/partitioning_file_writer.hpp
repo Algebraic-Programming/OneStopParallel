@@ -27,42 +27,42 @@ limitations under the License.
 namespace osp {
 namespace file_writer {
 
-template <typename hypergraph_t>
-void write_txt(std::ostream &os, const Partitioning<hypergraph_t> &partition) {
-    using index_type = typename hypergraph_t::vertex_idx;
+template <typename HypergraphT>
+void WriteTxt(std::ostream &os, const Partitioning<HypergraphT> &partition) {
+    using IndexType = typename HypergraphT::VertexIdx;
 
-    os << "%% Partitioning for " << partition.getInstance().getNumberOfPartitions() << " parts." << std::endl;
+    os << "%% Partitioning for " << partition.GetInstance().GetNumberOfPartitions() << " parts." << std::endl;
 
-    for (index_type node = 0; node < partition.getInstance().getHypergraph().num_vertices(); ++node) {
-        os << node << " " << partition.assignedPartition(node) << std::endl;
+    for (IndexType node = 0; node < partition.GetInstance().GetHypergraph().NumVertices(); ++node) {
+        os << node << " " << partition.AssignedPartition(node) << std::endl;
     }
 }
 
-template <typename hypergraph_t>
-void write_txt(const std::string &filename, const Partitioning<hypergraph_t> &partition) {
+template <typename HypergraphT>
+void WriteTxt(const std::string &filename, const Partitioning<HypergraphT> &partition) {
     std::ofstream os(filename);
-    write_txt(os, partition);
+    WriteTxt(os, partition);
 }
 
-template <typename hypergraph_t>
-void write_txt(std::ostream &os, const PartitioningWithReplication<hypergraph_t> &partition) {
-    using index_type = typename hypergraph_t::vertex_idx;
+template <typename HypergraphT>
+void WriteTxt(std::ostream &os, const PartitioningWithReplication<HypergraphT> &partition) {
+    using IndexType = typename HypergraphT::VertexIdx;
 
-    os << "%% Partitioning for " << partition.getInstance().getNumberOfPartitions() << " parts with replication." << std::endl;
+    os << "%% Partitioning for " << partition.GetInstance().GetNumberOfPartitions() << " parts with replication." << std::endl;
 
-    for (index_type node = 0; node < partition.getInstance().getHypergraph().num_vertices(); ++node) {
+    for (IndexType node = 0; node < partition.GetInstance().GetHypergraph().NumVertices(); ++node) {
         os << node;
-        for (unsigned part : partition.assignedPartitions(node)) {
+        for (unsigned part : partition.AssignedPartitions(node)) {
             os << " " << part;
         }
         os << std::endl;
     }
 }
 
-template <typename hypergraph_t>
-void write_txt(const std::string &filename, const PartitioningWithReplication<hypergraph_t> &partition) {
+template <typename HypergraphT>
+void WriteTxt(const std::string &filename, const PartitioningWithReplication<HypergraphT> &partition) {
     std::ofstream os(filename);
-    write_txt(os, partition);
+    WriteTxt(os, partition);
 }
 
 }    // namespace file_writer

@@ -30,7 +30,7 @@ limitations under the License.
 
 using namespace osp;
 
-BOOST_AUTO_TEST_CASE(test_sparse_matrix_adapter_1) {
+BOOST_AUTO_TEST_CASE(TestSparseMatrixAdapter1) {
     /*
 
            ---0
@@ -57,8 +57,8 @@ BOOST_AUTO_TEST_CASE(test_sparse_matrix_adapter_1) {
       6 | 0.0  10.0  11.0     0     0  12.0     0
 
     */
-    using SM_csr = Eigen::SparseMatrix<double, Eigen::RowMajor, int32_t>;
-    using SM_csc = Eigen::SparseMatrix<double, Eigen::ColMajor, int32_t>;
+    using SmCsr = Eigen::SparseMatrix<double, Eigen::RowMajor, int32_t>;
+    using SmCsc = Eigen::SparseMatrix<double, Eigen::ColMajor, int32_t>;
     using Triplet = Eigen::Triplet<double>;
     const int size = 7;
     std::vector<Triplet> triplets;
@@ -82,31 +82,31 @@ BOOST_AUTO_TEST_CASE(test_sparse_matrix_adapter_1) {
     triplets.emplace_back(6, 5, 12.0);    // x6 ← x5
 
     // Construct matrix
-    SM_csr L_csr(size, size);
-    L_csr.setFromTriplets(triplets.begin(), triplets.end());
+    SmCsr lCsr(size, size);
+    lCsr.setFromTriplets(triplets.begin(), triplets.end());
 
     SparseMatrixImp<int32_t> graph;
-    graph.setCSR(&L_csr);
-    SM_csc L_csc{};
-    L_csc = L_csr;
-    graph.setCSC(&L_csc);
+    graph.SetCsr(&lCsr);
+    SmCsc lCsc{};
+    lCsc = lCsr;
+    graph.SetCsc(&lCsc);
 
-    BOOST_CHECK_EQUAL(graph.num_edges(), 11);
-    BOOST_CHECK_EQUAL(graph.num_vertices(), 7);
-    BOOST_CHECK_EQUAL(graph.in_degree(0), 0);
-    BOOST_CHECK_EQUAL(graph.in_degree(1), 1);
-    BOOST_CHECK_EQUAL(graph.in_degree(3), 2);
-    BOOST_CHECK_EQUAL(graph.in_degree(6), 3);
-    BOOST_CHECK_EQUAL(graph.out_degree(0), 4);
-    BOOST_CHECK_EQUAL(graph.out_degree(1), 2);
-    BOOST_CHECK_EQUAL(graph.out_degree(3), 1);
-    BOOST_CHECK_EQUAL(graph.out_degree(6), 0);
+    BOOST_CHECK_EQUAL(graph.NumEdges(), 11);
+    BOOST_CHECK_EQUAL(graph.NumVertices(), 7);
+    BOOST_CHECK_EQUAL(graph.InDegree(0), 0);
+    BOOST_CHECK_EQUAL(graph.InDegree(1), 1);
+    BOOST_CHECK_EQUAL(graph.InDegree(3), 2);
+    BOOST_CHECK_EQUAL(graph.InDegree(6), 3);
+    BOOST_CHECK_EQUAL(graph.OutDegree(0), 4);
+    BOOST_CHECK_EQUAL(graph.OutDegree(1), 2);
+    BOOST_CHECK_EQUAL(graph.OutDegree(3), 1);
+    BOOST_CHECK_EQUAL(graph.OutDegree(6), 0);
 
-    using vertex_idx = int32_t;
+    using VertexIdx = int32_t;
 
-    std::vector<vertex_idx> vertices{0, 1, 2, 3, 4, 5, 6};
+    std::vector<VertexIdx> vertices{0, 1, 2, 3, 4, 5, 6};
 
-    std::vector<std::vector<vertex_idx>> out_neighbors{
+    std::vector<std::vector<VertexIdx>> outNeighbors{
         {1, 2, 3, 5},
         {4, 6},
         {3, 6},
@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(test_sparse_matrix_adapter_1) {
         {}
     };
 
-    std::vector<std::vector<vertex_idx>> in_neighbors{
+    std::vector<std::vector<VertexIdx>> inNeighbors{
         {},
         {0},
         {0},
@@ -128,38 +128,38 @@ BOOST_AUTO_TEST_CASE(test_sparse_matrix_adapter_1) {
 
     size_t idx = 0;
 
-    for (const long unsigned int &v : graph.vertices()) {
+    for (const long unsigned int &v : graph.Vertices()) {
         BOOST_CHECK_EQUAL(v, vertices[idx++]);
 
         size_t i = 0;
         const size_t vi = static_cast<size_t>(v);
 
-        for (const auto &e : graph.children(v)) {
-            BOOST_CHECK_EQUAL(e, out_neighbors[vi][i++]);
+        for (const auto &e : graph.Children(v)) {
+            BOOST_CHECK_EQUAL(e, outNeighbors[vi][i++]);
         }
 
         i = 0;
-        for (const auto &e : graph.parents(v)) {
-            BOOST_CHECK_EQUAL(e, in_neighbors[vi][i++]);
+        for (const auto &e : graph.Parents(v)) {
+            BOOST_CHECK_EQUAL(e, inNeighbors[vi][i++]);
         }
 
         i = 0;
-        for (const auto &e : out_edges(v, graph)) {
-            BOOST_CHECK_EQUAL(target(e, graph), out_neighbors[vi][i++]);
+        for (const auto &e : OutEdges(v, graph)) {
+            BOOST_CHECK_EQUAL(Target(e, graph), outNeighbors[vi][i++]);
         }
 
         i = 0;
-        for (const auto &e : in_edges(v, graph)) {
-            BOOST_CHECK_EQUAL(source(e, graph), in_neighbors[vi][i++]);
+        for (const auto &e : InEdges(v, graph)) {
+            BOOST_CHECK_EQUAL(Source(e, graph), inNeighbors[vi][i++]);
         }
 
-        BOOST_CHECK_EQUAL(graph.in_degree(v), in_neighbors[vi].size());
-        BOOST_CHECK_EQUAL(graph.out_degree(v), out_neighbors[vi].size());
+        BOOST_CHECK_EQUAL(graph.InDegree(v), inNeighbors[vi].size());
+        BOOST_CHECK_EQUAL(graph.OutDegree(v), outNeighbors[vi].size());
     }
 
     unsigned count = 0;
-    for (const auto &e : edges(graph)) {
-        std::cout << e.source << " -> " << e.target << std::endl;
+    for (const auto &e : Edges(graph)) {
+        std::cout << e.source_ << " -> " << e.target_ << std::endl;
         count++;
     }
     BOOST_CHECK_EQUAL(count, 11);

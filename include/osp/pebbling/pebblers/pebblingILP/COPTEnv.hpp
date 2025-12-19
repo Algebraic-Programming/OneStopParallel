@@ -22,7 +22,7 @@ limitations under the License.
 #include <coptcpp_pch.h>
 
 struct COPTEnv {
-    static Envr getInstance() {
+    static Envr GetInstance() {
         static Envr env;
         return env;
     }

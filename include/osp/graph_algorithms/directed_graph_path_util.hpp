@@ -39,17 +39,17 @@ namespace osp {
  * This function performs a Breadth-First Search (BFS) starting from the `src`
  * vertex to determine if the `dest` vertex is reachable.
  *
- * @tparam Graph_t The type of the graph.
+ * @tparam GraphT The type of the graph.
  * @param src The source vertex.
  * @param dest The destination vertex.
  * @param graph The graph to search in.
  * @return true if a path exists from src to dest, false otherwise.
  */
-template <typename Graph_t>
-bool has_path(const vertex_idx_t<Graph_t> src, const vertex_idx_t<Graph_t> dest, const Graph_t &graph) {
-    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
+template <typename GraphT>
+bool HasPath(const VertexIdxT<GraphT> src, const VertexIdxT<GraphT> dest, const GraphT &graph) {
+    static_assert(isDirectedGraphV<GraphT>, "GraphT must satisfy the directed_graph concept");
 
-    for (const auto &child : bfs_view(graph, src)) {
+    for (const auto &child : BfsView(graph, src)) {
         if (child == dest) {
             return true;
         }
@@ -58,45 +58,45 @@ bool has_path(const vertex_idx_t<Graph_t> src, const vertex_idx_t<Graph_t> dest,
     return false;
 }
 
-template <typename Graph_t>
-std::size_t longestPath(const std::set<vertex_idx_t<Graph_t>> &vertices, const Graph_t &graph) {
-    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
+template <typename GraphT>
+std::size_t LongestPath(const std::set<VertexIdxT<GraphT>> &vertices, const GraphT &graph) {
+    static_assert(isDirectedGraphV<GraphT>, "GraphT must satisfy the directed_graph concept");
 
-    using VertexType = vertex_idx_t<Graph_t>;
+    using VertexType = VertexIdxT<GraphT>;
 
-    std::queue<VertexType> bfs_queue;
-    std::map<VertexType, std::size_t> distances, in_degrees, visit_counter;
+    std::queue<VertexType> bfsQueue;
+    std::map<VertexType, std::size_t> distances, inDegrees, visitCounter;
 
     // Find source nodes
     for (const VertexType &node : vertices) {
         unsigned indeg = 0;
-        for (const VertexType &parent : graph.parents(node)) {
+        for (const VertexType &parent : graph.Parents(node)) {
             if (vertices.count(parent) == 1) {
                 ++indeg;
             }
         }
 
         if (indeg == 0) {
-            bfs_queue.push(node);
+            bfsQueue.push(node);
             distances[node] = 0;
         }
-        in_degrees[node] = indeg;
-        visit_counter[node] = 0;
+        inDegrees[node] = indeg;
+        visitCounter[node] = 0;
     }
 
     // Execute BFS
-    while (!bfs_queue.empty()) {
-        const VertexType current = bfs_queue.front();
-        bfs_queue.pop();
+    while (!bfsQueue.empty()) {
+        const VertexType current = bfsQueue.front();
+        bfsQueue.pop();
 
-        for (const VertexType &child : graph.children(current)) {
+        for (const VertexType &child : graph.Children(current)) {
             if (vertices.count(child) == 0) {
                 continue;
             }
 
-            ++visit_counter[child];
-            if (visit_counter[child] == in_degrees[child]) {
-                bfs_queue.push(child);
+            ++visitCounter[child];
+            if (visitCounter[child] == inDegrees[child]) {
+                bfsQueue.push(child);
                 distances[child] = distances[current] + 1;
             }
         }
@@ -107,80 +107,80 @@ std::size_t longestPath(const std::set<vertex_idx_t<Graph_t>> &vertices, const G
     });
 }
 
-template <typename Graph_t>
-std::size_t longestPath(const Graph_t &graph) {
-    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
+template <typename GraphT>
+std::size_t LongestPath(const GraphT &graph) {
+    static_assert(isDirectedGraphV<GraphT>, "GraphT must satisfy the directed_graph concept");
 
-    using VertexType = vertex_idx_t<Graph_t>;
+    using VertexType = VertexIdxT<GraphT>;
 
-    std::size_t max_edgecount = 0;
-    std::queue<VertexType> bfs_queue;
-    std::vector<VertexType> distances(graph.num_vertices(), 0), visit_counter(graph.num_vertices(), 0);
+    std::size_t maxEdgecount = 0;
+    std::queue<VertexType> bfsQueue;
+    std::vector<VertexType> distances(graph.NumVertices(), 0), visitCounter(graph.NumVertices(), 0);
 
     // Find source nodes
-    for (const auto &node : source_vertices_view(graph)) {
-        bfs_queue.push(node);
+    for (const auto &node : SourceVerticesView(graph)) {
+        bfsQueue.push(node);
     }
 
     // Execute BFS
-    while (!bfs_queue.empty()) {
-        const VertexType current = bfs_queue.front();
-        bfs_queue.pop();
+    while (!bfsQueue.empty()) {
+        const VertexType current = bfsQueue.front();
+        bfsQueue.pop();
 
-        for (const VertexType &child : graph.children(current)) {
-            ++visit_counter[child];
-            if (visit_counter[child] == graph.in_degree(child)) {
-                bfs_queue.push(child);
+        for (const VertexType &child : graph.Children(current)) {
+            ++visitCounter[child];
+            if (visitCounter[child] == graph.InDegree(child)) {
+                bfsQueue.push(child);
                 distances[child] = distances[current] + 1;
-                max_edgecount = std::max(max_edgecount, distances[child]);
+                maxEdgecount = std::max(maxEdgecount, distances[child]);
             }
         }
     }
 
-    return max_edgecount;
+    return maxEdgecount;
 }
 
-template <typename Graph_t>
-std::vector<vertex_idx_t<Graph_t>> longestChain(const Graph_t &graph) {
-    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
+template <typename GraphT>
+std::vector<VertexIdxT<GraphT>> LongestChain(const GraphT &graph) {
+    static_assert(isDirectedGraphV<GraphT>, "GraphT must satisfy the directed_graph concept");
 
-    using VertexType = vertex_idx_t<Graph_t>;
+    using VertexType = VertexIdxT<GraphT>;
 
     std::vector<VertexType> chain;
 
-    if (graph.num_vertices() == 0) {
+    if (graph.NumVertices() == 0) {
         return chain;
     }
 
-    std::vector<unsigned> top_length(graph.num_vertices(), 0);
-    unsigned running_longest_chain = 0;
+    std::vector<unsigned> topLength(graph.NumVertices(), 0);
+    unsigned runningLongestChain = 0;
 
-    VertexType end_longest_chain = 0;
+    VertexType endLongestChain = 0;
 
     // calculating lenght of longest path
-    for (const VertexType &node : top_sort_view(graph)) {
-        unsigned max_temp = 0;
-        for (const auto &parent : graph.parents(node)) {
-            max_temp = std::max(max_temp, top_length[parent]);
+    for (const VertexType &node : TopSortView(graph)) {
+        unsigned maxTemp = 0;
+        for (const auto &parent : graph.Parents(node)) {
+            maxTemp = std::max(maxTemp, topLength[parent]);
         }
 
-        top_length[node] = max_temp + 1;
-        if (top_length[node] > running_longest_chain) {
-            end_longest_chain = node;
-            running_longest_chain = top_length[node];
+        topLength[node] = maxTemp + 1;
+        if (topLength[node] > runningLongestChain) {
+            endLongestChain = node;
+            runningLongestChain = topLength[node];
         }
     }
 
     // reconstructing longest path
-    chain.push_back(end_longest_chain);
-    while (graph.in_degree(end_longest_chain) != 0) {
-        for (const VertexType &in_node : graph.parents(end_longest_chain)) {
-            if (top_length[in_node] != top_length[end_longest_chain] - 1) {
+    chain.push_back(endLongestChain);
+    while (graph.InDegree(endLongestChain) != 0) {
+        for (const VertexType &inNode : graph.Parents(endLongestChain)) {
+            if (topLength[inNode] != topLength[endLongestChain] - 1) {
                 continue;
             }
 
-            end_longest_chain = in_node;
-            chain.push_back(end_longest_chain);
+            endLongestChain = inNode;
+            chain.push_back(endLongestChain);
             break;
         }
     }
@@ -189,169 +189,169 @@ std::vector<vertex_idx_t<Graph_t>> longestChain(const Graph_t &graph) {
     return chain;
 }
 
-template <typename Graph_t, typename T = unsigned>
-std::vector<T> get_bottom_node_distance(const Graph_t &graph) {
+template <typename GraphT, typename T = unsigned>
+std::vector<T> GetBottomNodeDistance(const GraphT &graph) {
     static_assert(std::is_integral_v<T>, "T must be of integral type");
 
-    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "GraphT must satisfy the directed_graph concept");
 
-    std::vector<T> bottom_distance(graph.num_vertices(), 0);
+    std::vector<T> bottomDistance(graph.NumVertices(), 0);
 
-    const auto top_order = GetTopOrder(graph);
-    for (std::size_t i = top_order.size() - 1; i < top_order.size(); i--) {
-        T max_temp = 0;
-        for (const auto &j : graph.children(top_order[i])) {
-            max_temp = std::max(max_temp, bottom_distance[j]);
+    const auto topOrder = GetTopOrder(graph);
+    for (std::size_t i = topOrder.size() - 1; i < topOrder.size(); i--) {
+        T maxTemp = 0;
+        for (const auto &j : graph.Children(topOrder[i])) {
+            maxTemp = std::max(maxTemp, bottomDistance[j]);
         }
-        bottom_distance[top_order[i]] = ++max_temp;
+        bottomDistance[topOrder[i]] = ++maxTemp;
     }
-    return bottom_distance;
+    return bottomDistance;
 }
 
-template <typename Graph_t, typename T = unsigned>
-std::vector<T> get_top_node_distance(const Graph_t &graph) {
+template <typename GraphT, typename T = unsigned>
+std::vector<T> GetTopNodeDistance(const GraphT &graph) {
     static_assert(std::is_integral_v<T>, "T must be of integral type");
 
-    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
+    static_assert(isDirectedGraphV<GraphT>, "GraphT must satisfy the directed_graph concept");
 
-    std::vector<T> top_distance(graph.num_vertices(), 0);
+    std::vector<T> topDistance(graph.NumVertices(), 0);
 
-    for (const auto &vertex : bfs_top_sort_view(graph)) {
-        T max_temp = 0;
-        for (const auto &j : graph.parents(vertex)) {
-            max_temp = std::max(max_temp, top_distance[j]);
+    for (const auto &vertex : BfsTopSortView(graph)) {
+        T maxTemp = 0;
+        for (const auto &j : graph.Parents(vertex)) {
+            maxTemp = std::max(maxTemp, topDistance[j]);
         }
-        top_distance[vertex] = ++max_temp;
+        topDistance[vertex] = ++maxTemp;
     }
-    return top_distance;
+    return topDistance;
 }
 
-template <typename Graph_t>
-std::vector<std::vector<vertex_idx_t<Graph_t>>> compute_wavefronts(const Graph_t &graph) {
-    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
+template <typename GraphT>
+std::vector<std::vector<VertexIdxT<GraphT>>> ComputeWavefronts(const GraphT &graph) {
+    static_assert(isDirectedGraphV<GraphT>, "GraphT must satisfy the directed_graph concept");
 
-    std::vector<std::vector<vertex_idx_t<Graph_t>>> wavefronts;
-    std::vector<vertex_idx_t<Graph_t>> parents_visited(graph.num_vertices(), 0);
+    std::vector<std::vector<VertexIdxT<GraphT>>> wavefronts;
+    std::vector<VertexIdxT<GraphT>> parentsVisited(graph.NumVertices(), 0);
 
-    wavefronts.push_back(std::vector<vertex_idx_t<Graph_t>>());
-    for (const auto &vertex : graph.vertices()) {
-        if (graph.in_degree(vertex) == 0) {
+    wavefronts.push_back(std::vector<VertexIdxT<GraphT>>());
+    for (const auto &vertex : graph.Vertices()) {
+        if (graph.InDegree(vertex) == 0) {
             wavefronts.back().push_back(vertex);
         } else {
-            parents_visited[vertex] = static_cast<vertex_idx_t<Graph_t>>(graph.in_degree(vertex));
+            parentsVisited[vertex] = static_cast<VertexIdxT<GraphT>>(graph.InDegree(vertex));
         }
     }
 
-    vertex_idx_t<Graph_t> counter = static_cast<vertex_idx_t<Graph_t>>(wavefronts.back().size());
+    VertexIdxT<GraphT> counter = static_cast<VertexIdxT<GraphT>>(wavefronts.back().size());
 
-    while (counter < graph.num_vertices()) {
-        std::vector<vertex_idx_t<Graph_t>> next_wavefront;
-        for (const auto &v_prev_wavefront : wavefronts.back()) {
-            for (const auto &child : graph.children(v_prev_wavefront)) {
-                parents_visited[child]--;
-                if (parents_visited[child] == 0) {
-                    next_wavefront.push_back(child);
+    while (counter < graph.NumVertices()) {
+        std::vector<VertexIdxT<GraphT>> nextWavefront;
+        for (const auto &vPrevWavefront : wavefronts.back()) {
+            for (const auto &child : graph.Children(vPrevWavefront)) {
+                parentsVisited[child]--;
+                if (parentsVisited[child] == 0) {
+                    nextWavefront.push_back(child);
                     counter++;
                 }
             }
         }
 
-        wavefronts.push_back(next_wavefront);
+        wavefronts.push_back(nextWavefront);
     }
 
     return wavefronts;
 }
 
-template <typename Graph_t>
-std::vector<int> get_strict_poset_integer_map(unsigned const noise, double const poisson_param, const Graph_t &graph) {
-    static_assert(is_directed_graph_edge_desc_v<Graph_t>, "Graph_t must satisfy the directed_graph_edge_desc concept");
+template <typename GraphT>
+std::vector<int> GetStrictPosetIntegerMap(unsigned const noise, double const poissonParam, const GraphT &graph) {
+    static_assert(isDirectedGraphEdgeDescV<GraphT>, "GraphT must satisfy the directed_graph_edge_desc concept");
 
     if (noise > static_cast<unsigned>(std::numeric_limits<int>::max())) {
         throw std::overflow_error("Overflow in get_strict_poset_integer_map");
     }
 
-    using VertexType = vertex_idx_t<Graph_t>;
-    using EdgeType = edge_desc_t<Graph_t>;
+    using VertexType = VertexIdxT<GraphT>;
+    using EdgeType = EdgeDescT<GraphT>;
 
-    std::vector<VertexType> top_order = GetTopOrder(graph);
+    std::vector<VertexType> topOrder = GetTopOrder(graph);
 
-    Repeat_Chance repeater_coin;
+    RepeatChance repeaterCoin;
 
-    std::unordered_map<EdgeType, bool> up_or_down;
+    std::unordered_map<EdgeType, bool> upOrDown;
 
-    for (const auto &edge : edges(graph)) {
-        up_or_down.emplace(edge, repeater_coin.get_flip());
+    for (const auto &edge : Edges(graph)) {
+        upOrDown.emplace(edge, repeaterCoin.GetFlip());
     }
 
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::poisson_distribution<> poisson_gen(poisson_param + 1.0e-12);
+    std::poisson_distribution<> poissonGen(poissonParam + 1.0e-12);
 
-    std::vector<unsigned> top_distance = get_top_node_distance(graph);
-    std::vector<unsigned> bot_distance = get_bottom_node_distance(graph);
-    std::vector<int> new_top(graph.num_vertices(), 0);
-    std::vector<int> new_bot(graph.num_vertices(), 0);
+    std::vector<unsigned> topDistance = GetTopNodeDistance(graph);
+    std::vector<unsigned> botDistance = GetBottomNodeDistance(graph);
+    std::vector<int> newTop(graph.NumVertices(), 0);
+    std::vector<int> newBot(graph.NumVertices(), 0);
 
-    unsigned max_path = 0;
-    for (const auto &vertex : graph.vertices()) {
-        max_path = std::max(max_path, top_distance[vertex]);
+    unsigned maxPath = 0;
+    for (const auto &vertex : graph.Vertices()) {
+        maxPath = std::max(maxPath, topDistance[vertex]);
     }
 
-    for (const auto &source : source_vertices_view(graph)) {
-        if (max_path - bot_distance[source] + 1U + 2U * noise > static_cast<unsigned>(std::numeric_limits<int>::max())) {
+    for (const auto &source : SourceVertices(graph)) {
+        if (maxPath - botDistance[source] + 1U + 2U * noise > static_cast<unsigned>(std::numeric_limits<int>::max())) {
             throw std::overflow_error("Overflow in get_strict_poset_integer_map");
         }
-        new_top[source] = randInt(static_cast<int>(max_path - bot_distance[source] + 1 + 2 * noise)) - static_cast<int>(noise);
+        newTop[source] = RandInt(static_cast<int>(maxPath - botDistance[source] + 1 + 2 * noise)) - static_cast<int>(noise);
     }
 
-    for (const auto &sink : sink_vertices_view(graph)) {
-        if (max_path - top_distance[sink] + 1U + 2U * noise > static_cast<unsigned>(std::numeric_limits<int>::max())) {
+    for (const auto &sink : SinkVertices(graph)) {
+        if (maxPath - topDistance[sink] + 1U + 2U * noise > static_cast<unsigned>(std::numeric_limits<int>::max())) {
             throw std::overflow_error("Overflow in get_strict_poset_integer_map");
         }
-        new_bot[sink] = randInt(static_cast<int>(max_path - top_distance[sink] + 1U + 2U * noise)) - static_cast<int>(noise);
+        newBot[sink] = RandInt(static_cast<int>(maxPath - topDistance[sink] + 1U + 2U * noise)) - static_cast<int>(noise);
     }
 
-    for (const auto &vertex : top_order) {
-        if (is_source(vertex, graph)) {
+    for (const auto &vertex : topOrder) {
+        if (IsSource(vertex, graph)) {
             continue;
         }
 
-        int max_temp = std::numeric_limits<int>::min();
+        int maxTemp = std::numeric_limits<int>::min();
 
-        for (const auto &edge : in_edges(vertex, graph)) {
-            int temp = new_top[source(edge, graph)];
-            if (up_or_down.at(edge)) {
-                if (poisson_param <= 0.0) {
+        for (const auto &edge : InEdges(vertex, graph)) {
+            int temp = newTop[Source(edge, graph)];
+            if (upOrDown.at(edge)) {
+                if (poissonParam <= 0.0) {
                     temp += 1;
                 } else {
-                    temp += 1 + poisson_gen(gen);
+                    temp += 1 + poissonGen(gen);
                 }
             }
-            max_temp = std::max(max_temp, temp);
+            maxTemp = std::max(maxTemp, temp);
         }
-        new_top[vertex] = max_temp;
+        newTop[vertex] = maxTemp;
     }
 
-    for (std::reverse_iterator iter = top_order.crbegin(); iter != top_order.crend(); ++iter) {
-        if (is_sink(*iter, graph)) {
+    for (std::reverse_iterator iter = topOrder.crbegin(); iter != topOrder.crend(); ++iter) {
+        if (IsSink(*iter, graph)) {
             continue;
         }
 
-        int max_temp = std::numeric_limits<int>::min();
+        int maxTemp = std::numeric_limits<int>::min();
 
-        for (const auto &edge : out_edges(*iter, graph)) {
-            int temp = new_bot[target(edge, graph)];
-            if (!up_or_down.at(edge)) {
-                temp += 1 + poisson_gen(gen);
+        for (const auto &edge : OutEdges(*iter, graph)) {
+            int temp = newBot[Target(edge, graph)];
+            if (!upOrDown.at(edge)) {
+                temp += 1 + poissonGen(gen);
             }
-            max_temp = std::max(max_temp, temp);
+            maxTemp = std::max(maxTemp, temp);
         }
-        new_bot[*iter] = max_temp;
+        newBot[*iter] = maxTemp;
     }
 
-    std::vector<int> output(graph.num_vertices());
-    for (unsigned i = 0; i < graph.num_vertices(); i++) {
-        output[i] = new_top[i] - new_bot[i];
+    std::vector<int> output(graph.NumVertices());
+    for (unsigned i = 0; i < graph.NumVertices(); i++) {
+        output[i] = newTop[i] - newBot[i];
     }
     return output;
 }

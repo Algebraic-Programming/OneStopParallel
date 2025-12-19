@@ -23,40 +23,40 @@ limitations under the License.
 
 using namespace osp;
 
-BOOST_AUTO_TEST_CASE(BitMaskTest_1) {
-    const std::size_t num_flags = 4U;
-    BitMask mask(num_flags);
+BOOST_AUTO_TEST_CASE(BitMaskTest1) {
+    const std::size_t numFlags = 4U;
+    BitMask mask(numFlags);
 
     for (unsigned i = 0; i < 25U; ++i) {
-        for (std::size_t j = 0; j < num_flags; ++j) {
-            BOOST_CHECK_EQUAL(mask.mask[j], bool(i & (1U << j)));
+        for (std::size_t j = 0; j < numFlags; ++j) {
+            BOOST_CHECK_EQUAL(mask.mask_[j], bool(i & (1U << j)));
         }
         ++mask;
     }
 }
 
-BOOST_AUTO_TEST_CASE(BitMaskTest_2) {
-    const std::size_t num_flags = 6U;
-    BitMask mask(num_flags);
+BOOST_AUTO_TEST_CASE(BitMaskTest2) {
+    const std::size_t numFlags = 6U;
+    BitMask mask(numFlags);
 
     for (unsigned i = 0; i < 256U; ++i) {
         BitMask tmp = mask;
         BitMask post = mask++;
-        for (std::size_t j = 0; j < num_flags; ++j) {
-            BOOST_CHECK_EQUAL(tmp.mask[j], post.mask[j]);
+        for (std::size_t j = 0; j < numFlags; ++j) {
+            BOOST_CHECK_EQUAL(tmp.mask_[j], post.mask_[j]);
         }
     }
 }
 
-BOOST_AUTO_TEST_CASE(BitMaskTest_3) {
-    const std::size_t num_flags = 5U;
-    BitMask mask(num_flags);
+BOOST_AUTO_TEST_CASE(BitMaskTest3) {
+    const std::size_t numFlags = 5U;
+    BitMask mask(numFlags);
 
     for (unsigned i = 0; i < 256U; ++i) {
         BitMask tmp = mask++;
         ++tmp;
-        for (std::size_t j = 0; j < num_flags; ++j) {
-            BOOST_CHECK_EQUAL(tmp.mask[j], mask.mask[j]);
+        for (std::size_t j = 0; j < numFlags; ++j) {
+            BOOST_CHECK_EQUAL(tmp.mask_[j], mask.mask_[j]);
         }
     }
 }

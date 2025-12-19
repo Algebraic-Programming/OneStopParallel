@@ -26,16 +26,16 @@ namespace osp {
  * @brief The GreedyReccomputer class applies a greedy algorithm to remove some of the communciation steps in
  * a BspSchedule by recomputation steps if this decreases the cost.
  */
-template <typename Graph_t>
+template <typename GraphT>
 class GreedyRecomputer {
-    static_assert(is_computational_dag_v<Graph_t>, "GreedyRecomputer can only be used with computational DAGs.");
+    static_assert(isComputationalDagV<GraphT>, "GreedyRecomputer can only be used with computational DAGs.");
 
   private:
-    using vertex_idx = vertex_idx_t<Graph_t>;
-    using cost_type = v_workw_t<Graph_t>;
-    using KeyTriple = std::tuple<vertex_idx_t<Graph_t>, unsigned int, unsigned int>;
+    using VertexIdx = VertexIdxT<GraphT>;
+    using CostType = VWorkwT<GraphT>;
+    using KeyTriple = std::tuple<VertexIdxT<GraphT>, unsigned int, unsigned int>;
 
-    static_assert(std::is_same_v<v_workw_t<Graph_t>, v_commw_t<Graph_t>>,
+    static_assert(std::is_same_v<VWorkwT<GraphT>, VCommwT<GraphT>>,
                   "GreedyRecomputer requires work and comm. weights to have the same type.");
 
   public:
@@ -44,179 +44,179 @@ class GreedyRecomputer {
      */
     virtual ~GreedyRecomputer() = default;
 
-    RETURN_STATUS computeRecompSchedule(BspScheduleCS<Graph_t> &initial_schedule, BspScheduleRecomp<Graph_t> &out_schedule) const;
+    ReturnStatus ComputeRecompSchedule(BspScheduleCS<GraphT> &initialSchedule, BspScheduleRecomp<GraphT> &outSchedule) const;
 };
 
-template <typename Graph_t>
-RETURN_STATUS GreedyRecomputer<Graph_t>::computeRecompSchedule(BspScheduleCS<Graph_t> &initial_schedule,
-                                                               BspScheduleRecomp<Graph_t> &out_schedule) const {
-    const vertex_idx &N = initial_schedule.getInstance().numberOfVertices();
-    const unsigned &P = initial_schedule.getInstance().numberOfProcessors();
-    const unsigned &S = initial_schedule.numberOfSupersteps();
-    const Graph_t &G = initial_schedule.getInstance().getComputationalDag();
+template <typename GraphT>
+ReturnStatus GreedyRecomputer<GraphT>::ComputeRecompSchedule(BspScheduleCS<GraphT> &initialSchedule,
+                                                             BspScheduleRecomp<GraphT> &outSchedule) const {
+    const VertexIdx &n = initialSchedule.GetInstance().NumberOfVertices();
+    const unsigned &p = initialSchedule.GetInstance().NumberOfProcessors();
+    const unsigned &s = initialSchedule.NumberOfSupersteps();
+    const GraphT &g = initialSchedule.GetInstance().GetComputationalDag();
 
-    out_schedule = BspScheduleRecomp<Graph_t>(initial_schedule.getInstance());
-    out_schedule.setNumberOfSupersteps(initial_schedule.numberOfSupersteps());
+    outSchedule = BspScheduleRecomp<GraphT>(initialSchedule.GetInstance());
+    outSchedule.SetNumberOfSupersteps(initialSchedule.NumberOfSupersteps());
 
     // Initialize required data structures
-    std::vector<std::vector<cost_type>> work_cost(P, std::vector<cost_type>(S, 0)), send_cost(P, std::vector<cost_type>(S, 0)),
-        rec_cost(P, std::vector<cost_type>(S, 0));
+    std::vector<std::vector<CostType>> workCost(p, std::vector<CostType>(s, 0)), sendCost(p, std::vector<CostType>(s, 0)),
+        recCost(p, std::vector<CostType>(s, 0));
 
-    std::vector<std::vector<unsigned>> first_computable(N, std::vector<unsigned>(P, 0U)),
-        first_present(N, std::vector<unsigned>(P, std::numeric_limits<unsigned>::max()));
+    std::vector<std::vector<unsigned>> firstComputable(n, std::vector<unsigned>(p, 0U)),
+        firstPresent(n, std::vector<unsigned>(p, std::numeric_limits<unsigned>::max()));
 
-    std::vector<std::vector<std::multiset<unsigned>>> needed_on_proc(N, std::vector<std::multiset<unsigned>>(P, {S}));
+    std::vector<std::vector<std::multiset<unsigned>>> neededOnProc(n, std::vector<std::multiset<unsigned>>(p, {s}));
 
-    std::vector<cost_type> max_work(S, 0), max_comm(S, 0);
+    std::vector<CostType> maxWork(s, 0), maxComm(s, 0);
 
-    std::vector<std::set<KeyTriple>> comm_steps(S);
+    std::vector<std::set<KeyTriple>> commSteps(s);
 
-    for (vertex_idx node = 0; node < N; ++node) {
-        const unsigned &proc = initial_schedule.assignedProcessor(node);
-        const unsigned &step = initial_schedule.assignedSuperstep(node);
+    for (VertexIdx node = 0; node < n; ++node) {
+        const unsigned &proc = initialSchedule.AssignedProcessor(node);
+        const unsigned &step = initialSchedule.AssignedSuperstep(node);
 
-        work_cost[proc][step] += G.vertex_work_weight(node);
-        first_present[node][proc] = std::min(first_present[node][proc], step);
-        for (vertex_idx pred : G.parents(node)) {
-            needed_on_proc[pred][proc].insert(step);
+        workCost[proc][step] += g.VertexWorkWeight(node);
+        firstPresent[node][proc] = std::min(firstPresent[node][proc], step);
+        for (VertexIdx pred : g.Parents(node)) {
+            neededOnProc[pred][proc].insert(step);
         }
 
-        out_schedule.assignments(node).emplace_back(proc, step);
+        outSchedule.Assignments(node).emplace_back(proc, step);
     }
-    for (const std::pair<KeyTriple, unsigned> item : initial_schedule.getCommunicationSchedule()) {
-        const vertex_idx &node = std::get<0>(item.first);
-        const unsigned &from_proc = std::get<1>(item.first);
-        const unsigned &to_proc = std::get<2>(item.first);
+    for (const std::pair<KeyTriple, unsigned> item : initialSchedule.GetCommunicationSchedule()) {
+        const VertexIdx &node = std::get<0>(item.first);
+        const unsigned &fromProc = std::get<1>(item.first);
+        const unsigned &toProc = std::get<2>(item.first);
         const unsigned &step = item.second;
-        send_cost[from_proc][step] += G.vertex_comm_weight(node)
-                                      * initial_schedule.getInstance().getArchitecture().communicationCosts(from_proc, to_proc);
-        rec_cost[to_proc][step] += G.vertex_comm_weight(node)
-                                   * initial_schedule.getInstance().getArchitecture().communicationCosts(from_proc, to_proc);
+        sendCost[fromProc][step]
+            += g.VertexCommWeight(node) * initialSchedule.GetInstance().GetArchitecture().CommunicationCosts(fromProc, toProc);
+        recCost[toProc][step]
+            += g.VertexCommWeight(node) * initialSchedule.GetInstance().GetArchitecture().CommunicationCosts(fromProc, toProc);
 
-        comm_steps[step].emplace(item.first);
-        needed_on_proc[node][from_proc].insert(step);
-        first_present[node][to_proc] = std::min(first_present[node][to_proc], step + 1);
+        commSteps[step].emplace(item.first);
+        neededOnProc[node][fromProc].insert(step);
+        firstPresent[node][toProc] = std::min(firstPresent[node][toProc], step + 1);
     }
-    for (unsigned step = 0; step < S; ++step) {
-        for (unsigned proc = 0; proc < P; ++proc) {
-            max_work[step] = std::max(max_work[step], work_cost[proc][step]);
-            max_comm[step] = std::max(max_comm[step], send_cost[proc][step]);
-            max_comm[step] = std::max(max_comm[step], rec_cost[proc][step]);
+    for (unsigned step = 0; step < s; ++step) {
+        for (unsigned proc = 0; proc < p; ++proc) {
+            maxWork[step] = std::max(maxWork[step], workCost[proc][step]);
+            maxComm[step] = std::max(maxComm[step], sendCost[proc][step]);
+            maxComm[step] = std::max(maxComm[step], recCost[proc][step]);
         }
     }
 
-    for (vertex_idx node = 0; node < N; ++node) {
-        for (const vertex_idx &pred : G.parents(node)) {
-            for (unsigned proc = 0; proc < P; ++proc) {
-                first_computable[node][proc] = std::max(first_computable[node][proc], first_present[pred][proc]);
+    for (VertexIdx node = 0; node < n; ++node) {
+        for (const VertexIdx &pred : g.Parents(node)) {
+            for (unsigned proc = 0; proc < p; ++proc) {
+                firstComputable[node][proc] = std::max(firstComputable[node][proc], firstPresent[pred][proc]);
             }
         }
     }
 
     // Find improvement steps
-    bool still_improved = true;
-    while (still_improved) {
-        still_improved = false;
+    bool stillImproved = true;
+    while (stillImproved) {
+        stillImproved = false;
 
-        for (unsigned step = 0; step < S; ++step) {
-            std::vector<KeyTriple> to_erase;
-            for (const KeyTriple &entry : comm_steps[step]) {
-                const vertex_idx &node = std::get<0>(entry);
-                const unsigned &from_proc = std::get<1>(entry);
-                const unsigned &to_proc = std::get<2>(entry);
+        for (unsigned step = 0; step < s; ++step) {
+            std::vector<KeyTriple> toErase;
+            for (const KeyTriple &entry : commSteps[step]) {
+                const VertexIdx &node = std::get<0>(entry);
+                const unsigned &fromProc = std::get<1>(entry);
+                const unsigned &toProc = std::get<2>(entry);
 
                 // check how much comm cost we save by removing comm schedule entry
-                cost_type comm_induced = G.vertex_comm_weight(node)
-                                         * initial_schedule.getInstance().getArchitecture().communicationCosts(from_proc, to_proc);
+                CostType commInduced = g.VertexCommWeight(node)
+                                       * initialSchedule.GetInstance().GetArchitecture().CommunicationCosts(fromProc, toProc);
 
-                cost_type new_max_comm = 0;
-                for (unsigned proc = 0; proc < P; ++proc) {
-                    if (proc == from_proc) {
-                        new_max_comm = std::max(new_max_comm, send_cost[proc][step] - comm_induced);
+                CostType newMaxComm = 0;
+                for (unsigned proc = 0; proc < p; ++proc) {
+                    if (proc == fromProc) {
+                        newMaxComm = std::max(newMaxComm, sendCost[proc][step] - commInduced);
                     } else {
-                        new_max_comm = std::max(new_max_comm, send_cost[proc][step]);
+                        newMaxComm = std::max(newMaxComm, sendCost[proc][step]);
                     }
-                    if (proc == to_proc) {
-                        new_max_comm = std::max(new_max_comm, rec_cost[proc][step] - comm_induced);
+                    if (proc == toProc) {
+                        newMaxComm = std::max(newMaxComm, recCost[proc][step] - commInduced);
                     } else {
-                        new_max_comm = std::max(new_max_comm, rec_cost[proc][step]);
+                        newMaxComm = std::max(newMaxComm, recCost[proc][step]);
                     }
                 }
-                if (new_max_comm == max_comm[step]) {
+                if (newMaxComm == maxComm[step]) {
                     continue;
                 }
 
-                if (!initial_schedule.getInstance().isCompatible(node, to_proc)) {
+                if (!initialSchedule.GetInstance().IsCompatible(node, toProc)) {
                     continue;
                 }
 
-                cost_type decrease = max_comm[step] - new_max_comm;
-                if (max_comm[step] > 0 && new_max_comm == 0) {
-                    decrease += initial_schedule.getInstance().getArchitecture().synchronisationCosts();
+                CostType decrease = maxComm[step] - newMaxComm;
+                if (maxComm[step] > 0 && newMaxComm == 0) {
+                    decrease += initialSchedule.GetInstance().GetArchitecture().SynchronisationCosts();
                 }
 
                 // check how much it would increase the work cost instead
-                unsigned best_step = S;
-                cost_type smallest_increase = std::numeric_limits<cost_type>::max();
-                for (unsigned comp_step = first_computable[node][to_proc]; comp_step <= *needed_on_proc[node][to_proc].begin();
-                     ++comp_step) {
-                    cost_type increase = work_cost[to_proc][comp_step] + G.vertex_work_weight(node) > max_work[comp_step]
-                                             ? work_cost[to_proc][comp_step] + G.vertex_work_weight(node) - max_work[comp_step]
-                                             : 0;
+                unsigned bestStep = s;
+                CostType smallestIncrease = std::numeric_limits<CostType>::max();
+                for (unsigned compStep = firstComputable[node][toProc]; compStep <= *neededOnProc[node][toProc].begin();
+                     ++compStep) {
+                    CostType increase = workCost[toProc][compStep] + g.VertexWorkWeight(node) > maxWork[compStep]
+                                            ? workCost[toProc][compStep] + g.VertexWorkWeight(node) - maxWork[compStep]
+                                            : 0;
 
-                    if (increase < smallest_increase) {
-                        best_step = comp_step;
-                        smallest_increase = increase;
+                    if (increase < smallestIncrease) {
+                        bestStep = compStep;
+                        smallestIncrease = increase;
                     }
                 }
 
                 // check if this modification is beneficial
-                if (best_step == S || smallest_increase > decrease) {
+                if (bestStep == s || smallestIncrease > decrease) {
                     continue;
                 }
 
                 // execute the modification
-                to_erase.emplace_back(entry);
-                out_schedule.assignments(node).emplace_back(to_proc, best_step);
+                toErase.emplace_back(entry);
+                outSchedule.Assignments(node).emplace_back(toProc, bestStep);
 
-                send_cost[from_proc][step] -= comm_induced;
-                rec_cost[to_proc][step] -= comm_induced;
-                max_comm[step] = new_max_comm;
+                sendCost[fromProc][step] -= commInduced;
+                recCost[toProc][step] -= commInduced;
+                maxComm[step] = newMaxComm;
 
-                work_cost[to_proc][best_step] += G.vertex_work_weight(node);
-                max_work[best_step] += smallest_increase;
+                workCost[toProc][bestStep] += g.VertexWorkWeight(node);
+                maxWork[bestStep] += smallestIncrease;
 
                 // update movability bounds
-                for (const vertex_idx &pred : G.parents(node)) {
-                    needed_on_proc[pred][to_proc].insert(best_step);
+                for (const VertexIdx &pred : g.Parents(node)) {
+                    neededOnProc[pred][toProc].insert(bestStep);
                 }
 
-                needed_on_proc[node][from_proc].erase(needed_on_proc[node][from_proc].lower_bound(step));
+                neededOnProc[node][fromProc].erase(neededOnProc[node][fromProc].lower_bound(step));
 
-                first_present[node][to_proc] = best_step;
-                for (const vertex_idx &succ : G.children(node)) {
-                    for (const vertex_idx &pred : G.parents(node)) {
-                        first_computable[succ][to_proc] = std::max(first_computable[succ][to_proc], first_present[pred][to_proc]);
+                firstPresent[node][toProc] = bestStep;
+                for (const VertexIdx &succ : g.Children(node)) {
+                    for (const VertexIdx &pred : g.Parents(node)) {
+                        firstComputable[succ][toProc] = std::max(firstComputable[succ][toProc], firstPresent[pred][toProc]);
                     }
                 }
 
-                still_improved = true;
+                stillImproved = true;
             }
-            for (const KeyTriple &entry : to_erase) {
-                comm_steps[step].erase(entry);
+            for (const KeyTriple &entry : toErase) {
+                commSteps[step].erase(entry);
             }
         }
     }
 
-    for (unsigned step = 0; step < S; ++step) {
-        for (const KeyTriple &entry : comm_steps[step]) {
-            out_schedule.getCommunicationSchedule().emplace(entry, step);
+    for (unsigned step = 0; step < s; ++step) {
+        for (const KeyTriple &entry : commSteps[step]) {
+            outSchedule.GetCommunicationSchedule().emplace(entry, step);
         }
     }
 
-    out_schedule.mergeSupersteps();
+    outSchedule.MergeSupersteps();
 
-    return RETURN_STATUS::OSP_SUCCESS;
+    return ReturnStatus::OSP_SUCCESS;
 }
 
 }    // namespace osp

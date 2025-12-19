@@ -27,35 +27,35 @@ namespace osp {
  * @struct TotalCommunicationCost
  * @brief Implements the total communication cost model.
  */
-template <typename Graph_t>
+template <typename GraphT>
 struct TotalCommunicationCost {
-    using cost_type = double;
+    using CostType = double;
 
-    cost_type operator()(const BspSchedule<Graph_t> &schedule) const {
-        const auto &instance = schedule.getInstance();
-        const auto &node_to_processor_assignment = schedule.assignedProcessors();
+    CostType operator()(const BspSchedule<GraphT> &schedule) const {
+        const auto &instance = schedule.GetInstance();
+        const auto &nodeToProcessorAssignment = schedule.AssignedProcessors();
 
-        v_commw_t<Graph_t> total_communication = 0;
+        VCommwT<GraphT> totalCommunication = 0;
 
-        for (const auto &v : instance.vertices()) {
-            for (const auto &target : instance.getComputationalDag().children(v)) {
-                if (node_to_processor_assignment[v] != node_to_processor_assignment[target]) {
-                    total_communication += instance.sendCosts(node_to_processor_assignment[v], node_to_processor_assignment[target])
-                                           * instance.getComputationalDag().vertex_comm_weight(v);
+        for (const auto &v : instance.Vertices()) {
+            for (const auto &target : instance.GetComputationalDag().Children(v)) {
+                if (nodeToProcessorAssignment[v] != nodeToProcessorAssignment[target]) {
+                    totalCommunication += instance.SendCosts(nodeToProcessorAssignment[v], nodeToProcessorAssignment[target])
+                                          * instance.GetComputationalDag().VertexCommWeight(v);
                 }
             }
         }
 
-        auto comm_cost = total_communication * static_cast<double>(instance.communicationCosts())
-                         / static_cast<double>(instance.numberOfProcessors());
+        auto commCost = totalCommunication * static_cast<double>(instance.CommunicationCosts())
+                        / static_cast<double>(instance.NumberOfProcessors());
 
-        const unsigned number_of_supersteps = schedule.numberOfSupersteps();
+        const unsigned numberOfSupersteps = schedule.NumberOfSupersteps();
 
-        auto work_cost = cost_helpers::compute_work_costs(schedule);
-        auto sync_cost = static_cast<v_commw_t<Graph_t>>(number_of_supersteps > 1 ? number_of_supersteps - 1 : 0)
-                         * instance.synchronisationCosts();
+        auto workCost = cost_helpers::ComputeWorkCosts(schedule);
+        auto syncCost
+            = static_cast<VCommwT<GraphT>>(numberOfSupersteps > 1 ? numberOfSupersteps - 1 : 0) * instance.SynchronisationCosts();
 
-        return comm_cost + work_cost + sync_cost;
+        return commCost + workCost + syncCost;
     }
 };
 

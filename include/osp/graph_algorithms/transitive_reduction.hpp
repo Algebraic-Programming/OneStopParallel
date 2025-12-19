@@ -41,51 +41,50 @@ namespace osp {
  *
  * This algorithm is efficient for sparse graphs, with a complexity of roughly O(E * (V+E)).
  *
- * @tparam Graph_t_in The type of the input graph. Must satisfy the `is_directed_graph` concept.
- * @tparam Graph_t_out The type of the output graph. Must satisfy the `is_constructable_cdag` concept.
+ * @tparam GraphTIn The type of the input graph. Must satisfy the `is_directed_graph` concept.
+ * @tparam GraphTOut The type of the output graph. Must satisfy the `is_constructable_cdag` concept.
  * @param graph_in The input DAG.
  * @param graph_out The output graph, which will contain the transitive reduction. The graph should be empty.
  */
-template <typename Graph_t_in, typename Graph_t_out>
-void transitive_reduction_sparse(const Graph_t_in &graph_in, Graph_t_out &graph_out) {
-    static_assert(is_directed_graph_v<Graph_t_in>, "Input graph must be a directed graph.");
-    static_assert(is_constructable_cdag_v<Graph_t_out>, "Output graph must be a constructable computational DAG.");
-    assert(graph_out.num_vertices() == 0 && "Output graph must be empty.");
+template <typename GraphTIn, typename GraphTOut>
+void TransitiveReductionSparse(const GraphTIn &graphIn, GraphTOut &graphOut) {
+    static_assert(isDirectedGraphV<GraphTIn>, "Input graph must be a directed graph.");
+    static_assert(isConstructableCdagV<GraphTOut>, "Output graph must be a constructable computational DAG.");
+    assert(graphOut.NumVertices() == 0 && "Output graph must be empty.");
 
-    if (graph_in.num_vertices() == 0) {
+    if (graphIn.NumVertices() == 0) {
         return;
     }
 
     // 1. Copy vertices and their properties from graph_in to graph_out.
-    for (const auto &v_idx : graph_in.vertices()) {
-        if constexpr (has_typed_vertices_v<Graph_t_in> && is_constructable_cdag_typed_vertex_v<Graph_t_out>) {
-            graph_out.add_vertex(graph_in.vertex_work_weight(v_idx),
-                                 graph_in.vertex_comm_weight(v_idx),
-                                 graph_in.vertex_mem_weight(v_idx),
-                                 graph_in.vertex_type(v_idx));
+    for (const auto &vIdx : graphIn.Vertices()) {
+        if constexpr (hasTypedVerticesV<GraphTIn> && isConstructableCdagTypedVertexV<GraphTOut>) {
+            graphOut.AddVertex(graphIn.VertexWorkWeight(vIdx),
+                               graphIn.VertexCommWeight(vIdx),
+                               graphIn.VertexMemWeight(vIdx),
+                               graphIn.VertexType(vIdx));
         } else {
-            graph_out.add_vertex(
-                graph_in.vertex_work_weight(v_idx), graph_in.vertex_comm_weight(v_idx), graph_in.vertex_mem_weight(v_idx));
+            graphOut.AddVertex(graphIn.VertexWorkWeight(vIdx), graphIn.VertexCommWeight(vIdx), graphIn.VertexMemWeight(vIdx));
         }
     }
 
     // 2. Add an edge (u, v) to the reduction if it's not transitive.
     // An edge (u, v) is transitive if there exists a child w of u (w != v) that can reach v.
-    for (const auto &edge : edges(graph_in)) {
-        const auto u = source(edge, graph_in);
-        const auto v = target(edge, graph_in);
-        bool is_transitive = false;
-        for (const auto &w : graph_in.children(u)) {
-            if (w != v && has_path(w, v, graph_in)) {
-                is_transitive = true;
+    for (const auto &edge : Edges(graphIn)) {
+        const auto u = Source(edge, graphIn);
+        const auto v = Target(edge, graphIn);
+        bool isTransitive = false;
+        for (const auto &w : graphIn.Children(u)) {
+            if (w != v && HasPath(w, v, graphIn)) {
+                isTransitive = true;
                 break;
             }
         }
-        if (!is_transitive) {
-            if constexpr (has_edge_weights_v<Graph_t_in> && is_constructable_cdag_comm_edge_v<Graph_t_out>) {
-                graph_out.add_edge(u, v, graph_in.edge_comm_weight(edge));
+        if (!isTransitive) {
+            if constexpr (hasEdgeWeightsV<GraphTIn> && isConstructableCdagCommEdgeV<GraphTOut>) {
+                graphOut.AddEdge(u, v, graphIn.EdgeCommWeight(edge));
             } else {
-                graph_out.add_edge(u, v);
+                graphOut.AddEdge(u, v);
             }
         }
     }
@@ -105,46 +104,45 @@ void transitive_reduction_sparse(const Graph_t_in &graph_in, Graph_t_out &graph_
  *
  * This algorithm is efficient for dense graphs, with a complexity of O(V^3).
  *
- * @tparam Graph_t_in The type of the input graph. Must satisfy the `is_directed_graph_edge_desc` concept.
- * @tparam Graph_t_out The type of the output graph. Must satisfy the `is_constructable_cdag` concept.
+ * @tparam GraphTIn The type of the input graph. Must satisfy the `is_directed_graph_edge_desc` concept.
+ * @tparam GraphTOut The type of the output graph. Must satisfy the `is_constructable_cdag` concept.
  * @param graph_in The input DAG.
  * @param graph_out The output graph, which will contain the transitive reduction. The graph should be empty.
  */
-template <typename Graph_t_in, typename Graph_t_out>
-void transitive_reduction_dense(const Graph_t_in &graph_in, Graph_t_out &graph_out) {
-    static_assert(is_directed_graph_edge_desc_v<Graph_t_in>, "Input graph must be a directed graph with edge descriptors.");
-    static_assert(is_constructable_cdag_v<Graph_t_out>, "Output graph must be a constructable computational DAG.");
-    assert(graph_out.num_vertices() == 0 && "Output graph must be empty.");
+template <typename GraphTIn, typename GraphTOut>
+void TransitiveReductionDense(const GraphTIn &graphIn, GraphTOut &graphOut) {
+    static_assert(isDirectedGraphEdgeDescV<GraphTIn>, "Input graph must be a directed graph with edge descriptors.");
+    static_assert(isConstructableCdagV<GraphTOut>, "Output graph must be a constructable computational DAG.");
+    assert(graphOut.NumVertices() == 0 && "Output graph must be empty.");
 
-    const auto num_v = graph_in.num_vertices();
-    if (num_v == 0) {
+    const auto numV = graphIn.NumVertices();
+    if (numV == 0) {
         return;
     }
 
     // 1. Copy vertices and their properties from graph_in to graph_out.
-    for (const auto &v_idx : graph_in.vertices()) {
-        if constexpr (has_typed_vertices_v<Graph_t_in> && is_constructable_cdag_typed_vertex_v<Graph_t_out>) {
-            graph_out.add_vertex(graph_in.vertex_work_weight(v_idx),
-                                 graph_in.vertex_comm_weight(v_idx),
-                                 graph_in.vertex_mem_weight(v_idx),
-                                 graph_in.vertex_type(v_idx));
+    for (const auto &vIdx : graphIn.Vertices()) {
+        if constexpr (hasTypedVerticesV<GraphTIn> && isConstructableCdagTypedVertexV<GraphTOut>) {
+            graphOut.AddVertex(graphIn.VertexWorkWeight(vIdx),
+                               graphIn.VertexCommWeight(vIdx),
+                               graphIn.VertexMemWeight(vIdx),
+                               graphIn.VertexType(vIdx));
         } else {
-            graph_out.add_vertex(
-                graph_in.vertex_work_weight(v_idx), graph_in.vertex_comm_weight(v_idx), graph_in.vertex_mem_weight(v_idx));
+            graphOut.AddVertex(graphIn.VertexWorkWeight(vIdx), graphIn.VertexCommWeight(vIdx), graphIn.VertexMemWeight(vIdx));
         }
     }
 
     // 2. Compute transitive closure (reachability matrix).
-    std::vector<std::vector<bool>> reachable(num_v, std::vector<bool>(num_v, false));
-    for (const auto &edge : edges(graph_in)) {
-        reachable[source(edge, graph_in)][target(edge, graph_in)] = true;
+    std::vector<std::vector<bool>> reachable(numV, std::vector<bool>(numV, false));
+    for (const auto &edge : Edges(graphIn)) {
+        reachable[Source(edge, graphIn)][Target(edge, graphIn)] = true;
     }
 
-    const auto top_order = GetTopOrder(graph_in);
-    for (const auto &k : top_order) {
-        for (const auto &i : top_order) {
+    const auto topOrder = GetTopOrder(graphIn);
+    for (const auto &k : topOrder) {
+        for (const auto &i : topOrder) {
             if (reachable[i][k]) {
-                for (const auto &j : top_order) {
+                for (const auto &j : topOrder) {
                     if (reachable[k][j]) {
                         reachable[i][j] = true;
                     }
@@ -154,21 +152,21 @@ void transitive_reduction_dense(const Graph_t_in &graph_in, Graph_t_out &graph_o
     }
 
     // 3. Add an edge (u, v) to the reduction if it's not transitive.
-    for (const auto &edge : edges(graph_in)) {
-        const auto u = source(edge, graph_in);
-        const auto v = target(edge, graph_in);
-        bool is_transitive = false;
-        for (const auto &w : graph_in.children(u)) {
+    for (const auto &edge : Edges(graphIn)) {
+        const auto u = Source(edge, graphIn);
+        const auto v = Target(edge, graphIn);
+        bool isTransitive = false;
+        for (const auto &w : graphIn.Children(u)) {
             if (w != v && reachable[w][v]) {
-                is_transitive = true;
+                isTransitive = true;
                 break;
             }
         }
-        if (!is_transitive) {
-            if constexpr (has_edge_weights_v<Graph_t_in> && is_constructable_cdag_comm_edge_v<Graph_t_out>) {
-                graph_out.add_edge(u, v, graph_in.edge_comm_weight(edge));
+        if (!isTransitive) {
+            if constexpr (hasEdgeWeightsV<GraphTIn> && isConstructableCdagCommEdgeV<GraphTOut>) {
+                graphOut.AddEdge(u, v, graphIn.EdgeCommWeight(edge));
             } else {
-                graph_out.add_edge(u, v);
+                graphOut.AddEdge(u, v);
             }
         }
     }

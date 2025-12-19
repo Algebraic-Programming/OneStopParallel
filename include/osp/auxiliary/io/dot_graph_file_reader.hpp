@@ -33,7 +33,7 @@ limitations under the License.
 namespace osp {
 namespace file_reader {
 
-std::vector<std::string> split(const std::string &s, char delimiter) {
+std::vector<std::string> Split(const std::string &s, char delimiter) {
     std::vector<std::string> tokens;
     std::string token;
     std::istringstream tokenStream(s);
@@ -43,7 +43,7 @@ std::vector<std::string> split(const std::string &s, char delimiter) {
     return tokens;
 }
 
-std::string removeLeadingAndTrailingQuotes(const std::string &str) {
+std::string RemoveLeadingAndTrailingQuotes(const std::string &str) {
     if (str.empty()) {
         return str;
     }
@@ -62,27 +62,27 @@ std::string removeLeadingAndTrailingQuotes(const std::string &str) {
     return str.substr(start, end - start);
 }
 
-template <typename Graph_t>
-void parseDotNode(const std::string &line, Graph_t &G) {
+template <typename GraphT>
+void ParseDotNode(const std::string &line, GraphT &g) {
     std::size_t pos = line.find('[');
     if (pos == std::string::npos) {
         return;
     }
-    std::size_t end_pos = line.find(']');
-    if (end_pos == std::string::npos) {
+    std::size_t endPos = line.find(']');
+    if (endPos == std::string::npos) {
         return;
     }
 
-    std::string properties = line.substr(pos + 1, end_pos - pos - 1);
-    std::vector<std::string> keyValuePairs = split(properties, ';');
+    std::string properties = line.substr(pos + 1, endPos - pos - 1);
+    std::vector<std::string> keyValuePairs = Split(properties, ';');
 
-    v_workw_t<Graph_t> work_weight = 0;
-    v_memw_t<Graph_t> mem_weight = 0;
-    v_commw_t<Graph_t> comm_weight = 0;
-    v_type_t<Graph_t> type = 0;
+    VWorkwT<GraphT> workWeight = 0;
+    VMemwT<GraphT> memWeight = 0;
+    VCommwT<GraphT> commWeight = 0;
+    VTypeT<GraphT> type = 0;
 
     for (const std::string &keyValuePair : keyValuePairs) {
-        std::vector<std::string> keyValue = split(keyValuePair, '=');
+        std::vector<std::string> keyValue = Split(keyValuePair, '=');
         if (keyValue.size() != 2) {
             continue;
         }
@@ -96,68 +96,68 @@ void parseDotNode(const std::string &line, Graph_t &G) {
             continue;
         }
 
-        std::string value = removeLeadingAndTrailingQuotes(keyValue[1]);
+        std::string value = RemoveLeadingAndTrailingQuotes(keyValue[1]);
 
         try {
             if (key == "work_weight") {
-                work_weight = static_cast<v_workw_t<Graph_t>>(std::stoll(value));
+                workWeight = static_cast<VWorkwT<GraphT>>(std::stoll(value));
             } else if (key == "mem_weight") {
-                mem_weight = static_cast<v_memw_t<Graph_t>>(std::stoll(value));
+                memWeight = static_cast<VMemwT<GraphT>>(std::stoll(value));
             } else if (key == "comm_weight") {
-                comm_weight = static_cast<v_commw_t<Graph_t>>(std::stoll(value));
+                commWeight = static_cast<VCommwT<GraphT>>(std::stoll(value));
             } else if (key == "type") {
-                type = static_cast<v_type_t<Graph_t>>(std::stoll(value));
+                type = static_cast<VTypeT<GraphT>>(std::stoll(value));
             }
         } catch (...) {
             std::cerr << "Warning: Failed to parse property value: " << value << "\n";
         }
     }
 
-    if constexpr (is_constructable_cdag_typed_vertex_v<Graph_t>) {
-        G.add_vertex(work_weight, comm_weight, mem_weight, type);
+    if constexpr (isConstructableCdagTypedVertexV<GraphT>) {
+        g.AddVertex(workWeight, commWeight, memWeight, type);
     } else {
-        G.add_vertex(work_weight, comm_weight, mem_weight);
+        g.AddVertex(workWeight, commWeight, memWeight);
     }
 }
 
-template <typename Graph_t>
-void parseDotEdge(const std::string &line, Graph_t &G) {
-    using edge_commw_t_or_default = std::conditional_t<has_edge_weights_v<Graph_t>, e_commw_t<Graph_t>, v_commw_t<Graph_t>>;
+template <typename GraphT>
+void ParseDotEdge(const std::string &line, GraphT &g) {
+    using EdgeCommwTOrDefault = std::conditional_t<hasEdgeWeightsV<GraphT>, ECommwT<GraphT>, VCommwT<GraphT>>;
 
-    std::size_t arrow_pos = line.find("->");
-    if (arrow_pos == std::string::npos) {
+    std::size_t arrowPos = line.find("->");
+    if (arrowPos == std::string::npos) {
         return;
     }
 
-    std::string source_str = line.substr(0, arrow_pos);
-    source_str.erase(source_str.find_last_not_of(" \t\n\r\f\v") + 1);
+    std::string sourceStr = line.substr(0, arrowPos);
+    sourceStr.erase(sourceStr.find_last_not_of(" \t\n\r\f\v") + 1);
 
-    std::string target_str;
-    std::size_t bracket_pos = line.find('[', arrow_pos);
-    if (bracket_pos != std::string::npos) {
-        target_str = line.substr(arrow_pos + 2, bracket_pos - (arrow_pos + 2));
+    std::string targetStr;
+    std::size_t bracketPos = line.find('[', arrowPos);
+    if (bracketPos != std::string::npos) {
+        targetStr = line.substr(arrowPos + 2, bracketPos - (arrowPos + 2));
     } else {
-        target_str = line.substr(arrow_pos + 2);
+        targetStr = line.substr(arrowPos + 2);
     }
 
-    target_str.erase(0, target_str.find_first_not_of(" \t\n\r\f\v"));
-    target_str.erase(target_str.find_last_not_of(" \t\n\r\f\v") + 1);
+    targetStr.erase(0, targetStr.find_first_not_of(" \t\n\r\f\v"));
+    targetStr.erase(targetStr.find_last_not_of(" \t\n\r\f\v") + 1);
 
     try {
-        vertex_idx_t<Graph_t> source_node = static_cast<vertex_idx_t<Graph_t>>(std::stoll(source_str));
-        vertex_idx_t<Graph_t> target_node = static_cast<vertex_idx_t<Graph_t>>(std::stoll(target_str));
+        VertexIdxT<GraphT> sourceNode = static_cast<VertexIdxT<GraphT>>(std::stoll(sourceStr));
+        VertexIdxT<GraphT> targetNode = static_cast<VertexIdxT<GraphT>>(std::stoll(targetStr));
 
-        if constexpr (is_constructable_cdag_comm_edge_v<Graph_t>) {
-            edge_commw_t_or_default comm_weight = 0;
+        if constexpr (isConstructableCdagCommEdgeV<GraphT>) {
+            EdgeCommwTOrDefault commWeight = 0;
 
-            if (bracket_pos != std::string::npos) {
-                std::size_t end_bracket_pos = line.find(']', bracket_pos);
-                if (end_bracket_pos != std::string::npos) {
-                    std::string properties = line.substr(bracket_pos + 1, end_bracket_pos - bracket_pos - 1);
-                    std::vector<std::string> keyValuePairs = split(properties, ';');
+            if (bracketPos != std::string::npos) {
+                std::size_t endBracketPos = line.find(']', bracketPos);
+                if (endBracketPos != std::string::npos) {
+                    std::string properties = line.substr(bracketPos + 1, endBracketPos - bracketPos - 1);
+                    std::vector<std::string> keyValuePairs = Split(properties, ';');
 
                     for (const auto &keyValuePair : keyValuePairs) {
-                        std::vector<std::string> keyValue = split(keyValuePair, '=');
+                        std::vector<std::string> keyValue = Split(keyValuePair, '=');
                         if (keyValue.size() != 2) {
                             continue;
                         }
@@ -169,26 +169,26 @@ void parseDotEdge(const std::string &line, Graph_t &G) {
                             continue;
                         }
 
-                        std::string value = removeLeadingAndTrailingQuotes(keyValue[1]);
+                        std::string value = RemoveLeadingAndTrailingQuotes(keyValue[1]);
 
                         if (key == "comm_weight") {
-                            comm_weight = static_cast<edge_commw_t_or_default>(std::stoll(value));
+                            commWeight = static_cast<EdgeCommwTOrDefault>(std::stoll(value));
                         }
                     }
                 }
             }
 
-            G.add_edge(source_node, target_node, comm_weight);
+            g.AddEdge(sourceNode, targetNode, commWeight);
         } else {
-            G.add_edge(source_node, target_node);
+            g.AddEdge(sourceNode, targetNode);
         }
     } catch (...) {
         std::cerr << "Warning: Failed to parse edge nodes from line: " << line << "\n";
     }
 }
 
-template <typename Graph_t>
-bool readComputationalDagDotFormat(std::ifstream &infile, Graph_t &graph) {
+template <typename GraphT>
+bool ReadComputationalDagDotFormat(std::ifstream &infile, GraphT &graph) {
     std::string line;
     while (std::getline(infile, line)) {
         if (line.length() > MAX_LINE_LENGTH) {
@@ -204,24 +204,24 @@ bool readComputationalDagDotFormat(std::ifstream &infile, Graph_t &graph) {
 
         if (line.find("->") != std::string::npos) {
             // This is an edge
-            parseDotEdge(line, graph);
+            ParseDotEdge(line, graph);
         } else if (line.find('[') != std::string::npos) {
             // This is a node
-            parseDotNode(line, graph);
+            ParseDotNode(line, graph);
         }
     }
 
     return true;
 }
 
-template <typename Graph_t>
-bool readComputationalDagDotFormat(const std::string &filename, Graph_t &graph) {
+template <typename GraphT>
+bool ReadComputationalDagDotFormat(const std::string &filename, GraphT &graph) {
     if (std::filesystem::path(filename).extension() != ".dot") {
         std::cerr << "Error: Only .dot files are accepted.\n";
         return false;
     }
 
-    if (!isPathSafe(filename)) {
+    if (!IsPathSafe(filename)) {
         std::cerr << "Error: Unsafe file path.\n";
         return false;
     }
@@ -232,7 +232,7 @@ bool readComputationalDagDotFormat(const std::string &filename, Graph_t &graph) 
         return false;
     }
 
-    return readComputationalDagDotFormat(infile, graph);
+    return ReadComputationalDagDotFormat(infile, graph);
 }
 
 }    // namespace file_reader

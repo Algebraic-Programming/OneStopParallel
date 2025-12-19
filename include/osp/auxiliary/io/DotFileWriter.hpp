@@ -30,72 +30,73 @@ namespace osp {
 
 class DotFileWriter {
   private:
-    template <typename Graph_t>
+    template <typename GraphT>
 
-    struct EdgeWriter_DOT {
-        const Graph_t &graph;
+    struct EdgeWriterDot {
+        const GraphT &graph_;
 
-        EdgeWriter_DOT(const Graph_t &graph_) : graph(graph_) {}
+        EdgeWriterDot(const GraphT &graph) : graph_(graph) {}
 
-        void operator()(std::ostream &out, const edge_desc_t<Graph_t> &i) const {
-            out << source(i, graph) << "->" << target(i, graph) << " ["
-                << "comm_weight=\"" << graph.edge_comm_weight(i) << "\";"
+        void operator()(std::ostream &out, const EdgeDescT<GraphT> &i) const {
+            out << Source(i, graph_) << "->" << Target(i, graph_) << " ["
+                << "comm_weight=\"" << graph_.EdgeCommWeight(i) << "\";"
                 << "]";
         }
     };
 
-    template <typename Graph_t>
-    struct VertexWriterSchedule_DOT {
-        const BspSchedule<Graph_t> &schedule;
+    template <typename GraphT>
+    struct VertexWriterScheduleDot {
+        const BspSchedule<GraphT> &schedule_;
 
-        VertexWriterSchedule_DOT(const BspSchedule<Graph_t> &schedule_) : schedule(schedule_) {}
+        VertexWriterScheduleDot(const BspSchedule<GraphT> &schedule) : schedule_(schedule) {}
 
-        void operator()(std::ostream &out, const vertex_idx_t<Graph_t> &i) const {
+        void operator()(std::ostream &out, const VertexIdxT<GraphT> &i) const {
             out << i << " ["
-                << "work_weight=\"" << schedule.getInstance().getComputationalDag().vertex_work_weight(i) << "\";"
-                << "comm_weight=\"" << schedule.getInstance().getComputationalDag().vertex_comm_weight(i) << "\";"
-                << "mem_weight=\"" << schedule.getInstance().getComputationalDag().vertex_mem_weight(i) << "\";";
+                << "work_weight=\"" << schedule_.GetInstance().GetComputationalDag().VertexWorkWeight(i) << "\";"
+                << "comm_weight=\"" << schedule_.GetInstance().GetComputationalDag().VertexCommWeight(i) << "\";"
+                << "mem_weight=\"" << schedule_.GetInstance().GetComputationalDag().VertexMemWeight(i) << "\";";
 
-            if constexpr (has_typed_vertices_v<Graph_t>) {
-                out << "type=\"" << schedule.getInstance().getComputationalDag().vertex_type(i) << "\";";
+            if constexpr (hasTypedVerticesV<GraphT>) {
+                out << "type=\"" << schedule_.GetInstance().GetComputationalDag().VertexType(i) << "\";";
             }
 
-            out << "proc=\"" << schedule.assignedProcessor(i) << "\";" << "superstep=\"" << schedule.assignedSuperstep(i) << "\";";
+            out << "proc=\"" << schedule_.AssignedProcessor(i) << "\";" << "superstep=\"" << schedule_.AssignedSuperstep(i)
+                << "\";";
 
             out << "]";
         }
     };
 
-    template <typename Graph_t>
-    struct VertexWriterScheduleRecomp_DOT {
-        const BspScheduleRecomp<Graph_t> &schedule;
+    template <typename GraphT>
+    struct VertexWriterScheduleRecompDot {
+        const BspScheduleRecomp<GraphT> &schedule_;
 
-        VertexWriterScheduleRecomp_DOT(const BspScheduleRecomp<Graph_t> &schedule_) : schedule(schedule_) {}
+        VertexWriterScheduleRecompDot(const BspScheduleRecomp<GraphT> &schedule) : schedule_(schedule) {}
 
-        void operator()(std::ostream &out, const vertex_idx_t<Graph_t> &i) const {
+        void operator()(std::ostream &out, const VertexIdxT<GraphT> &i) const {
             out << i << " ["
-                << "work_weight=\"" << schedule.getInstance().getComputationalDag().vertex_work_weight(i) << "\";"
-                << "comm_weight=\"" << schedule.getInstance().getComputationalDag().vertex_comm_weight(i) << "\";"
-                << "mem_weight=\"" << schedule.getInstance().getComputationalDag().vertex_mem_weight(i) << "\";";
+                << "work_weight=\"" << schedule_.GetInstance().GetComputationalDag().VertexWorkWeight(i) << "\";"
+                << "comm_weight=\"" << schedule_.GetInstance().GetComputationalDag().VertexCommWeight(i) << "\";"
+                << "mem_weight=\"" << schedule_.GetInstance().GetComputationalDag().VertexMemWeight(i) << "\";";
 
-            if constexpr (has_typed_vertices_v<Graph_t>) {
-                out << "type=\"" << schedule.getInstance().getComputationalDag().vertex_type(i) << "\";";
+            if constexpr (hasTypedVerticesV<GraphT>) {
+                out << "type=\"" << schedule_.GetInstance().GetComputationalDag().VertexType(i) << "\";";
             }
 
             out << "proc=\"(";
-            for (size_t j = 0; j < schedule.assignments(i).size() - 1; ++j) {
-                out << schedule.assignments(i)[j].first << ",";
+            for (size_t j = 0; j < schedule_.Assignments(i).size() - 1; ++j) {
+                out << schedule_.Assignments(i)[j].first << ",";
             }
-            out << schedule.assignments(i)[schedule.assignments(i).size() - 1].first << ")\";"
+            out << schedule_.Assignments(i)[schedule_.Assignments(i).size() - 1].first << ")\";"
                 << "superstep=\"(";
-            for (size_t j = 0; j < schedule.assignments(i).size() - 1; ++j) {
-                out << schedule.assignments(i)[j].second << ",";
+            for (size_t j = 0; j < schedule_.Assignments(i).size() - 1; ++j) {
+                out << schedule_.Assignments(i)[j].second << ",";
             }
-            out << schedule.assignments(i)[schedule.assignments(i).size() - 1].second << ")\";";
+            out << schedule_.Assignments(i)[schedule_.Assignments(i).size() - 1].second << ")\";";
 
             bool found = false;
 
-            for (const auto &[key, val] : schedule.getCommunicationSchedule()) {
+            for (const auto &[key, val] : schedule_.GetCommunicationSchedule()) {
                 if (std::get<0>(key) == i) {
                     if (!found) {
                         out << "cs=\"[";
@@ -116,50 +117,51 @@ class DotFileWriter {
         }
     };
 
-    template <typename Graph_t>
-    struct VertexWriterDuplicateRecompSchedule_DOT {
-        const Graph_t &graph;
-        const std::vector<std::string> name;
-        const std::vector<unsigned> node_to_proc;
-        const std::vector<unsigned> node_to_superstep;
+    template <typename GraphT>
+    struct VertexWriterDuplicateRecompScheduleDot {
+        const GraphT &graph_;
+        const std::vector<std::string> name_;
+        const std::vector<unsigned> nodeToProc_;
+        const std::vector<unsigned> nodeToSuperstep_;
 
-        VertexWriterDuplicateRecompSchedule_DOT(const Graph_t &graph_,
-                                                const std::vector<std::string> &name_,
-                                                std::vector<unsigned> &node_to_proc_,
-                                                std::vector<unsigned> &node_to_superstep_)
-            : graph(graph_), name(name_), node_to_proc(node_to_proc_), node_to_superstep(node_to_superstep_) {}
+        VertexWriterDuplicateRecompScheduleDot(const GraphT &graph,
+                                               const std::vector<std::string> &name,
+                                               std::vector<unsigned> &nodeToProc,
+                                               std::vector<unsigned> &nodeToSuperstep)
+            : graph_(graph), name_(name), nodeToProc_(nodeToProc), nodeToSuperstep_(nodeToSuperstep) {}
 
         template <class VertexOrEdge>
         void operator()(std::ostream &out, const VertexOrEdge &i) const {
-            out << i << " [" << "label=\"" << name[i] << "\";" << "work_weight=\"" << graph.vertex_work_weight(i) << "\";"
-                << "comm_weight=\"" << graph.vertex_comm_weight(i) << "\";" << "mem_weight=\"" << graph.vertex_mem_weight(i)
-                << "\";" << "proc=\"" << node_to_proc[i] << "\";" << "superstep=\"" << node_to_superstep[i] << "\";";
+            out << i << " [" << "label=\"" << name_[i] << "\";" << "work_weight=\"" << graph_.VertexWorkWeight(i) << "\";"
+                << "comm_weight=\"" << graph_.VertexCommWeight(i) << "\";" << "mem_weight=\"" << graph_.VertexMemWeight(i)
+                << "\";" << "proc=\"" << nodeToProc_[i] << "\";" << "superstep=\"" << nodeToSuperstep_[i] << "\";";
 
             out << "]";
         }
     };
 
-    template <typename Graph_t>
-    struct VertexWriterScheduleCS_DOT {
-        const BspScheduleCS<Graph_t> &schedule;
+    template <typename GraphT>
+    struct VertexWriterScheduleCsDot {
+        const BspScheduleCS<GraphT> &schedule_;
 
-        VertexWriterScheduleCS_DOT(const BspScheduleCS<Graph_t> &schedule_) : schedule(schedule_) {}
+        VertexWriterScheduleCsDot(const BspScheduleCS<GraphT> &schedule) : schedule_(schedule) {}
 
-        void operator()(std::ostream &out, const vertex_idx_t<Graph_t> &i) const {
+        void operator()(std::ostream &out, const VertexIdxT<GraphT> &i) const {
             out << i << " ["
-                << "work_weight=\"" << schedule.getInstance().getComputationalDag().vertex_work_weight(i) << "\";"
-                << "comm_weight=\"" << schedule.getInstance().getComputationalDag().vertex_comm_weight(i) << "\";"
-                << "mem_weight=\"" << schedule.getInstance().getComputationalDag().vertex_mem_weight(i) << "\";";
+                << "work_weight=\"" << schedule_.GetInstance().GetComputationalDag().VertexWorkWeight(i) << "\";"
+                << "comm_weight=\"" << schedule_.GetInstance().GetComputationalDag().VertexCommWeight(i) << "\";"
+                << "mem_weight=\"" << schedule_.GetInstance().GetComputationalDag().VertexMemWeight(i) << "\";";
 
-            if constexpr (has_typed_vertices_v<Graph_t>) {
-                out << "type=\"" << schedule.getInstance().getComputationalDag().vertex_type(i) << "\";";
+            if constexpr (hasTypedVerticesV<GraphT>) {
+                out << "type=\"" << schedule_.GetInstance().GetComputationalDag().VertexType(i) << "\";";
             }
 
-            out << "proc=\"" << schedule.assignedProcessor(i) << "\";" << "superstep=\"" << schedule.assignedSuperstep(i) << "\";";
+            out << "proc=\"" << schedule_.AssignedProcessor(i) << "\";" << "superstep=\"" << schedule_.AssignedSuperstep(i)
+                << "\";";
 
             bool found = false;
 
-            for (const auto &[key, val] : schedule.getCommunicationSchedule()) {
+            for (const auto &[key, val] : schedule_.GetCommunicationSchedule()) {
                 if (std::get<0>(key) == i) {
                     if (!found) {
                         out << "cs=\"[";
@@ -180,35 +182,35 @@ class DotFileWriter {
         }
     };
 
-    template <typename Graph_t>
-    struct VertexWriterGraph_DOT {
-        const Graph_t &graph;
+    template <typename GraphT>
+    struct VertexWriterGraphDot {
+        const GraphT &graph_;
 
-        VertexWriterGraph_DOT(const Graph_t &graph_) : graph(graph_) {}
+        VertexWriterGraphDot(const GraphT &graph) : graph_(graph) {}
 
-        void operator()(std::ostream &out, const vertex_idx_t<Graph_t> &i) const {
+        void operator()(std::ostream &out, const VertexIdxT<GraphT> &i) const {
             out << i << " ["
-                << "work_weight=\"" << graph.vertex_work_weight(i) << "\";"
-                << "comm_weight=\"" << graph.vertex_comm_weight(i) << "\";"
-                << "mem_weight=\"" << graph.vertex_mem_weight(i) << "\";";
+                << "work_weight=\"" << graph_.VertexWorkWeight(i) << "\";"
+                << "comm_weight=\"" << graph_.VertexCommWeight(i) << "\";"
+                << "mem_weight=\"" << graph_.VertexMemWeight(i) << "\";";
 
-            if constexpr (has_typed_vertices_v<Graph_t>) {
-                out << "type=\"" << graph.vertex_type(i) << "\";";
+            if constexpr (hasTypedVerticesV<GraphT>) {
+                out << "type=\"" << graph_.VertexType(i) << "\";";
             }
 
             out << "]";
         }
     };
 
-    template <typename Graph_t, typename color_container_t>
-    struct ColoredVertexWriterGraph_DOT {
-        const Graph_t &graph;
-        const color_container_t &colors;
-        std::vector<std::string> color_strings;
-        std::vector<std::string> shape_strings;
+    template <typename GraphT, typename ColorContainerT>
+    struct ColoredVertexWriterGraphDot {
+        const GraphT &graph_;
+        const ColorContainerT &colors_;
+        std::vector<std::string> colorStrings_;
+        std::vector<std::string> shapeStrings_;
 
-        ColoredVertexWriterGraph_DOT(const Graph_t &graph_, const color_container_t &colors_) : graph(graph_), colors(colors_) {
-            color_strings = {"lightcoral",      "palegreen",   "lightblue",     "gold",
+        ColoredVertexWriterGraphDot(const GraphT &graph, const ColorContainerT &colors) : graph_(graph), colors_(colors) {
+            colorStrings_ = {"lightcoral",      "palegreen",   "lightblue",     "gold",
                              "orchid",          "sandybrown",  "aquamarine",    "burlywood",
                              "hotpink",         "yellowgreen", "skyblue",       "khaki",
                              "violet",          "salmon",      "turquoise",     "tan",
@@ -227,52 +229,52 @@ class DotFileWriter {
                              "darkred",         "darkgreen",   "mediumblue",    "ivory",
                              "indigo",          "orange",      "darkcyan",      "antiquewhite"};
 
-            shape_strings = {"oval", "rect", "hexagon", "parallelogram"};
+            shapeStrings_ = {"oval", "rect", "hexagon", "parallelogram"};
         }
 
-        void operator()(std::ostream &out, const vertex_idx_t<Graph_t> &i) const {
-            if (i >= static_cast<vertex_idx_t<Graph_t>>(colors.size())) {
+        void operator()(std::ostream &out, const VertexIdxT<GraphT> &i) const {
+            if (i >= static_cast<VertexIdxT<GraphT>>(colors_.size())) {
                 // Fallback for safety: print without color if colors vector is mismatched or palette is empty.
                 out << i << " [";
             } else {
                 // Use modulo operator to cycle through the fixed palette if there are more color
                 // groups than available colors.
-                const std::string &color = color_strings[colors[i] % color_strings.size()];
+                const std::string &color = colorStrings_[colors_[i] % colorStrings_.size()];
                 out << i << " [style=filled;fillcolor=" << color << ";";
             }
 
-            out << "work_weight=\"" << graph.vertex_work_weight(i) << "\";"
-                << "comm_weight=\"" << graph.vertex_comm_weight(i) << "\";"
-                << "mem_weight=\"" << graph.vertex_mem_weight(i) << "\";";
+            out << "work_weight=\"" << graph_.VertexWorkWeight(i) << "\";"
+                << "comm_weight=\"" << graph_.VertexCommWeight(i) << "\";"
+                << "mem_weight=\"" << graph_.VertexMemWeight(i) << "\";";
 
-            if constexpr (has_typed_vertices_v<Graph_t>) {
-                out << "type=\"" << graph.vertex_type(i) << "\";shape=\""
-                    << shape_strings[graph.vertex_type(i) % shape_strings.size()] << "\";";
+            if constexpr (hasTypedVerticesV<GraphT>) {
+                out << "type=\"" << graph_.VertexType(i) << "\";shape=\""
+                    << shapeStrings_[graph_.VertexType(i) % shapeStrings_.size()] << "\";";
             }
 
             out << "]";
         }
     };
 
-    template <typename Graph_t, typename vertex_writer_t>
-    void write_graph_structure(std::ostream &os, const Graph_t &graph, const vertex_writer_t &vertex_writer) const {
+    template <typename GraphT, typename VertexWriterT>
+    void WriteGraphStructure(std::ostream &os, const GraphT &graph, const VertexWriterT &vertexWriter) const {
         os << "digraph G {\n";
-        for (const auto &v : graph.vertices()) {
-            vertex_writer(os, v);
+        for (const auto &v : graph.Vertices()) {
+            vertexWriter(os, v);
             os << "\n";
         }
 
-        if constexpr (has_edge_weights_v<Graph_t>) {
-            EdgeWriter_DOT<Graph_t> edge_writer(graph);
+        if constexpr (hasEdgeWeightsV<GraphT>) {
+            EdgeWriterDot<GraphT> edgeWriter(graph);
 
-            for (const auto &e : edges(graph)) {
-                edge_writer(os, e);
+            for (const auto &e : Edges(graph)) {
+                edgeWriter(os, e);
                 os << "\n";
             }
 
         } else {
-            for (const auto &v : graph.vertices()) {
-                for (const auto &child : graph.children(v)) {
+            for (const auto &v : graph.Vertices()) {
+                for (const auto &child : graph.Children(v)) {
                     os << v << "->" << child << "\n";
                 }
             }
@@ -298,9 +300,9 @@ class DotFileWriter {
      *
      * @param os The output stream to write the DOT representation of the computational DAG.
      */
-    template <typename Graph_t>
-    void write_schedule(std::ostream &os, const BspSchedule<Graph_t> &schedule) const {
-        write_graph_structure(os, schedule.getInstance().getComputationalDag(), VertexWriterSchedule_DOT<Graph_t>(schedule));
+    template <typename GraphT>
+    void WriteSchedule(std::ostream &os, const BspSchedule<GraphT> &schedule) const {
+        WriteGraphStructure(os, schedule.GetInstance().GetComputationalDag(), VertexWriterScheduleDot<GraphT>(schedule));
     }
 
     /**
@@ -317,109 +319,106 @@ class DotFileWriter {
      *
      * @param filename The name of the file to write the DOT representation of the computational DAG.
      */
-    template <typename Graph_t>
-    void write_schedule(const std::string &filename, const BspSchedule<Graph_t> &schedule) const {
+    template <typename GraphT>
+    void WriteSchedule(const std::string &filename, const BspSchedule<GraphT> &schedule) const {
         std::ofstream os(filename);
-        write_schedule(os, schedule);
+        WriteSchedule(os, schedule);
     }
 
-    template <typename Graph_t>
-    void write_schedule_cs(std::ostream &os, const BspScheduleCS<Graph_t> &schedule) const {
-        write_graph_structure(os, schedule.getInstance().getComputationalDag(), VertexWriterScheduleCS_DOT<Graph_t>(schedule));
+    template <typename GraphT>
+    void WriteScheduleCS(std::ostream &os, const BspScheduleCS<GraphT> &schedule) const {
+        WriteGraphStructure(os, schedule.GetInstance().GetComputationalDag(), VertexWriterScheduleCsDot<GraphT>(schedule));
     }
 
-    template <typename Graph_t>
-    void write_schedule_cs(const std::string &filename, const BspScheduleCS<Graph_t> &schedule) const {
+    template <typename GraphT>
+    void WriteScheduleCS(const std::string &filename, const BspScheduleCS<GraphT> &schedule) const {
         std::ofstream os(filename);
-        write_schedule_cs(os, schedule);
+        WriteScheduleCS(os, schedule);
     }
 
-    template <typename Graph_t>
-    void write_schedule_recomp(std::ostream &os, const BspScheduleRecomp<Graph_t> &schedule) const {
-        write_graph_structure(os, schedule.getInstance().getComputationalDag(), VertexWriterScheduleRecomp_DOT<Graph_t>(schedule));
+    template <typename GraphT>
+    void WriteScheduleRecomp(std::ostream &os, const BspScheduleRecomp<GraphT> &schedule) const {
+        WriteGraphStructure(os, schedule.GetInstance().GetComputationalDag(), VertexWriterScheduleRecompDot<GraphT>(schedule));
     }
 
-    template <typename Graph_t>
-    void write_schedule_recomp(const std::string &filename, const BspScheduleRecomp<Graph_t> &schedule) const {
+    template <typename GraphT>
+    void WriteScheduleRecomp(const std::string &filename, const BspScheduleRecomp<GraphT> &schedule) const {
         std::ofstream os(filename);
-        write_schedule_recomp(os, schedule);
+        WriteScheduleRecomp(os, schedule);
     }
 
-    template <typename Graph_t>
-    void write_schedule_recomp_duplicate(std::ostream &os, const BspScheduleRecomp<Graph_t> &schedule) const {
-        const auto &g = schedule.getInstance().getComputationalDag();
+    template <typename GraphT>
+    void WriteScheduleRecompDuplicate(std::ostream &os, const BspScheduleRecomp<GraphT> &schedule) const {
+        const auto &g = schedule.GetInstance().GetComputationalDag();
 
-        using VertexType = vertex_idx_t<Graph_t>;
+        using VertexType = VertexIdxT<GraphT>;
 
-        std::vector<std::string> names(schedule.getTotalAssignments());
-        std::vector<unsigned> node_to_proc(schedule.getTotalAssignments());
-        std::vector<unsigned> node_to_superstep(schedule.getTotalAssignments());
+        std::vector<std::string> names(schedule.GetTotalAssignments());
+        std::vector<unsigned> nodeToProc(schedule.GetTotalAssignments());
+        std::vector<unsigned> nodeToSuperstep(schedule.GetTotalAssignments());
 
-        std::unordered_map<VertexType, std::vector<size_t>> vertex_to_idx;
+        std::unordered_map<VertexType, std::vector<size_t>> vertexToIdx;
 
-        using vertex_type_t_or_default
-            = std::conditional_t<is_computational_dag_typed_vertices_v<Graph_t>, v_type_t<Graph_t>, unsigned>;
-        using edge_commw_t_or_default = std::conditional_t<has_edge_weights_v<Graph_t>, e_commw_t<Graph_t>, v_commw_t<Graph_t>>;
+        using VertexTypeTOrDefault = std::conditional_t<isComputationalDagTypedVerticesV<GraphT>, VTypeT<GraphT>, unsigned>;
+        using EdgeCommwTOrDefault = std::conditional_t<hasEdgeWeightsV<GraphT>, ECommwT<GraphT>, VCommwT<GraphT>>;
 
-        using cdag_vertex_impl_t
-            = cdag_vertex_impl<vertex_idx_t<Graph_t>, v_workw_t<Graph_t>, v_commw_t<Graph_t>, v_memw_t<Graph_t>, vertex_type_t_or_default>;
-        using cdag_edge_impl_t = cdag_edge_impl<edge_commw_t_or_default>;
+        using CDagVertexImplT
+            = CDagVertexImpl<VertexIdxT<GraphT>, VWorkwT<GraphT>, VCommwT<GraphT>, VMemwT<GraphT>, VertexTypeTOrDefault>;
+        using CDagEdgeImplT = CDagEdgeImpl<EdgeCommwTOrDefault>;
 
-        using graph_t = computational_dag_edge_idx_vector_impl<cdag_vertex_impl_t, cdag_edge_impl_t>;
+        using GraphT2 = ComputationalDagEdgeIdxVectorImpl<CDagVertexImplT, CDagEdgeImplT>;
 
-        graph_t g2;
+        GraphT2 g2;
 
-        size_t idx_new = 0;
+        size_t idxNew = 0;
 
-        for (const auto &node : g.vertices()) {
-            if (schedule.assignments(node).size() == 1) {
-                g2.add_vertex(
-                    g.vertex_work_weight(node), g.vertex_comm_weight(node), g.vertex_mem_weight(node), g.vertex_type(node));
+        for (const auto &node : g.Vertices()) {
+            if (schedule.Assignments(node).size() == 1) {
+                g2.AddVertex(g.VertexWorkWeight(node), g.VertexCommWeight(node), g.VertexMemWeight(node), g.VertexType(node));
 
-                names[idx_new] = std::to_string(node);
-                node_to_proc[idx_new] = schedule.assignments(node)[0].first;
-                node_to_superstep[idx_new] = schedule.assignments(node)[0].second;
+                names[idxNew] = std::to_string(node);
+                nodeToProc[idxNew] = schedule.Assignments(node)[0].first;
+                nodeToSuperstep[idxNew] = schedule.Assignments(node)[0].second;
 
-                vertex_to_idx.insert({node, {idx_new}});
-                idx_new++;
+                vertexToIdx.insert({node, {idxNew}});
+                idxNew++;
 
             } else {
                 std::vector<size_t> idxs;
-                for (unsigned i = 0; i < schedule.assignments(node).size(); ++i) {
-                    g2.add_vertex(
-                        g.vertex_work_weight(node), g.vertex_comm_weight(node), g.vertex_mem_weight(node), g.vertex_type(node));
+                for (unsigned i = 0; i < schedule.Assignments(node).size(); ++i) {
+                    g2.AddVertex(g.VertexWorkWeight(node), g.VertexCommWeight(node), g.VertexMemWeight(node), g.VertexType(node));
 
-                    names[idx_new] = std::to_string(node).append("_").append(std::to_string(i));
-                    node_to_proc[idx_new] = schedule.assignments(node)[i].first;
-                    node_to_superstep[idx_new] = schedule.assignments(node)[i].second;
+                    names[idxNew] = std::to_string(node).append("_").append(std::to_string(i));
+                    nodeToProc[idxNew] = schedule.Assignments(node)[i].first;
+                    nodeToSuperstep[idxNew] = schedule.Assignments(node)[i].second;
 
-                    idxs.push_back(idx_new++);
+                    idxs.push_back(idxNew++);
                 }
-                vertex_to_idx.insert({node, idxs});
+                vertexToIdx.insert({node, idxs});
             }
         }
 
-        for (const auto &[key, val] : vertex_to_idx) {
+        for (const auto &[key, val] : vertexToIdx) {
             if (val.size() == 1) {
-                for (const auto &target : g.children(key)) {
-                    for (const auto &new_node_target : vertex_to_idx[target]) {
-                        g2.add_edge(val[0], new_node_target);
+                for (const auto &target : g.Children(key)) {
+                    for (const auto &newNodeTarget : vertexToIdx[target]) {
+                        g2.AddEdge(val[0], newNodeTarget);
                     }
                 }
 
             } else {
-                std::unordered_set<unsigned> assigned_processors;
+                std::unordered_set<unsigned> assignedProcessors;
 
-                for (const auto &assignment : schedule.assignments(key)) {
-                    assigned_processors.insert(assignment.first);
+                for (const auto &assignment : schedule.Assignments(key)) {
+                    assignedProcessors.insert(assignment.first);
                 }
 
                 for (unsigned i = 0; i < val.size(); i++) {
-                    for (const auto &target : g.children(key)) {
-                        for (size_t j = 0; j < vertex_to_idx[target].size(); j++) {
-                            if (assigned_processors.find(node_to_proc[vertex_to_idx[target][j]]) == assigned_processors.end()
-                                || node_to_proc[val[i]] == node_to_proc[vertex_to_idx[target][j]]) {
-                                g2.add_edge(val[i], vertex_to_idx[target][j]);
+                    for (const auto &target : g.Children(key)) {
+                        for (size_t j = 0; j < vertexToIdx[target].size(); j++) {
+                            if (assignedProcessors.find(nodeToProc[vertexToIdx[target][j]]) == assignedProcessors.end()
+                                || nodeToProc[val[i]] == nodeToProc[vertexToIdx[target][j]]) {
+                                g2.AddEdge(val[i], vertexToIdx[target][j]);
                             }
                         }
                     }
@@ -427,43 +426,43 @@ class DotFileWriter {
             }
         }
 
-        write_graph_structure(os, g2, VertexWriterDuplicateRecompSchedule_DOT<graph_t>(g2, names, node_to_proc, node_to_superstep));
+        WriteGraphStructure(os, g2, VertexWriterDuplicateRecompScheduleDot<GraphT2>(g2, names, nodeToProc, nodeToSuperstep));
     }
 
-    template <typename Graph_t>
-    void write_schedule_recomp_duplicate(const std::string &filename, const BspScheduleRecomp<Graph_t> &schedule) const {
+    template <typename GraphT>
+    void WriteScheduleRecompDuplicate(const std::string &filename, const BspScheduleRecomp<GraphT> &schedule) const {
         std::ofstream os(filename);
-        write_schedule_recomp_duplicate(os, schedule);
+        WriteScheduleRecompDuplicate(os, schedule);
     }
 
-    template <typename Graph_t, typename color_container_t>
-    void write_colored_graph(std::ostream &os, const Graph_t &graph, const color_container_t &colors) const {
-        static_assert(is_computational_dag_v<Graph_t>, "Graph_t must be a computational DAG");
+    template <typename GraphT, typename ColorContainerT>
+    void WriteColoredGraph(std::ostream &os, const GraphT &graph, const ColorContainerT &colors) const {
+        static_assert(isComputationalDagV<GraphT>, "GraphT must be a computational DAG");
 
-        write_graph_structure(os, graph, ColoredVertexWriterGraph_DOT<Graph_t, color_container_t>(graph, colors));
+        WriteGraphStructure(os, graph, ColoredVertexWriterGraphDot<GraphT, ColorContainerT>(graph, colors));
     }
 
-    template <typename Graph_t, typename color_container_t>
-    void write_colored_graph(const std::string &filename, const Graph_t &graph, const color_container_t &colors) const {
-        static_assert(is_computational_dag_v<Graph_t>, "Graph_t must be a computational DAG");
-
-        std::ofstream os(filename);
-        write_colored_graph(os, graph, colors);
-    }
-
-    template <typename Graph_t>
-    void write_graph(std::ostream &os, const Graph_t &graph) const {
-        static_assert(is_computational_dag_v<Graph_t>, "Graph_t must be a computational DAG");
-
-        write_graph_structure(os, graph, VertexWriterGraph_DOT<Graph_t>(graph));
-    }
-
-    template <typename Graph_t>
-    void write_graph(const std::string &filename, const Graph_t &graph) const {
-        static_assert(is_computational_dag_v<Graph_t>, "Graph_t must be a computational DAG");
+    template <typename GraphT, typename ColorContainerT>
+    void WriteColoredGraph(const std::string &filename, const GraphT &graph, const ColorContainerT &colors) const {
+        static_assert(isComputationalDagV<GraphT>, "GraphT must be a computational DAG");
 
         std::ofstream os(filename);
-        write_graph(os, graph);
+        WriteColoredGraph(os, graph, colors);
+    }
+
+    template <typename GraphT>
+    void WriteGraph(std::ostream &os, const GraphT &graph) const {
+        static_assert(isComputationalDagV<GraphT>, "GraphT must be a computational DAG");
+
+        WriteGraphStructure(os, graph, VertexWriterGraphDot<GraphT>(graph));
+    }
+
+    template <typename GraphT>
+    void WriteGraph(const std::string &filename, const GraphT &graph) const {
+        static_assert(isComputationalDagV<GraphT>, "GraphT must be a computational DAG");
+
+        std::ofstream os(filename);
+        WriteGraph(os, graph);
     }
 };
 

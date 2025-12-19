@@ -24,18 +24,18 @@ namespace osp {
 
 /// @class IBspSchedule
 /// @brief Interface for a BSP (Bulk Synchronous Parallel) schedule.
-template <typename Graph_t>
+template <typename GraphT>
 class IBspScheduleEval {
-    using vertex_idx = vertex_idx_t<Graph_t>;
+    using VertexIdx = VertexIdxT<GraphT>;
 
   public:
     /// @brief Destructor.
     virtual ~IBspScheduleEval() = default;
 
-    virtual v_workw_t<Graph_t> computeCosts() const = 0;
-    virtual v_workw_t<Graph_t> computeWorkCosts() const = 0;
-    virtual unsigned numberOfSupersteps() const = 0;
-    virtual const BspInstance<Graph_t> &getInstance() const = 0;
+    virtual VWorkwT<GraphT> ComputeCosts() const = 0;
+    virtual VWorkwT<GraphT> ComputeWorkCosts() const = 0;
+    virtual unsigned NumberOfSupersteps() const = 0;
+    virtual const BspInstance<GraphT> &GetInstance() const = 0;
 };
 
 }    // namespace  osp

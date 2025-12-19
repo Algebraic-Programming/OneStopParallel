@@ -33,55 +33,55 @@ namespace osp {
  * Tarjan's algorithm performs a single depth-first search to find all strongly connected components.
  * It has a time complexity of O(V + E), where V is the number of vertices and E is the number of edges.
  *
- * @tparam Graph_t The type of the graph, which must satisfy the `directed_graph` concept.
+ * @tparam GraphT The type of the graph, which must satisfy the `directed_graph` concept.
  * @param graph The input directed graph.
  * @return A vector of vectors, where each inner vector contains the vertices of a strongly connected component.
  */
-template <typename Graph_t>
-std::vector<std::vector<vertex_idx_t<Graph_t>>> strongly_connected_components(const Graph_t &graph) {
-    static_assert(is_directed_graph_v<Graph_t>, "Graph_t must satisfy the directed_graph concept");
+template <typename GraphT>
+std::vector<std::vector<VertexIdxT<GraphT>>> StronglyConnectedComponents(const GraphT &graph) {
+    static_assert(isDirectedGraphV<GraphT>, "GraphT must satisfy the directed_graph concept");
 
-    using VertexType = vertex_idx_t<Graph_t>;
-    const auto num_vertices = graph.num_vertices();
-    if (num_vertices == 0) {
+    using VertexType = VertexIdxT<GraphT>;
+    const auto numVertices = graph.NumVertices();
+    if (numVertices == 0) {
         return {};
     }
 
     const VertexType unvisited = std::numeric_limits<VertexType>::max();
-    std::vector<VertexType> ids(num_vertices, unvisited);
-    std::vector<VertexType> low(num_vertices, unvisited);
-    std::vector<bool> on_stack(num_vertices, false);
+    std::vector<VertexType> ids(numVertices, unvisited);
+    std::vector<VertexType> low(numVertices, unvisited);
+    std::vector<bool> onStack(numVertices, false);
     std::stack<VertexType> s;
-    VertexType id_counter = 0;
+    VertexType idCounter = 0;
     std::vector<std::vector<VertexType>> sccs;
 
-    using ChildIterator = decltype(graph.children(std::declval<VertexType>()).begin());
+    using ChildIterator = decltype(graph.Children(std::declval<VertexType>()).begin());
 
-    for (VertexType i = 0; i < num_vertices; ++i) {
+    for (VertexType i = 0; i < numVertices; ++i) {
         if (ids[i] == unvisited) {
-            std::vector<std::pair<VertexType, std::pair<ChildIterator, ChildIterator>>> dfs_stack;
+            std::vector<std::pair<VertexType, std::pair<ChildIterator, ChildIterator>>> dfsStack;
 
-            dfs_stack.emplace_back(i, std::make_pair(graph.children(i).begin(), graph.children(i).end()));
+            dfsStack.emplace_back(i, std::make_pair(graph.Children(i).begin(), graph.Children(i).end()));
 
             s.push(i);
-            on_stack[i] = true;
-            ids[i] = low[i] = id_counter++;
+            onStack[i] = true;
+            ids[i] = low[i] = idCounter++;
 
-            while (!dfs_stack.empty()) {
-                auto &[at, iter_pair] = dfs_stack.back();
-                auto &child_iter = iter_pair.first;
-                const auto &child_end = iter_pair.second;
+            while (!dfsStack.empty()) {
+                auto &[at, iterPair] = dfsStack.back();
+                auto &childIter = iterPair.first;
+                const auto &childEnd = iterPair.second;
 
-                if (child_iter != child_end) {
-                    VertexType to = *child_iter;
-                    ++child_iter;
+                if (childIter != childEnd) {
+                    VertexType to = *childIter;
+                    ++childIter;
 
                     if (ids[to] == unvisited) {
-                        dfs_stack.emplace_back(to, std::make_pair(graph.children(to).begin(), graph.children(to).end()));
+                        dfsStack.emplace_back(to, std::make_pair(graph.Children(to).begin(), graph.Children(to).end()));
                         s.push(to);
-                        on_stack[to] = true;
-                        ids[to] = low[to] = id_counter++;
-                    } else if (on_stack[to]) {
+                        onStack[to] = true;
+                        ids[to] = low[to] = idCounter++;
+                    } else if (onStack[to]) {
                         low[at] = std::min(low[at], ids[to]);
                     }
                 } else {
@@ -90,7 +90,7 @@ std::vector<std::vector<vertex_idx_t<Graph_t>>> strongly_connected_components(co
                         while (true) {
                             VertexType node = s.top();
                             s.pop();
-                            on_stack[node] = false;
+                            onStack[node] = false;
                             scc.push_back(node);
                             if (node == at) {
                                 break;
@@ -99,12 +99,12 @@ std::vector<std::vector<vertex_idx_t<Graph_t>>> strongly_connected_components(co
                         sccs.emplace_back(std::move(scc));
                     }
 
-                    if (dfs_stack.size() > 1) {
-                        auto &[parent, _] = dfs_stack[dfs_stack.size() - 2];
+                    if (dfsStack.size() > 1) {
+                        auto &[parent, _] = dfsStack[dfsStack.size() - 2];
                         low[parent] = std::min(low[parent], low[at]);
                     }
 
-                    dfs_stack.pop_back();
+                    dfsStack.pop_back();
                 }
             }
         }

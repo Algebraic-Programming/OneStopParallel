@@ -29,33 +29,33 @@ namespace osp {
  * @brief Generates a random graph where an edge (i,j), with i<j, is included with probability
  * prob*exp(-(j-i-1)/bandwidth)
  *
- * @param num_vertices Number of vertices of the graph
- * @param bandwidth chance/num_vertices is the probability of edge inclusion
+ * @param numVertices Number of vertices of the graph
+ * @param bandwidth chance/numVertices is the probability of edge inclusion
  * @param prob probability of an edge immediately off the diagonal to be included
  * @return DAG
  */
-template <typename Graph_t>
-void near_diag_random_graph(Graph_t &dag_out, vertex_idx_t<Graph_t> num_vertices, double bandwidth, double prob) {
-    static_assert(is_constructable_cdag_v<Graph_t>, "Graph_t must be a constructable computational DAG type");
+template <typename GraphT>
+void NearDiagRandomGraph(GraphT &dagOut, VertexIdxT<GraphT> numVertices, double bandwidth, double prob) {
+    static_assert(isConstructableCdagV<GraphT>, "GraphT must be a constructable computational DAG type");
 
-    dag_out = Graph_t(num_vertices);
+    dagOut = GraphT(numVertices);
 
     std::random_device rd;
     std::mt19937 gen(rd());
 
-    for (vertex_idx_t<Graph_t> v = 1; v < num_vertices; ++v) {
-        std::binomial_distribution<vertex_idx_t<Graph_t>> bino_dist(vertex_idx_t<Graph_t>(num_vertices - v),
-                                                                    prob * std::exp(1.0 - static_cast<double>(v) / bandwidth));
-        vertex_idx_t<Graph_t> off_diag_edges_num = bino_dist(gen);
+    for (VertexIdxT<GraphT> v = 1; v < numVertices; ++v) {
+        std::binomial_distribution<VertexIdxT<GraphT>> binoDist(VertexIdxT<GraphT>(numVertices - v),
+                                                                prob * std::exp(1.0 - static_cast<double>(v) / bandwidth));
+        VertexIdxT<GraphT> offDiagEdgesNum = binoDist(gen);
 
-        std::vector<vertex_idx_t<Graph_t>> range(num_vertices - v, 0);
+        std::vector<VertexIdxT<GraphT>> range(numVertices - v, 0);
         std::iota(range.begin(), range.end(), 0);
-        std::vector<vertex_idx_t<Graph_t>> sampled;
+        std::vector<VertexIdxT<GraphT>> sampled;
 
-        std::sample(range.begin(), range.end(), std::back_inserter(sampled), off_diag_edges_num, gen);
+        std::sample(range.begin(), range.end(), std::back_inserter(sampled), offDiagEdgesNum, gen);
 
         for (const auto &j : sampled) {
-            dag_out.add_edge(j, j + 1);
+            dagOut.AddEdge(j, j + 1);
         }
     }
 }

@@ -39,21 +39,21 @@ BOOST_AUTO_TEST_CASE(SubGraphCompactSparseGraph) {
         {3,  7},
         {1,  2}
     });
-    Compact_Sparse_Graph<true, true, true, true, true> graph(11, edges);
-    Compact_Sparse_Graph<true, true, true, true, true> subGraph;
+    CompactSparseGraph<true, true, true, true, true> graph(11, edges);
+    CompactSparseGraph<true, true, true, true, true> subGraph;
 
     unsigned cntr = 0;
-    for (const auto &vert : graph.vertices()) {
-        graph.set_vertex_work_weight(vert, cntr++);
-        graph.set_vertex_comm_weight(vert, cntr++);
-        graph.set_vertex_mem_weight(vert, cntr++);
-        graph.set_vertex_type(vert, cntr++);
+    for (const auto &vert : graph.Vertices()) {
+        graph.SetVertexWorkWeight(vert, cntr++);
+        graph.SetVertexCommWeight(vert, cntr++);
+        graph.SetVertexMemWeight(vert, cntr++);
+        graph.SetVertexType(vert, cntr++);
     }
 
-    const std::vector<vertex_idx_t<Compact_Sparse_Graph<true, true, true, true, true>>> selectVert({2, 3, 10, 6, 7});
-    const auto vertCorrespondence = create_induced_subgraph_map(graph, subGraph, selectVert);
-    BOOST_CHECK_EQUAL(subGraph.num_vertices(), selectVert.size());
-    BOOST_CHECK_EQUAL(subGraph.num_edges(), 4);
+    const std::vector<VertexIdxT<CompactSparseGraph<true, true, true, true, true>>> selectVert({2, 3, 10, 6, 7});
+    const auto vertCorrespondence = CreateInducedSubgraphMap(graph, subGraph, selectVert);
+    BOOST_CHECK_EQUAL(subGraph.NumVertices(), selectVert.size());
+    BOOST_CHECK_EQUAL(subGraph.NumEdges(), 4);
 
     for (const auto &vert : selectVert) {
         BOOST_CHECK_LT(vertCorrespondence.at(vert), selectVert.size());
@@ -66,18 +66,18 @@ BOOST_AUTO_TEST_CASE(SubGraphCompactSparseGraph) {
     }
 
     for (const auto &vert : selectVert) {
-        BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), subGraph.vertex_work_weight(vertCorrespondence.at(vert)));
-        BOOST_CHECK_EQUAL(graph.vertex_comm_weight(vert), subGraph.vertex_comm_weight(vertCorrespondence.at(vert)));
-        BOOST_CHECK_EQUAL(graph.vertex_mem_weight(vert), subGraph.vertex_mem_weight(vertCorrespondence.at(vert)));
-        BOOST_CHECK_EQUAL(graph.vertex_type(vert), subGraph.vertex_type(vertCorrespondence.at(vert)));
+        BOOST_CHECK_EQUAL(graph.VertexWorkWeight(vert), subGraph.VertexWorkWeight(vertCorrespondence.at(vert)));
+        BOOST_CHECK_EQUAL(graph.VertexCommWeight(vert), subGraph.VertexCommWeight(vertCorrespondence.at(vert)));
+        BOOST_CHECK_EQUAL(graph.VertexMemWeight(vert), subGraph.VertexMemWeight(vertCorrespondence.at(vert)));
+        BOOST_CHECK_EQUAL(graph.VertexType(vert), subGraph.VertexType(vertCorrespondence.at(vert)));
     }
 }
 
 BOOST_AUTO_TEST_CASE(SubGraphDagVectorImpl) {
-    using v_impl = cdag_vertex_impl<std::size_t, unsigned, unsigned, unsigned, unsigned>;
+    using VImpl = CDagVertexImpl<std::size_t, unsigned, unsigned, unsigned, unsigned>;
 
-    computational_dag_vector_impl<v_impl> graph;
-    computational_dag_vector_impl<v_impl> subGraph;
+    ComputationalDagVectorImpl<VImpl> graph;
+    ComputationalDagVectorImpl<VImpl> subGraph;
 
     const std::size_t numVert = 11;
     const std::vector<std::pair<std::size_t, std::size_t>> edges({
@@ -96,17 +96,17 @@ BOOST_AUTO_TEST_CASE(SubGraphDagVectorImpl) {
 
     unsigned cntr = 0;
     for (std::size_t i = 0U; i < numVert; ++i) {
-        graph.add_vertex(cntr, cntr + 1U, cntr + 2U, cntr + 3U);
+        graph.AddVertex(cntr, cntr + 1U, cntr + 2U, cntr + 3U);
         cntr += 4U;
     }
     for (const auto &[src, tgt] : edges) {
-        graph.add_edge(src, tgt);
+        graph.AddEdge(src, tgt);
     }
 
-    const std::vector<vertex_idx_t<computational_dag_vector_impl<v_impl>>> selectVert({2, 3, 10, 6, 7});
-    const auto vertCorrespondence = create_induced_subgraph_map(graph, subGraph, selectVert);
-    BOOST_CHECK_EQUAL(subGraph.num_vertices(), selectVert.size());
-    BOOST_CHECK_EQUAL(subGraph.num_edges(), 4);
+    const std::vector<VertexIdxT<ComputationalDagVectorImpl<VImpl>>> selectVert({2, 3, 10, 6, 7});
+    const auto vertCorrespondence = CreateInducedSubgraphMap(graph, subGraph, selectVert);
+    BOOST_CHECK_EQUAL(subGraph.NumVertices(), selectVert.size());
+    BOOST_CHECK_EQUAL(subGraph.NumEdges(), 4);
 
     for (const auto &vert : selectVert) {
         BOOST_CHECK_LT(vertCorrespondence.at(vert), selectVert.size());
@@ -119,9 +119,9 @@ BOOST_AUTO_TEST_CASE(SubGraphDagVectorImpl) {
     }
 
     for (const auto &vert : selectVert) {
-        BOOST_CHECK_EQUAL(graph.vertex_work_weight(vert), subGraph.vertex_work_weight(vertCorrespondence.at(vert)));
-        BOOST_CHECK_EQUAL(graph.vertex_comm_weight(vert), subGraph.vertex_comm_weight(vertCorrespondence.at(vert)));
-        BOOST_CHECK_EQUAL(graph.vertex_mem_weight(vert), subGraph.vertex_mem_weight(vertCorrespondence.at(vert)));
-        BOOST_CHECK_EQUAL(graph.vertex_type(vert), subGraph.vertex_type(vertCorrespondence.at(vert)));
+        BOOST_CHECK_EQUAL(graph.VertexWorkWeight(vert), subGraph.VertexWorkWeight(vertCorrespondence.at(vert)));
+        BOOST_CHECK_EQUAL(graph.VertexCommWeight(vert), subGraph.VertexCommWeight(vertCorrespondence.at(vert)));
+        BOOST_CHECK_EQUAL(graph.VertexMemWeight(vert), subGraph.VertexMemWeight(vertCorrespondence.at(vert)));
+        BOOST_CHECK_EQUAL(graph.VertexType(vert), subGraph.VertexType(vertCorrespondence.at(vert)));
     }
 }
