@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(TestTotal) {
 
     BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
     BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
-};
+}
 
 BOOST_AUTO_TEST_CASE(TestFull) {
     using graph = ComputationalDagEdgeIdxVectorImplDefT;
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(TestFull) {
 
     BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
     BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
-};
+}
 
 BOOST_AUTO_TEST_CASE(TestCs) {
     using graph = ComputationalDagEdgeIdxVectorImplDefT;
@@ -234,7 +234,7 @@ BOOST_AUTO_TEST_CASE(TestCs) {
     BOOST_CHECK(scheduleCs.SatisfiesPrecedenceConstraints());
     BOOST_CHECK(scheduleCs.HasValidCommSchedule());
     BOOST_CHECK(before >= after);
-};
+}
 
 BOOST_AUTO_TEST_CASE(TestPartial) {
     using graph = ComputationalDagEdgeIdxVectorImplDefT;
@@ -281,4 +281,4 @@ BOOST_AUTO_TEST_CASE(TestPartial) {
     BOOST_CHECK(schedule.HasValidCommSchedule());
     auto costAfter = schedule.ComputeCosts();
     BOOST_CHECK(costAfter <= costMid);
-};
+}

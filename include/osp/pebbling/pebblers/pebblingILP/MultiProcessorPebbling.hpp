@@ -285,7 +285,7 @@ ReturnStatus MultiProcessorPebbling<GraphT>::ComputeSchedule(BspSchedule<GraphT>
             return ReturnStatus::TIMEOUT;
         }
     }
-};
+}
 
 template <typename GraphT>
 ReturnStatus MultiProcessorPebbling<GraphT>::ComputeSynchPebbling(PebblingSchedule<GraphT> &schedule) {
@@ -724,7 +724,7 @@ void MultiProcessorPebbling<GraphT>::SetupBaseVariablesConstraints(const BspInst
             model_.AddConstr(expr <= 1);
         }
     }
-};
+}
 
 template <typename GraphT>
 void MultiProcessorPebbling<GraphT>::SetupSyncPhaseVariablesConstraints(const BspInstance<GraphT> &instance) {
@@ -777,7 +777,7 @@ void MultiProcessorPebbling<GraphT>::SetupSyncPhaseVariablesConstraints(const Bs
                 compPhase_[static_cast<int>(t)] + sendUpPhase_[static_cast<int>(t)] + sendDownPhase_[static_cast<int>(t)] <= 1);
         }
     }
-};
+}
 
 template <typename GraphT>
 void MultiProcessorPebbling<GraphT>::SetupBspVariablesConstraintsObjective(const BspInstance<GraphT> &instance) {
@@ -932,7 +932,7 @@ void MultiProcessorPebbling<GraphT>::SetupBspVariablesConstraintsObjective(const
     }
 
     model_.SetObjective(expr, COPT_MINIMIZE);
-};
+}
 
 template <typename GraphT>
 void MultiProcessorPebbling<GraphT>::SetupSyncObjective(const BspInstance<GraphT> &instance) {
@@ -1067,7 +1067,7 @@ void MultiProcessorPebbling<GraphT>::WriteSolutionCallback::callback() {
 
         } catch (const std::exception &e) {}
     }
-};
+}
 
 template <typename GraphT>
 void MultiProcessorPebbling<GraphT>::ConstructPebblingScheduleFromSolution(PebblingSchedule<GraphT> &schedule) {

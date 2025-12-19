@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(TestFull) {
     mpp.ComputePebblingWithInitialSolution(initialSol, schedule);
     schedule.CleanSchedule();
     BOOST_CHECK(schedule.IsValid());
-};
+}
 
 BOOST_AUTO_TEST_CASE(TestPartial) {
     using graph = ComputationalDagVectorImplDefUnsignedT;
@@ -102,4 +102,4 @@ BOOST_AUTO_TEST_CASE(TestPartial) {
     PebblingSchedule<graph> schedule(instance);
     mpp.ComputePebbling(schedule);
     BOOST_CHECK(schedule.IsValid());
-};
+}

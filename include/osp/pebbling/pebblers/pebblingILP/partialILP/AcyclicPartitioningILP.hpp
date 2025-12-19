@@ -300,7 +300,7 @@ void AcyclicPartitioningILP<GraphT>::SetupVariablesConstraintsObjective(const Bs
     }
 
     model_.SetObjective(expr, COPT_MINIMIZE);
-};
+}
 
 template <typename GraphT>
 void AcyclicPartitioningILP<GraphT>::WriteSolutionCallback::callback() {
@@ -313,7 +313,7 @@ void AcyclicPartitioningILP<GraphT>::WriteSolutionCallback::callback() {
 
         } catch (const std::exception &e) {}
     }
-};
+}
 
 template <typename GraphT>
 std::vector<unsigned> AcyclicPartitioningILP<GraphT>::ReturnAssignment(const BspInstance<GraphT> &instance) {

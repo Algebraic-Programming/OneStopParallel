@@ -287,7 +287,7 @@ void CoptPartialScheduler<GraphT>::UpdateSchedule(BspScheduleCS<GraphT> &schedul
 
     schedule.CleanCommSchedule();
     schedule.ShrinkByMergingSupersteps();
-};
+}
 
 template <typename GraphT>
 void CoptPartialScheduler<GraphT>::SetupVariablesConstraintsObjective(const BspScheduleCS<GraphT> &schedule, Model &model) {
@@ -646,7 +646,7 @@ void CoptPartialScheduler<GraphT>::SetupVariablesConstraintsObjective(const BspS
     expr += schedule.GetInstance().SynchronisationCosts() * hasCommAtEnd[0];
 
     model.SetObjective(expr - schedule.GetInstance().SynchronisationCosts(), COPT_MINIMIZE);
-};
+}
 
 template <typename GraphT>
 void CoptPartialScheduler<GraphT>::SetupVertexMaps(const BspScheduleCS<GraphT> &schedule) {
@@ -761,6 +761,6 @@ void CoptPartialScheduler<GraphT>::SetupVertexMaps(const BspScheduleCS<GraphT> &
             }
         }
     }
-};
+}
 
 }    // namespace osp

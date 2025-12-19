@@ -134,4 +134,4 @@ BOOST_AUTO_TEST_CASE(TestFull) {
     partitionerRep.ComputePartitioning(partitionRep);
     BOOST_CHECK(partitionRep.SatisfiesBalanceConstraint());
     BOOST_CHECK(partitionRep.ComputeConnectivityCost() == 0);
-};
+}
