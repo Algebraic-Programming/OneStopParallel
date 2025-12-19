@@ -123,10 +123,8 @@ int main(int argc, char *argv[]) {
         }
         if (partition.SatisfiesBalanceConstraint()) {
             partitioner.SetUseInitialSolution(true);
-            partitioner.SetUseInitialSolution(true);
         }
 
-        partitioner.SetTimeLimitSeconds(600);
         partitioner.SetTimeLimitSeconds(600);
         if (replicate == 2) {
             partitioner.SetReplicationModel(
