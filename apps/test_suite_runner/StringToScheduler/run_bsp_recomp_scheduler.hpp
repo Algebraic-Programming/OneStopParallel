@@ -58,7 +58,7 @@ RETURN_STATUS run_bsp_recomp_scheduler(const ConfigParser &parser,
 
         GreedyRecomputer<Graph_t> scheduler;
 
-        return scheduler.computeRecompSchedule(initial_schedule, schedule);
+        return scheduler.computeRecompScheduleBasic(initial_schedule, schedule);
 
     } else {
         throw std::invalid_argument("Parameter error: Unknown algorithm.\n");
