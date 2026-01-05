@@ -59,6 +59,10 @@ class IBspSchedule {
     /// @brief Get the number of supersteps in the schedule.
     /// @return The number of supersteps in the schedule.
     virtual unsigned NumberOfSupersteps() const = 0;
+
+    /// @brief Get the staleness of the schedule.
+    /// @return The staleness of the schedule.
+    virtual unsigned GetStaleness() const { return 1; }
 };
 
 }    // namespace  osp

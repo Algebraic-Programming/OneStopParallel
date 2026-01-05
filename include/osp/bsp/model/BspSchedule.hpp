@@ -254,7 +254,7 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
      *
      * @return The staleness of the schedule.
      */
-    [[nodiscard]] virtual unsigned GetStaleness() const { return 1; }
+    [[nodiscard]] virtual unsigned GetStaleness() const override { return 1; }
 
     /**
      * @brief Sets the superstep assigned to the specified node.

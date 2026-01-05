@@ -291,6 +291,8 @@ class KlActiveSchedule {
     CostT cost_ = 0;
     bool feasible_ = true;
 
+    unsigned staleness_ = 1;
+
   public:
     virtual ~KlActiveSchedule() = default;
 
@@ -301,6 +303,8 @@ class KlActiveSchedule {
     inline VectorSchedule<GraphT> &GetVectorSchedule() { return vectorSchedule_; }
 
     inline const SetSchedule<GraphT> &GetSetSchedule() const { return setSchedule_; }
+
+    unsigned GetStaleness() const { return staleness_; }
 
     inline CostT GetCost() { return cost_; }
 
@@ -554,6 +558,8 @@ void KlActiveSchedule<GraphT, CostT, MemoryConstraintT>::Initialize(const IBspSc
     vectorSchedule_ = VectorSchedule(schedule);
     setSchedule_ = SetSchedule(schedule);
     workDatastructures_.Initialize(setSchedule_, *instance_, NumSteps());
+
+    staleness_ = schedule.GetStaleness();
 
     cost_ = 0;
     feasible_ = true;
