@@ -457,16 +457,14 @@ class KlActiveSchedule {
             const auto &child = Target(edge, instance_->GetComputationalDag());
 
             if (threadData.currentViolations_.find(edge) == threadData.currentViolations_.end()) {
-                if ((nodeStep > vectorSchedule_.AssignedSuperstep(child))
-                    || (nodeStep == vectorSchedule_.AssignedSuperstep(child)
-                        && nodeProc != vectorSchedule_.AssignedProcessor(child))) {
+                const unsigned differentProcessors = (nodeProc == vectorSchedule_.AssignedProcessor(child)) ? 0 : staleness_;
+                if (nodeStep + differentProcessors > vectorSchedule_.AssignedSuperstep(child)) {
                     threadData.currentViolations_.insert(edge);
                     threadData.newViolations_[child] = edge;
                 }
             } else {
-                if ((nodeStep < vectorSchedule_.AssignedSuperstep(child))
-                    || (nodeStep == vectorSchedule_.AssignedSuperstep(child)
-                        && nodeProc == vectorSchedule_.AssignedProcessor(child))) {
+                const unsigned differentProcessors = (nodeProc == vectorSchedule_.AssignedProcessor(child)) ? 0 : staleness_;
+                if (nodeStep + differentProcessors <= vectorSchedule_.AssignedSuperstep(child)) {
                     threadData.currentViolations_.erase(edge);
                     threadData.resolvedViolations_.insert(edge);
                 }
@@ -477,16 +475,14 @@ class KlActiveSchedule {
             const auto &parent = Source(edge, instance_->GetComputationalDag());
 
             if (threadData.currentViolations_.find(edge) == threadData.currentViolations_.end()) {
-                if ((nodeStep < vectorSchedule_.AssignedSuperstep(parent))
-                    || (nodeStep == vectorSchedule_.AssignedSuperstep(parent)
-                        && nodeProc != vectorSchedule_.AssignedProcessor(parent))) {
+                const unsigned differentProcessors = (nodeProc == vectorSchedule_.AssignedProcessor(parent)) ? 0 : staleness_;
+                if (vectorSchedule_.AssignedSuperstep(parent) + differentProcessors > nodeStep) {
                     threadData.currentViolations_.insert(edge);
                     threadData.newViolations_[parent] = edge;
                 }
             } else {
-                if ((nodeStep > vectorSchedule_.AssignedSuperstep(parent))
-                    || (nodeStep == vectorSchedule_.AssignedSuperstep(parent)
-                        && nodeProc == vectorSchedule_.AssignedProcessor(parent))) {
+                const unsigned differentProcessors = (nodeProc == vectorSchedule_.AssignedProcessor(parent)) ? 0 : staleness_;
+                if (vectorSchedule_.AssignedSuperstep(parent) + differentProcessors <= nodeStep) {
                     threadData.currentViolations_.erase(edge);
                     threadData.resolvedViolations_.insert(edge);
                 }
@@ -545,7 +541,9 @@ void KlActiveSchedule<GraphT, CostT, MemoryConstraintT>::ComputeViolations(Threa
         const unsigned sourceStep = AssignedSuperstep(sourceV);
         const unsigned targetStep = AssignedSuperstep(targetV);
 
-        if (sourceStep > targetStep || (sourceStep == targetStep && sourceProc != targetProc)) {
+        const unsigned differentProcessors = (sourceProc == targetProc) ? 0 : staleness_;
+
+        if (sourceStep + differentProcessors > targetStep) {
             threadData.currentViolations_.insert(edge);
             threadData.feasible_ = false;
         }
