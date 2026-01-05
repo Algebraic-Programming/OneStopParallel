@@ -29,42 +29,42 @@ limitations under the License.
 
 using namespace osp;
 
-BOOST_AUTO_TEST_CASE(test_cost_models_simple_dag) {
-    using graph = computational_dag_edge_idx_vector_impl_def_int_t;
+BOOST_AUTO_TEST_CASE(TestCostModelsSimpleDag) {
+    using Graph = ComputationalDagEdgeIdxVectorImplDefIntT;
 
-    BspInstance<graph> instance;
-    instance.setNumberOfProcessors(2);
-    instance.setCommunicationCosts(10);
-    instance.setSynchronisationCosts(5);
+    BspInstance<Graph> instance;
+    instance.SetNumberOfProcessors(2);
+    instance.SetCommunicationCosts(10);
+    instance.SetSynchronisationCosts(5);
 
-    auto &dag = instance.getComputationalDag();
-    dag.add_vertex(10, 1, 0);
-    dag.add_vertex(20, 2, 0);
-    dag.add_vertex(30, 3, 0);
-    dag.add_vertex(40, 4, 0);
-    dag.add_vertex(50, 5, 0);
-    dag.add_edge(0, 1);
-    dag.add_edge(0, 2);
-    dag.add_edge(1, 4);
-    dag.add_edge(2, 3);
-    dag.add_edge(3, 4);
+    auto &dag = instance.GetComputationalDag();
+    dag.AddVertex(10, 1, 0);
+    dag.AddVertex(20, 2, 0);
+    dag.AddVertex(30, 3, 0);
+    dag.AddVertex(40, 4, 0);
+    dag.AddVertex(50, 5, 0);
+    dag.AddEdge(0, 1);
+    dag.AddEdge(0, 2);
+    dag.AddEdge(1, 4);
+    dag.AddEdge(2, 3);
+    dag.AddEdge(3, 4);
 
-    BspSchedule<graph> schedule(instance);
+    BspSchedule<Graph> schedule(instance);
 
-    schedule.setAssignedProcessor(0, 0);
-    schedule.setAssignedSuperstep(0, 0);
-    schedule.setAssignedProcessor(1, 0);
-    schedule.setAssignedSuperstep(1, 1);
-    schedule.setAssignedProcessor(2, 1);
-    schedule.setAssignedSuperstep(2, 1);
-    schedule.setAssignedProcessor(3, 1);
-    schedule.setAssignedSuperstep(3, 2);
-    schedule.setAssignedProcessor(4, 1);
-    schedule.setAssignedSuperstep(4, 3);
-    schedule.updateNumberOfSupersteps();
+    schedule.SetAssignedProcessor(0, 0);
+    schedule.SetAssignedSuperstep(0, 0);
+    schedule.SetAssignedProcessor(1, 0);
+    schedule.SetAssignedSuperstep(1, 1);
+    schedule.SetAssignedProcessor(2, 1);
+    schedule.SetAssignedSuperstep(2, 1);
+    schedule.SetAssignedProcessor(3, 1);
+    schedule.SetAssignedSuperstep(3, 2);
+    schedule.SetAssignedProcessor(4, 1);
+    schedule.SetAssignedSuperstep(4, 3);
+    schedule.UpdateNumberOfSupersteps();
 
-    BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
-    BOOST_CHECK_EQUAL(schedule.numberOfSupersteps(), 4);
+    BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
+    BOOST_CHECK_EQUAL(schedule.NumberOfSupersteps(), 4);
 
     // Work cost (BSP model) = sum of max work per superstep across processors
     // SS0: max(P0=10, P1=0) = 10
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(test_cost_models_simple_dag) {
     // SS2: max(P0=0, P1=40) = 40
     // SS3: max(P0=0, P1=50) = 50
     // Total work = 10 + 30 + 40 + 50 = 130
-    BOOST_CHECK_EQUAL(schedule.computeWorkCosts(), 130);
+    BOOST_CHECK_EQUAL(schedule.ComputeWorkCosts(), 130);
 
     // LazyCommunicationCost
     // Sends/receives at step_needed - staleness (staleness=1)
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(test_cost_models_simple_dag) {
     // Comm = 10 + 20 = 30
     // Syncs = 2 * L = 2 * 5 = 10 (only steps with comm)
     // Total = 30 + 10 + 130 = 170
-    BOOST_CHECK_EQUAL(LazyCommunicationCost<graph>()(schedule), 170);
+    BOOST_CHECK_EQUAL(LazyCommunicationCost<Graph>()(schedule), 170);
 
     // BufferedSendingCost
     // Send at producer step, receive at step_needed - staleness
@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(test_cost_models_simple_dag) {
     // Comm = 10 + 20 + 20 = 50
     // Syncs = 3 * L = 3 * 5 = 15 (all steps with comm)
     // Total = 50 + 15 + 130 = 195
-    BOOST_CHECK_EQUAL(BufferedSendingCost<graph>()(schedule), 195);
+    BOOST_CHECK_EQUAL(BufferedSendingCost<Graph>()(schedule), 195);
 
     // TotalCommunicationCost
     // Sum of cross-processor edge comm weights * g / P
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(test_cost_models_simple_dag) {
     // Work = 130
     // Sync = 3 * 5 = 15 (number_of_supersteps - 1)
     // Total = 15 + 130 + 15 = 160
-    BOOST_CHECK_EQUAL(TotalCommunicationCost<graph>()(schedule), 160);
+    BOOST_CHECK_EQUAL(TotalCommunicationCost<Graph>()(schedule), 160);
 
     // TotalLambdaCommunicationCost
     // For each node, sum comm_weight * sendCosts over unique target processors
@@ -113,8 +113,8 @@ BOOST_AUTO_TEST_CASE(test_cost_models_simple_dag) {
     // Node 1 (P0, cw=2): target_procs={P1} → 2*1 = 2
     // Node 2 (P1, cw=3): target_procs={P1} → 3*0 = 0
     // Node 3 (P1, cw=4): target_procs={P1} → 4*0 = 0
-    // comm_costs = 1+2+0+0 = 3, comm_cost = 3 * (1/2) * 10 = 15
+    // comm_costs = 1+2+0+0 = 3, commCost = 3 * (1/2) * 10 = 15
     // Work = 130, Sync = 3 * 5 = 15
     // Total = 15 + 130 + 15 = 160
-    BOOST_CHECK_EQUAL(TotalLambdaCommunicationCost<graph>()(schedule), 160);
+    BOOST_CHECK_EQUAL(TotalLambdaCommunicationCost<Graph>()(schedule), 160);
 }

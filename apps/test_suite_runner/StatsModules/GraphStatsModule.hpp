@@ -32,21 +32,21 @@ template <typename TargetObjectType>
 class GraphStatsModule : public IStatisticModule<TargetObjectType> {
   public:
   private:
-    const std::vector<std::string> metric_headers = {"num_vertices", "num_edges", "avg_wavefront_size"};
+    const std::vector<std::string> metricHeaders_ = {"num_vertices", "num_edges", "avg_wavefront_size"};
 
   public:
-    std::vector<std::string> get_metric_headers() const override { return metric_headers; }
+    std::vector<std::string> GetMetricHeaders() const override { return metricHeaders_; }
 
-    std::map<std::string, std::string> record_statistics(const TargetObjectType &schedule,
-                                                         std::ofstream & /*log_stream*/) const override {
+    std::map<std::string, std::string> RecordStatistics(const TargetObjectType &schedule,
+                                                        std::ofstream & /*log_stream*/) const override {
         std::map<std::string, std::string> stats;
 
-        const auto &graph = schedule.getInstance().getComputationalDag();
+        const auto &graph = schedule.GetInstance().GetComputationalDag();
 
-        stats["num_vertices"] = std::to_string(graph.num_vertices());
-        stats["num_edges"] = std::to_string(graph.num_edges());
+        stats["num_vertices"] = std::to_string(graph.NumVertices());
+        stats["num_edges"] = std::to_string(graph.NumEdges());
         stats["avg_wavefront_size"]
-            = std::to_string(static_cast<double>(graph.num_vertices()) / static_cast<double>(longestPath(graph)));
+            = std::to_string(static_cast<double>(graph.NumVertices()) / static_cast<double>(LongestPath(graph)));
         return stats;
     }
 };

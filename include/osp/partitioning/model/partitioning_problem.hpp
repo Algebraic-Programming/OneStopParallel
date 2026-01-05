@@ -26,90 +26,90 @@ limitations under the License.
 namespace osp {
 
 // represents a hypergraph partitioning problem into a fixed number of parts with a balance constraint
-template <typename hypergraph_t>
+template <typename HypergraphT>
 class PartitioningProblem {
   private:
-    using this_t = PartitioningProblem<hypergraph_t>;
+    using ThisT = PartitioningProblem<HypergraphT>;
 
-    using index_type = typename hypergraph_t::vertex_idx;
-    using workw_type = typename hypergraph_t::vertex_work_weight_type;
-    using memw_type = typename hypergraph_t::vertex_mem_weight_type;
-    using commw_type = typename hypergraph_t::vertex_comm_weight_type;
+    using IndexType = typename HypergraphT::VertexIdx;
+    using WorkwType = typename HypergraphT::VertexWorkWeightType;
+    using MemwType = typename HypergraphT::VertexMemWeightType;
+    using CommwType = typename HypergraphT::VertexCommWeightType;
 
-    hypergraph_t hgraph;
+    HypergraphT hgraph_;
 
-    unsigned nr_of_partitions;
-    workw_type max_work_weight_per_partition;
-    memw_type max_memory_weight_per_partition;
+    unsigned nrOfPartitions_;
+    WorkwType maxWorkWeightPerPartition_;
+    MemwType maxMemoryWeightPerPartition_;
 
-    bool allows_replication = false;
+    bool allowsReplication_ = false;
 
   public:
     PartitioningProblem() = default;
 
-    PartitioningProblem(const hypergraph_t &hgraph_,
-                        unsigned nr_parts_ = 2,
-                        workw_type max_work_weight_ = std::numeric_limits<workw_type>::max(),
-                        memw_type max_memory_weight_ = std::numeric_limits<memw_type>::max())
-        : hgraph(hgraph_),
-          nr_of_partitions(nr_parts_),
-          max_work_weight_per_partition(max_work_weight_),
-          max_memory_weight_per_partition(max_memory_weight_) {}
+    PartitioningProblem(const HypergraphT &hgraph,
+                        unsigned nrParts = 2,
+                        WorkwType maxWorkWeight = std::numeric_limits<WorkwType>::max(),
+                        MemwType maxMemoryWeight = std::numeric_limits<MemwType>::max())
+        : hgraph_(hgraph),
+          nrOfPartitions_(nrParts),
+          maxWorkWeightPerPartition_(maxWorkWeight),
+          maxMemoryWeightPerPartition_(maxMemoryWeight) {}
 
-    PartitioningProblem(const hypergraph_t &&hgraph_,
-                        unsigned nr_parts_ = 2,
-                        workw_type max_work_weight_ = std::numeric_limits<workw_type>::max(),
-                        memw_type max_memory_weight_ = std::numeric_limits<memw_type>::max())
-        : hgraph(hgraph_),
-          nr_of_partitions(nr_parts_),
-          max_work_weight_per_partition(max_work_weight_),
-          max_memory_weight_per_partition(max_memory_weight_) {}
+    PartitioningProblem(const HypergraphT &&hgraph,
+                        unsigned nrParts = 2,
+                        WorkwType maxWorkWeight = std::numeric_limits<WorkwType>::max(),
+                        MemwType maxMemoryWeight = std::numeric_limits<MemwType>::max())
+        : hgraph_(hgraph),
+          nrOfPartitions_(nrParts),
+          maxWorkWeightPerPartition_(maxWorkWeight),
+          maxMemoryWeightPerPartition_(maxMemoryWeight) {}
 
-    PartitioningProblem(const this_t &other) = default;
-    PartitioningProblem(this_t &&other) = default;
+    PartitioningProblem(const ThisT &other) = default;
+    PartitioningProblem(ThisT &&other) = default;
 
-    PartitioningProblem &operator=(const this_t &other) = default;
-    PartitioningProblem &operator=(this_t &&other) = default;
+    PartitioningProblem &operator=(const ThisT &other) = default;
+    PartitioningProblem &operator=(ThisT &&other) = default;
 
     // getters
-    inline const hypergraph_t &getHypergraph() const { return hgraph; }
+    inline const HypergraphT &GetHypergraph() const { return hgraph_; }
 
-    inline hypergraph_t &getHypergraph() { return hgraph; }
+    inline HypergraphT &GetHypergraph() { return hgraph_; }
 
-    inline unsigned getNumberOfPartitions() const { return nr_of_partitions; }
+    inline unsigned GetNumberOfPartitions() const { return nrOfPartitions_; }
 
-    inline workw_type getMaxWorkWeightPerPartition() const { return max_work_weight_per_partition; }
+    inline WorkwType GetMaxWorkWeightPerPartition() const { return maxWorkWeightPerPartition_; }
 
-    inline memw_type getMaxMemoryWeightPerPartition() const { return max_memory_weight_per_partition; }
+    inline MemwType GetMaxMemoryWeightPerPartition() const { return maxMemoryWeightPerPartition_; }
 
-    inline bool getAllowsReplication() const { return allows_replication; }
+    inline bool GetAllowsReplication() const { return allowsReplication_; }
 
     // setters
-    inline void setHypergraph(const hypergraph_t &hgraph_) { hgraph = hgraph_; }
+    inline void SetHypergraph(const HypergraphT &hgraph) { hgraph_ = hgraph; }
 
-    inline void setNumberOfPartitions(unsigned nr_parts_) { nr_of_partitions = nr_parts_; }
+    inline void SetNumberOfPartitions(unsigned nrParts) { nrOfPartitions_ = nrParts; }
 
-    inline void setAllowsReplication(bool allowed_) { allows_replication = allowed_; }
+    inline void SetAllowsReplication(bool allowed) { allowsReplication_ = allowed; }
 
-    inline void setMaxWorkWeightExplicitly(workw_type max_weight_) { max_work_weight_per_partition = max_weight_; }
+    inline void SetMaxWorkWeightExplicitly(WorkwType maxWeight) { maxWorkWeightPerPartition_ = maxWeight; }
 
-    void setMaxWorkWeightViaImbalanceFactor(double imbalance) {
+    void SetMaxWorkWeightViaImbalanceFactor(double imbalance) {
         if (imbalance < 0) {
             throw std::invalid_argument("Invalid Argument while setting imbalance parameter: parameter is negative.");
         } else {
-            max_work_weight_per_partition = static_cast<workw_type>(
-                ceil(compute_total_vertex_work_weight(hgraph) / static_cast<double>(nr_of_partitions) * (1.0 + imbalance)));
+            maxWorkWeightPerPartition_ = static_cast<WorkwType>(
+                ceil(ComputeTotalVertexWorkWeight(hgraph_) / static_cast<double>(nrOfPartitions_) * (1.0 + imbalance)));
         }
     }
 
-    inline void setMaxMemoryWeightExplicitly(memw_type max_weight_) { max_memory_weight_per_partition = max_weight_; }
+    inline void SetMaxMemoryWeightExplicitly(MemwType maxWeight) { maxMemoryWeightPerPartition_ = maxWeight; }
 
-    void setMaxMemoryWeightViaImbalanceFactor(double imbalance) {
+    void SetMaxMemoryWeightViaImbalanceFactor(double imbalance) {
         if (imbalance < 0) {
             throw std::invalid_argument("Invalid Argument while setting imbalance parameter: parameter is negative.");
         } else {
-            max_memory_weight_per_partition = static_cast<memw_type>(
-                ceil(compute_total_vertex_memory_weight(hgraph) / static_cast<double>(nr_of_partitions) * (1.0 + imbalance)));
+            maxMemoryWeightPerPartition_ = static_cast<MemwType>(
+                ceil(ComputeTotalVertexMemoryWeight(hgraph_) / static_cast<double>(nrOfPartitions_) * (1.0 + imbalance)));
         }
     }
 };

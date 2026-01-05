@@ -26,20 +26,20 @@ using namespace osp;
 BOOST_AUTO_TEST_CASE(IntegerSqrt) {
     for (std::size_t root = 1U; root < 200U; ++root) {
         for (std::size_t num = root * root; num < (root + 1U) * (root + 1U); ++num) {
-            BOOST_CHECK_EQUAL(intSqrtFloor(num), root);
+            BOOST_CHECK_EQUAL(IntSqrtFloor(num), root);
         }
     }
 
     for (int root = 1; root < 300; ++root) {
         for (int num = root * root; num < (root + 1) * (root + 1); ++num) {
-            BOOST_CHECK_EQUAL(intSqrtFloor(num), root);
+            BOOST_CHECK_EQUAL(IntSqrtFloor(num), root);
         }
     }
 }
 
 BOOST_AUTO_TEST_CASE(Divisors) {
     for (std::size_t num = 1U; num < 1000U; ++num) {
-        const std::vector<std::size_t> divs = divisorsList(num);
+        const std::vector<std::size_t> divs = DivisorsList(num);
         for (const std::size_t &div : divs) {
             std::cout << div << ", ";
             BOOST_CHECK_EQUAL(num % div, 0U);

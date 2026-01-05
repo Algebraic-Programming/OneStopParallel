@@ -32,11 +32,11 @@ namespace osp {
  * @tparam T The integral type of the values (e.g., int, unsigned, size_t).
  */
 template <typename T>
-class integral_range {
+class IntegralRange {
     static_assert(std::is_integral<T>::value, "integral_range requires an integral type");
 
-    T start;
-    T finish;
+    T start_;
+    T finish_;
 
   public:
     /**
@@ -44,7 +44,7 @@ class integral_range {
      *
      * This iterator satisfies the RandomAccessIterator concept.
      */
-    class integral_iterator {    // public for std::reverse_iterator
+    class IntegralIterator {    // public for std::reverse_iterator
       public:
         using iterator_category = std::random_access_iterator_tag;
         using difference_type = std::ptrdiff_t;
@@ -55,157 +55,157 @@ class integral_range {
         /**
          * @brief Proxy object to support operator-> for integral types.
          */
-        struct arrow_proxy {
-            T value;
+        struct ArrowProxy {
+            T value_;
 
-            constexpr const T *operator->() const noexcept { return &value; }
+            constexpr const T *operator->() const noexcept { return &value_; }
         };
 
       private:
-        value_type current;
+        value_type current_;
 
       public:
         /**
          * @brief Default constructor. Initializes iterator to 0.
          */
-        constexpr integral_iterator() noexcept : current(0) {}
+        constexpr IntegralIterator() noexcept : current_(0) {}
 
         /**
          * @brief Constructs an iterator pointing to the given value.
          * @param start The starting value.
          */
-        explicit constexpr integral_iterator(value_type start) noexcept : current(start) {}
+        explicit constexpr IntegralIterator(value_type start) noexcept : current_(start) {}
 
-        constexpr integral_iterator(const integral_iterator &) noexcept = default;
-        constexpr integral_iterator &operator=(const integral_iterator &) noexcept = default;
-        ~integral_iterator() = default;
+        constexpr IntegralIterator(const IntegralIterator &) noexcept = default;
+        constexpr IntegralIterator &operator=(const IntegralIterator &) noexcept = default;
+        ~IntegralIterator() = default;
 
         /**
          * @brief Dereference operator.
          * @return The current integral value.
          */
-        [[nodiscard]] constexpr value_type operator*() const noexcept { return current; }
+        [[nodiscard]] constexpr value_type operator*() const noexcept { return current_; }
 
         /**
          * @brief Arrow operator.
          * @return A proxy object that allows access to the address of the value.
          */
-        [[nodiscard]] constexpr arrow_proxy operator->() const noexcept { return arrow_proxy{current}; }
+        [[nodiscard]] constexpr ArrowProxy operator->() const noexcept { return ArrowProxy{current_}; }
 
-        constexpr integral_iterator &operator++() noexcept {
-            ++current;
+        constexpr IntegralIterator &operator++() noexcept {
+            ++current_;
             return *this;
         }
 
-        constexpr integral_iterator operator++(int) noexcept {
-            integral_iterator temp = *this;
+        constexpr IntegralIterator operator++(int) noexcept {
+            IntegralIterator temp = *this;
             ++(*this);
             return temp;
         }
 
-        constexpr integral_iterator &operator--() noexcept {
-            --current;
+        constexpr IntegralIterator &operator--() noexcept {
+            --current_;
             return *this;
         }
 
-        constexpr integral_iterator operator--(int) noexcept {
-            integral_iterator temp = *this;
+        constexpr IntegralIterator operator--(int) noexcept {
+            IntegralIterator temp = *this;
             --(*this);
             return temp;
         }
 
-        [[nodiscard]] constexpr bool operator==(const integral_iterator &other) const noexcept {
-            return current == other.current;
+        [[nodiscard]] constexpr bool operator==(const IntegralIterator &other) const noexcept {
+            return current_ == other.current_;
         }
 
-        [[nodiscard]] constexpr bool operator!=(const integral_iterator &other) const noexcept { return !(*this == other); }
+        [[nodiscard]] constexpr bool operator!=(const IntegralIterator &other) const noexcept { return !(*this == other); }
 
-        constexpr integral_iterator &operator+=(difference_type n) noexcept {
-            current = static_cast<value_type>(current + n);
+        constexpr IntegralIterator &operator+=(difference_type n) noexcept {
+            current_ = static_cast<value_type>(current_ + n);
             return *this;
         }
 
-        [[nodiscard]] constexpr integral_iterator operator+(difference_type n) const noexcept {
-            integral_iterator temp = *this;
+        [[nodiscard]] constexpr IntegralIterator operator+(difference_type n) const noexcept {
+            IntegralIterator temp = *this;
             return temp += n;
         }
 
-        [[nodiscard]] friend constexpr integral_iterator operator+(difference_type n, const integral_iterator &it) noexcept {
+        [[nodiscard]] friend constexpr IntegralIterator operator+(difference_type n, const IntegralIterator &it) noexcept {
             return it + n;
         }
 
-        constexpr integral_iterator &operator-=(difference_type n) noexcept {
-            current = static_cast<value_type>(current - n);
+        constexpr IntegralIterator &operator-=(difference_type n) noexcept {
+            current_ = static_cast<value_type>(current_ - n);
             return *this;
         }
 
-        [[nodiscard]] constexpr integral_iterator operator-(difference_type n) const noexcept {
-            integral_iterator temp = *this;
+        [[nodiscard]] constexpr IntegralIterator operator-(difference_type n) const noexcept {
+            IntegralIterator temp = *this;
             return temp -= n;
         }
 
-        [[nodiscard]] constexpr difference_type operator-(const integral_iterator &other) const noexcept {
-            return static_cast<difference_type>(current) - static_cast<difference_type>(other.current);
+        [[nodiscard]] constexpr difference_type operator-(const IntegralIterator &other) const noexcept {
+            return static_cast<difference_type>(current_) - static_cast<difference_type>(other.current_);
         }
 
         [[nodiscard]] constexpr value_type operator[](difference_type n) const noexcept { return *(*this + n); }
 
-        [[nodiscard]] constexpr bool operator<(const integral_iterator &other) const noexcept { return current < other.current; }
+        [[nodiscard]] constexpr bool operator<(const IntegralIterator &other) const noexcept { return current_ < other.current_; }
 
-        [[nodiscard]] constexpr bool operator>(const integral_iterator &other) const noexcept { return current > other.current; }
+        [[nodiscard]] constexpr bool operator>(const IntegralIterator &other) const noexcept { return current_ > other.current_; }
 
-        [[nodiscard]] constexpr bool operator<=(const integral_iterator &other) const noexcept {
-            return current <= other.current;
+        [[nodiscard]] constexpr bool operator<=(const IntegralIterator &other) const noexcept {
+            return current_ <= other.current_;
         }
 
-        [[nodiscard]] constexpr bool operator>=(const integral_iterator &other) const noexcept {
-            return current >= other.current;
+        [[nodiscard]] constexpr bool operator>=(const IntegralIterator &other) const noexcept {
+            return current_ >= other.current_;
         }
     };
 
-    using reverse_integral_iterator = std::reverse_iterator<integral_iterator>;
+    using ReverseIntegralIterator = std::reverse_iterator<IntegralIterator>;
 
   public:
     /**
      * @brief Constructs a range [0, end).
      * @param end_ The exclusive upper bound.
      */
-    constexpr integral_range(T end_) noexcept : start(static_cast<T>(0)), finish(end_) {}
+    constexpr IntegralRange(T end) noexcept : start_(static_cast<T>(0)), finish_(end) {}
 
     /**
      * @brief Constructs a range [start, end).
      * @param start_ The inclusive lower bound.
      * @param end_ The exclusive upper bound.
      */
-    constexpr integral_range(T start_, T end_) noexcept : start(start_), finish(end_) {}
+    constexpr IntegralRange(T start, T end) noexcept : start_(start), finish_(end) {}
 
-    [[nodiscard]] constexpr integral_iterator begin() const noexcept { return integral_iterator(start); }
+    [[nodiscard]] constexpr IntegralIterator begin() const noexcept { return IntegralIterator(start_); }
 
-    [[nodiscard]] constexpr integral_iterator cbegin() const noexcept { return integral_iterator(start); }
+    [[nodiscard]] constexpr IntegralIterator cbegin() const noexcept { return IntegralIterator(start_); }
 
-    [[nodiscard]] constexpr integral_iterator end() const noexcept { return integral_iterator(finish); }
+    [[nodiscard]] constexpr IntegralIterator end() const noexcept { return IntegralIterator(finish_); }
 
-    [[nodiscard]] constexpr integral_iterator cend() const noexcept { return integral_iterator(finish); }
+    [[nodiscard]] constexpr IntegralIterator cend() const noexcept { return IntegralIterator(finish_); }
 
-    [[nodiscard]] constexpr reverse_integral_iterator rbegin() const noexcept { return reverse_integral_iterator(end()); }
+    [[nodiscard]] constexpr ReverseIntegralIterator rbegin() const noexcept { return ReverseIntegralIterator(end()); }
 
-    [[nodiscard]] constexpr reverse_integral_iterator crbegin() const noexcept { return reverse_integral_iterator(cend()); }
+    [[nodiscard]] constexpr ReverseIntegralIterator crbegin() const noexcept { return ReverseIntegralIterator(cend()); }
 
-    [[nodiscard]] constexpr reverse_integral_iterator rend() const noexcept { return reverse_integral_iterator(begin()); }
+    [[nodiscard]] constexpr ReverseIntegralIterator rend() const noexcept { return ReverseIntegralIterator(begin()); }
 
-    [[nodiscard]] constexpr reverse_integral_iterator crend() const noexcept { return reverse_integral_iterator(cbegin()); }
+    [[nodiscard]] constexpr ReverseIntegralIterator crend() const noexcept { return ReverseIntegralIterator(cbegin()); }
 
     /**
      * @brief Returns the number of elements in the range.
      * @return The size of the range.
      */
-    [[nodiscard]] constexpr auto size() const noexcept { return finish - start; }
+    [[nodiscard]] constexpr auto size() const noexcept { return finish_ - start_; }
 
     /**
      * @brief Checks if the range is empty.
      * @return True if the range is empty, false otherwise.
      */
-    [[nodiscard]] constexpr bool empty() const noexcept { return start == finish; }
+    [[nodiscard]] constexpr bool empty() const noexcept { return start_ == finish_; }
 };
 
 }    // namespace osp

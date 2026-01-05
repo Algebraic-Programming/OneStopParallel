@@ -32,17 +32,17 @@ namespace pt = boost::property_tree;
 // main parameters for running simple_schedulers.cpp
 struct ConfigParser {
   public:
-    pt::ptree global_params;
-    pt::ptree scheduler;
-    pt::ptree instances;
+    pt::ptree globalParams_;
+    pt::ptree scheduler_;
+    pt::ptree instances_;
 
   private:
-    std::string main_config_file = "";
-    bool has_config_file = false;
+    std::string mainConfigFile_ = "";
+    bool hasConfigFile_ = false;
 
-    pt::ptree scheduler_config;
+    pt::ptree schedulerConfig_;
 
-    void usage() {
+    void Usage() {
         std::cout << "Usage: Either read config file: \n"
                   << "     --config *.json          \t\tSpecify config .json file.\n"
                   << "  Or specify command line options:\n"
@@ -56,51 +56,51 @@ struct ConfigParser {
                   << "   Available scheduler: \n";
 
         pt::ptree loadPtreeRoot;
-        pt::read_json(main_config_file, loadPtreeRoot);
-        pt::ptree scheduler_config_usage = loadPtreeRoot.get_child("algorithms");
+        pt::read_json(mainConfigFile_, loadPtreeRoot);
+        pt::ptree schedulerConfigUsage = loadPtreeRoot.get_child("algorithms");
 
-        for (auto &algorithm : scheduler_config_usage) {
+        for (auto &algorithm : schedulerConfigUsage) {
             std::cout << "     --" << algorithm.second.get_child("name").get_value<std::string>() << "\t\t"
                       << algorithm.second.get_child("description").get_value<std::string>() << "\n";
         }
     }
 
-    void add_algorithm(std::string name) {
-        bool algorithm_found = false;
-        std::string algorithm_identifier = name;
+    void AddAlgorithm(std::string name) {
+        bool algorithmFound = false;
+        std::string algorithmIdentifier = name;
 
-        while (algorithm_identifier.find("-") == 0) {
-            algorithm_identifier = algorithm_identifier.substr(1);
+        while (algorithmIdentifier.find("-") == 0) {
+            algorithmIdentifier = algorithmIdentifier.substr(1);
         }
 
-        for (auto &algorithm : scheduler_config) {
-            std::string alg_name = algorithm.second.get_child("name").get_value<std::string>();
+        for (auto &algorithm : schedulerConfig_) {
+            std::string algName = algorithm.second.get_child("name").get_value<std::string>();
 
-            if (alg_name == algorithm_identifier) {
-                scheduler.push_back(algorithm);
-                algorithm_found = true;
+            if (algName == algorithmIdentifier) {
+                scheduler_.push_back(algorithm);
+                algorithmFound = true;
             }
         }
 
-        if (!algorithm_found) {
+        if (!algorithmFound) {
             throw std::invalid_argument("Parameter error: wrong input or unknown algorithm \"" + name + "\".\n");
         }
     }
 
-    void parse_config_file(std::string filename) {
+    void ParseConfigFile(std::string filename) {
         pt::ptree loadPtreeRoot;
         pt::read_json(filename, loadPtreeRoot);
 
-        global_params = loadPtreeRoot.get_child("globalParameters");
+        globalParams_ = loadPtreeRoot.get_child("globalParameters");
 
         try {
-            instances = loadPtreeRoot.get_child("inputInstances");
+            instances_ = loadPtreeRoot.get_child("inputInstances");
         } catch (const pt::ptree_bad_path &e) {}
 
-        pt::ptree scheduler_config_parse = loadPtreeRoot.get_child("algorithms");
-        for (auto &algorithm : scheduler_config_parse) {
+        pt::ptree schedulerConfigParse = loadPtreeRoot.get_child("algorithms");
+        for (auto &algorithm : schedulerConfigParse) {
             if (algorithm.second.get_child("run").get_value<bool>()) {
-                scheduler.push_back(algorithm);
+                scheduler_.push_back(algorithm);
             }
         }
     }
@@ -108,58 +108,58 @@ struct ConfigParser {
   public:
     ConfigParser() = default;
 
-    ConfigParser(std::string main_config_file_) : main_config_file(main_config_file_), has_config_file(true) {}
+    ConfigParser(std::string mainConfigFile) : mainConfigFile_(mainConfigFile), hasConfigFile_(true) {}
 
-    void parse_args(const int argc, const char *const argv[]) {
-        if (has_config_file) {
+    void ParseArgs(const int argc, const char *const argv[]) {
+        if (hasConfigFile_) {
             if (argc < 3) {
-                usage();
+                Usage();
                 throw std::invalid_argument("Parameter error: not enough parameters specified.\n");
             } else if (std::string(argv[1]) == "--config") {
-                std::string config_file = argv[2];
-                if (config_file.empty() || config_file.substr(config_file.size() - 5) != ".json") {
+                std::string configFile = argv[2];
+                if (configFile.empty() || configFile.substr(configFile.size() - 5) != ".json") {
                     throw std::invalid_argument("Parameter error: config file ending is not \".json\".\n");
                 }
 
-                parse_config_file(config_file);
-                if (scheduler.empty()) {
+                ParseConfigFile(configFile);
+                if (scheduler_.empty()) {
                     throw std::invalid_argument("Parameter error: config file does not specify scheduler to run!\n");
                 }
-                if (instances.empty()) {
+                if (instances_.empty()) {
                     throw std::invalid_argument("Parameter error: config file does not specify input instances!\n");
                 }
-                if (global_params.empty()) {
+                if (globalParams_.empty()) {
                     throw std::invalid_argument("Parameter error: config file does not specify global parameters!\n");
                 }
             } else {
-                const std::set<std::string> parameters_requiring_value({"--config",
-                                                                        "--inputDag",
-                                                                        "--g",
-                                                                        "-inputDag",
-                                                                        "-g",
-                                                                        "--timeLimit",
-                                                                        "--t",
-                                                                        "-timeLimit",
-                                                                        "-t",
-                                                                        "--inputMachine",
-                                                                        "--m",
-                                                                        "-inputMachine",
-                                                                        "-m"});
+                const std::set<std::string> parametersRequiringValue({"--config",
+                                                                      "--inputDag",
+                                                                      "--g",
+                                                                      "-inputDag",
+                                                                      "-g",
+                                                                      "--timeLimit",
+                                                                      "--t",
+                                                                      "-timeLimit",
+                                                                      "-t",
+                                                                      "--inputMachine",
+                                                                      "--m",
+                                                                      "-inputMachine",
+                                                                      "-m"});
 
                 pt::ptree loadPtreeRoot;
-                pt::read_json(main_config_file, loadPtreeRoot);
+                pt::read_json(mainConfigFile_, loadPtreeRoot);
 
-                global_params = loadPtreeRoot.get_child("globalParameters");
-                scheduler_config = loadPtreeRoot.get_child("algorithms");
+                globalParams_ = loadPtreeRoot.get_child("globalParameters");
+                schedulerConfig_ = loadPtreeRoot.get_child("algorithms");
                 pt::ptree instance;
 
-                bool graph_specified = false;
-                bool machine_specified = false;
+                bool graphSpecified = false;
+                bool machineSpecified = false;
 
                 // PROCESS COMMAND LINE ARGUMENTS
                 for (int i = 1; i < argc; ++i) {
                     // Check parameters that require an argument afterwards
-                    if (parameters_requiring_value.count(argv[i]) == 1 && i + 1 >= argc) {
+                    if (parametersRequiringValue.count(argv[i]) == 1 && i + 1 >= argc) {
                         throw std::invalid_argument("Parameter error: no parameter value after the \"" + std::string(argv[i])
                                                     + "\" option.\n");
                     }
@@ -167,48 +167,48 @@ struct ConfigParser {
                     std::string flag = argv[i];
 
                     if (std::string(flag) == "--config") {
-                        usage();
+                        Usage();
                         throw std::invalid_argument("Parameter error: usage \"" + std::string(argv[i]) + "\".\n");
 
                     } else if (std::string(flag) == "--timelimit" || std::string(flag) == "--t" || std::string(flag) == "-t"
                                || std::string(flag) == "-timelimit") {
-                        global_params.put("timeLimit", std::stoi(argv[++i]));
+                        globalParams_.put("timeLimit", std::stoi(argv[++i]));
 
                     } else if (std::string(flag) == "--sankey" || std::string(flag) == "--s" || std::string(flag) == "-s"
                                || std::string(flag) == "-sankey") {
-                        global_params.put("outputSankeySchedule", true);
+                        globalParams_.put("outputSankeySchedule", true);
 
                     } else if (std::string(flag) == "--dot" || std::string(flag) == "--d" || std::string(flag) == "-d"
                                || std::string(flag) == "-dot") {
-                        global_params.put("outputDotSchedule", true);
+                        globalParams_.put("outputDotSchedule", true);
 
                     } else if (std::string(flag) == "--inputDag" || std::string(flag) == "--g" || std::string(flag) == "-inputDag"
                                || std::string(flag) == "-g") {
                         instance.put("graphFile", argv[++i]);
-                        graph_specified = true;
+                        graphSpecified = true;
 
                     } else if (std::string(flag) == "--inputMachine" || std::string(flag) == "--m"
                                || std::string(flag) == "-inputMachine" || std::string(flag) == "-m") {
                         instance.put("machineParamsFile", argv[++i]);
-                        machine_specified = true;
+                        machineSpecified = true;
 
                     } else if (std::string(flag) == "--output" || std::string(flag) == "--o" || std::string(flag) == "-output"
                                || std::string(flag) == "-o") {
-                        global_params.put("outputSchedule", true);
+                        globalParams_.put("outputSchedule", true);
                     } else {
-                        add_algorithm(flag);
+                        AddAlgorithm(flag);
                     }
                 }
 
-                if (!machine_specified || !graph_specified) {
-                    usage();
+                if (!machineSpecified || !graphSpecified) {
+                    Usage();
                     throw std::invalid_argument("Parameter error: no graph or machine parameters were specified!\n");
-                } else if (scheduler.empty()) {
-                    usage();
+                } else if (scheduler_.empty()) {
+                    Usage();
                     throw std::invalid_argument("Parameter error: no algorithm was specified!\n");
                 }
 
-                instances.push_back(std::make_pair("", instance));
+                instances_.push_back(std::make_pair("", instance));
             }
         } else {
             if (argc < 3 || std::string(argv[1]) != "--config") {
@@ -218,16 +218,16 @@ struct ConfigParser {
                 throw std::invalid_argument("Parameter error: not enough parameters specified.\n");
 
             } else {
-                std::string config_file = argv[2];
-                if (config_file.empty() || config_file.substr(config_file.size() - 5) != ".json") {
+                std::string configFile = argv[2];
+                if (configFile.empty() || configFile.substr(configFile.size() - 5) != ".json") {
                     throw std::invalid_argument("Parameter error: config file ending is not \".json\".\n");
                 }
 
-                parse_config_file(config_file);
-                if (scheduler.empty()) {
+                ParseConfigFile(configFile);
+                if (scheduler_.empty()) {
                     throw std::invalid_argument("Parameter error: config file does not specify scheduler to run!\n");
                 }
-                if (global_params.empty()) {
+                if (globalParams_.empty()) {
                     throw std::invalid_argument("Parameter error: config file does not specify global parameters!\n");
                 }
             }

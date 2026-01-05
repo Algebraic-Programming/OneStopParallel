@@ -29,238 +29,238 @@ limitations under the License.
 
 namespace osp {
 
-template <typename Graph_t>
-struct cm_vertex {
-    using VertexType = vertex_idx_t<Graph_t>;
-    VertexType vertex;
+template <typename GraphT>
+struct CmVertex {
+    using VertexType = VertexIdxT<GraphT>;
+    VertexType vertex_;
 
-    VertexType parent_position;
+    VertexType parentPosition_;
 
-    VertexType degree;
+    VertexType degree_;
 
-    cm_vertex() : vertex(0), parent_position(0), degree(0) {}
+    CmVertex() : vertex_(0), parentPosition_(0), degree_(0) {}
 
-    cm_vertex(VertexType vertex_, VertexType degree_, VertexType parent_position_)
-        : vertex(vertex_), parent_position(parent_position_), degree(degree_) {}
+    CmVertex(VertexType vertex, VertexType degree, VertexType parentPosition)
+        : vertex_(vertex), parentPosition_(parentPosition), degree_(degree) {}
 
-    bool operator<(cm_vertex const &rhs) const {
-        return (parent_position < rhs.parent_position) || (parent_position == rhs.parent_position and degree < rhs.degree)
-               || (parent_position == rhs.parent_position and degree == rhs.degree and vertex < rhs.vertex);
+    bool operator<(CmVertex const &rhs) const {
+        return (parentPosition_ < rhs.parentPosition_) || (parentPosition_ == rhs.parentPosition_ and degree_ < rhs.degree_)
+               || (parentPosition_ == rhs.parentPosition_ and degree_ == rhs.degree_ and vertex_ < rhs.vertex_);
     }
 };
 
-template <typename Graph_t>
-std::vector<vertex_idx_t<Graph_t>> cuthill_mckee_wavefront(const Graph_t &dag, bool permutation = false) {
-    using VertexType = vertex_idx_t<Graph_t>;
-    using cm_vertex = cm_vertex<Graph_t>;
+template <typename GraphT>
+std::vector<VertexIdxT<GraphT>> CuthillMckeeWavefront(const GraphT &dag, bool permutation = false) {
+    using VertexType = VertexIdxT<GraphT>;
+    using CmVertex = CmVertex<GraphT>;
 
-    std::vector<VertexType> result(dag.num_vertices());
-    std::vector<unsigned> predecessors_count(dag.num_vertices(), 0);
-    std::vector<VertexType> predecessors_position(dag.num_vertices(), dag.num_vertices());
+    std::vector<VertexType> result(dag.NumVertices());
+    std::vector<unsigned> predecessorsCount(dag.NumVertices(), 0);
+    std::vector<VertexType> predecessorsPosition(dag.NumVertices(), dag.NumVertices());
 
-    std::vector<cm_vertex> current_wavefront;
-    for (const auto &source : source_vertices_view(dag)) {
-        current_wavefront.push_back(cm_vertex(source, dag.out_degree(source), 0));
+    std::vector<CmVertex> currentWavefront;
+    for (const auto &source : SourceVerticesView(dag)) {
+        currentWavefront.push_back(CmVertex(source, dag.OutDegree(source), 0));
     }
 
-    std::vector<cm_vertex> new_wavefront;
-    VertexType node_counter = 0;
-    while (node_counter < dag.num_vertices()) {
-        new_wavefront.clear();
-        std::sort(current_wavefront.begin(), current_wavefront.end());
+    std::vector<CmVertex> newWavefront;
+    VertexType nodeCounter = 0;
+    while (nodeCounter < dag.NumVertices()) {
+        newWavefront.clear();
+        std::sort(currentWavefront.begin(), currentWavefront.end());
 
         if (permutation) {
-            for (VertexType i = 0; i < static_cast<VertexType>(current_wavefront.size()); i++) {
-                result[current_wavefront[i].vertex] = node_counter + i;
+            for (VertexType i = 0; i < static_cast<VertexType>(currentWavefront.size()); i++) {
+                result[currentWavefront[i].vertex_] = nodeCounter + i;
             }
         } else {
-            for (size_t i = 0; i < current_wavefront.size(); i++) {
-                result[node_counter + i] = current_wavefront[i].vertex;
+            for (size_t i = 0; i < currentWavefront.size(); i++) {
+                result[nodeCounter + i] = currentWavefront[i].vertex_;
             }
         }
 
-        if (node_counter + static_cast<VertexType>(current_wavefront.size()) == dag.num_vertices()) {
+        if (nodeCounter + static_cast<VertexType>(currentWavefront.size()) == dag.NumVertices()) {
             break;
         }
 
-        for (VertexType i = 0; i < static_cast<VertexType>(current_wavefront.size()); i++) {
-            for (const auto &child : dag.children(current_wavefront[i].vertex)) {
-                predecessors_count[child]++;
-                predecessors_position[child] = std::min(predecessors_position[child], node_counter + i);
+        for (VertexType i = 0; i < static_cast<VertexType>(currentWavefront.size()); i++) {
+            for (const auto &child : dag.Children(currentWavefront[i].vertex_)) {
+                predecessorsCount[child]++;
+                predecessorsPosition[child] = std::min(predecessorsPosition[child], nodeCounter + i);
 
-                if (predecessors_count[child] == dag.in_degree(child)) {
-                    new_wavefront.push_back(cm_vertex(child, dag.out_degree(child), predecessors_position[child]));
+                if (predecessorsCount[child] == dag.InDegree(child)) {
+                    newWavefront.push_back(CmVertex(child, dag.OutDegree(child), predecessorsPosition[child]));
                 }
             }
         }
 
-        node_counter += static_cast<VertexType>(current_wavefront.size());
+        nodeCounter += static_cast<VertexType>(currentWavefront.size());
 
-        std::swap(current_wavefront, new_wavefront);
+        std::swap(currentWavefront, newWavefront);
     }
 
     return result;
 }
 
-template <typename Graph_t>
-std::vector<vertex_idx_t<Graph_t>> cuthill_mckee_undirected(const Graph_t &dag, bool start_at_sink, bool perm = false) {
-    using VertexType = vertex_idx_t<Graph_t>;
-    using cm_vertex = cm_vertex<Graph_t>;
+template <typename GraphT>
+std::vector<VertexIdxT<GraphT>> CuthillMckeeUndirected(const GraphT &dag, bool startAtSink, bool perm = false) {
+    using VertexType = VertexIdxT<GraphT>;
+    using CmVertex = CmVertex<GraphT>;
 
-    std::vector<VertexType> cm_order(dag.num_vertices());
+    std::vector<VertexType> cmOrder(dag.NumVertices());
 
-    std::unordered_map<VertexType, unsigned> max_node_distances;
-    VertexType first_node = 0;
+    std::unordered_map<VertexType, unsigned> maxNodeDistances;
+    VertexType firstNode = 0;
 
     // compute bottom or top node distances of sink or source nodes, store node with the largest distance in first_node
-    if (start_at_sink) {
-        unsigned max_distance = 0;
-        const std::vector<unsigned> top_node_distance = get_top_node_distance(dag);
-        for (const auto &i : dag.vertices()) {
-            if (is_sink(i, dag)) {
-                max_node_distances[i] = top_node_distance[i];
+    if (startAtSink) {
+        unsigned maxDistance = 0;
+        const std::vector<unsigned> topNodeDistance = GetTopNodeDistance(dag);
+        for (const auto &i : dag.Vertices()) {
+            if (IsSink(i, dag)) {
+                maxNodeDistances[i] = topNodeDistance[i];
 
-                if (top_node_distance[i] > max_distance) {
-                    max_distance = top_node_distance[i];
-                    first_node = i;
+                if (topNodeDistance[i] > maxDistance) {
+                    maxDistance = topNodeDistance[i];
+                    firstNode = i;
                 }
             }
         }
     } else {
-        unsigned max_distance = 0;
-        const std::vector<unsigned> bottom_node_distance = get_bottom_node_distance(dag);
-        for (const auto &i : dag.vertices()) {
-            if (is_source(i, dag)) {
-                max_node_distances[i] = bottom_node_distance[i];
+        unsigned maxDistance = 0;
+        const std::vector<unsigned> bottomNodeDistance = GetBottomNodeDistance(dag);
+        for (const auto &i : dag.Vertices()) {
+            if (IsSource(i, dag)) {
+                maxNodeDistances[i] = bottomNodeDistance[i];
 
-                if (bottom_node_distance[i] > max_distance) {
-                    max_distance = bottom_node_distance[i];
-                    first_node = i;
+                if (bottomNodeDistance[i] > maxDistance) {
+                    maxDistance = bottomNodeDistance[i];
+                    firstNode = i;
                 }
             }
         }
     }
 
     if (perm) {
-        cm_order[first_node] = 0;
+        cmOrder[firstNode] = 0;
     } else {
-        cm_order[0] = first_node;
+        cmOrder[0] = firstNode;
     }
 
     std::unordered_set<VertexType> visited;
-    visited.insert(first_node);
+    visited.insert(firstNode);
 
-    std::vector<cm_vertex> current_level;
-    current_level.reserve(dag.in_degree(first_node) + dag.out_degree(first_node));
+    std::vector<CmVertex> currentLevel;
+    currentLevel.reserve(dag.InDegree(firstNode) + dag.OutDegree(firstNode));
 
-    for (const auto &child : dag.children(first_node)) {
-        current_level.push_back(cm_vertex(child, dag.in_degree(child) + dag.out_degree(child), 0));
+    for (const auto &child : dag.Children(firstNode)) {
+        currentLevel.push_back(CmVertex(child, dag.InDegree(child) + dag.OutDegree(child), 0));
         visited.insert(child);
     }
 
-    for (const auto &parent : dag.parents(first_node)) {
-        current_level.push_back(cm_vertex(parent, dag.in_degree(parent) + dag.out_degree(parent), 0));
+    for (const auto &parent : dag.Parents(firstNode)) {
+        currentLevel.push_back(CmVertex(parent, dag.InDegree(parent) + dag.OutDegree(parent), 0));
         visited.insert(parent);
     }
 
-    VertexType node_counter = 1;
-    while (node_counter < dag.num_vertices()) {
-        std::sort(current_level.begin(), current_level.end());
+    VertexType nodeCounter = 1;
+    while (nodeCounter < dag.NumVertices()) {
+        std::sort(currentLevel.begin(), currentLevel.end());
 
         if (perm) {
-            for (VertexType i = 0; i < current_level.size(); i++) {
-                cm_order[current_level[i].vertex] = node_counter + i;
+            for (VertexType i = 0; i < currentLevel.size(); i++) {
+                cmOrder[currentLevel[i].vertex_] = nodeCounter + i;
             }
         } else {
-            for (VertexType i = 0; i < current_level.size(); i++) {
-                cm_order[node_counter + i] = current_level[i].vertex;
+            for (VertexType i = 0; i < currentLevel.size(); i++) {
+                cmOrder[nodeCounter + i] = currentLevel[i].vertex_;
             }
         }
 
-        if (node_counter + current_level.size() == dag.num_vertices()) {
+        if (nodeCounter + currentLevel.size() == dag.NumVertices()) {
             break;
         }
 
-        std::unordered_map<VertexType, VertexType> node_priority;
+        std::unordered_map<VertexType, VertexType> nodePriority;
 
-        for (VertexType i = 0; i < current_level.size(); i++) {
-            for (const auto &child : dag.children(current_level[i].vertex)) {
+        for (VertexType i = 0; i < currentLevel.size(); i++) {
+            for (const auto &child : dag.Children(currentLevel[i].vertex_)) {
                 if (visited.find(child) == visited.end()) {
-                    if (node_priority.find(child) == node_priority.end()) {
-                        node_priority[child] = node_counter + i;
+                    if (nodePriority.find(child) == nodePriority.end()) {
+                        nodePriority[child] = nodeCounter + i;
                     } else {
-                        node_priority[child] = std::min(node_priority[child], node_counter + i);
+                        nodePriority[child] = std::min(nodePriority[child], nodeCounter + i);
                     }
                 }
             }
 
-            for (const auto &parent : dag.parents(current_level[i].vertex)) {
+            for (const auto &parent : dag.Parents(currentLevel[i].vertex_)) {
                 if (visited.find(parent) == visited.end()) {
-                    if (node_priority.find(parent) == node_priority.end()) {
-                        node_priority[parent] = node_counter + i;
+                    if (nodePriority.find(parent) == nodePriority.end()) {
+                        nodePriority[parent] = nodeCounter + i;
                     } else {
-                        node_priority[parent] = std::min(node_priority[parent], node_counter + i);
+                        nodePriority[parent] = std::min(nodePriority[parent], nodeCounter + i);
                     }
                 }
             }
         }
 
-        node_counter += current_level.size();
+        nodeCounter += currentLevel.size();
 
-        if (node_priority.empty()) {    // the dag has more than one connected components
+        if (nodePriority.empty()) {    // the dag has more than one connected components
 
-            unsigned max_distance = 0;
-            for (const auto [node, distance] : max_node_distances) {
-                if (visited.find(node) == visited.end() and distance > max_distance) {
-                    max_distance = distance;
-                    first_node = node;
+            unsigned maxDistance = 0;
+            for (const auto [node, distance] : maxNodeDistances) {
+                if (visited.find(node) == visited.end() and distance > maxDistance) {
+                    maxDistance = distance;
+                    firstNode = node;
                 }
             }
 
             if (perm) {
-                cm_order[first_node] = node_counter;
+                cmOrder[firstNode] = nodeCounter;
             } else {
-                cm_order[node_counter] = first_node;
+                cmOrder[nodeCounter] = firstNode;
             }
-            visited.insert(first_node);
+            visited.insert(firstNode);
 
-            current_level.clear();
-            current_level.reserve(dag.in_degree(first_node) + dag.out_degree(first_node));
+            currentLevel.clear();
+            currentLevel.reserve(dag.InDegree(firstNode) + dag.OutDegree(firstNode));
 
-            for (const auto &child : dag.children(first_node)) {
-                current_level.push_back(cm_vertex(child, dag.in_degree(child) + dag.out_degree(child), node_counter));
+            for (const auto &child : dag.Children(firstNode)) {
+                currentLevel.push_back(CmVertex(child, dag.InDegree(child) + dag.OutDegree(child), nodeCounter));
                 visited.insert(child);
             }
 
-            for (const auto &parent : dag.parents(first_node)) {
-                current_level.push_back(cm_vertex(parent, dag.in_degree(parent) + dag.out_degree(parent), node_counter));
+            for (const auto &parent : dag.Parents(firstNode)) {
+                currentLevel.push_back(CmVertex(parent, dag.InDegree(parent) + dag.OutDegree(parent), nodeCounter));
                 visited.insert(parent);
             }
 
-            node_counter++;
+            nodeCounter++;
 
         } else {
-            current_level.clear();
-            current_level.reserve(node_priority.size());
+            currentLevel.clear();
+            currentLevel.reserve(nodePriority.size());
 
-            for (const auto &[node, priority] : node_priority) {
-                current_level.push_back(cm_vertex(node, dag.in_degree(node) + dag.out_degree(node), priority));
+            for (const auto &[node, priority] : nodePriority) {
+                currentLevel.push_back(CmVertex(node, dag.InDegree(node) + dag.OutDegree(node), priority));
                 visited.insert(node);
             }
         }
     }
 
-    return cm_order;
+    return cmOrder;
 }
 
 // Cuthill-McKee Wavefront
-template <typename Graph_t>
-inline std::vector<vertex_idx_t<Graph_t>> GetTopOrderCuthillMcKeeWavefront(const Graph_t &dag) {
-    std::vector<vertex_idx_t<Graph_t>> order;
-    if (dag.num_vertices() > 0) {
-        std::vector<vertex_idx_t<Graph_t>> priority = cuthill_mckee_wavefront(dag);
-        order.reserve(dag.num_vertices());
-        for (const auto &v : priority_vec_top_sort_view(dag, priority)) {
+template <typename GraphT>
+inline std::vector<VertexIdxT<GraphT>> GetTopOrderCuthillMcKeeWavefront(const GraphT &dag) {
+    std::vector<VertexIdxT<GraphT>> order;
+    if (dag.NumVertices() > 0) {
+        std::vector<VertexIdxT<GraphT>> priority = CuthillMckeeWavefront(dag);
+        order.reserve(dag.NumVertices());
+        for (const auto &v : PriorityVecTopSortView(dag, priority)) {
             order.push_back(v);
         }
     }
@@ -268,13 +268,13 @@ inline std::vector<vertex_idx_t<Graph_t>> GetTopOrderCuthillMcKeeWavefront(const
 }
 
 // Cuthill-McKee Undirected
-template <typename Graph_t>
-inline std::vector<vertex_idx_t<Graph_t>> GetTopOrderCuthillMcKeeUndirected(const Graph_t &dag) {
-    std::vector<vertex_idx_t<Graph_t>> order;
-    if (dag.num_vertices() > 0) {
-        std::vector<vertex_idx_t<Graph_t>> priority = cuthill_mckee_undirected(dag, true, true);
-        order.reserve(dag.num_vertices());
-        for (const auto &v : priority_vec_top_sort_view(dag, priority)) {
+template <typename GraphT>
+inline std::vector<VertexIdxT<GraphT>> GetTopOrderCuthillMcKeeUndirected(const GraphT &dag) {
+    std::vector<VertexIdxT<GraphT>> order;
+    if (dag.NumVertices() > 0) {
+        std::vector<VertexIdxT<GraphT>> priority = CuthillMckeeUndirected(dag, true, true);
+        order.reserve(dag.NumVertices());
+        for (const auto &v : PriorityVecTopSortView(dag, priority)) {
             order.push_back(v);
         }
     }

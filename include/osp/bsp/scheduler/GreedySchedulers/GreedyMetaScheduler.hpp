@@ -32,71 +32,71 @@ namespace osp {
  * @brief The GreedyMetaScheduler class represents a meta-scheduler that selects the best schedule produced from a list of
  * added schedulers.
  *
- * This class inherits from the Scheduler class and implements the computeSchedule() and getScheduleName() methods.
- * The computeSchedule() method iterates through a list of schedulers, computes a schedule using each one,
+ * This class inherits from the Scheduler class and implements the ComputeSchedule() and GetScheduleName() methods.
+ * The ComputeSchedule() method iterates through a list of schedulers, computes a schedule using each one,
  * and returns the schedule with the minimum cost.
  *
- * @tparam Graph_t The graph type representing the computational DAG.
+ * @tparam GraphT The graph type representing the computational DAG.
  * @tparam CostModel The cost model functor to evaluate schedules. Defaults to LazyCommunicationCost.
  */
-template <typename Graph_t, typename CostModel = LazyCommunicationCost<Graph_t>>
-class GreedyMetaScheduler : public Scheduler<Graph_t> {
-    Serial<Graph_t> serial_scheduler_;
-    std::vector<Scheduler<Graph_t> *> schedulers_;
+template <typename GraphT, typename CostModel = LazyCommunicationCost<GraphT>>
+class GreedyMetaScheduler : public Scheduler<GraphT> {
+    Serial<GraphT> serialScheduler_;
+    std::vector<Scheduler<GraphT> *> schedulers_;
 
-    static constexpr bool verbose = false;
+    static constexpr bool verbose_ = false;
 
   public:
     /**
      * @brief Default constructor for GreedyMetaScheduler.
      */
-    GreedyMetaScheduler() : Scheduler<Graph_t>() {}
+    GreedyMetaScheduler() : Scheduler<GraphT>() {}
 
     /**
      * @brief Default destructor for MetaScheduler.
      */
     ~GreedyMetaScheduler() override = default;
 
-    void addSerialScheduler() { schedulers_.push_back(&serial_scheduler_); }
+    void AddSerialScheduler() { schedulers_.push_back(&serialScheduler_); }
 
-    void addScheduler(Scheduler<Graph_t> &s) { schedulers_.push_back(&s); }
+    void AddScheduler(Scheduler<GraphT> &s) { schedulers_.push_back(&s); }
 
-    void resetScheduler() { schedulers_.clear(); }
+    void ResetScheduler() { schedulers_.clear(); }
 
-    RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &schedule) override {
-        if (schedule.getInstance().getArchitecture().numberOfProcessors() == 1) {
-            if constexpr (verbose) {
+    ReturnStatus ComputeSchedule(BspSchedule<GraphT> &schedule) override {
+        if (schedule.GetInstance().GetArchitecture().NumberOfProcessors() == 1) {
+            if constexpr (verbose_) {
                 std::cout << "Using serial scheduler for P=1." << std::endl;
             }
-            serial_scheduler_.computeSchedule(schedule);
-            return RETURN_STATUS::OSP_SUCCESS;
+            serialScheduler_.ComputeSchedule(schedule);
+            return ReturnStatus::OSP_SUCCESS;
         }
 
-        v_workw_t<Graph_t> best_schedule_cost = std::numeric_limits<v_workw_t<Graph_t>>::max();
-        BspSchedule<Graph_t> current_schedule(schedule.getInstance());
+        VWorkwT<GraphT> bestScheduleCost = std::numeric_limits<VWorkwT<GraphT>>::max();
+        BspSchedule<GraphT> currentSchedule(schedule.GetInstance());
 
-        for (Scheduler<Graph_t> *scheduler : schedulers_) {
-            scheduler->computeSchedule(current_schedule);
-            const v_workw_t<Graph_t> schedule_cost = CostModel()(current_schedule);
+        for (Scheduler<GraphT> *scheduler : schedulers_) {
+            scheduler->ComputeSchedule(currentSchedule);
+            const VWorkwT<GraphT> scheduleCost = CostModel()(currentSchedule);
 
-            if constexpr (verbose) {
-                std::cout << "Executed scheduler " << scheduler->getScheduleName() << ", costs: " << schedule_cost
-                          << ", nr. supersteps: " << current_schedule.numberOfSupersteps() << std::endl;
+            if constexpr (verbose_) {
+                std::cout << "Executed scheduler " << scheduler->GetScheduleName() << ", costs: " << scheduleCost
+                          << ", nr. supersteps: " << currentSchedule.NumberOfSupersteps() << std::endl;
             }
 
-            if (schedule_cost < best_schedule_cost) {
-                best_schedule_cost = schedule_cost;
-                schedule = current_schedule;
-                if constexpr (verbose) {
+            if (scheduleCost < bestScheduleCost) {
+                bestScheduleCost = scheduleCost;
+                schedule = currentSchedule;
+                if constexpr (verbose_) {
                     std::cout << "New best schedule!" << std::endl;
                 }
             }
         }
 
-        return RETURN_STATUS::OSP_SUCCESS;
+        return ReturnStatus::OSP_SUCCESS;
     }
 
-    std::string getScheduleName() const override { return "GreedyMetaScheduler"; }
+    std::string GetScheduleName() const override { return "GreedyMetaScheduler"; }
 };
 
 }    // namespace osp

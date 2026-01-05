@@ -24,280 +24,280 @@ limitations under the License.
 
 namespace osp {
 
-namespace SarkarParams {
+namespace sarkar_params {
 
 enum class BufferMergeMode { OFF, FAN_IN, FAN_OUT, HOMOGENEOUS, FULL };
 
-template <typename commCostType>
+template <typename CommCostType>
 struct MulParameters {
-    std::size_t seed{42U};
-    double geomDecay{0.875};
-    double leniency{0.0};
-    std::vector<commCostType> commCostVec{std::initializer_list<commCostType>{}};
-    commCostType maxWeight{std::numeric_limits<commCostType>::max()};
-    commCostType smallWeightThreshold{std::numeric_limits<commCostType>::lowest()};
-    unsigned max_num_iteration_without_changes{3U};
-    BufferMergeMode buffer_merge_mode{BufferMergeMode::OFF};
+    std::size_t seed_{42U};
+    double geomDecay_{0.875};
+    double leniency_{0.0};
+    std::vector<CommCostType> commCostVec_{std::initializer_list<CommCostType>{}};
+    CommCostType maxWeight_{std::numeric_limits<CommCostType>::max()};
+    CommCostType smallWeightThreshold_{std::numeric_limits<CommCostType>::lowest()};
+    unsigned maxNumIterationWithoutChanges_{3U};
+    BufferMergeMode bufferMergeMode_{BufferMergeMode::OFF};
 };
 
-}    // end namespace SarkarParams
+}    // namespace sarkar_params
 
-template <typename Graph_t, typename Graph_t_coarse>
-class SarkarMul : public MultilevelCoarser<Graph_t, Graph_t_coarse> {
+template <typename GraphT, typename GraphTCoarse>
+class SarkarMul : public MultilevelCoarser<GraphT, GraphTCoarse> {
   private:
-    bool first_coarsen{true};
-    Thue_Morse_Sequence thue_coin{42U};
-    Biased_Random balanced_random{42U};
+    bool firstCoarsen_{true};
+    ThueMorseSequence thueCoin_{42U};
+    BiasedRandom balancedRandom_{42U};
 
     // Multilevel coarser parameters
-    SarkarParams::MulParameters<v_workw_t<Graph_t>> ml_params;
+    sarkar_params::MulParameters<VWorkwT<GraphT>> mlParams_;
     // Coarser parameters
-    SarkarParams::Parameters<v_workw_t<Graph_t>> params;
+    sarkar_params::Parameters<VWorkwT<GraphT>> params_;
     // Initial coarser
-    Sarkar<Graph_t, Graph_t_coarse> coarser_initial;
+    Sarkar<GraphT, GraphTCoarse> coarserInitial_;
     // Subsequent coarser
-    Sarkar<Graph_t_coarse, Graph_t_coarse> coarser_secondary;
+    Sarkar<GraphTCoarse, GraphTCoarse> coarserSecondary_;
 
-    void setSeed();
-    void initParams();
-    void updateParams();
+    void SetSeed();
+    void InitParams();
+    void UpdateParams();
 
-    RETURN_STATUS run_single_contraction_mode(vertex_idx_t<Graph_t> &diff_vertices);
-    RETURN_STATUS run_buffer_merges();
-    RETURN_STATUS run_contractions(v_workw_t<Graph_t> commCost);
-    RETURN_STATUS run_contractions() override;
+    ReturnStatus RunSingleContractionMode(VertexIdxT<GraphT> &diffVertices);
+    ReturnStatus RunBufferMerges();
+    ReturnStatus RunContractions(VWorkwT<GraphT> commCost);
+    ReturnStatus RunContractions() override;
 
   public:
-    void setParameters(SarkarParams::MulParameters<v_workw_t<Graph_t>> ml_params_) {
-        ml_params = std::move(ml_params_);
-        setSeed();
-        initParams();
+    void SetParameters(sarkar_params::MulParameters<VWorkwT<GraphT>> mlParams) {
+        mlParams_ = std::move(mlParams);
+        SetSeed();
+        InitParams();
     };
 
-    std::string getCoarserName() const { return "Sarkar"; };
+    std::string GetCoarserName() const override { return "Sarkar"; };
 };
 
-template <typename Graph_t, typename Graph_t_coarse>
-void SarkarMul<Graph_t, Graph_t_coarse>::setSeed() {
+template <typename GraphT, typename GraphTCoarse>
+void SarkarMul<GraphT, GraphTCoarse>::SetSeed() {
     constexpr std::size_t seedReduction = 4096U;
-    thue_coin = Thue_Morse_Sequence(ml_params.seed % seedReduction);
-    balanced_random = Biased_Random(ml_params.seed);
+    thueCoin_ = ThueMorseSequence(mlParams_.seed_ % seedReduction);
+    balancedRandom_ = BiasedRandom(mlParams_.seed_);
 }
 
-template <typename Graph_t, typename Graph_t_coarse>
-void SarkarMul<Graph_t, Graph_t_coarse>::initParams() {
-    first_coarsen = true;
+template <typename GraphT, typename GraphTCoarse>
+void SarkarMul<GraphT, GraphTCoarse>::InitParams() {
+    firstCoarsen_ = true;
 
-    params.geomDecay = ml_params.geomDecay;
-    params.leniency = ml_params.leniency;
-    params.maxWeight = ml_params.maxWeight;
-    params.smallWeightThreshold = ml_params.smallWeightThreshold;
+    params_.geomDecay_ = mlParams_.geomDecay_;
+    params_.leniency_ = mlParams_.leniency_;
+    params_.maxWeight_ = mlParams_.maxWeight_;
+    params_.smallWeightThreshold_ = mlParams_.smallWeightThreshold_;
 
-    if (ml_params.commCostVec.empty()) {
-        v_workw_t<Graph_t> syncCosts = 128;
-        syncCosts = std::max(syncCosts, static_cast<v_workw_t<Graph_t>>(1));
+    if (mlParams_.commCostVec_.empty()) {
+        VWorkwT<GraphT> syncCosts = 128;
+        syncCosts = std::max(syncCosts, static_cast<VWorkwT<GraphT>>(1));
 
-        while (syncCosts >= static_cast<v_workw_t<Graph_t>>(1)) {
-            ml_params.commCostVec.emplace_back(syncCosts);
+        while (syncCosts >= static_cast<VWorkwT<GraphT>>(1)) {
+            mlParams_.commCostVec_.emplace_back(syncCosts);
             syncCosts /= 2;
         }
     }
 
-    std::sort(ml_params.commCostVec.begin(), ml_params.commCostVec.end());
+    std::sort(mlParams_.commCostVec_.begin(), mlParams_.commCostVec_.end());
 
-    updateParams();
+    UpdateParams();
 }
 
-template <typename Graph_t, typename Graph_t_coarse>
-void SarkarMul<Graph_t, Graph_t_coarse>::updateParams() {
-    coarser_initial.setParameters(params);
-    coarser_secondary.setParameters(params);
+template <typename GraphT, typename GraphTCoarse>
+void SarkarMul<GraphT, GraphTCoarse>::UpdateParams() {
+    coarserInitial_.SetParameters(params_);
+    coarserSecondary_.SetParameters(params_);
 }
 
-template <typename Graph_t, typename Graph_t_coarse>
-RETURN_STATUS SarkarMul<Graph_t, Graph_t_coarse>::run_single_contraction_mode(vertex_idx_t<Graph_t> &diff_vertices) {
-    RETURN_STATUS status = RETURN_STATUS::OSP_SUCCESS;
+template <typename GraphT, typename GraphTCoarse>
+ReturnStatus SarkarMul<GraphT, GraphTCoarse>::RunSingleContractionMode(VertexIdxT<GraphT> &diffVertices) {
+    ReturnStatus status = ReturnStatus::OSP_SUCCESS;
 
-    vertex_idx_t<Graph_t> current_num_vertices;
-    if (first_coarsen) {
-        current_num_vertices = MultilevelCoarser<Graph_t, Graph_t_coarse>::getOriginalGraph()->num_vertices();
+    VertexIdxT<GraphT> currentNumVertices;
+    if (firstCoarsen_) {
+        currentNumVertices = MultilevelCoarser<GraphT, GraphTCoarse>::GetOriginalGraph()->NumVertices();
     } else {
-        current_num_vertices = MultilevelCoarser<Graph_t, Graph_t_coarse>::dag_history.back()->num_vertices();
+        currentNumVertices = MultilevelCoarser<GraphT, GraphTCoarse>::dagHistory_.back()->NumVertices();
     }
 
-    Graph_t_coarse coarsened_dag;
-    std::vector<vertex_idx_t<Graph_t_coarse>> contraction_map;
-    bool coarsen_success;
+    GraphTCoarse coarsenedDag;
+    std::vector<VertexIdxT<GraphTCoarse>> contractionMap;
+    bool coarsenSuccess;
 
-    if (first_coarsen) {
-        coarsen_success = coarser_initial.coarsenDag(
-            *(MultilevelCoarser<Graph_t, Graph_t_coarse>::getOriginalGraph()), coarsened_dag, contraction_map);
-        first_coarsen = false;
+    if (firstCoarsen_) {
+        coarsenSuccess = coarserInitial_.CoarsenDag(
+            *(MultilevelCoarser<GraphT, GraphTCoarse>::GetOriginalGraph()), coarsenedDag, contractionMap);
+        firstCoarsen_ = false;
     } else {
-        coarsen_success = coarser_secondary.coarsenDag(
-            *(MultilevelCoarser<Graph_t, Graph_t_coarse>::dag_history.back()), coarsened_dag, contraction_map);
+        coarsenSuccess = coarserSecondary_.CoarsenDag(
+            *(MultilevelCoarser<GraphT, GraphTCoarse>::dagHistory_.back()), coarsenedDag, contractionMap);
     }
 
-    if (!coarsen_success) {
-        status = RETURN_STATUS::ERROR;
+    if (!coarsenSuccess) {
+        status = ReturnStatus::ERROR;
     }
 
     status = std::max(
-        status, MultilevelCoarser<Graph_t, Graph_t_coarse>::add_contraction(std::move(contraction_map), std::move(coarsened_dag)));
+        status, MultilevelCoarser<GraphT, GraphTCoarse>::AddContraction(std::move(contractionMap), std::move(coarsenedDag)));
 
-    vertex_idx_t<Graph_t> new_num_vertices = MultilevelCoarser<Graph_t, Graph_t_coarse>::dag_history.back()->num_vertices();
-    diff_vertices = current_num_vertices - new_num_vertices;
+    VertexIdxT<GraphT> newNumVertices = MultilevelCoarser<GraphT, GraphTCoarse>::dagHistory_.back()->NumVertices();
+    diffVertices = currentNumVertices - newNumVertices;
 
     return status;
 }
 
-template <typename Graph_t, typename Graph_t_coarse>
-RETURN_STATUS SarkarMul<Graph_t, Graph_t_coarse>::run_contractions(v_workw_t<Graph_t> commCost) {
-    RETURN_STATUS status = RETURN_STATUS::OSP_SUCCESS;
-    vertex_idx_t<Graph_t> diff = 0;
+template <typename GraphT, typename GraphTCoarse>
+ReturnStatus SarkarMul<GraphT, GraphTCoarse>::RunContractions(VWorkwT<GraphT> commCost) {
+    ReturnStatus status = ReturnStatus::OSP_SUCCESS;
+    VertexIdxT<GraphT> diff = 0;
 
-    params.commCost = commCost;
-    updateParams();
+    params_.commCost_ = commCost;
+    UpdateParams();
 
-    unsigned outer_no_change = 0;
-    while (outer_no_change < ml_params.max_num_iteration_without_changes) {
-        unsigned inner_no_change = 0;
-        bool outer_change = false;
+    unsigned outerNoChange = 0;
+    while (outerNoChange < mlParams_.maxNumIterationWithoutChanges_) {
+        unsigned innerNoChange = 0;
+        bool outerChange = false;
 
         // Lines
-        while (inner_no_change < ml_params.max_num_iteration_without_changes) {
-            params.mode = SarkarParams::Mode::LINES;
-            params.useTopPoset = thue_coin.get_flip();
-            updateParams();
+        while (innerNoChange < mlParams_.maxNumIterationWithoutChanges_) {
+            params_.mode_ = sarkar_params::Mode::LINES;
+            params_.useTopPoset_ = thueCoin_.GetFlip();
+            UpdateParams();
 
-            status = std::max(status, run_single_contraction_mode(diff));
+            status = std::max(status, RunSingleContractionMode(diff));
 
             if (diff > 0) {
-                outer_change = true;
-                inner_no_change = 0;
+                outerChange = true;
+                innerNoChange = 0;
             } else {
-                inner_no_change++;
+                innerNoChange++;
             }
         }
-        inner_no_change = 0;
+        innerNoChange = 0;
 
         // Partial Fans
-        while (inner_no_change < ml_params.max_num_iteration_without_changes) {
-            params.mode = thue_coin.get_flip() ? SarkarParams::Mode::FAN_IN_PARTIAL : SarkarParams::Mode::FAN_OUT_PARTIAL;
-            updateParams();
+        while (innerNoChange < mlParams_.maxNumIterationWithoutChanges_) {
+            params_.mode_ = thueCoin_.GetFlip() ? sarkar_params::Mode::FAN_IN_PARTIAL : sarkar_params::Mode::FAN_OUT_PARTIAL;
+            UpdateParams();
 
-            status = std::max(status, run_single_contraction_mode(diff));
+            status = std::max(status, RunSingleContractionMode(diff));
 
             if (diff > 0) {
-                outer_change = true;
-                inner_no_change = 0;
+                outerChange = true;
+                innerNoChange = 0;
             } else {
-                inner_no_change++;
+                innerNoChange++;
             }
         }
-        inner_no_change = 0;
+        innerNoChange = 0;
 
         // Full Fans
-        while (inner_no_change < ml_params.max_num_iteration_without_changes) {
-            params.mode = thue_coin.get_flip() ? SarkarParams::Mode::FAN_IN_FULL : SarkarParams::Mode::FAN_OUT_FULL;
-            updateParams();
+        while (innerNoChange < mlParams_.maxNumIterationWithoutChanges_) {
+            params_.mode_ = thueCoin_.GetFlip() ? sarkar_params::Mode::FAN_IN_FULL : sarkar_params::Mode::FAN_OUT_FULL;
+            UpdateParams();
 
-            status = std::max(status, run_single_contraction_mode(diff));
+            status = std::max(status, RunSingleContractionMode(diff));
 
             if (diff > 0) {
-                outer_change = true;
-                inner_no_change = 0;
+                outerChange = true;
+                innerNoChange = 0;
             } else {
-                inner_no_change++;
+                innerNoChange++;
             }
         }
-        inner_no_change = 0;
+        innerNoChange = 0;
 
         // Levels
-        while (inner_no_change < ml_params.max_num_iteration_without_changes) {
-            params.mode = thue_coin.get_flip() ? SarkarParams::Mode::LEVEL_EVEN : SarkarParams::Mode::LEVEL_ODD;
-            params.useTopPoset = balanced_random.get_flip();
-            updateParams();
+        while (innerNoChange < mlParams_.maxNumIterationWithoutChanges_) {
+            params_.mode_ = thueCoin_.GetFlip() ? sarkar_params::Mode::LEVEL_EVEN : sarkar_params::Mode::LEVEL_ODD;
+            params_.useTopPoset_ = balancedRandom_.GetFlip();
+            UpdateParams();
 
-            status = std::max(status, run_single_contraction_mode(diff));
+            status = std::max(status, RunSingleContractionMode(diff));
 
             if (diff > 0) {
-                outer_change = true;
-                inner_no_change = 0;
+                outerChange = true;
+                innerNoChange = 0;
             } else {
-                inner_no_change++;
+                innerNoChange++;
             }
         }
 
-        if (outer_change) {
-            outer_no_change = 0;
+        if (outerChange) {
+            outerNoChange = 0;
         } else {
-            outer_no_change++;
+            outerNoChange++;
         }
     }
 
     return status;
 }
 
-template <typename Graph_t, typename Graph_t_coarse>
-RETURN_STATUS SarkarMul<Graph_t, Graph_t_coarse>::run_buffer_merges() {
-    RETURN_STATUS status = RETURN_STATUS::OSP_SUCCESS;
+template <typename GraphT, typename GraphTCoarse>
+ReturnStatus SarkarMul<GraphT, GraphTCoarse>::RunBufferMerges() {
+    ReturnStatus status = ReturnStatus::OSP_SUCCESS;
 
-    unsigned no_change = 0;
-    while (no_change < ml_params.max_num_iteration_without_changes) {
-        vertex_idx_t<Graph_t> diff = 0;
-        if ((ml_params.buffer_merge_mode == SarkarParams::BufferMergeMode::HOMOGENEOUS)
-            || (ml_params.buffer_merge_mode == SarkarParams::BufferMergeMode::FULL && diff == 0)) {
-            params.mode = SarkarParams::Mode::HOMOGENEOUS_BUFFER;
-            updateParams();
-            status = std::max(status, run_single_contraction_mode(diff));
+    unsigned noChange = 0;
+    while (noChange < mlParams_.maxNumIterationWithoutChanges_) {
+        VertexIdxT<GraphT> diff = 0;
+        if ((mlParams_.bufferMergeMode_ == sarkar_params::BufferMergeMode::HOMOGENEOUS)
+            || (mlParams_.bufferMergeMode_ == sarkar_params::BufferMergeMode::FULL && diff == 0)) {
+            params_.mode_ = sarkar_params::Mode::HOMOGENEOUS_BUFFER;
+            UpdateParams();
+            status = std::max(status, RunSingleContractionMode(diff));
         }
-        if (ml_params.buffer_merge_mode == SarkarParams::BufferMergeMode::FAN_IN) {
-            params.mode = SarkarParams::Mode::FAN_IN_BUFFER;
-            updateParams();
-            status = std::max(status, run_single_contraction_mode(diff));
+        if (mlParams_.bufferMergeMode_ == sarkar_params::BufferMergeMode::FAN_IN) {
+            params_.mode_ = sarkar_params::Mode::FAN_IN_BUFFER;
+            UpdateParams();
+            status = std::max(status, RunSingleContractionMode(diff));
         }
-        if (ml_params.buffer_merge_mode == SarkarParams::BufferMergeMode::FAN_OUT) {
-            params.mode = SarkarParams::Mode::FAN_OUT_BUFFER;
-            updateParams();
-            status = std::max(status, run_single_contraction_mode(diff));
+        if (mlParams_.bufferMergeMode_ == sarkar_params::BufferMergeMode::FAN_OUT) {
+            params_.mode_ = sarkar_params::Mode::FAN_OUT_BUFFER;
+            UpdateParams();
+            status = std::max(status, RunSingleContractionMode(diff));
         }
-        if (ml_params.buffer_merge_mode == SarkarParams::BufferMergeMode::FULL && diff == 0) {
-            const bool flip = thue_coin.get_flip();
-            params.mode = flip ? SarkarParams::Mode::FAN_IN_BUFFER : SarkarParams::Mode::FAN_OUT_BUFFER;
-            updateParams();
-            status = std::max(status, run_single_contraction_mode(diff));
+        if (mlParams_.bufferMergeMode_ == sarkar_params::BufferMergeMode::FULL && diff == 0) {
+            const bool flip = thueCoin_.GetFlip();
+            params_.mode_ = flip ? sarkar_params::Mode::FAN_IN_BUFFER : sarkar_params::Mode::FAN_OUT_BUFFER;
+            UpdateParams();
+            status = std::max(status, RunSingleContractionMode(diff));
 
             if (diff == 0) {
-                params.mode = (!flip) ? SarkarParams::Mode::FAN_IN_BUFFER : SarkarParams::Mode::FAN_OUT_BUFFER;
-                updateParams();
-                status = std::max(status, run_single_contraction_mode(diff));
+                params_.mode_ = (!flip) ? sarkar_params::Mode::FAN_IN_BUFFER : sarkar_params::Mode::FAN_OUT_BUFFER;
+                UpdateParams();
+                status = std::max(status, RunSingleContractionMode(diff));
             }
         }
 
         if (diff > 0) {
-            no_change = 0;
-            status = std::max(status, run_contractions(ml_params.commCostVec.back()));
+            noChange = 0;
+            status = std::max(status, RunContractions(mlParams_.commCostVec_.back()));
         } else {
-            no_change++;
+            noChange++;
         }
     }
 
     return status;
 }
 
-template <typename Graph_t, typename Graph_t_coarse>
-RETURN_STATUS SarkarMul<Graph_t, Graph_t_coarse>::run_contractions() {
-    initParams();
+template <typename GraphT, typename GraphTCoarse>
+ReturnStatus SarkarMul<GraphT, GraphTCoarse>::RunContractions() {
+    InitParams();
 
-    RETURN_STATUS status = RETURN_STATUS::OSP_SUCCESS;
+    ReturnStatus status = ReturnStatus::OSP_SUCCESS;
 
-    for (const v_workw_t<Graph_t> commCost : ml_params.commCostVec) {
-        status = std::max(status, run_contractions(commCost));
+    for (const VWorkwT<GraphT> commCost : mlParams_.commCostVec_) {
+        status = std::max(status, RunContractions(commCost));
     }
 
-    if (ml_params.buffer_merge_mode != SarkarParams::BufferMergeMode::OFF) {
-        status = std::max(status, run_buffer_merges());
+    if (mlParams_.bufferMergeMode_ != sarkar_params::BufferMergeMode::OFF) {
+        status = std::max(status, RunBufferMerges());
     }
 
     return status;

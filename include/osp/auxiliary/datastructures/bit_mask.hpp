@@ -23,16 +23,16 @@ limitations under the License.
 namespace osp {
 
 struct BitMask {
-    std::vector<bool> mask;
+    std::vector<bool> mask_;
 
-    BitMask(std::size_t n) : mask(std::vector<bool>(n, false)) {};
+    BitMask(std::size_t n) : mask_(std::vector<bool>(n, false)) {};
 
     BitMask &operator++() {
-        for (std::size_t i = 0; i < mask.size(); ++i) {
-            if (mask[i]) {
-                mask[i] = false;
+        for (std::size_t i = 0; i < mask_.size(); ++i) {
+            if (mask_[i]) {
+                mask_[i] = false;
             } else {
-                mask[i] = true;
+                mask_[i] = true;
                 break;
             }
         }

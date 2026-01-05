@@ -31,28 +31,28 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    std::string filename_graph = argv[1];
+    std::string filenameGraph = argv[1];
 
-    std::string name_graph = filename_graph.substr(filename_graph.find_last_of("/\\") + 1);
-    name_graph = name_graph.substr(0, name_graph.find_last_of("."));
+    std::string nameGraph = filenameGraph.substr(filenameGraph.find_last_of("/\\") + 1);
+    nameGraph = nameGraph.substr(0, nameGraph.find_last_of("."));
 
-    std::cout << "Graph: " << name_graph << std::endl;
+    std::cout << "Graph: " << nameGraph << std::endl;
 
-    using SM_csc = Eigen::SparseMatrix<double, Eigen::ColMajor, int32_t>;    // Compressed Sparse Column format
-    using SM_csr = Eigen::SparseMatrix<double, Eigen::RowMajor, int32_t>;    // Compressed Sparse Row format
+    using SmCsc = Eigen::SparseMatrix<double, Eigen::ColMajor, int32_t>;    // Compressed Sparse Column format
+    using SmCsr = Eigen::SparseMatrix<double, Eigen::RowMajor, int32_t>;    // Compressed Sparse Row format
 
-    SM_csc L_csc;    // Initialize a sparse matrix in CSC format
+    SmCsc lCsc;    // Initialize a sparse matrix in CSC format
 
-    Eigen::loadMarket(L_csc, filename_graph);
+    Eigen::loadMarket(lCsc, filenameGraph);
 
-    SM_csr L_csr = L_csc;    // Reformat the sparse matrix from CSC to CSR format
+    SmCsr lCsr = lCsc;    // Reformat the sparse matrix from CSC to CSR format
 
-    Eigen::IncompleteCholesky<double, Eigen::Lower, Eigen::AMDOrdering<int>> ichol(L_csc);
+    Eigen::IncompleteCholesky<double, Eigen::Lower, Eigen::AMDOrdering<int>> ichol(lCsc);
 
-    SM_csc LChol_csc = ichol.matrixL();
+    SmCsc lCholCsc = ichol.matrixL();
 
     Eigen::saveMarket(
-        LChol_csc, filename_graph.substr(0, filename_graph.find_last_of(".")) + "_postChol.mtx", Eigen::UpLoType::Symmetric);
+        lCholCsc, filenameGraph.substr(0, filenameGraph.find_last_of(".")) + "_postChol.mtx", Eigen::UpLoType::Symmetric);
 
     return 0;
 }

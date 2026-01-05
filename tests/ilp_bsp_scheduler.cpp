@@ -35,13 +35,13 @@ limitations under the License.
 
 using namespace osp;
 
-BOOST_AUTO_TEST_CASE(test_total) {
-    using graph = computational_dag_edge_idx_vector_impl_def_t;
+BOOST_AUTO_TEST_CASE(TestTotal) {
+    using graph = ComputationalDagEdgeIdxVectorImplDefT;
 
     BspInstance<graph> instance;
-    instance.setNumberOfProcessors(4);
-    instance.setCommunicationCosts(3);
-    instance.setSynchronisationCosts(5);
+    instance.SetNumberOfProcessors(4);
+    instance.SetCommunicationCosts(3);
+    instance.SetSynchronisationCosts(5);
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -51,37 +51,37 @@ BOOST_AUTO_TEST_CASE(test_total) {
         std::cout << cwd << std::endl;
     }
 
-    bool status = file_reader::readComputationalDagHyperdagFormatDB(
-        (cwd / "data/spaa/tiny/instance_spmv_N6_nzP0d4.hdag").string(), instance.getComputationalDag());
+    bool status = file_reader::ReadComputationalDagHyperdagFormatDB(
+        (cwd / "data/spaa/tiny/instance_spmv_N6_nzP0d4.hdag").string(), instance.GetComputationalDag());
 
     BOOST_CHECK(status);
 
-    BspSchedule<graph> schedule_to(instance);
+    BspSchedule<graph> scheduleTo(instance);
 
-    TotalCommunicationScheduler<graph> scheduler_to;
-    scheduler_to.setTimeLimitSeconds(10);
+    TotalCommunicationScheduler<graph> schedulerTo;
+    schedulerTo.SetTimeLimitSeconds(10);
 
-    const auto result_to = scheduler_to.computeSchedule(schedule_to);
-    BOOST_CHECK(result_to == RETURN_STATUS::OSP_SUCCESS || result_to == RETURN_STATUS::BEST_FOUND);
-    BOOST_CHECK(schedule_to.satisfiesPrecedenceConstraints());
+    const auto resultTo = schedulerTo.ComputeSchedule(scheduleTo);
+    BOOST_CHECK(resultTo == ReturnStatus::OSP_SUCCESS || resultTo == ReturnStatus::BEST_FOUND);
+    BOOST_CHECK(scheduleTo.SatisfiesPrecedenceConstraints());
 
     BspSchedule<graph> schedule(instance);
 
     TotalCommunicationScheduler<graph> scheduler;
-    scheduler.setTimeLimitSeconds(3600);
-    const auto result = scheduler.computeSchedule(schedule);
+    scheduler.SetTimeLimitSeconds(3600);
+    const auto result = scheduler.ComputeSchedule(schedule);
 
-    BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
-    BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
-};
+    BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
+    BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
+}
 
-BOOST_AUTO_TEST_CASE(test_full) {
-    using graph = computational_dag_edge_idx_vector_impl_def_t;
+BOOST_AUTO_TEST_CASE(TestFull) {
+    using graph = ComputationalDagEdgeIdxVectorImplDefT;
 
     BspInstance<graph> instance;
-    instance.setNumberOfProcessors(4);
-    instance.setCommunicationCosts(3);
-    instance.setSynchronisationCosts(5);
+    instance.SetNumberOfProcessors(4);
+    instance.SetCommunicationCosts(3);
+    instance.SetSynchronisationCosts(5);
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -91,117 +91,117 @@ BOOST_AUTO_TEST_CASE(test_full) {
         std::cout << cwd << std::endl;
     }
 
-    bool status = file_reader::readComputationalDagHyperdagFormatDB(
-        (cwd / "data/spaa/tiny/instance_spmv_N6_nzP0d4.hdag").string(), instance.getComputationalDag());
+    bool status = file_reader::ReadComputationalDagHyperdagFormatDB(
+        (cwd / "data/spaa/tiny/instance_spmv_N6_nzP0d4.hdag").string(), instance.GetComputationalDag());
 
     BOOST_CHECK(status);
 
-    BspScheduleCS<graph> schedule_to(instance);
+    BspScheduleCS<graph> scheduleTo(instance);
 
-    CoptFullScheduler<graph> scheduler_to;
-    scheduler_to.setTimeLimitSeconds(10);
+    CoptFullScheduler<graph> schedulerTo;
+    schedulerTo.SetTimeLimitSeconds(10);
 
-    const auto result_to = scheduler_to.computeScheduleCS(schedule_to);
-    BOOST_CHECK_EQUAL(RETURN_STATUS::BEST_FOUND, result_to);
-    BOOST_CHECK(schedule_to.satisfiesPrecedenceConstraints());
+    const auto resultTo = schedulerTo.ComputeScheduleCS(scheduleTo);
+    BOOST_CHECK_EQUAL(ReturnStatus::BEST_FOUND, resultTo);
+    BOOST_CHECK(scheduleTo.SatisfiesPrecedenceConstraints());
 
-    CoptFullScheduler<graph> scheduler_recomp;
-    BspScheduleRecomp<graph> schedule_recomp(instance);
-    scheduler_recomp.setTimeLimitSeconds(10);
-    scheduler_recomp.computeScheduleRecomp(schedule_recomp);
-    BOOST_CHECK(schedule_recomp.satisfiesConstraints());
+    CoptFullScheduler<graph> schedulerRecomp;
+    BspScheduleRecomp<graph> scheduleRecomp(instance);
+    schedulerRecomp.SetTimeLimitSeconds(10);
+    schedulerRecomp.ComputeScheduleRecomp(scheduleRecomp);
+    BOOST_CHECK(scheduleRecomp.SatisfiesConstraints());
 
     // WITH INITIALIZATION
 
-    BspSchedule<graph> schedule_init(instance);
+    BspSchedule<graph> scheduleInit(instance);
     GreedyBspScheduler<graph> greedy;
-    greedy.computeSchedule(schedule_init);
-    BOOST_CHECK(schedule_init.satisfiesPrecedenceConstraints());
-    BspScheduleCS<graph> schedule_init_cs(schedule_init);
-    BOOST_CHECK(schedule_init_cs.hasValidCommSchedule());
+    greedy.ComputeSchedule(scheduleInit);
+    BOOST_CHECK(scheduleInit.SatisfiesPrecedenceConstraints());
+    BspScheduleCS<graph> scheduleInitCs(scheduleInit);
+    BOOST_CHECK(scheduleInitCs.HasValidCommSchedule());
 
     // initialize with standard schedule, return standard schedule
-    CoptFullScheduler<graph> scheduler_init;
-    BspScheduleCS<graph> schedule_improved(instance);
-    scheduler_init.setTimeLimitSeconds(10);
-    scheduler_init.setInitialSolutionFromBspSchedule(schedule_init_cs);
-    const auto result_init = scheduler_init.computeScheduleCS(schedule_improved);
-    BOOST_CHECK_EQUAL(RETURN_STATUS::BEST_FOUND, result_init);
-    BOOST_CHECK(schedule_improved.satisfiesPrecedenceConstraints());
-    BOOST_CHECK(schedule_improved.hasValidCommSchedule());
+    CoptFullScheduler<graph> schedulerInit;
+    BspScheduleCS<graph> scheduleImproved(instance);
+    schedulerInit.SetTimeLimitSeconds(10);
+    schedulerInit.SetInitialSolutionFromBspSchedule(scheduleInitCs);
+    const auto resultInit = schedulerInit.ComputeScheduleCS(scheduleImproved);
+    BOOST_CHECK_EQUAL(ReturnStatus::BEST_FOUND, resultInit);
+    BOOST_CHECK(scheduleImproved.SatisfiesPrecedenceConstraints());
+    BOOST_CHECK(scheduleImproved.HasValidCommSchedule());
 
     // initialize with standard schedule, return recomputing schedule
-    CoptFullScheduler<graph> scheduler_init2(schedule_init_cs);
-    BspScheduleRecomp<graph> schedule_improved2(instance);
-    scheduler_init2.setTimeLimitSeconds(10);
-    const auto result_init2 = scheduler_init2.computeScheduleRecomp(schedule_improved2);
-    BOOST_CHECK_EQUAL(RETURN_STATUS::BEST_FOUND, result_init2);
-    BOOST_CHECK(schedule_improved2.satisfiesConstraints());
+    CoptFullScheduler<graph> schedulerInit2(scheduleInitCs);
+    BspScheduleRecomp<graph> scheduleImproved2(instance);
+    schedulerInit2.SetTimeLimitSeconds(10);
+    const auto resultInit2 = schedulerInit2.ComputeScheduleRecomp(scheduleImproved2);
+    BOOST_CHECK_EQUAL(ReturnStatus::BEST_FOUND, resultInit2);
+    BOOST_CHECK(scheduleImproved2.SatisfiesConstraints());
 
     // initialize with recomputing schedule, return recomputing schedule
-    BspScheduleRecomp<graph> schedule_improved3(instance), schedule_init3(schedule_init_cs);
-    CoptFullScheduler<graph> scheduler_init3(schedule_init3);
-    scheduler_init3.setTimeLimitSeconds(10);
-    const auto result_init3 = scheduler_init3.computeScheduleRecomp(schedule_improved3);
-    BOOST_CHECK_EQUAL(RETURN_STATUS::BEST_FOUND, result_init3);
-    BOOST_CHECK(schedule_improved3.satisfiesConstraints());
+    BspScheduleRecomp<graph> scheduleImproved3(instance), scheduleInit3(scheduleInitCs);
+    CoptFullScheduler<graph> schedulerInit3(scheduleInit3);
+    schedulerInit3.SetTimeLimitSeconds(10);
+    const auto resultInit3 = schedulerInit3.ComputeScheduleRecomp(scheduleImproved3);
+    BOOST_CHECK_EQUAL(ReturnStatus::BEST_FOUND, resultInit3);
+    BOOST_CHECK(scheduleImproved3.SatisfiesConstraints());
 
     // with vertex types
-    BspInstance<graph> instance_typed = instance;
-    instance_typed.getArchitecture().setProcessorType(0, 1);
-    instance_typed.getArchitecture().setProcessorType(1, 1);
-    for (vertex_idx_t<graph> node = 0; node < static_cast<vertex_idx_t<graph> >(instance_typed.numberOfVertices()); ++node) {
-        instance_typed.getComputationalDag().set_vertex_type(node, node % 2);
+    BspInstance<graph> instanceTyped = instance;
+    instanceTyped.GetArchitecture().SetProcessorType(0, 1);
+    instanceTyped.GetArchitecture().SetProcessorType(1, 1);
+    for (VertexIdxT<graph> node = 0; node < static_cast<VertexIdxT<graph> >(instanceTyped.NumberOfVertices()); ++node) {
+        instanceTyped.GetComputationalDag().SetVertexType(node, node % 2);
     }
-    instance_typed.setDiagonalCompatibilityMatrix(2);
+    instanceTyped.SetDiagonalCompatibilityMatrix(2);
 
-    BspSchedule<graph> schedule_typed(instance_typed);
-    greedy.computeSchedule(schedule_typed);
-    BOOST_CHECK(schedule_typed.satisfiesPrecedenceConstraints());
-    BOOST_CHECK(schedule_typed.satisfiesNodeTypeConstraints());
+    BspSchedule<graph> scheduleTyped(instanceTyped);
+    greedy.ComputeSchedule(scheduleTyped);
+    BOOST_CHECK(scheduleTyped.SatisfiesPrecedenceConstraints());
+    BOOST_CHECK(scheduleTyped.SatisfiesNodeTypeConstraints());
 
-    CoptFullScheduler<graph> scheduler_typed;
-    BspScheduleCS<graph> schedule_typed_cs(schedule_typed);
-    scheduler_typed.setTimeLimitSeconds(10);
-    scheduler_typed.setInitialSolutionFromBspSchedule(schedule_typed_cs);
-    const auto result_typed = scheduler_typed.computeSchedule(schedule_typed);
-    BOOST_CHECK_EQUAL(RETURN_STATUS::BEST_FOUND, result_typed);
-    BOOST_CHECK(schedule_typed.satisfiesPrecedenceConstraints());
-    BOOST_CHECK(schedule_typed.satisfiesNodeTypeConstraints());
+    CoptFullScheduler<graph> schedulerTyped;
+    BspScheduleCS<graph> scheduleTypedCs(scheduleTyped);
+    schedulerTyped.SetTimeLimitSeconds(10);
+    schedulerTyped.SetInitialSolutionFromBspSchedule(scheduleTypedCs);
+    const auto resultTyped = schedulerTyped.ComputeSchedule(scheduleTyped);
+    BOOST_CHECK_EQUAL(ReturnStatus::BEST_FOUND, resultTyped);
+    BOOST_CHECK(scheduleTyped.SatisfiesPrecedenceConstraints());
+    BOOST_CHECK(scheduleTyped.SatisfiesNodeTypeConstraints());
 
     // with MaxBSP schedule
-    CoptFullScheduler<graph> scheduler_max;
-    MaxBspScheduleCS<graph> schedule_max(instance);
-    scheduler_max.setTimeLimitSeconds(10);
-    const auto result_max = scheduler_max.computeMaxBspScheduleCS(schedule_max);
-    BOOST_CHECK(result_max == RETURN_STATUS::OSP_SUCCESS || result_max == RETURN_STATUS::BEST_FOUND);
-    BOOST_CHECK(schedule_max.satisfiesPrecedenceConstraints());
-    BOOST_CHECK(schedule_max.hasValidCommSchedule());
+    CoptFullScheduler<graph> schedulerMax;
+    MaxBspScheduleCS<graph> scheduleMax(instance);
+    schedulerMax.SetTimeLimitSeconds(10);
+    const auto resultMax = schedulerMax.ComputeMaxBspScheduleCs(scheduleMax);
+    BOOST_CHECK(resultMax == ReturnStatus::OSP_SUCCESS || resultMax == ReturnStatus::BEST_FOUND);
+    BOOST_CHECK(scheduleMax.SatisfiesPrecedenceConstraints());
+    BOOST_CHECK(scheduleMax.HasValidCommSchedule());
 
-    scheduler_max.setInitialSolutionFromBspSchedule(schedule_max);
-    const auto result_max2 = scheduler_max.computeMaxBspScheduleCS(schedule_max);
-    BOOST_CHECK(result_max2 == RETURN_STATUS::OSP_SUCCESS || result_max2 == RETURN_STATUS::BEST_FOUND);
-    BOOST_CHECK(schedule_max.satisfiesPrecedenceConstraints());
-    BOOST_CHECK(schedule_max.hasValidCommSchedule());
+    schedulerMax.SetInitialSolutionFromBspSchedule(scheduleMax);
+    const auto resultMax2 = schedulerMax.ComputeMaxBspScheduleCs(scheduleMax);
+    BOOST_CHECK(resultMax2 == ReturnStatus::OSP_SUCCESS || resultMax2 == ReturnStatus::BEST_FOUND);
+    BOOST_CHECK(scheduleMax.SatisfiesPrecedenceConstraints());
+    BOOST_CHECK(scheduleMax.HasValidCommSchedule());
 
     // longer time
     BspScheduleCS<graph> schedule(instance);
 
     CoptFullScheduler<graph> scheduler;
-    scheduler.setTimeLimitSeconds(3600);
-    const auto result = scheduler.computeScheduleCS(schedule);
+    scheduler.SetTimeLimitSeconds(3600);
+    const auto result = scheduler.ComputeScheduleCS(schedule);
 
-    BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
-    BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
-};
+    BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
+    BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
+}
 
-BOOST_AUTO_TEST_CASE(test_cs) {
-    using graph = computational_dag_edge_idx_vector_impl_def_t;
+BOOST_AUTO_TEST_CASE(TestCs) {
+    using graph = ComputationalDagEdgeIdxVectorImplDefT;
 
     BspInstance<graph> instance;
-    instance.setNumberOfProcessors(4);
-    instance.setCommunicationCosts(3);
-    instance.setSynchronisationCosts(5);
+    instance.SetNumberOfProcessors(4);
+    instance.SetCommunicationCosts(3);
+    instance.SetSynchronisationCosts(5);
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -211,38 +211,38 @@ BOOST_AUTO_TEST_CASE(test_cs) {
         std::cout << cwd << std::endl;
     }
 
-    bool status = file_reader::readComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_pregel.hdag").string(),
-                                                                    instance.getComputationalDag());
+    bool status = file_reader::ReadComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_pregel.hdag").string(),
+                                                                    instance.GetComputationalDag());
 
     BOOST_CHECK(status);
 
     BspSchedule<graph> schedule(instance);
     GreedyBspScheduler<graph> greedy;
-    greedy.computeSchedule(schedule);
-    BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
-    BspScheduleCS<graph> schedule_cs(schedule);
-    BOOST_CHECK(schedule_cs.hasValidCommSchedule());
+    greedy.ComputeSchedule(schedule);
+    BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
+    BspScheduleCS<graph> scheduleCs(schedule);
+    BOOST_CHECK(scheduleCs.HasValidCommSchedule());
 
     CoptCommScheduleOptimizer<graph> scheduler;
-    scheduler.setTimeLimitSeconds(10);
-    const auto before = schedule_cs.compute_cs_communication_costs();
-    const auto result = scheduler.improveSchedule(schedule_cs);
-    BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
-    const auto after = schedule_cs.compute_cs_communication_costs();
+    scheduler.SetTimeLimitSeconds(10);
+    const auto before = scheduleCs.ComputeCsCommunicationCosts();
+    const auto result = scheduler.ImproveSchedule(scheduleCs);
+    BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
+    const auto after = scheduleCs.ComputeCsCommunicationCosts();
     std::cout << before << " --cs--> " << after << std::endl;
 
-    BOOST_CHECK(schedule_cs.satisfiesPrecedenceConstraints());
-    BOOST_CHECK(schedule_cs.hasValidCommSchedule());
+    BOOST_CHECK(scheduleCs.SatisfiesPrecedenceConstraints());
+    BOOST_CHECK(scheduleCs.HasValidCommSchedule());
     BOOST_CHECK(before >= after);
-};
+}
 
-BOOST_AUTO_TEST_CASE(test_partial) {
-    using graph = computational_dag_edge_idx_vector_impl_def_t;
+BOOST_AUTO_TEST_CASE(TestPartial) {
+    using graph = ComputationalDagEdgeIdxVectorImplDefT;
 
     BspInstance<graph> instance;
-    instance.setNumberOfProcessors(3);
-    instance.setCommunicationCosts(3);
-    instance.setSynchronisationCosts(5);
+    instance.SetNumberOfProcessors(3);
+    instance.SetCommunicationCosts(3);
+    instance.SetSynchronisationCosts(5);
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -252,33 +252,33 @@ BOOST_AUTO_TEST_CASE(test_partial) {
         std::cout << cwd << std::endl;
     }
 
-    bool status = file_reader::readComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_pregel.hdag").string(),
-                                                                    instance.getComputationalDag());
+    bool status = file_reader::ReadComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_pregel.hdag").string(),
+                                                                    instance.GetComputationalDag());
 
     BOOST_CHECK(status);
 
-    BspSchedule<graph> schedule_init(instance);
+    BspSchedule<graph> scheduleInit(instance);
     GreedyBspScheduler<graph> greedy;
-    greedy.computeSchedule(schedule_init);
-    BOOST_CHECK(schedule_init.satisfiesPrecedenceConstraints());
-    BspScheduleCS<graph> schedule(schedule_init);
-    BOOST_CHECK(schedule.hasValidCommSchedule());
+    greedy.ComputeSchedule(scheduleInit);
+    BOOST_CHECK(scheduleInit.SatisfiesPrecedenceConstraints());
+    BspScheduleCS<graph> schedule(scheduleInit);
+    BOOST_CHECK(schedule.HasValidCommSchedule());
 
     CoptPartialScheduler<graph> scheduler;
-    scheduler.setTimeLimitSeconds(10);
-    scheduler.setStartAndEndSuperstep(0, 2);
-    auto cost_before = schedule.computeCosts();
-    auto result = scheduler.improveSchedule(schedule);
-    BOOST_CHECK(result == RETURN_STATUS::OSP_SUCCESS || result == RETURN_STATUS::BEST_FOUND);
-    BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
-    BOOST_CHECK(schedule.hasValidCommSchedule());
-    auto cost_mid = schedule.computeCosts();
-    BOOST_CHECK(cost_mid <= cost_before);
-    scheduler.setStartAndEndSuperstep(2, 5);
-    result = scheduler.improveSchedule(schedule);
-    BOOST_CHECK(result == RETURN_STATUS::OSP_SUCCESS || result == RETURN_STATUS::BEST_FOUND);
-    BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
-    BOOST_CHECK(schedule.hasValidCommSchedule());
-    auto cost_after = schedule.computeCosts();
-    BOOST_CHECK(cost_after <= cost_mid);
-};
+    scheduler.SetTimeLimitSeconds(10);
+    scheduler.SetStartAndEndSuperstep(0, 2);
+    auto costBefore = schedule.ComputeCosts();
+    auto result = scheduler.ImproveSchedule(schedule);
+    BOOST_CHECK(result == ReturnStatus::OSP_SUCCESS || result == ReturnStatus::BEST_FOUND);
+    BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
+    BOOST_CHECK(schedule.HasValidCommSchedule());
+    auto costMid = schedule.ComputeCosts();
+    BOOST_CHECK(costMid <= costBefore);
+    scheduler.SetStartAndEndSuperstep(2, 5);
+    result = scheduler.ImproveSchedule(schedule);
+    BOOST_CHECK(result == ReturnStatus::OSP_SUCCESS || result == ReturnStatus::BEST_FOUND);
+    BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
+    BOOST_CHECK(schedule.HasValidCommSchedule());
+    auto costAfter = schedule.ComputeCosts();
+    BOOST_CHECK(costAfter <= costMid);
+}

@@ -35,7 +35,7 @@ limitations under the License.
 namespace osp {
 
 // unbiased random int generator
-inline int randInt(int lim) {
+inline int RandInt(int lim) {
     int rnd = std::rand();
     while (rnd >= RAND_MAX - RAND_MAX % lim) {
         rnd = std::rand();
@@ -47,40 +47,39 @@ inline int randInt(int lim) {
 // pair of integers
 template <typename T1, typename T2>
 struct Pair {
-    int a, b;
+    int a_, b_;
 
-    explicit Pair(const T1 a_ = T1(), const T2 b_ = T2()) : a(a_), b(b_) {}
+    explicit Pair(const T1 a = T1(), const T2 b = T2()) : a_(a), b_(b) {}
 
-    template <typename T1_, typename T2_>
-    bool operator<(const Pair<T1_, T2_> &other) const {
-        return (a < other.a || (a == other.a && b < other.b));
+    bool operator<(const Pair<T1, T2> &other) const { return (a_ < other.a_ || (a_ == other.a_ && b_ < other.b_)); }
+
+    std::ostream &operator<<(std::ostream &os) const {
+        return os << ("(" + std::to_string(a_) + ", " + std::to_string(b_) + ")");
     }
-
-    std::ostream &operator<<(std::ostream &os) const { return os << ("(" + std::to_string(a) + ", " + std::to_string(b) + ")"); }
 };
 
-using intPair = Pair<int, int>;
+using IntPair = Pair<int, int>;
 
 // triple of integers
 template <typename T1, typename T2, typename T3>
 struct Triple {
-    T1 a;
-    T2 b;
-    T3 c;
+    T1 a_;
+    T2 b_;
+    T3 c_;
 
-    explicit Triple(const T1 a_ = T1(), const int b_ = T2(), const int c_ = T3()) : a(a_), b(b_), c(c_) {}
+    explicit Triple(const T1 a = T1(), const int b = T2(), const int c = T3()) : a_(a), b_(b), c_(c) {}
 
     std::ostream &operator<<(std::ostream &os) const {
-        return os << "(" << std::to_string(a) << ", " << std::to_string(b) << ", " << std::to_string(c) << ")";
+        return os << "(" << std::to_string(a_) << ", " << std::to_string(b_) << ", " << std::to_string(c_) << ")";
     }
 };
 
-using intTriple = Triple<int, int, int>;
+using IntTriple = Triple<int, int, int>;
 
-inline bool isDisjoint(std::vector<intPair> &intervals) {
+inline bool IsDisjoint(std::vector<IntPair> &intervals) {
     sort(intervals.begin(), intervals.end());
     for (size_t i = 0; i + 1 < intervals.size(); ++i) {
-        if (intervals[i].b > intervals[i + 1].a) {
+        if (intervals[i].b_ > intervals[i + 1].a_) {
             return false;
         }
     }
@@ -90,7 +89,7 @@ inline bool isDisjoint(std::vector<intPair> &intervals) {
 
 // computes power of an integer
 template <typename T>
-constexpr T intpow(T base, unsigned exp) {
+constexpr T Intpow(T base, unsigned exp) {
     static_assert(std::is_integral<T>::value);
 
     if (exp == 0U) {
@@ -100,23 +99,23 @@ constexpr T intpow(T base, unsigned exp) {
         return base;
     }
 
-    T tmp = intpow(base, exp / 2U);
+    T tmp = Intpow(base, exp / 2U);
     if (exp % 2U == 0U) {
         return tmp * tmp;
     }
     return base * tmp * tmp;
 }
 
-struct contractionEdge {
-    intPair edge;
-    int nodeW;
-    int edgeW;
+struct ContractionEdge {
+    IntPair edge_;
+    int nodeW_;
+    int edgeW_;
 
-    contractionEdge(const int from, const int to, const int Wnode, const int Wedge)
-        : edge(from, to), nodeW(Wnode), edgeW(Wedge) {}
+    ContractionEdge(const int from, const int to, const int wnode, const int wedge)
+        : edge_(from, to), nodeW_(wnode), edgeW_(wedge) {}
 
-    bool operator<(const contractionEdge &other) const {
-        return (nodeW < other.nodeW || (nodeW == other.nodeW && edgeW < other.edgeW));
+    bool operator<(const ContractionEdge &other) const {
+        return (nodeW_ < other.nodeW_ || (nodeW_ == other.nodeW_ && edgeW_ < other.edgeW_));
     }
 };
 
@@ -125,7 +124,7 @@ static const std::vector<std::string> possibleModes{
     "random", "SJF", "cilk", "BSPg", "ETF", "BL-EST", "ETF-NUMA", "BL-EST-NUMA", "Layers"};
 
 // modify problem filename by adding substring at the right place
-inline std::string editFilename(const std::string &filename, const std::string &toInsert) {
+inline std::string EditFilename(const std::string &filename, const std::string &toInsert) {
     auto pos = filename.find("_coarse");
     if (pos == std::string::npos) {
         pos = filename.find("_instance");
@@ -139,7 +138,7 @@ inline std::string editFilename(const std::string &filename, const std::string &
 
 // unordered set intersection
 template <typename T>
-std::unordered_set<T> get_intersection(const std::unordered_set<T> &a, const std::unordered_set<T> &b) {
+std::unordered_set<T> GetIntersection(const std::unordered_set<T> &a, const std::unordered_set<T> &b) {
     std::vector<T> result;
     const auto &larger = a.size() > b.size() ? a : b;
     const auto &smaller = a.size() <= b.size() ? a : b;
@@ -153,7 +152,7 @@ std::unordered_set<T> get_intersection(const std::unordered_set<T> &a, const std
 
 // unordered set union
 template <typename T>
-std::unordered_set<T> get_union(const std::unordered_set<T> &a, const std::unordered_set<T> &b) {
+std::unordered_set<T> GetUnion(const std::unordered_set<T> &a, const std::unordered_set<T> &b) {
     std::unordered_set<T> larger = a.size() > b.size() ? a : b;
     std::unordered_set<T> smaller = a.size() <= b.size() ? a : b;
     for (auto &elem : smaller) {
@@ -162,9 +161,9 @@ std::unordered_set<T> get_union(const std::unordered_set<T> &a, const std::unord
     return larger;
 }
 
-// zip two vectors of equal length
+// Zip two vectors of equal length
 template <typename S, typename T>
-std::vector<std::pair<S, T>> zip(const std::vector<S> &a, const std::vector<T> &b) {
+std::vector<std::pair<S, T>> Zip(const std::vector<S> &a, const std::vector<T> &b) {
     assert(a.size() == b.size());
 
     std::vector<std::pair<S, T>> result;
@@ -177,7 +176,7 @@ std::vector<std::pair<S, T>> zip(const std::vector<S> &a, const std::vector<T> &
 }
 
 template <typename S, typename T>
-void unzip(std::vector<std::pair<S, T>> &zipped, std::vector<S> &a, std::vector<T> &b) {
+void Unzip(std::vector<std::pair<S, T>> &zipped, std::vector<S> &a, std::vector<T> &b) {
     a.resize(zipped.size());
     b.resize(zipped.size());
 
@@ -188,26 +187,26 @@ void unzip(std::vector<std::pair<S, T>> &zipped, std::vector<S> &a, std::vector<
 }
 
 template <typename T>
-std::vector<size_t> sort_and_sorting_arrangement(std::vector<T> &a) {
+std::vector<size_t> SortAndSortingArrangement(std::vector<T> &a) {
     std::vector<size_t> rearrangement;
     rearrangement.resize(a.size());
     std::iota(rearrangement.begin(), rearrangement.end(), 0);
 
-    std::vector<std::pair<T, size_t>> zipped = zip(a, rearrangement);
+    std::vector<std::pair<T, size_t>> zipped = Zip(a, rearrangement);
     std::sort(zipped.begin(), zipped.end());
 
-    unzip(zipped, a, rearrangement);
+    Unzip(zipped, a, rearrangement);
 
     return rearrangement;
 }
 
-template <typename T, typename retT = size_t>
-std::vector<retT> sorting_arrangement(const std::vector<T> &a, bool increasing = true) {
-    std::vector<retT> rearrangement;
+template <typename T, typename RetT = size_t>
+std::vector<RetT> SortingArrangement(const std::vector<T> &a, bool increasing = true) {
+    std::vector<RetT> rearrangement;
     rearrangement.resize(a.size());
     std::iota(rearrangement.begin(), rearrangement.end(), 0);
 
-    std::vector<std::pair<T, retT>> zipped = zip(a, rearrangement);
+    std::vector<std::pair<T, RetT>> zipped = Zip(a, rearrangement);
     std::sort(zipped.begin(), zipped.end());
     if (!increasing) {
         std::reverse(zipped.begin(), zipped.end());
@@ -221,7 +220,7 @@ std::vector<retT> sorting_arrangement(const std::vector<T> &a, bool increasing =
 }
 
 // checks if a vector is rearrangement of 0... N-1
-inline bool check_vector_is_rearrangement_of_0_to_N(const std::vector<size_t> &a) {
+inline bool CheckVectorIsRearrangementOf0ToN(const std::vector<size_t> &a) {
     std::vector<bool> contained(a.size(), false);
     for (auto &val : a) {
         if (val >= a.size()) {
@@ -237,36 +236,36 @@ inline bool check_vector_is_rearrangement_of_0_to_N(const std::vector<size_t> &a
 
 // sorts a vector like the arrangement
 template <typename T>
-void sort_like_arrangement(std::vector<T> &a, const std::vector<size_t> &arrangement) {
+void SortLikeArrangement(std::vector<T> &a, const std::vector<size_t> &arrangement) {
     assert(a.size() == arrangement.size());
-    assert(check_vector_is_rearrangement_of_0_to_N(arrangement));
+    assert(CheckVectorIsRearrangementOf0ToN(arrangement));
 
     std::vector<bool> moved(a.size(), false);
     for (size_t i = 0; i < a.size(); i++) {
         if (moved[i]) {
             continue;
         }
-        T i_val = a[i];
-        size_t prev_j = i;
+        T iVal = a[i];
+        size_t prevJ = i;
         size_t j = arrangement[i];
         while (i != j) {
-            a[prev_j] = a[j];
-            moved[prev_j] = true;
-            prev_j = j;
+            a[prevJ] = a[j];
+            moved[prevJ] = true;
+            prevJ = j;
             j = arrangement[j];
         }
-        a[prev_j] = i_val;    // j == i
-        moved[prev_j] = true;
+        a[prevJ] = iVal;    // j == i
+        moved[prevJ] = true;
     }
 }
 
 // sorts vector according to values in second vector w/o changing second vector
 template <typename S, typename T>
-void sort_like(std::vector<S> &a, const std::vector<T> &b) {
+void SortLike(std::vector<S> &a, const std::vector<T> &b) {
     assert(a.size() == b.size());
 
-    std::vector<size_t> arrangement = sorting_arrangement(b);
-    sort_like_arrangement(a, arrangement);
+    std::vector<size_t> arrangement = SortingArrangement(b);
+    SortLikeArrangement(a, arrangement);
 }
 
 /**
@@ -278,14 +277,14 @@ void sort_like(std::vector<S> &a, const std::vector<T> &b) {
  * @return T KeyType of SetType
  */
 template <class SetType, typename T = typename SetType::key_type>
-T Get_Median(SetType ordered_set) {
-    assert(ordered_set.size() != 0);
-    typename SetType::iterator it = ordered_set.begin();
-    if (ordered_set.size() % 2 == 1) {
-        std::advance(it, ordered_set.size() / 2);
+T GetMedian(SetType orderedSet) {
+    assert(orderedSet.size() != 0);
+    typename SetType::iterator it = orderedSet.begin();
+    if (orderedSet.size() % 2 == 1) {
+        std::advance(it, orderedSet.size() / 2);
         return *it;
     } else {
-        std::advance(it, (ordered_set.size() - 1) / 2);
+        std::advance(it, (orderedSet.size() - 1) / 2);
         T val1 = *it;
         T val2 = *(++it);
         return val1 + (val2 - val1) / 2;
@@ -301,11 +300,11 @@ T Get_Median(SetType ordered_set) {
  * @return T KeyType of SetType
  */
 template <class SetType, typename T = typename SetType::key_type>
-T Get_Lower_Median(SetType ordered_set) {
-    assert(ordered_set.size() != 0);
-    typename SetType::iterator it = ordered_set.begin();
+T GetLowerMedian(SetType orderedSet) {
+    assert(orderedSet.size() != 0);
+    typename SetType::iterator it = orderedSet.begin();
 
-    std::advance(it, (ordered_set.size() - 1) / 2);
+    std::advance(it, (orderedSet.size() - 1) / 2);
     return *it;
 }
 
@@ -318,11 +317,11 @@ T Get_Lower_Median(SetType ordered_set) {
  * @return T KeyType of SetType
  */
 template <class SetType, typename T = typename SetType::key_type>
-T Get_upper_third_percentile(SetType ordered_set) {
-    assert(ordered_set.size() != 0);
-    typename SetType::iterator it = ordered_set.begin();
+T GetUpperThirdPercentile(SetType orderedSet) {
+    assert(orderedSet.size() != 0);
+    typename SetType::iterator it = orderedSet.begin();
 
-    std::advance(it, (ordered_set.size() / 3) + ((ordered_set.size() + 1) / 3));
+    std::advance(it, (orderedSet.size() / 3) + ((orderedSet.size() + 1) / 3));
     return *it;
 }
 
@@ -335,11 +334,11 @@ T Get_upper_third_percentile(SetType ordered_set) {
  * @return T KeyType of SetType
  */
 template <class SetType, typename T = typename SetType::key_type>
-T Get_lower_third_percentile(SetType ordered_set) {
-    assert(ordered_set.size() != 0);
-    typename SetType::iterator it = ordered_set.begin();
+T GetLowerThirdPercentile(SetType orderedSet) {
+    assert(orderedSet.size() != 0);
+    typename SetType::iterator it = orderedSet.begin();
 
-    std::advance(it, (ordered_set.size() / 3));
+    std::advance(it, (orderedSet.size() / 3));
     return *it;
 }
 

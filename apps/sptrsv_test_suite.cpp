@@ -25,11 +25,11 @@ limitations under the License.
 
 #ifdef EIGEN_FOUND
 
-using graph_t = osp::sparse_matrix_graph_int32_t;
+using GraphT = osp::SparseMatrixGraphInt32T;
 
 int main(int argc, char *argv[]) {
-    osp::BspScheduleTestSuiteRunner<graph_t> runner;
-    return runner.run(argc, argv);
+    osp::BspScheduleTestSuiteRunner<GraphT> runner;
+    return runner.Run(argc, argv);
 
     return 0;
 }

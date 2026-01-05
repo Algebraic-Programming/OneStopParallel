@@ -30,38 +30,38 @@ namespace osp {
 /**
  * @brief Generates a Erdos Renyi random directed graph
  *
- * @param num_vertices Number of vertices of the graph
- * @param chance chance/num_vertices is the probability of edge inclusion
+ * @param numVertices Number of vertices of the graph
+ * @param chance chance/numVertices is the probability of edge inclusion
  * @return DAG
  */
-template <typename Graph_t>
-void erdos_renyi_graph_gen(Graph_t &dag_out, vertex_idx_t<Graph_t> num_vertices, double chance) {
-    static_assert(is_constructable_cdag_v<Graph_t>, "Graph_t must be a constructable computational DAG type");
+template <typename GraphT>
+void ErdosRenyiGraphGen(GraphT &dagOut, VertexIdxT<GraphT> numVertices, double chance) {
+    static_assert(isConstructableCdagV<GraphT>, "GraphT must be a constructable computational DAG type");
 
-    dag_out = Graph_t(num_vertices);
+    dagOut = GraphT(numVertices);
 
     std::random_device rd;
     std::mt19937 gen(rd());
 
-    for (const auto &v : dag_out.vertices()) {
-        const auto one = static_cast<vertex_idx_t<Graph_t>>(1);
-        std::binomial_distribution<vertex_idx_t<Graph_t>> bino_dist(num_vertices - one - v, chance / double(num_vertices));
-        auto out_edges_num = bino_dist(gen);
+    for (const auto &v : dagOut.Vertices()) {
+        const auto one = static_cast<VertexIdxT<GraphT>>(1);
+        std::binomial_distribution<VertexIdxT<GraphT>> binoDist(numVertices - one - v, chance / double(numVertices));
+        auto outEdgesNum = binoDist(gen);
 
-        std::unordered_set<vertex_idx_t<Graph_t>> out_edges;
-        while (out_edges.size() < static_cast<size_t>(out_edges_num)) {
-            std::uniform_int_distribution<vertex_idx_t<Graph_t>> dist(0, num_vertices - one - v);
-            vertex_idx_t<Graph_t> edge = v + one + dist(gen);
+        std::unordered_set<VertexIdxT<GraphT>> outEdges;
+        while (outEdges.size() < static_cast<size_t>(outEdgesNum)) {
+            std::uniform_int_distribution<VertexIdxT<GraphT>> dist(0, numVertices - one - v);
+            VertexIdxT<GraphT> edge = v + one + dist(gen);
 
-            if (out_edges.find(edge) != out_edges.cend()) {
+            if (outEdges.find(edge) != outEdges.cend()) {
                 continue;
             }
 
-            out_edges.emplace(edge);
+            outEdges.emplace(edge);
         }
 
-        for (auto &j : out_edges) {
-            dag_out.add_edge(v, j);
+        for (auto &j : outEdges) {
+            dagOut.AddEdge(v, j);
         }
     }
 }

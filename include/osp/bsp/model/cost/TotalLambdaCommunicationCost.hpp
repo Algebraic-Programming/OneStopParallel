@@ -29,43 +29,43 @@ namespace osp {
  * @struct TotalLambdaCommunicationCost
  * @brief Implements the total lambda communication cost model.
  */
-template <typename Graph_t>
+template <typename GraphT>
 struct TotalLambdaCommunicationCost {
-    using cost_type = double;
+    using CostType = double;
 
-    cost_type operator()(const BspSchedule<Graph_t> &schedule) const {
-        const auto &instance = schedule.getInstance();
-        const auto &node_to_processor_assignment = schedule.assignedProcessors();
+    CostType operator()(const BspSchedule<GraphT> &schedule) const {
+        const auto &instance = schedule.GetInstance();
+        const auto &nodeToProcessorAssignment = schedule.AssignedProcessors();
 
-        v_commw_t<Graph_t> comm_costs = 0;
-        const double comm_multiplier = 1.0 / instance.numberOfProcessors();
+        VCommwT<GraphT> commCosts = 0;
+        const double commMultiplier = 1.0 / instance.NumberOfProcessors();
 
-        for (const auto &v : instance.vertices()) {
-            if (instance.getComputationalDag().out_degree(v) == 0) {
+        for (const auto &v : instance.Vertices()) {
+            if (instance.GetComputationalDag().OutDegree(v) == 0) {
                 continue;
             }
 
-            std::unordered_set<unsigned> target_procs;
-            for (const auto &target : instance.getComputationalDag().children(v)) {
-                target_procs.insert(node_to_processor_assignment[target]);
+            std::unordered_set<unsigned> targetProcs;
+            for (const auto &target : instance.GetComputationalDag().Children(v)) {
+                targetProcs.insert(nodeToProcessorAssignment[target]);
             }
 
-            const unsigned source_proc = node_to_processor_assignment[v];
-            const auto v_comm_cost = instance.getComputationalDag().vertex_comm_weight(v);
+            const unsigned sourceProc = nodeToProcessorAssignment[v];
+            const auto vCommCost = instance.GetComputationalDag().VertexCommWeight(v);
 
-            for (const auto &target_proc : target_procs) {
-                comm_costs += v_comm_cost * instance.sendCosts(source_proc, target_proc);
+            for (const auto &targetProc : targetProcs) {
+                commCosts += vCommCost * instance.SendCosts(sourceProc, targetProc);
             }
         }
 
-        const unsigned number_of_supersteps = schedule.numberOfSupersteps();
+        const unsigned numberOfSupersteps = schedule.NumberOfSupersteps();
 
-        auto comm_cost = comm_costs * comm_multiplier * static_cast<double>(instance.communicationCosts());
-        auto work_cost = cost_helpers::compute_work_costs(schedule);
-        auto sync_cost = static_cast<v_commw_t<Graph_t>>(number_of_supersteps > 1 ? number_of_supersteps - 1 : 0)
-                         * instance.synchronisationCosts();
+        auto commCost = commCosts * commMultiplier * static_cast<double>(instance.CommunicationCosts());
+        auto workCost = cost_helpers::ComputeWorkCosts(schedule);
+        auto syncCost
+            = static_cast<VCommwT<GraphT>>(numberOfSupersteps > 1 ? numberOfSupersteps - 1 : 0) * instance.SynchronisationCosts();
 
-        return comm_cost + static_cast<double>(work_cost) + static_cast<double>(sync_cost);
+        return commCost + static_cast<double>(workCost) + static_cast<double>(syncCost);
     }
 };
 

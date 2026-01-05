@@ -12,9 +12,9 @@
 using namespace osp;
 
 BOOST_AUTO_TEST_CASE(HeavyEdgePartitioning) {
-    using Graph_t = boost_graph_int_t;
+    using GraphT = BoostGraphIntT;
 
-    std::vector<std::string> filenames_graph = test_graphs();
+    std::vector<std::string> filenamesGraph = TestGraphs();
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -24,34 +24,34 @@ BOOST_AUTO_TEST_CASE(HeavyEdgePartitioning) {
         std::cout << cwd << std::endl;
     }
 
-    for (auto &filename_graph : filenames_graph) {
-        std::string name_graph = filename_graph.substr(filename_graph.find_last_of("/\\") + 1, filename_graph.find_last_of("."));
+    for (auto &filenameGraph : filenamesGraph) {
+        std::string nameGraph = filenameGraph.substr(filenameGraph.find_last_of("/\\") + 1, filenameGraph.find_last_of("."));
 
-        std::cout << std::endl << "Graph: " << name_graph << std::endl;
+        std::cout << std::endl << "Graph: " << nameGraph << std::endl;
 
-        Graph_t graph;
+        GraphT graph;
 
-        bool status_graph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(), graph);
+        bool statusGraph = file_reader::ReadComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(), graph);
 
-        if (!status_graph) {
+        if (!statusGraph) {
             std::cout << "Reading files failed." << std::endl;
             BOOST_CHECK(false);
         }
 
         int weight = 0;
-        for (const auto &e : edges(graph)) {
-            graph.set_edge_comm_weight(e, 1 + (weight + 100 % 500));
+        for (const auto &e : Edges(graph)) {
+            graph.SetEdgeCommWeight(e, 1 + (weight + 100 % 500));
         }
 
-        auto partition = heavy_edge_preprocess(graph, 5.0, 0.7f, 0.34f);
-        std::vector<bool> vertex_in_partition(graph.num_vertices(), false);
+        auto partition = HeavyEdgePreprocess(graph, 5.0, 0.7f, 0.34f);
+        std::vector<bool> vertexInPartition(graph.NumVertices(), false);
         for (const auto &part : partition) {
             for (const auto &vert : part) {
-                BOOST_CHECK(!vertex_in_partition[vert]);
-                vertex_in_partition[vert] = true;
+                BOOST_CHECK(!vertexInPartition[vert]);
+                vertexInPartition[vert] = true;
             }
         }
-        for (const bool value : vertex_in_partition) {
+        for (const bool value : vertexInPartition) {
             BOOST_CHECK(value);
         }
     }

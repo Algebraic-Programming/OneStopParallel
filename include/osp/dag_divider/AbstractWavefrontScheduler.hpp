@@ -33,90 +33,90 @@ namespace osp {
  * @class AbstractWavefrontScheduler
  * @brief Base class for schedulers that operate on wavefronts of a DAG.
  */
-template <typename Graph_t, typename constr_graph_t>
-class AbstractWavefrontScheduler : public Scheduler<Graph_t> {
+template <typename GraphT, typename ConstrGraphT>
+class AbstractWavefrontScheduler : public Scheduler<GraphT> {
   protected:
-    IDagDivider<Graph_t> *divider;
-    Scheduler<constr_graph_t> *scheduler;
-    static constexpr bool enable_debug_prints = true;
+    IDagDivider<GraphT> *divider_;
+    Scheduler<ConstrGraphT> *scheduler_;
+    static constexpr bool enableDebugPrints_ = true;
 
     /**
      * @brief Distributes processors proportionally, ensuring active components get at least one if possible.
      * @param allocation A reference to the vector that will be filled with the processor allocation.
      * @return True if the scarcity case was hit (fewer processors than active components), false otherwise.
      */
-    bool distributeProcessors(unsigned total_processors_of_type,
-                              const std::vector<double> &work_weights,
+    bool DistributeProcessors(unsigned totalProcessorsOfType,
+                              const std::vector<double> &workWeights,
                               std::vector<unsigned> &allocation) const {
-        allocation.assign(work_weights.size(), 0);
-        double total_work = std::accumulate(work_weights.begin(), work_weights.end(), 0.0);
-        if (total_work <= 1e-9 || total_processors_of_type == 0) {
+        allocation.assign(workWeights.size(), 0);
+        double totalWork = std::accumulate(workWeights.begin(), workWeights.end(), 0.0);
+        if (totalWork <= 1e-9 || totalProcessorsOfType == 0) {
             return false;
         }
 
-        std::vector<size_t> active_indices;
-        for (size_t i = 0; i < work_weights.size(); ++i) {
-            if (work_weights[i] > 1e-9) {
-                active_indices.push_back(i);
+        std::vector<size_t> activeIndices;
+        for (size_t i = 0; i < workWeights.size(); ++i) {
+            if (workWeights[i] > 1e-9) {
+                activeIndices.push_back(i);
             }
         }
 
-        if (active_indices.empty()) {
+        if (activeIndices.empty()) {
             return false;
         }
 
-        size_t num_active_components = active_indices.size();
-        unsigned remaining_procs = total_processors_of_type;
+        size_t numActiveComponents = activeIndices.size();
+        unsigned remainingProcs = totalProcessorsOfType;
 
         // --- Stage 1: Guarantee at least one processor if possible (anti-starvation) ---
-        if (total_processors_of_type >= num_active_components) {
+        if (totalProcessorsOfType >= numActiveComponents) {
             // Abundance case: Give one processor to each active component first.
-            for (size_t idx : active_indices) {
+            for (size_t idx : activeIndices) {
                 allocation[idx] = 1;
             }
-            remaining_procs -= static_cast<unsigned>(num_active_components);
+            remainingProcs -= static_cast<unsigned>(numActiveComponents);
         } else {
             // Scarcity case: Not enough processors for each active component.
-            std::vector<std::pair<double, size_t>> sorted_work;
-            for (size_t idx : active_indices) {
-                sorted_work.push_back({work_weights[idx], idx});
+            std::vector<std::pair<double, size_t>> sortedWork;
+            for (size_t idx : activeIndices) {
+                sortedWork.push_back({workWeights[idx], idx});
             }
-            std::sort(sorted_work.rbegin(), sorted_work.rend());
-            for (unsigned i = 0; i < remaining_procs; ++i) {
-                allocation[sorted_work[i].second]++;
+            std::sort(sortedWork.rbegin(), sortedWork.rend());
+            for (unsigned i = 0; i < remainingProcs; ++i) {
+                allocation[sortedWork[i].second]++;
             }
             return true;    // Scarcity case was hit.
         }
 
         // --- Stage 2: Proportional Distribution of Remaining Processors ---
-        if (remaining_procs > 0) {
-            std::vector<double> adjusted_work_weights;
-            double adjusted_total_work = 0;
+        if (remainingProcs > 0) {
+            std::vector<double> adjustedWorkWeights;
+            double adjustedTotalWork = 0;
 
-            double work_per_proc = total_work / static_cast<double>(total_processors_of_type);
+            double workPerProc = totalWork / static_cast<double>(totalProcessorsOfType);
 
-            for (size_t idx : active_indices) {
-                double adjusted_work = std::max(0.0, work_weights[idx] - work_per_proc);
-                adjusted_work_weights.push_back(adjusted_work);
-                adjusted_total_work += adjusted_work;
+            for (size_t idx : activeIndices) {
+                double adjustedWork = std::max(0.0, workWeights[idx] - workPerProc);
+                adjustedWorkWeights.push_back(adjustedWork);
+                adjustedTotalWork += adjustedWork;
             }
 
-            if (adjusted_total_work > 1e-9) {
+            if (adjustedTotalWork > 1e-9) {
                 std::vector<std::pair<double, size_t>> remainders;
-                unsigned allocated_count = 0;
+                unsigned allocatedCount = 0;
 
-                for (size_t i = 0; i < active_indices.size(); ++i) {
-                    double exact_share = (adjusted_work_weights[i] / adjusted_total_work) * remaining_procs;
-                    unsigned additional_alloc = static_cast<unsigned>(std::floor(exact_share));
-                    allocation[active_indices[i]] += additional_alloc;    // Add to the base allocation of 1
-                    remainders.push_back({exact_share - additional_alloc, active_indices[i]});
-                    allocated_count += additional_alloc;
+                for (size_t i = 0; i < activeIndices.size(); ++i) {
+                    double exactShare = (adjustedWorkWeights[i] / adjustedTotalWork) * remainingProcs;
+                    unsigned additionalAlloc = static_cast<unsigned>(std::floor(exactShare));
+                    allocation[activeIndices[i]] += additionalAlloc;    // Add to the base allocation of 1
+                    remainders.push_back({exactShare - additionalAlloc, activeIndices[i]});
+                    allocatedCount += additionalAlloc;
                 }
 
                 std::sort(remainders.rbegin(), remainders.rend());
 
-                unsigned remainder_processors = remaining_procs - allocated_count;
-                for (unsigned i = 0; i < remainder_processors; ++i) {
+                unsigned remainderProcessors = remainingProcs - allocatedCount;
+                for (unsigned i = 0; i < remainderProcessors; ++i) {
                     if (i < remainders.size()) {
                         allocation[remainders[i].second]++;
                     }
@@ -126,37 +126,37 @@ class AbstractWavefrontScheduler : public Scheduler<Graph_t> {
         return false;    // Scarcity case was not hit.
     }
 
-    BspArchitecture<constr_graph_t> createSubArchitecture(const BspArchitecture<Graph_t> &original_arch,
-                                                          const std::vector<unsigned> &sub_dag_proc_types) const {
+    BspArchitecture<ConstrGraphT> CreateSubArchitecture(const BspArchitecture<GraphT> &originalArch,
+                                                        const std::vector<unsigned> &subDagProcTypes) const {
         // The calculation is now inside the assert, so it only happens in debug builds.
-        assert(std::accumulate(sub_dag_proc_types.begin(), sub_dag_proc_types.end(), 0u) > 0
+        assert(std::accumulate(subDagProcTypes.begin(), subDagProcTypes.end(), 0u) > 0
                && "Attempted to create a sub-architecture with zero processors.");
 
-        BspArchitecture<constr_graph_t> sub_architecture(original_arch);
-        std::vector<v_memw_t<Graph_t>> sub_dag_processor_memory(original_arch.getProcessorTypeCount().size(),
-                                                                std::numeric_limits<v_memw_t<Graph_t>>::max());
-        for (unsigned i = 0; i < original_arch.numberOfProcessors(); ++i) {
-            sub_dag_processor_memory[original_arch.processorType(i)]
-                = std::min(original_arch.memoryBound(i), sub_dag_processor_memory[original_arch.processorType(i)]);
+        BspArchitecture<ConstrGraphT> subArchitecture(originalArch);
+        std::vector<VMemwT<GraphT>> subDagProcessorMemory(originalArch.GetProcessorTypeCount().size(),
+                                                          std::numeric_limits<VMemwT<GraphT>>::max());
+        for (unsigned i = 0; i < originalArch.NumberOfProcessors(); ++i) {
+            subDagProcessorMemory[originalArch.ProcessorType(i)]
+                = std::min(originalArch.MemoryBound(i), subDagProcessorMemory[originalArch.ProcessorType(i)]);
         }
-        sub_architecture.SetProcessorsConsequTypes(sub_dag_proc_types, sub_dag_processor_memory);
-        return sub_architecture;
+        subArchitecture.SetProcessorsConsequTypes(subDagProcTypes, subDagProcessorMemory);
+        return subArchitecture;
     }
 
-    bool validateWorkDistribution(const std::vector<constr_graph_t> &sub_dags, const BspInstance<Graph_t> &instance) const {
-        const auto &original_arch = instance.getArchitecture();
-        for (const auto &rep_sub_dag : sub_dags) {
-            const double total_rep_work = sumOfVerticesWorkWeights(rep_sub_dag);
+    bool ValidateWorkDistribution(const std::vector<ConstrGraphT> &subDags, const BspInstance<GraphT> &instance) const {
+        const auto &originalArch = instance.GetArchitecture();
+        for (const auto &repSubDag : subDags) {
+            const double totalRepWork = SumOfVerticesWorkWeights(repSubDag);
 
-            double sum_of_compatible_works_for_rep = 0.0;
-            for (unsigned type_idx = 0; type_idx < original_arch.getNumberOfProcessorTypes(); ++type_idx) {
-                sum_of_compatible_works_for_rep += sumOfCompatibleWorkWeights(rep_sub_dag, instance, type_idx);
+            double sumOfCompatibleWorksForRep = 0.0;
+            for (unsigned typeIdx = 0; typeIdx < originalArch.GetNumberOfProcessorTypes(); ++typeIdx) {
+                sumOfCompatibleWorksForRep += SumOfCompatibleWorkWeights(repSubDag, instance, typeIdx);
             }
 
-            if (sum_of_compatible_works_for_rep > total_rep_work + 1e-9) {
-                if constexpr (enable_debug_prints) {
-                    std::cerr << "ERROR: Sum of compatible work (" << sum_of_compatible_works_for_rep << ") exceeds total work ("
-                              << total_rep_work << ") for a sub-dag. Aborting." << std::endl;
+            if (sumOfCompatibleWorksForRep > totalRepWork + 1e-9) {
+                if constexpr (enableDebugPrints_) {
+                    std::cerr << "ERROR: Sum of compatible work (" << sumOfCompatibleWorksForRep << ") exceeds total work ("
+                              << totalRepWork << ") for a sub-dag. Aborting." << std::endl;
                 }
                 return false;
             }
@@ -165,7 +165,7 @@ class AbstractWavefrontScheduler : public Scheduler<Graph_t> {
     }
 
   public:
-    AbstractWavefrontScheduler(IDagDivider<Graph_t> &div, Scheduler<constr_graph_t> &sched) : divider(&div), scheduler(&sched) {}
+    AbstractWavefrontScheduler(IDagDivider<GraphT> &div, Scheduler<ConstrGraphT> &sched) : divider_(&div), scheduler_(&sched) {}
 };
 
 }    // namespace osp

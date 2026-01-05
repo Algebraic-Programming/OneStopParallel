@@ -24,59 +24,57 @@ limitations under the License.
 
 namespace osp {
 
-template <typename Graph_t, typename Constr_Graph_t>
-class ConnectedComponentScheduler : public Scheduler<Graph_t> {
-    Scheduler<Constr_Graph_t> *scheduler;
+template <typename GraphT, typename ConstrGraphT>
+class ConnectedComponentScheduler : public Scheduler<GraphT> {
+    Scheduler<ConstrGraphT> *scheduler_;
 
   public:
-    ConnectedComponentScheduler(Scheduler<Constr_Graph_t> &_scheduler) : scheduler(&_scheduler) {}
+    ConnectedComponentScheduler(Scheduler<ConstrGraphT> &scheduler) : scheduler_(&scheduler) {}
 
-    std::string getScheduleName() const override { return "SubDagScheduler"; }
+    std::string GetScheduleName() const override { return "SubDagScheduler"; }
 
-    RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &schedule) override {
-        const auto &instance = schedule.getInstance();
+    ReturnStatus ComputeSchedule(BspSchedule<GraphT> &schedule) override {
+        const auto &instance = schedule.GetInstance();
 
-        const Graph_t &dag = instance.getComputationalDag();
-        ConnectedComponentDivider<Graph_t, Constr_Graph_t> partitioner;
+        const GraphT &dag = instance.GetComputationalDag();
+        ConnectedComponentDivider<GraphT, ConstrGraphT> partitioner;
 
-        partitioner.divide(dag);
+        partitioner.Divide(dag);
 
-        v_workw_t<Graph_t> total_work_weight = sumOfVerticesWorkWeights(dag);
+        VWorkwT<GraphT> totalWorkWeight = SumOfVerticesWorkWeights(dag);
 
-        unsigned num_processors_offset = 0;
+        unsigned numProcessorsOffset = 0;
 
-        for (std::size_t i = 0; i < partitioner.get_sub_dags().size(); i++) {
-            const auto &sub_dag = partitioner.get_sub_dags()[i];
-            const auto &mapping = partitioner.get_vertex_mapping()[i];
+        for (std::size_t i = 0; i < partitioner.GetSubDags().size(); i++) {
+            const auto &subDag = partitioner.GetSubDags()[i];
+            const auto &mapping = partitioner.GetVertexMapping()[i];
 
-            v_workw_t<Constr_Graph_t> sub_dag_work_weight = sumOfVerticesWorkWeights(sub_dag);
+            VWorkwT<ConstrGraphT> subDagWorkWeight = SumOfVerticesWorkWeights(subDag);
 
-            BspInstance<Constr_Graph_t> sub_instance(sub_dag, instance.getArchitecture());
-            BspArchitecture<Constr_Graph_t> &sub_architecture = sub_instance.getArchitecture();
+            BspInstance<ConstrGraphT> subInstance(subDag, instance.GetArchitecture());
+            BspArchitecture<ConstrGraphT> &subArchitecture = subInstance.GetArchitecture();
 
-            const double sub_dag_work_weight_percent
-                = static_cast<double>(sub_dag_work_weight) / static_cast<double>(total_work_weight);
-            const unsigned sub_dag_processors
-                = static_cast<unsigned>(sub_dag_work_weight_percent * sub_architecture.numberOfProcessors());
+            const double subDagWorkWeightPercent = static_cast<double>(subDagWorkWeight) / static_cast<double>(totalWorkWeight);
+            const unsigned subDagProcessors = static_cast<unsigned>(subDagWorkWeightPercent * subArchitecture.NumberOfProcessors());
 
-            sub_architecture.setNumberOfProcessors(sub_dag_processors);
+            subArchitecture.SetNumberOfProcessors(subDagProcessors);
 
-            BspSchedule<Constr_Graph_t> sub_schedule(sub_instance);
-            auto status = scheduler->computeSchedule(sub_schedule);
+            BspSchedule<ConstrGraphT> subSchedule(subInstance);
+            auto status = scheduler_->ComputeSchedule(subSchedule);
 
-            if (status != RETURN_STATUS::OSP_SUCCESS && status != RETURN_STATUS::BEST_FOUND) {
+            if (status != ReturnStatus::OSP_SUCCESS && status != ReturnStatus::BEST_FOUND) {
                 return status;
             }
 
-            for (const auto &v : sub_instance.vertices()) {
-                schedule.setAssignedProcessor(mapping.at(v), sub_schedule.assignedProcessor(v) + num_processors_offset);
-                schedule.setAssignedSuperstep(mapping.at(v), sub_schedule.assignedSuperstep(v));
+            for (const auto &v : subInstance.Vertices()) {
+                schedule.SetAssignedProcessor(mapping.at(v), subSchedule.AssignedProcessor(v) + numProcessorsOffset);
+                schedule.SetAssignedSuperstep(mapping.at(v), subSchedule.AssignedSuperstep(v));
             }
 
-            num_processors_offset += sub_architecture.numberOfProcessors();
+            numProcessorsOffset += subArchitecture.NumberOfProcessors();
         }
 
-        return RETURN_STATUS::OSP_SUCCESS;
+        return ReturnStatus::OSP_SUCCESS;
     }
 };
 

@@ -36,11 +36,11 @@ limitations under the License.
 
 // void print_bsp_schedule(const BspSchedule &bsp_schedule) {
 //     std::vector<std::vector<std::vector<unsigned>>> schedule(
-//         bsp_schedule.numberOfSupersteps(),
-//         std::vector<std::vector<unsigned>>(bsp_schedule.getInstance().numberOfProcessors(), std::vector<unsigned>()));
+//         bsp_schedule.NumberOfSupersteps(),
+//         std::vector<std::vector<unsigned>>(bsp_schedule.GetInstance().NumberOfProcessors(), std::vector<unsigned>()));
 
-//     for (size_t node = 0; node < bsp_schedule.getInstance().numberOfVertices(); node++) {
-//         schedule[bsp_schedule.assignedSuperstep(node)][bsp_schedule.assignedProcessor(node)].push_back(node);
+//     for (size_t node = 0; node < bsp_schedule.GetInstance().NumberOfVertices(); node++) {
+//         schedule[bsp_schedule.AssignedSuperstep(node)][bsp_schedule.AssignedProcessor(node)].push_back(node);
 //     }
 
 //     std::cout << std::endl << "Schedule:" << std::endl;
@@ -80,9 +80,9 @@ limitations under the License.
 //             std::cout << "Architecture: " << name_machine << std::endl;
 
 //             auto [status_graph, graph] =
-//                 FileReader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string());
+//                 FileReader::ReadComputationalDagHyperdagFormatDB((cwd / filename_graph).string());
 //             auto [status_architecture, architecture] =
-//                 FileReader::readBspArchitecture((cwd / filename_machine).string());
+//                 FileReader::ReadBspArchitecture((cwd / filename_machine).string());
 
 //             if (!status_graph || !status_architecture) {
 
@@ -94,45 +94,45 @@ limitations under the License.
 
 //             RandomBadGreedy test0;
 
-//             std::pair<RETURN_STATUS, BspSchedule> result0 = test0.computeSchedule(instance);
-//             test_improver->improveSchedule(result0.second);
+//             std::pair<ReturnStatus, BspSchedule> result0 = test0.ComputeSchedule(instance);
+//             test_improver->ImproveSchedule(result0.second);
 
 //             print_bsp_schedule(result0.second);
 
 //             BOOST_CHECK_EQUAL(SUCCESS, result0.first);
 
-//             BOOST_CHECK(result0.second.satisfiesPrecedenceConstraints());
-//             BOOST_CHECK(result0.second.hasValidCommSchedule());
+//             BOOST_CHECK(result0.second.SatisfiesPrecedenceConstraints());
+//             BOOST_CHECK(result0.second.HasValidCommSchedule());
 
 //             BalDMixR test1;
 
-//             std::pair<RETURN_STATUS, BspSchedule> result1 = test1.computeSchedule(instance);
-//             test_improver->improveSchedule(result1.second);
+//             std::pair<ReturnStatus, BspSchedule> result1 = test1.ComputeSchedule(instance);
+//             test_improver->ImproveSchedule(result1.second);
 
 //             print_bsp_schedule(result1.second);
 
 //             BOOST_CHECK_EQUAL(SUCCESS, result1.first);
 
-//             BOOST_CHECK(result1.second.satisfiesPrecedenceConstraints());
-//             BOOST_CHECK(result1.second.hasValidCommSchedule());
+//             BOOST_CHECK(result1.second.SatisfiesPrecedenceConstraints());
+//             BOOST_CHECK(result1.second.HasValidCommSchedule());
 
 //             HDagg_simple test2;
 
-//             std::pair<RETURN_STATUS, BspSchedule> result2 = test2.computeSchedule(instance);
-//             test_improver->improveSchedule(result2.second);
+//             std::pair<ReturnStatus, BspSchedule> result2 = test2.ComputeSchedule(instance);
+//             test_improver->ImproveSchedule(result2.second);
 
 //             print_bsp_schedule(result2.second);
 
 //             BOOST_CHECK_EQUAL(SUCCESS, result2.first);
 
-//             BOOST_CHECK(result2.second.satisfiesPrecedenceConstraints());
-//             BOOST_CHECK(result2.second.hasValidCommSchedule());
+//             BOOST_CHECK(result2.second.SatisfiesPrecedenceConstraints());
+//             BOOST_CHECK(result2.second.HasValidCommSchedule());
 
 //         }
 //     }
 // };
 
-BOOST_AUTO_TEST_CASE(Hungarian_alg_process_permuter_test) {
+BOOST_AUTO_TEST_CASE(HungarianAlgProcessPermuterTest) {
     // Hungarian_alg_process_permuter test;
     // run_test(&test);
 }
@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(Hungarian_alg_process_permuter_test) {
 // BOOST_AUTO_TEST_CASE(LKTotalCommScheduler_test) {
 //     kl_total_comm test;
 
-//     test.setTimeLimitSeconds(10);
+//     test.SetTimeLimitSeconds(10);
 //     test.set_compute_with_time_limit(true);
 //     run_test(&test);
 // }

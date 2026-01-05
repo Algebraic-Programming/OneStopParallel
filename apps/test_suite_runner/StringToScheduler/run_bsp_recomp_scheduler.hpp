@@ -34,31 +34,31 @@ limitations under the License.
 
 namespace osp {
 
-const std::set<std::string> get_available_bsp_recomp_scheduler_names() { return {"GreedyRecomputer"}; }
+const std::set<std::string> GetAvailableBspRecompSchedulerNames() { return {"GreedyRecomputer"}; }
 
-template <typename Graph_t>
-RETURN_STATUS run_bsp_recomp_scheduler(const ConfigParser &parser,
-                                       const boost::property_tree::ptree &algorithm,
-                                       BspScheduleRecomp<Graph_t> &schedule) {
+template <typename GraphT>
+ReturnStatus RunBspRecompScheduler(const ConfigParser &parser,
+                                   const boost::property_tree::ptree &algorithm,
+                                   BspScheduleRecomp<GraphT> &schedule) {
     // const unsigned timeLimit = parser.global_params.get_child("timeLimit").get_value<unsigned>();
     //  const bool use_memory_constraint = parser.global_params.get_child("use_memory_constraints").get_value<bool>();
 
     std::cout << "Running algorithm: " << algorithm.get_child("name").get_value<std::string>() << std::endl;
 
     if (algorithm.get_child("name").get_value<std::string>() == "GreedyRecomputer") {
-        BspSchedule<Graph_t> bsp_schedule(schedule.getInstance());
+        BspSchedule<GraphT> bspSchedule(schedule.GetInstance());
 
-        RETURN_STATUS status = run_bsp_scheduler(parser, algorithm.get_child("parameters").get_child("scheduler"), bsp_schedule);
+        ReturnStatus status = RunBspScheduler(parser, algorithm.get_child("parameters").get_child("scheduler"), bspSchedule);
 
-        BspScheduleCS<Graph_t> initial_schedule(std::move(bsp_schedule));
+        BspScheduleCS<GraphT> initialSchedule(std::move(bspSchedule));
 
-        if (status == RETURN_STATUS::ERROR) {
-            return RETURN_STATUS::ERROR;
+        if (status == ReturnStatus::ERROR) {
+            return ReturnStatus::ERROR;
         }
 
-        GreedyRecomputer<Graph_t> scheduler;
+        GreedyRecomputer<GraphT> scheduler;
 
-        return scheduler.computeRecompSchedule(initial_schedule, schedule);
+        return scheduler.ComputeRecompSchedule(initialSchedule, schedule);
 
     } else {
         throw std::invalid_argument("Parameter error: Unknown algorithm.\n");

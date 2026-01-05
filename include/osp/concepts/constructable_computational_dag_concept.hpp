@@ -40,24 +40,24 @@ namespace osp {
  * @brief Concept to check if vertex weights are modifiable.
  *
  * Requires:
- * - `set_vertex_work_weight(v, w)`
- * - `set_vertex_comm_weight(v, w)`
- * - `set_vertex_mem_weight(v, w)`
+ * - `SetVertexWorkWeight(v, w)`
+ * - `SetVertexCommWeight(v, w)`
+ * - `SetVertexMemWeight(v, w)`
  *
  * Also requires the graph to be default constructible, copy/move constructible, and assignable.
  *
  * @tparam T The graph type.
  */
 template <typename T, typename = void>
-struct is_modifiable_cdag_vertex : std::false_type {};
+struct IsModifiableCdagVertex : std::false_type {};
 
 template <typename T>
-struct is_modifiable_cdag_vertex<
+struct IsModifiableCdagVertex<
     T,
-    std::void_t<decltype(std::declval<T>().set_vertex_work_weight(std::declval<vertex_idx_t<T>>(), std::declval<v_workw_t<T>>())),
-                decltype(std::declval<T>().set_vertex_comm_weight(std::declval<vertex_idx_t<T>>(), std::declval<v_commw_t<T>>())),
-                decltype(std::declval<T>().set_vertex_mem_weight(std::declval<vertex_idx_t<T>>(), std::declval<v_memw_t<T>>()))>>
-    : std::conjunction<is_computational_dag<T>,
+    std::void_t<decltype(std::declval<T>().SetVertexWorkWeight(std::declval<VertexIdxT<T>>(), std::declval<VWorkwT<T>>())),
+                decltype(std::declval<T>().SetVertexCommWeight(std::declval<VertexIdxT<T>>(), std::declval<VCommwT<T>>())),
+                decltype(std::declval<T>().SetVertexMemWeight(std::declval<VertexIdxT<T>>(), std::declval<VMemwT<T>>()))>>
+    : std::conjunction<IsComputationalDag<T>,
                        std::is_default_constructible<T>,
                        std::is_copy_constructible<T>,
                        std::is_move_constructible<T>,
@@ -65,131 +65,130 @@ struct is_modifiable_cdag_vertex<
                        std::is_move_assignable<T>> {};
 
 template <typename T>
-inline constexpr bool is_modifiable_cdag_vertex_v = is_modifiable_cdag_vertex<T>::value;
+inline constexpr bool isModifiableCdagVertexV = IsModifiableCdagVertex<T>::value;
 
 /**
  * @brief Concept to check if vertices can be added to the graph.
  *
  * Requires:
- * - `add_vertex(work_weight, comm_weight, mem_weight)`
+ * - `AddVertex(work_weight, comm_weight, mem_weight)`
  * - Constructibility from `vertex_idx_t` (for reserving size).
  *
  * @tparam T The graph type.
  */
 template <typename T, typename = void>
-struct is_constructable_cdag_vertex : std::false_type {};
+struct IsConstructableCdagVertex : std::false_type {};
 
 template <typename T>
-struct is_constructable_cdag_vertex<T,
-                                    std::void_t<decltype(std::declval<T>().add_vertex(
-                                        std::declval<v_workw_t<T>>(), std::declval<v_commw_t<T>>(), std::declval<v_memw_t<T>>()))>>
-    : std::conjunction<is_modifiable_cdag_vertex<T>, std::is_constructible<T, vertex_idx_t<T>>> {};
+struct IsConstructableCdagVertex<T,
+                                 std::void_t<decltype(std::declval<T>().AddVertex(
+                                     std::declval<VWorkwT<T>>(), std::declval<VCommwT<T>>(), std::declval<VMemwT<T>>()))>>
+    : std::conjunction<IsModifiableCdagVertex<T>, std::is_constructible<T, VertexIdxT<T>>> {};
 
 template <typename T>
-inline constexpr bool is_constructable_cdag_vertex_v = is_constructable_cdag_vertex<T>::value;
+inline constexpr bool isConstructableCdagVertexV = IsConstructableCdagVertex<T>::value;
 
 /**
  * @brief Concept to check if vertex types are modifiable.
  *
  * Requires:
- * - `set_vertex_type(v, type)`
+ * - `SetVertexType(v, type)`
  *
  * @tparam T The graph type.
  */
 template <typename T, typename = void>
-struct is_modifiable_cdag_typed_vertex : std::false_type {};
+struct IsModifiableCdagTypedVertex : std::false_type {};
 
 template <typename T>
-struct is_modifiable_cdag_typed_vertex<
+struct IsModifiableCdagTypedVertex<
     T,
-    std::void_t<decltype(std::declval<T>().set_vertex_type(std::declval<vertex_idx_t<T>>(), std::declval<v_type_t<T>>()))>>
-    : std::conjunction<is_modifiable_cdag_vertex<T>, is_computational_dag_typed_vertices<T>> {};    // for default node type
+    std::void_t<decltype(std::declval<T>().SetVertexType(std::declval<VertexIdxT<T>>(), std::declval<VTypeT<T>>()))>>
+    : std::conjunction<IsModifiableCdagVertex<T>, IsComputationalDagTypedVertices<T>> {};    // for default node type
 
 template <typename T>
-inline constexpr bool is_modifiable_cdag_typed_vertex_v = is_modifiable_cdag_typed_vertex<T>::value;
+inline constexpr bool isModifiableCdagTypedVertexV = IsModifiableCdagTypedVertex<T>::value;
 
 /**
  * @brief Concept to check if typed vertices can be added.
  *
  * Requires:
- * - `add_vertex(work, comm, mem, type)`
+ * - `AddVertex(work, comm, mem, type)`
  *
  * @tparam T The graph type.
  */
 template <typename T, typename = void>
-struct is_constructable_cdag_typed_vertex : std::false_type {};
+struct IsConstructableCdagTypedVertex : std::false_type {};
 
 template <typename T>
-struct is_constructable_cdag_typed_vertex<
+struct IsConstructableCdagTypedVertex<
     T,
-    std::void_t<decltype(std::declval<T>().add_vertex(
-        std::declval<v_workw_t<T>>(), std::declval<v_commw_t<T>>(), std::declval<v_memw_t<T>>(), std::declval<v_type_t<T>>()))>>
-    : std::conjunction<is_constructable_cdag_vertex<T>, is_modifiable_cdag_typed_vertex<T>> {};    // for default node type
+    std::void_t<decltype(std::declval<T>().AddVertex(
+        std::declval<VWorkwT<T>>(), std::declval<VCommwT<T>>(), std::declval<VMemwT<T>>(), std::declval<VTypeT<T>>()))>>
+    : std::conjunction<IsConstructableCdagVertex<T>, IsModifiableCdagTypedVertex<T>> {};    // for default node type
 
 template <typename T>
-inline constexpr bool is_constructable_cdag_typed_vertex_v = is_constructable_cdag_typed_vertex<T>::value;
+inline constexpr bool isConstructableCdagTypedVertexV = IsConstructableCdagTypedVertex<T>::value;
 
 /**
  * @brief Concept to check if edges can be added (unweighted).
  *
  * Requires:
- * - `add_edge(source, target)`
+ * - `AddEdge(source, target)`
  *
  * @tparam T The graph type.
  */
 template <typename T, typename = void>
-struct is_constructable_cdag_edge : std::false_type {};
+struct IsConstructableCdagEdge : std::false_type {};
 
 template <typename T>
-struct is_constructable_cdag_edge<
+struct IsConstructableCdagEdge<
     T,
-    std::void_t<decltype(std::declval<T>().add_edge(std::declval<vertex_idx_t<T>>(), std::declval<vertex_idx_t<T>>()))>>
-    : is_directed_graph<T> {};
+    std::void_t<decltype(std::declval<T>().AddEdge(std::declval<VertexIdxT<T>>(), std::declval<VertexIdxT<T>>()))>>
+    : IsDirectedGraph<T> {};
 
 template <typename T>
-inline constexpr bool is_constructable_cdag_edge_v = is_constructable_cdag_edge<T>::value;
+inline constexpr bool isConstructableCdagEdgeV = IsConstructableCdagEdge<T>::value;
 
 /**
  * @brief Concept to check if edge communication weights are modifiable.
  *
  * Requires:
- * - `set_edge_comm_weight(edge, weight)`
+ * - `SetEdgeCommWeight(edge, weight)`
  *
  * @tparam T The graph type.
  */
 template <typename T, typename = void>
-struct is_modifiable_cdag_comm_edge : std::false_type {};
+struct IsModifiableCdagCommEdge : std::false_type {};
 
 template <typename T>
-struct is_modifiable_cdag_comm_edge<
+struct IsModifiableCdagCommEdge<
     T,
-    std::void_t<decltype(std::declval<T>().set_edge_comm_weight(std::declval<edge_desc_t<T>>(), std::declval<e_commw_t<T>>()))>>
-    : std::conjunction<is_computational_dag_edge_desc<T>> {};    // for default edge weight
+    std::void_t<decltype(std::declval<T>().SetEdgeCommWeight(std::declval<EdgeDescT<T>>(), std::declval<ECommwT<T>>()))>>
+    : std::conjunction<IsComputationalDagEdgeDesc<T>> {};    // for default edge weight
 
 template <typename T>
-inline constexpr bool is_modifiable_cdag_comm_edge_v = is_modifiable_cdag_comm_edge<T>::value;
+inline constexpr bool isModifiableCdagCommEdgeV = IsModifiableCdagCommEdge<T>::value;
 
 /**
  * @brief Concept to check if weighted edges can be added.
  *
  * Requires:
- * - `add_edge(source, target, weight)`
+ * - `AddEdge(source, target, weight)`
  *
  * @tparam T The graph type.
  */
 template <typename T, typename = void>
-struct is_constructable_cdag_comm_edge : std::false_type {};
+struct IsConstructableCdagCommEdge : std::false_type {};
 
 template <typename T>
-struct is_constructable_cdag_comm_edge<
-    T,
-    std::void_t<decltype(std::declval<T>().add_edge(
-        std::declval<vertex_idx_t<T>>(), std::declval<vertex_idx_t<T>>(), std::declval<e_commw_t<T>>()))>>
-    : std::conjunction<is_constructable_cdag_edge<T>, is_computational_dag_edge_desc<T>, is_modifiable_cdag_comm_edge<T>> {
+struct IsConstructableCdagCommEdge<T,
+                                   std::void_t<decltype(std::declval<T>().AddEdge(
+                                       std::declval<VertexIdxT<T>>(), std::declval<VertexIdxT<T>>(), std::declval<ECommwT<T>>()))>>
+    : std::conjunction<IsConstructableCdagEdge<T>, IsComputationalDagEdgeDesc<T>, IsModifiableCdagCommEdge<T>> {
 };    // for default edge weight
 
 template <typename T>
-inline constexpr bool is_constructable_cdag_comm_edge_v = is_constructable_cdag_comm_edge<T>::value;
+inline constexpr bool isConstructableCdagCommEdgeV = IsConstructableCdagCommEdge<T>::value;
 
 /**
  * @brief Concept for a fully constructable computational DAG.
@@ -199,20 +198,20 @@ inline constexpr bool is_constructable_cdag_comm_edge_v = is_constructable_cdag_
  * @tparam T The graph type.
  */
 template <typename T, typename = void>
-struct is_constructable_cdag : std::false_type {};
+struct IsConstructableCdag : std::false_type {};
 
 template <typename T>
-struct is_constructable_cdag<T, std::void_t<>>
-    : std::conjunction<is_computational_dag<T>, is_constructable_cdag_vertex<T>, is_constructable_cdag_edge<T>> {};
+struct IsConstructableCdag<T, std::void_t<>>
+    : std::conjunction<IsComputationalDag<T>, IsConstructableCdagVertex<T>, IsConstructableCdagEdge<T>> {};
 
 template <typename T>
-inline constexpr bool is_constructable_cdag_v = is_constructable_cdag<T>::value;
+inline constexpr bool isConstructableCdagV = IsConstructableCdag<T>::value;
 
 /**
  * @brief Helper trait to check if a graph can be directly constructed from a vertex count and a set of edges.
  */
 template <typename T>
-inline constexpr bool is_direct_constructable_cdag_v
-    = std::is_constructible<T, vertex_idx_t<T>, std::set<std::pair<vertex_idx_t<T>, vertex_idx_t<T>>>>::value;
+inline constexpr bool isDirectConstructableCdagV
+    = std::is_constructible<T, VertexIdxT<T>, std::set<std::pair<VertexIdxT<T>, VertexIdxT<T>>>>::value;
 
 }    // namespace osp

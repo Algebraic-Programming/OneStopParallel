@@ -33,9 +33,9 @@ limitations under the License.
 
 using namespace osp;
 
-BOOST_AUTO_TEST_CASE(StepByStepCoarser_test) {
-    using graph = boost_graph_uint_t;
-    StepByStepCoarser<graph> test;
+BOOST_AUTO_TEST_CASE(StepByStepCoarserTest) {
+    using Graph = BoostGraphUintT;
+    StepByStepCoarser<Graph> test;
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -45,37 +45,37 @@ BOOST_AUTO_TEST_CASE(StepByStepCoarser_test) {
         std::cout << cwd << std::endl;
     }
 
-    graph DAG;
+    Graph dag;
 
-    bool status = file_reader::readComputationalDagHyperdagFormatDB(
-        (cwd / "data/spaa/tiny/instance_spmv_N10_nzP0d25.hdag").string(), DAG);
+    bool status = file_reader::ReadComputationalDagHyperdagFormatDB(
+        (cwd / "data/spaa/tiny/instance_spmv_N10_nzP0d25.hdag").string(), dag);
 
     BOOST_CHECK(status);
 
-    StepByStepCoarser<graph> coarser;
+    StepByStepCoarser<Graph> coarser;
 
-    coarser.setTargetNumberOfNodes(static_cast<unsigned>(DAG.num_vertices()) / 2);
+    coarser.SetTargetNumberOfNodes(static_cast<unsigned>(dag.NumVertices()) / 2);
 
-    graph coarsened_dag1, coarsened_dag2;
-    std::vector<std::vector<vertex_idx_t<graph>>> old_vertex_ids;
-    std::vector<vertex_idx_t<graph>> new_vertex_id;
+    Graph coarsenedDag1, coarsenedDag2;
+    std::vector<std::vector<VertexIdxT<Graph>>> oldVertexIds;
+    std::vector<VertexIdxT<Graph>> newVertexId;
 
-    coarser.coarsenDag(DAG, coarsened_dag1, new_vertex_id);
-    old_vertex_ids = coarser_util::invert_vertex_contraction_map<graph, graph>(new_vertex_id);
+    coarser.CoarsenDag(dag, coarsenedDag1, newVertexId);
+    oldVertexIds = coarser_util::InvertVertexContractionMap<Graph, Graph>(newVertexId);
 
-    coarser.setTargetNumberOfNodes(static_cast<unsigned>(DAG.num_vertices()) * 2 / 3);
-    coarser.coarsenForPebbling(DAG, coarsened_dag2, new_vertex_id);
-    old_vertex_ids = coarser_util::invert_vertex_contraction_map<graph, graph>(new_vertex_id);
+    coarser.SetTargetNumberOfNodes(static_cast<unsigned>(dag.NumVertices()) * 2 / 3);
+    coarser.CoarsenForPebbling(dag, coarsenedDag2, newVertexId);
+    oldVertexIds = coarser_util::InvertVertexContractionMap<Graph, Graph>(newVertexId);
 }
 
-BOOST_AUTO_TEST_CASE(Multilevel_test) {
-    using graph = boost_graph_uint_t;
-    StepByStepCoarser<graph> test;
+BOOST_AUTO_TEST_CASE(MultilevelTest) {
+    using Graph = BoostGraphUintT;
+    StepByStepCoarser<Graph> test;
 
-    BspInstance<graph> instance;
-    instance.setNumberOfProcessors(2);
-    instance.setCommunicationCosts(3);
-    instance.setSynchronisationCosts(5);
+    BspInstance<Graph> instance;
+    instance.SetNumberOfProcessors(2);
+    instance.SetCommunicationCosts(3);
+    instance.SetSynchronisationCosts(5);
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -85,25 +85,25 @@ BOOST_AUTO_TEST_CASE(Multilevel_test) {
         std::cout << cwd << std::endl;
     }
 
-    bool status = file_reader::readComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_pregel.hdag").string(),
-                                                                    instance.getComputationalDag());
+    bool status = file_reader::ReadComputationalDagHyperdagFormatDB((cwd / "data/spaa/tiny/instance_pregel.hdag").string(),
+                                                                    instance.GetComputationalDag());
 
     BOOST_CHECK(status);
 
-    MultiLevelHillClimbingScheduler<graph> multi1, multi2;
-    BspSchedule<graph> schedule1(instance), schedule2(instance);
+    MultiLevelHillClimbingScheduler<Graph> multi1, multi2;
+    BspSchedule<Graph> schedule1(instance), schedule2(instance);
 
-    multi1.setContractionRate(0.3);
-    multi1.useLinearRefinementSteps(5);
+    multi1.SetContractionRate(0.3);
+    multi1.UseLinearRefinementSteps(5);
 
-    auto result = multi1.computeSchedule(schedule1);
-    BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
-    BOOST_CHECK(schedule1.satisfiesPrecedenceConstraints());
+    auto result = multi1.ComputeSchedule(schedule1);
+    BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
+    BOOST_CHECK(schedule1.SatisfiesPrecedenceConstraints());
 
-    multi2.setContractionRate(0.3);
-    multi2.useExponentialRefinementPoints(1.2);
+    multi2.SetContractionRate(0.3);
+    multi2.UseExponentialRefinementPoints(1.2);
 
-    result = multi2.computeSchedule(schedule2);
-    BOOST_CHECK_EQUAL(RETURN_STATUS::OSP_SUCCESS, result);
-    BOOST_CHECK(schedule2.satisfiesPrecedenceConstraints());
+    result = multi2.ComputeSchedule(schedule2);
+    BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
+    BOOST_CHECK(schedule2.SatisfiesPrecedenceConstraints());
 }

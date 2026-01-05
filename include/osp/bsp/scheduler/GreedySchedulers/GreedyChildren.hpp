@@ -28,112 +28,112 @@ limitations under the License.
 
 namespace osp {
 
-template <typename Graph_t>
-class GreedyChildren : public Scheduler<Graph_t> {
+template <typename GraphT>
+class GreedyChildren : public Scheduler<GraphT> {
   private:
-    bool ensure_enough_sources;
+    bool ensureEnoughSources_;
 
   public:
-    GreedyChildren(bool ensure_enough_sources_ = true) : Scheduler<Graph_t>(), ensure_enough_sources(ensure_enough_sources_) {};
+    GreedyChildren(bool ensureEnoughSources = true) : Scheduler<GraphT>(), ensureEnoughSources_(ensureEnoughSources) {};
 
-    RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &sched) override {
-        using VertexType = vertex_idx_t<Graph_t>;
-        const auto &instance = sched.getInstance();
+    ReturnStatus ComputeSchedule(BspSchedule<GraphT> &sched) override {
+        using VertexType = VertexIdxT<GraphT>;
+        const auto &instance = sched.GetInstance();
 
-        for (const auto &v : instance.getComputationalDag().vertices()) {
-            sched.setAssignedProcessor(v, std::numeric_limits<unsigned>::max());
+        for (const auto &v : instance.GetComputationalDag().Vertices()) {
+            sched.SetAssignedProcessor(v, std::numeric_limits<unsigned>::max());
         }
 
-        const auto &graph = instance.getComputationalDag();
+        const auto &graph = instance.GetComputationalDag();
 
-        unsigned superstep_counter = 0;
+        unsigned superstepCounter = 0;
 
-        std::vector<VertexType> predecessors_count(instance.numberOfVertices(), 0);
+        std::vector<VertexType> predecessorsCount(instance.NumberOfVertices(), 0);
         std::multiset<std::pair<unsigned, VertexType>, std::greater<>> next;
-        for (const VertexType &i : source_vertices_view(graph)) {
-            next.emplace(graph.out_degree(i), i);
+        for (const VertexType &i : SourceVerticesView(graph)) {
+            next.emplace(graph.OutDegree(i), i);
         }
 
         while (!next.empty()) {
-            std::unordered_set<VertexType> nodes_assigned_this_superstep;
-            std::vector<v_workw_t<Graph_t>> processor_weights(instance.numberOfProcessors(), 0);
+            std::unordered_set<VertexType> nodesAssignedThisSuperstep;
+            std::vector<VWorkwT<GraphT>> processorWeights(instance.NumberOfProcessors(), 0);
 
-            bool few_sources = next.size() < instance.numberOfProcessors() ? true : false;
-            bool node_added = true;
-            while (!next.empty() && node_added) {
-                node_added = false;
+            bool fewSources = next.size() < instance.NumberOfProcessors() ? true : false;
+            bool nodeAdded = true;
+            while (!next.empty() && nodeAdded) {
+                nodeAdded = false;
                 for (auto iter = next.begin(); iter != next.cend(); iter++) {
                     const auto &node = iter->second;
-                    bool processor_set = false;
-                    bool failed_to_allocate = false;
-                    unsigned processor_to_be_allocated = 0;
+                    bool processorSet = false;
+                    bool failedToAllocate = false;
+                    unsigned processorToBeAllocated = 0;
 
-                    for (const auto &par : graph.parents(node)) {
-                        if (nodes_assigned_this_superstep.count(par)) {
-                            if (!processor_set) {
-                                const unsigned par_proc = sched.assignedProcessor(par);
-                                if (!instance.isCompatible(node, par_proc)) {
-                                    failed_to_allocate = true;
+                    for (const auto &par : graph.Parents(node)) {
+                        if (nodesAssignedThisSuperstep.count(par)) {
+                            if (!processorSet) {
+                                const unsigned parProc = sched.AssignedProcessor(par);
+                                if (!instance.IsCompatible(node, parProc)) {
+                                    failedToAllocate = true;
                                     break;
                                 }
-                                processor_set = true;
-                                processor_to_be_allocated = par_proc;
-                            } else if (sched.assignedProcessor(par) != processor_to_be_allocated) {
-                                failed_to_allocate = true;
+                                processorSet = true;
+                                processorToBeAllocated = parProc;
+                            } else if (sched.AssignedProcessor(par) != processorToBeAllocated) {
+                                failedToAllocate = true;
                                 break;
                             }
                         }
                     }
 
-                    if (failed_to_allocate) {
+                    if (failedToAllocate) {
                         continue;
                     }
 
-                    sched.setAssignedSuperstep(node, superstep_counter);
-                    if (processor_set) {
-                        sched.setAssignedProcessor(node, processor_to_be_allocated);
+                    sched.SetAssignedSuperstep(node, superstepCounter);
+                    if (processorSet) {
+                        sched.SetAssignedProcessor(node, processorToBeAllocated);
                     } else {
-                        v_workw_t<Graph_t> min_weight = std::numeric_limits<v_workw_t<Graph_t>>::max();
-                        unsigned best_proc = std::numeric_limits<unsigned>::max();
-                        for (unsigned p = 0; p < instance.numberOfProcessors(); ++p) {
-                            if (instance.isCompatible(node, p)) {
-                                if (processor_weights[p] < min_weight) {
-                                    min_weight = processor_weights[p];
-                                    best_proc = p;
+                        VWorkwT<GraphT> minWeight = std::numeric_limits<VWorkwT<GraphT>>::max();
+                        unsigned bestProc = std::numeric_limits<unsigned>::max();
+                        for (unsigned p = 0; p < instance.NumberOfProcessors(); ++p) {
+                            if (instance.IsCompatible(node, p)) {
+                                if (processorWeights[p] < minWeight) {
+                                    minWeight = processorWeights[p];
+                                    bestProc = p;
                                 }
                             }
                         }
-                        sched.setAssignedProcessor(node, best_proc);
+                        sched.SetAssignedProcessor(node, bestProc);
                     }
 
-                    nodes_assigned_this_superstep.emplace(node);
-                    processor_weights[sched.assignedProcessor(node)] += graph.vertex_work_weight(node);
-                    std::vector<VertexType> new_nodes;
-                    for (const auto &chld : graph.children(node)) {
-                        predecessors_count[chld]++;
-                        if (predecessors_count[chld] == graph.in_degree(chld)) {
-                            new_nodes.emplace_back(chld);
+                    nodesAssignedThisSuperstep.emplace(node);
+                    processorWeights[sched.AssignedProcessor(node)] += graph.VertexWorkWeight(node);
+                    std::vector<VertexType> newNodes;
+                    for (const auto &chld : graph.Children(node)) {
+                        predecessorsCount[chld]++;
+                        if (predecessorsCount[chld] == graph.InDegree(chld)) {
+                            newNodes.emplace_back(chld);
                         }
                     }
                     next.erase(iter);
-                    for (const auto &vrt : new_nodes) {
-                        next.emplace(graph.out_degree(vrt), vrt);
+                    for (const auto &vrt : newNodes) {
+                        next.emplace(graph.OutDegree(vrt), vrt);
                     }
-                    node_added = true;
+                    nodeAdded = true;
                     break;
                 }
-                if (ensure_enough_sources && few_sources && next.size() >= instance.numberOfProcessors()) {
+                if (ensureEnoughSources_ && fewSources && next.size() >= instance.NumberOfProcessors()) {
                     break;
                 }
             }
 
-            superstep_counter++;
+            superstepCounter++;
         }
 
-        return RETURN_STATUS::OSP_SUCCESS;
+        return ReturnStatus::OSP_SUCCESS;
     }
 
-    std::string getScheduleName() const override { return ensure_enough_sources ? "GreedyChildrenS" : "GreedyChildren"; }
+    std::string GetScheduleName() const override { return ensureEnoughSources_ ? "GreedyChildrenS" : "GreedyChildren"; }
 };
 
 }    // namespace osp
