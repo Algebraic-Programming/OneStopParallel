@@ -36,9 +36,9 @@ namespace osp {
  * It specifies the contract for computing standard BSP schedules (BspSchedule) and communication-aware schedules
  * (BspScheduleCS).
  */
-template <typename Graph_t>
+template <typename GraphT>
 class Scheduler {
-    static_assert(is_computational_dag_v<Graph_t>, "Scheduler can only be used with computational DAGs.");
+    static_assert(isComputationalDagV<GraphT>, "Scheduler can only be used with computational DAGs.");
 
   public:
     /**
@@ -55,7 +55,7 @@ class Scheduler {
      * @brief Get the name of the scheduling algorithm.
      * @return The name of the scheduling algorithm.
      */
-    virtual std::string getScheduleName() const = 0;
+    virtual std::string GetScheduleName() const = 0;
 
     /**
      * @brief Computes a BSP schedule for the given BSP instance.
@@ -64,28 +64,28 @@ class Scheduler {
      * the specific scheduling logic. It modifies the passed BspSchedule object.
      *
      * @param schedule The BspSchedule object to be computed. It contains the BspInstance.
-     * @return RETURN_STATUS::OSP_SUCCESS if a schedule was successfully computed,
-     *         RETURN_STATUS::ERROR if an error occurred, or other status codes as appropriate.
+     * @return ReturnStatus::OSP_SUCCESS if a schedule was successfully computed,
+     *         ReturnStatus::ERROR if an error occurred, or other status codes as appropriate.
      */
-    virtual RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &schedule) = 0;
+    virtual ReturnStatus ComputeSchedule(BspSchedule<GraphT> &schedule) = 0;
 
     /**
      * @brief Computes a BSP schedule with communication schedule (CS).
      *
-     * This method provides a default implementation that first computes the basic BSP schedule using computeSchedule().
-     * If successful, it then calls setAutoCommunicationSchedule() on the schedule to set a communication schedule.
+     * This method provides a default implementation that first computes the basic BSP schedule using ComputeSchedule().
+     * If successful, it then calls SetAutoCommunicationSchedule() on the schedule to set a communication schedule.
      *
      * @param schedule The BspScheduleCS object to be computed. It contains the BspInstance.
-     * @return RETURN_STATUS::OSP_SUCCESS or RETURN_STATUS::BEST_FOUND if a schedule was successfully computed,
-     *         RETURN_STATUS::ERROR if an error occurred, or other status codes as appropriate.
+     * @return ReturnStatus::OSP_SUCCESS or ReturnStatus::BEST_FOUND if a schedule was successfully computed,
+     *         ReturnStatus::ERROR if an error occurred, or other status codes as appropriate.
      */
-    virtual RETURN_STATUS computeScheduleCS(BspScheduleCS<Graph_t> &schedule) {
-        auto result = computeSchedule(schedule);
-        if (result == RETURN_STATUS::OSP_SUCCESS || result == RETURN_STATUS::BEST_FOUND) {
-            schedule.setAutoCommunicationSchedule();
+    virtual ReturnStatus ComputeScheduleCS(BspScheduleCS<GraphT> &schedule) {
+        auto result = ComputeSchedule(schedule);
+        if (result == ReturnStatus::OSP_SUCCESS || result == ReturnStatus::BEST_FOUND) {
+            schedule.SetAutoCommunicationSchedule();
             return result;
         } else {
-            return RETURN_STATUS::ERROR;
+            return ReturnStatus::ERROR;
         }
     }
 };

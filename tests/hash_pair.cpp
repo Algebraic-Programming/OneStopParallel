@@ -19,11 +19,11 @@ limitations under the License.
 #define BOOST_TEST_MODULE Hash_Pair
 #include <boost/test/unit_test.hpp>
 
-#include "osp/auxiliary/misc.hpp"
+#include "osp/auxiliary/hash_util.hpp"
 
 using namespace osp;
 
-BOOST_AUTO_TEST_CASE(Hash_Pair) {
+BOOST_AUTO_TEST_CASE(HashPair) {
     std::pair<int, int> p1({0, 0});
     std::pair<int, int> p2({1, 1});
     std::pair<int, int> p3({1, 2});
@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(Hash_Pair) {
     std::pair<int, int> p6({2, 6});
     std::pair<int, int> p7 = p6;
 
-    pair_hash hasher;
+    PairHash hasher;
 
     BOOST_CHECK(hasher(p7) == hasher(p6));
 

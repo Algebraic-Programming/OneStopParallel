@@ -24,47 +24,47 @@ limitations under the License.
 
 namespace osp {
 
-template <typename Graph_t, typename Graph_t_coarse>
-class CoarseAndSchedule : public Scheduler<Graph_t> {
+template <typename GraphT, typename GraphTCoarse>
+class CoarseAndSchedule : public Scheduler<GraphT> {
   private:
-    Coarser<Graph_t, Graph_t_coarse> &coarser;
-    Scheduler<Graph_t_coarse> &scheduler;
+    Coarser<GraphT, GraphTCoarse> &coarser_;
+    Scheduler<GraphTCoarse> &scheduler_;
 
   public:
-    CoarseAndSchedule(Coarser<Graph_t, Graph_t_coarse> &coarser_, Scheduler<Graph_t_coarse> &scheduler_)
-        : coarser(coarser_), scheduler(scheduler_) {}
+    CoarseAndSchedule(Coarser<GraphT, GraphTCoarse> &coarser, Scheduler<GraphTCoarse> &scheduler)
+        : coarser_(coarser), scheduler_(scheduler) {}
 
-    std::string getScheduleName() const override {
-        return "Coarse(" + coarser.getCoarserName() + ")AndSchedule(" + scheduler.getScheduleName() + ")";
+    std::string GetScheduleName() const override {
+        return "Coarse(" + coarser_.GetCoarserName() + ")AndSchedule(" + scheduler_.GetScheduleName() + ")";
     }
 
-    RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &schedule) override {
-        const auto &instance = schedule.getInstance();
+    ReturnStatus ComputeSchedule(BspSchedule<GraphT> &schedule) override {
+        const auto &instance = schedule.GetInstance();
 
-        BspInstance<Graph_t_coarse> instance_coarse;
+        BspInstance<GraphTCoarse> instanceCoarse;
 
-        std::vector<vertex_idx_t<Graph_t_coarse>> reverse_vertex_map;
+        std::vector<VertexIdxT<GraphTCoarse>> reverseVertexMap;
 
-        bool status = coarser.coarsenDag(instance.getComputationalDag(), instance_coarse.getComputationalDag(), reverse_vertex_map);
+        bool status = coarser_.CoarsenDag(instance.GetComputationalDag(), instanceCoarse.GetComputationalDag(), reverseVertexMap);
 
         if (!status) {
-            return RETURN_STATUS::ERROR;
+            return ReturnStatus::ERROR;
         }
 
-        instance_coarse.getArchitecture() = instance.getArchitecture();
-        instance_coarse.setNodeProcessorCompatibility(instance.getProcessorCompatibilityMatrix());
+        instanceCoarse.GetArchitecture() = instance.GetArchitecture();
+        instanceCoarse.SetNodeProcessorCompatibility(instance.GetProcessorCompatibilityMatrix());
 
-        BspSchedule<Graph_t_coarse> schedule_coarse(instance_coarse);
+        BspSchedule<GraphTCoarse> scheduleCoarse(instanceCoarse);
 
-        const auto status_coarse = scheduler.computeSchedule(schedule_coarse);
+        const auto statusCoarse = scheduler_.ComputeSchedule(scheduleCoarse);
 
-        if (status_coarse != RETURN_STATUS::OSP_SUCCESS and status_coarse != RETURN_STATUS::BEST_FOUND) {
-            return status_coarse;
+        if (statusCoarse != ReturnStatus::OSP_SUCCESS and statusCoarse != ReturnStatus::BEST_FOUND) {
+            return statusCoarse;
         }
 
-        coarser_util::pull_back_schedule(schedule_coarse, reverse_vertex_map, schedule);
+        coarser_util::PullBackSchedule(scheduleCoarse, reverseVertexMap, schedule);
 
-        return RETURN_STATUS::OSP_SUCCESS;
+        return ReturnStatus::OSP_SUCCESS;
     }
 };
 

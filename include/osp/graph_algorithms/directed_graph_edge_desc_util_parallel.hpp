@@ -29,48 +29,48 @@ limitations under the License.
 
 namespace osp {
 
-template <typename Graph_t>
-std::unordered_set<edge_desc_t<Graph_t>> long_edges_in_triangles_parallel(const Graph_t &graph) {
-    static_assert(is_directed_graph_edge_desc_v<Graph_t>, "Graph_t must satisfy the directed_graph edge desc concept");
-    static_assert(has_hashable_edge_desc_v<Graph_t>, "Graph_t must satisfy the has_hashable_edge_desc concept");
+template <typename GraphT>
+std::unordered_set<EdgeDescT<GraphT>> LongEdgesInTrianglesParallel(const GraphT &graph) {
+    static_assert(isDirectedGraphEdgeDescV<GraphT>, "GraphT must satisfy the directed_graph edge desc concept");
+    static_assert(hasHashableEdgeDescV<GraphT>, "GraphT must satisfy the HasHashableEdgeDesc concept");
 
-    if (graph.num_edges() < 1000) {
-        return long_edges_in_triangles(graph);
+    if (graph.NumEdges() < 1000) {
+        return LongEdgesInTriangles(graph);
     }
 
-    std::unordered_set<edge_desc_t<Graph_t>> long_edges;
-    std::vector<std::vector<edge_desc_t<Graph_t>>> deleted_edges_thread(static_cast<size_t>(omp_get_max_threads()));
+    std::unordered_set<EdgeDescT<GraphT>> longEdges;
+    std::vector<std::vector<EdgeDescT<GraphT>>> deletedEdgesThread(static_cast<size_t>(omp_get_max_threads()));
 
 #pragma omp parallel for schedule(dynamic, 4)
-    for (vertex_idx_t<Graph_t> vertex = 0; vertex < graph.num_vertices(); ++vertex) {
-        // for (const auto &vertex : graph.vertices()) {
+    for (VertexIdxT<GraphT> vertex = 0; vertex < graph.NumVertices(); ++vertex) {
+        // for (const auto &vertex : graph.Vertices()) {
 
         const unsigned int proc = static_cast<unsigned>(omp_get_thread_num());
 
-        std::unordered_set<vertex_idx_t<Graph_t>> children_set;
-        for (const auto &v : graph.children(vertex)) {
-            children_set.emplace(v);
+        std::unordered_set<VertexIdxT<GraphT>> childrenSet;
+        for (const auto &v : graph.Children(vertex)) {
+            childrenSet.emplace(v);
         }
 
-        for (const auto &edge : out_edges(vertex, graph)) {
-            const auto &child = target(edge, graph);
+        for (const auto &edge : OutEdges(vertex, graph)) {
+            const auto &child = Target(edge, graph);
 
-            for (const auto &parent : graph.parents(child)) {
-                if (children_set.find(parent) != children_set.cend()) {
-                    deleted_edges_thread[proc].emplace_back(edge);
+            for (const auto &parent : graph.Parents(child)) {
+                if (childrenSet.find(parent) != childrenSet.cend()) {
+                    deletedEdgesThread[proc].emplace_back(edge);
                     break;
                 }
             }
         }
     }
 
-    for (const auto &edges_thread : deleted_edges_thread) {
-        for (const auto &edge : edges_thread) {
-            long_edges.emplace(edge);
+    for (const auto &edgesThread : deletedEdgesThread) {
+        for (const auto &edge : edgesThread) {
+            longEdges.emplace(edge);
         }
     }
 
-    return long_edges;
+    return longEdges;
 }
 
 }    // namespace osp

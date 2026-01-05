@@ -39,7 +39,7 @@ limitations under the License.
 
 using namespace osp;
 
-bool compare_vectors(Eigen::VectorXd &v1, Eigen::VectorXd &v2) {
+bool CompareVectors(Eigen::VectorXd &v1, Eigen::VectorXd &v2) {
     std::cout << std::fixed;
     std::cout << std::setprecision(15);
 
@@ -58,9 +58,9 @@ bool compare_vectors(Eigen::VectorXd &v1, Eigen::VectorXd &v2) {
     return same;
 }
 
-BOOST_AUTO_TEST_CASE(test_eigen_sptrsv) {
-    using SM_csr = Eigen::SparseMatrix<double, Eigen::RowMajor, int32_t>;
-    using SM_csc = Eigen::SparseMatrix<double, Eigen::ColMajor, int32_t>;
+BOOST_AUTO_TEST_CASE(TestEigenSptrsv) {
+    using SmCsr = Eigen::SparseMatrix<double, Eigen::RowMajor, int32_t>;
+    using SmCsc = Eigen::SparseMatrix<double, Eigen::ColMajor, int32_t>;
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -73,179 +73,178 @@ BOOST_AUTO_TEST_CASE(test_eigen_sptrsv) {
 
     SparseMatrixImp<int32_t> graph;
 
-    SM_csr L_csr;
-    bool matrix_load_success = Eigen::loadMarket(L_csr, filename);
-    BOOST_CHECK(matrix_load_success);
+    SmCsr lCsr;
+    bool matrixLoadSuccess = Eigen::loadMarket(lCsr, filename);
+    BOOST_CHECK(matrixLoadSuccess);
 
-    if (!matrix_load_success) {
+    if (!matrixLoadSuccess) {
         std::cerr << "Failed to read matrix from " << filename << std::endl;
         return;
     }
 
-    std::cout << "Loaded matrix of size " << L_csr.rows() << " x " << L_csr.cols() << " with " << L_csr.nonZeros()
-              << " non-zeros.\n";
+    std::cout << "Loaded matrix of size " << lCsr.rows() << " x " << lCsr.cols() << " with " << lCsr.nonZeros() << " non-zeros.\n";
 
-    graph.setCSR(&L_csr);
-    SM_csc L_csc{};
-    L_csc = L_csr;
-    graph.setCSC(&L_csc);
+    graph.SetCsr(&lCsr);
+    SmCsc lCsc{};
+    lCsc = lCsr;
+    graph.SetCsc(&lCsc);
 
     BspArchitecture<SparseMatrixImp<int32_t>> architecture(16, 1, 500);
     BspInstance<SparseMatrixImp<int32_t>> instance(graph, architecture);
     GrowLocalAutoCores<SparseMatrixImp<int32_t>> scheduler;
     BspSchedule<SparseMatrixImp<int32_t>> schedule(instance);
-    auto result = scheduler.computeSchedule(schedule);
+    auto result = scheduler.ComputeSchedule(schedule);
 
-    BOOST_CHECK_EQUAL(result, RETURN_STATUS::OSP_SUCCESS);
-    BOOST_CHECK_EQUAL(&schedule.getInstance(), &instance);
-    BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+    BOOST_CHECK_EQUAL(result, ReturnStatus::OSP_SUCCESS);
+    BOOST_CHECK_EQUAL(&schedule.GetInstance(), &instance);
+    BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
 
-    BspScheduleCS<SparseMatrixImp<int32_t>> schedule_cs(instance);
-    auto result_cs = scheduler.computeScheduleCS(schedule_cs);
+    BspScheduleCS<SparseMatrixImp<int32_t>> scheduleCs(instance);
+    auto resultCs = scheduler.ComputeScheduleCS(scheduleCs);
 
     /*
-    for (const auto &node : instance.vertices()) {
+    for (const auto &node : instance.Vertices()) {
         std::cout << "Vertex " << node << " children:" <<  std::endl;
-        for (const auto &target : instance.getComputationalDag().children(node)) {
+        for (const auto &target : instance.GetComputationalDag().Children(node)) {
             std::cout << "target:" << target << std::endl;
         }
         std::cout << std::endl;
     }
     */
 
-    BOOST_CHECK_EQUAL(result_cs, RETURN_STATUS::OSP_SUCCESS);
-    BOOST_CHECK(schedule_cs.hasValidCommSchedule());
+    BOOST_CHECK_EQUAL(resultCs, ReturnStatus::OSP_SUCCESS);
+    BOOST_CHECK(scheduleCs.HasValidCommSchedule());
 
-    // std::cout << "Scheduling Costs:" << schedule_cs.computeCosts() << std::endl;
+    // std::cout << "Scheduling Costs:" << schedule_cs.ComputeCosts() << std::endl;
     // std::cout << "lazy com Costs:" <<schedule_cs.compute_lazy_communication_costs() << std::endl;
 
     // Eigen L solve
-    Eigen::VectorXd L_b_ref, L_x_ref;    // Declare vectors
-    auto n = L_csc.cols();               // Get the number of columns (assuming square matrix)
-    L_x_ref.resize(n);                   // Resize solution vector
-    L_b_ref.resize(n);                   // Resize RHS vector
-    auto L_view = L_csc.triangularView<Eigen::Lower>();
-    L_b_ref.setOnes();    // Initialize RHS vector with all ones
-    L_x_ref.setZero();
-    L_x_ref = L_view.solve(L_b_ref);
+    Eigen::VectorXd lBRef, lXRef;    // Declare vectors
+    auto n = lCsc.cols();            // Get the number of columns (assuming square matrix)
+    lXRef.resize(n);                 // Resize solution vector
+    lBRef.resize(n);                 // Resize RHS vector
+    auto lView = lCsc.triangularView<Eigen::Lower>();
+    lBRef.setOnes();    // Initialize RHS vector with all ones
+    lXRef.setZero();
+    lXRef = lView.solve(lBRef);
 
     // OSP no permutation setup
     Sptrsv<int32_t> sim{instance};
-    sim.setup_csr_no_permutation(schedule_cs);
+    sim.SetupCsrNoPermutation(scheduleCs);
 
     // osp no permutation L_solve
-    auto L_x_osp = L_x_ref;
-    auto L_b_osp = L_b_ref;
-    L_b_osp.setOnes();
+    auto lXOsp = lXRef;
+    auto lBOsp = lBRef;
+    lBOsp.setOnes();
     // L_x_osp.setZero();
-    sim.x = &L_x_osp[0];
-    sim.b = &L_b_osp[0];
-    sim.lsolve_no_permutation();
-    BOOST_CHECK(compare_vectors(L_x_ref, L_x_osp));
+    sim.x_ = &lXOsp[0];
+    sim.b_ = &lBOsp[0];
+    sim.LsolveNoPermutation();
+    BOOST_CHECK(CompareVectors(lXRef, lXOsp));
 
     // Comparisson with osp serial L solve
     // Eigen
-    L_b_ref.setOnes();
-    L_x_ref.setZero();
-    L_x_ref = L_view.solve(L_b_ref);
+    lBRef.setOnes();
+    lXRef.setZero();
+    lXRef = lView.solve(lBRef);
     // OSP
-    L_b_osp.setOnes();
+    lBOsp.setOnes();
     // L_x_osp.setZero();
-    sim.lsolve_serial();
-    BOOST_CHECK(compare_vectors(L_x_ref, L_x_osp));
+    sim.LsolveSerial();
+    BOOST_CHECK(CompareVectors(lXRef, lXOsp));
 
     // INPLACE case eigen L solve vs osp L solve
     // Eigen
-    L_b_ref.setConstant(0.1);
-    L_x_ref.setConstant(0.1);
-    L_x_ref = L_view.solve(L_b_ref);
+    lBRef.setConstant(0.1);
+    lXRef.setConstant(0.1);
+    lXRef = lView.solve(lBRef);
     // OSP
-    L_x_osp.setConstant(0.1);
-    L_b_osp.setZero();    // this will not be used as x will take the values that already has instead of the b values
-    sim.lsolve_no_permutation_in_place();
-    BOOST_CHECK(compare_vectors(L_x_ref, L_x_osp));
+    lXOsp.setConstant(0.1);
+    lBOsp.setZero();    // this will not be used as x will take the values that already has instead of the b values
+    sim.LsolveNoPermutationInPlace();
+    BOOST_CHECK(CompareVectors(lXRef, lXOsp));
 
     // Comparisson with osp serial in place L solve
     // Eigen
-    L_b_ref.setConstant(0.1);
-    L_x_ref.setConstant(0.1);
-    L_x_ref = L_view.solve(L_b_ref);
+    lBRef.setConstant(0.1);
+    lXRef.setConstant(0.1);
+    lXRef = lView.solve(lBRef);
     // OSP
-    L_x_osp.setConstant(0.1);
-    L_b_osp.setZero();    // this will not be used as x will take the values that already has instead of the b values
-    sim.lsolve_serial_in_place();
-    BOOST_CHECK(compare_vectors(L_x_ref, L_x_osp));
+    lXOsp.setConstant(0.1);
+    lBOsp.setZero();    // this will not be used as x will take the values that already has instead of the b values
+    sim.LsolveSerialInPlace();
+    BOOST_CHECK(CompareVectors(lXRef, lXOsp));
 
     // Upper Solve
-    SM_csr U_csr = L_csc.transpose();
-    SM_csc U_csc = U_csr;    // Convert to column-major
-    Eigen::VectorXd U_b_ref(n), U_x_ref(n);
-    Eigen::VectorXd U_b_osp(n), U_x_osp(n);
+    SmCsr uCsr = lCsc.transpose();
+    SmCsc uCsc = uCsr;    // Convert to column-major
+    Eigen::VectorXd uBRef(n), uXRef(n);
+    Eigen::VectorXd uBOsp(n), uXOsp(n);
     // Eigen reference U solve
-    U_b_ref.setOnes();
-    U_x_ref.setZero();
-    auto U_view = U_csc.triangularView<Eigen::Upper>();
-    U_x_ref = U_view.solve(U_b_ref);
+    uBRef.setOnes();
+    uXRef.setZero();
+    auto uView = uCsc.triangularView<Eigen::Upper>();
+    uXRef = uView.solve(uBRef);
     // OSP U solve
-    U_b_osp.setOnes();
-    U_x_osp.setZero();
-    sim.x = &U_x_osp[0];
-    sim.b = &U_b_osp[0];
-    sim.usolve_no_permutation();
-    BOOST_CHECK(compare_vectors(U_x_ref, U_x_osp));
+    uBOsp.setOnes();
+    uXOsp.setZero();
+    sim.x_ = &uXOsp[0];
+    sim.b_ = &uBOsp[0];
+    sim.UsolveNoPermutation();
+    BOOST_CHECK(CompareVectors(uXRef, uXOsp));
 
     // Comparisson with osp serial U solve
     // Eigen
-    U_b_ref.setOnes();
-    U_x_ref.setZero();
-    U_x_ref = U_view.solve(U_b_ref);
+    uBRef.setOnes();
+    uXRef.setZero();
+    uXRef = uView.solve(uBRef);
     // OSP
-    U_b_osp.setOnes();
-    U_x_osp.setZero();
-    sim.usolve_serial();
-    BOOST_CHECK(compare_vectors(U_x_ref, U_x_osp));
+    uBOsp.setOnes();
+    uXOsp.setZero();
+    sim.UsolveSerial();
+    BOOST_CHECK(CompareVectors(uXRef, uXOsp));
 
     // INPLACE case eigen U solve vs osp U solve
     // Eigen
-    U_b_ref.setConstant(0.1);
-    U_x_ref.setConstant(0.1);
-    U_x_ref = U_view.solve(U_b_ref);
+    uBRef.setConstant(0.1);
+    uXRef.setConstant(0.1);
+    uXRef = uView.solve(uBRef);
     // OSP
-    U_x_osp.setConstant(0.1);
-    U_b_osp.setZero();    // this will not be used as x will take the values that already has instead of the b values
-    sim.usolve_no_permutation_in_place();
-    BOOST_CHECK(compare_vectors(U_x_ref, U_x_osp));
+    uXOsp.setConstant(0.1);
+    uBOsp.setZero();    // this will not be used as x will take the values that already has instead of the b values
+    sim.UsolveNoPermutationInPlace();
+    BOOST_CHECK(CompareVectors(uXRef, uXOsp));
 
     // Comparisson with osp serial in place U solve
     // Eigen
-    U_b_ref.setConstant(0.1);
-    U_x_ref.setConstant(0.1);
-    U_x_ref = U_view.solve(U_b_ref);
+    uBRef.setConstant(0.1);
+    uXRef.setConstant(0.1);
+    uXRef = uView.solve(uBRef);
     // OSP
-    U_x_osp.setConstant(0.1);
-    U_b_osp.setZero();    // this will not be used as x will take the values that already has instead of the b values
-    sim.usolve_serial_in_place();
-    BOOST_CHECK(compare_vectors(U_x_ref, U_x_osp));
+    uXOsp.setConstant(0.1);
+    uBOsp.setZero();    // this will not be used as x will take the values that already has instead of the b values
+    sim.UsolveSerialInPlace();
+    BOOST_CHECK(CompareVectors(uXRef, uXOsp));
 
     // Lsolve in-place With PERMUTATION
-    std::vector<size_t> perm = schedule_node_permuter_basic(schedule_cs, LOOP_PROCESSORS);
-    sim.setup_csr_with_permutation(schedule_cs, perm);
+    std::vector<size_t> perm = ScheduleNodePermuterBasic(scheduleCs, LOOP_PROCESSORS);
+    sim.SetupCsrWithPermutation(scheduleCs, perm);
 
     // Comparisson with osp serial in place L solve
     // Eigen
-    L_b_ref.setConstant(0.1);
-    L_x_ref.setConstant(0.1);
-    L_x_ref = L_view.solve(L_b_ref);
+    lBRef.setConstant(0.1);
+    lXRef.setConstant(0.1);
+    lXRef = lView.solve(lBRef);
     // OSP
-    L_x_osp.setConstant(0.1);
-    L_b_osp.setZero();    // this will not be used as x will take the values that already has instead of the b values
-    sim.x = &L_x_osp[0];
-    sim.b = &L_b_osp[0];
+    lXOsp.setConstant(0.1);
+    lBOsp.setZero();    // this will not be used as x will take the values that already has instead of the b values
+    sim.x_ = &lXOsp[0];
+    sim.b_ = &lBOsp[0];
     // sim.permute_x_vector(perm);
-    sim.lsolve_with_permutation_in_place();
+    sim.LsolveWithPermutationInPlace();
 
-    sim.permute_x_vector(perm);
-    BOOST_CHECK(compare_vectors(L_x_ref, L_x_osp));
+    sim.PermuteXVector(perm);
+    BOOST_CHECK(CompareVectors(lXRef, lXOsp));
 }
 
 #endif

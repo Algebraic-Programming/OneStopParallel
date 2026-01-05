@@ -28,17 +28,17 @@ namespace osp {
  * The ImprovementScheduler class provides a common interface for improvement scheduling scheduler.
  * Subclasses of this class can implement specific improvement scheduler by overriding the virtual methods.
  */
-template <typename Graph_t>
+template <typename GraphT>
 class ImprovementScheduler {
   protected:
-    unsigned timeLimitSeconds; /**< The time limit in seconds for the improvement algorithm. */
+    unsigned timeLimitSeconds_; /**< The time limit in seconds for the improvement algorithm. */
 
   public:
     /**
      * @brief Constructor for ImprovementScheduler.
      * @param timelimit The time limit in seconds for the improvement algorithm. Default is 3600 seconds (1 hour).
      */
-    ImprovementScheduler(unsigned timelimit = 3600) : timeLimitSeconds(timelimit) {}
+    ImprovementScheduler(unsigned timelimit = 3600) : timeLimitSeconds_(timelimit) {}
 
     /**
      * @brief Destructor for ImprovementScheduler.
@@ -49,70 +49,70 @@ class ImprovementScheduler {
      * @brief Set the time limit in seconds for the improvement algorithm.
      * @param limit The time limit in seconds.
      */
-    virtual void setTimeLimitSeconds(unsigned int limit) { timeLimitSeconds = limit; }
+    virtual void SetTimeLimitSeconds(unsigned int limit) { timeLimitSeconds_ = limit; }
 
     /**
      * @brief Set the time limit in hours for the improvement algorithm.
      * @param limit The time limit in hours.
      */
-    virtual void setTimeLimitHours(unsigned int limit) { timeLimitSeconds = limit * 3600; }
+    virtual void SetTimeLimitHours(unsigned int limit) { timeLimitSeconds_ = limit * 3600; }
 
     /**
      * @brief Get the time limit in seconds for the improvement algorithm.
      * @return The time limit in seconds.
      */
-    inline unsigned int getTimeLimitSeconds() const { return timeLimitSeconds; }
+    inline unsigned int GetTimeLimitSeconds() const { return timeLimitSeconds_; }
 
     /**
      * @brief Get the time limit in hours for the improvement algorithm.
      * @return The time limit in hours.
      */
-    inline unsigned int getTimeLimitHours() const { return timeLimitSeconds / 3600; }
+    inline unsigned int GetTimeLimitHours() const { return timeLimitSeconds_ / 3600; }
 
     /**
      * @brief Get the name of the improvement scheduling algorithm.
      * @return The name of the algorithm as a string.
      */
-    virtual std::string getScheduleName() const = 0;
+    virtual std::string GetScheduleName() const = 0;
 
     /**
      * @brief Improve the given BspSchedule.
      * @param schedule The BspSchedule to be improved.
      * @return The status of the improvement operation.
      */
-    virtual RETURN_STATUS improveSchedule(BspSchedule<Graph_t> &schedule) = 0;
+    virtual ReturnStatus ImproveSchedule(BspSchedule<GraphT> &schedule) = 0;
 
     /**
      * @brief Improve the given BspSchedule within the time limit.
      * @param schedule The BspSchedule to be improved.
      * @return The status of the improvement operation.
      */
-    virtual RETURN_STATUS improveScheduleWithTimeLimit(BspSchedule<Graph_t> &schedule) = 0;
+    virtual ReturnStatus ImproveScheduleWithTimeLimit(BspSchedule<GraphT> &schedule) = 0;
 };
 
-template <typename Graph_t>
-class ComboScheduler : public Scheduler<Graph_t> {
+template <typename GraphT>
+class ComboScheduler : public Scheduler<GraphT> {
   private:
-    Scheduler<Graph_t> &base_scheduler;
-    ImprovementScheduler<Graph_t> &improvement_scheduler;
+    Scheduler<GraphT> &baseScheduler_;
+    ImprovementScheduler<GraphT> &improvementScheduler_;
 
   public:
-    ComboScheduler(Scheduler<Graph_t> &base, ImprovementScheduler<Graph_t> &improvement)
-        : Scheduler<Graph_t>(), base_scheduler(base), improvement_scheduler(improvement) {}
+    ComboScheduler(Scheduler<GraphT> &base, ImprovementScheduler<GraphT> &improvement)
+        : Scheduler<GraphT>(), baseScheduler_(base), improvementScheduler_(improvement) {}
 
     virtual ~ComboScheduler() = default;
 
-    virtual std::string getScheduleName() const override {
-        return base_scheduler.getScheduleName() + "+" + improvement_scheduler.getScheduleName();
+    virtual std::string GetScheduleName() const override {
+        return baseScheduler_.GetScheduleName() + "+" + improvementScheduler_.GetScheduleName();
     }
 
-    virtual RETURN_STATUS computeSchedule(BspSchedule<Graph_t> &schedule) override {
-        RETURN_STATUS status = base_scheduler.computeSchedule(schedule);
-        if (status != RETURN_STATUS::OSP_SUCCESS and status != RETURN_STATUS::BEST_FOUND) {
+    virtual ReturnStatus ComputeSchedule(BspSchedule<GraphT> &schedule) override {
+        ReturnStatus status = baseScheduler_.ComputeSchedule(schedule);
+        if (status != ReturnStatus::OSP_SUCCESS and status != ReturnStatus::BEST_FOUND) {
             return status;
         }
 
-        return improvement_scheduler.improveSchedule(schedule);
+        return improvementScheduler_.ImproveSchedule(schedule);
     }
 };
 

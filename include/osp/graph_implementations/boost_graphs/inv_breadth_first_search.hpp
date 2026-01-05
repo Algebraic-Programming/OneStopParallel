@@ -52,7 +52,7 @@ void inv_breadth_first_visit(
         Q.pop();
         vis.examine_vertex(u, g);
         for (boost::tie(ei, ei_end) = in_edges(u, g); ei != ei_end; ++ei) {
-            Vertex v = target(*ei, g);
+            Vertex v = Target(*ei, g);
             vis.examine_edge(*ei, g);
             ColorValue v_color = get(color, v);
             if (v_color == Color::white()) {

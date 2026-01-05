@@ -23,30 +23,30 @@ limitations under the License.
 namespace osp {
 
 template <typename VertexType, std::size_t defautlVal = 11U>
-struct uniform_node_hash_func {
-    using result_type = std::size_t;
+struct UniformNodeHashFunc {
+    using ResultType = std::size_t;
 
-    result_type operator()(const VertexType &) { return defautlVal; }
+    ResultType operator()(const VertexType &) { return defautlVal; }
 };
 
 template <typename VertexType>
-struct vector_node_hash_func {
-    const std::vector<std::size_t> &node_hashes_;
+struct VectorNodeHashFunc {
+    const std::vector<std::size_t> &nodeHashes_;
 
-    vector_node_hash_func(const std::vector<std::size_t> &node_hashes) : node_hashes_(node_hashes) {}
+    VectorNodeHashFunc(const std::vector<std::size_t> &nodeHashes) : nodeHashes_(nodeHashes) {}
 
-    using result_type = std::size_t;
+    using ResultType = std::size_t;
 
-    result_type operator()(const VertexType &v) const { return node_hashes_[v]; }
+    ResultType operator()(const VertexType &v) const { return nodeHashes_[v]; }
 };
 
 template <class T>
-void hash_combine(std::size_t &seed, const T &v) {
+void HashCombine(std::size_t &seed, const T &v) {
     std::hash<T> hasher;
     seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 }
 
-struct pair_hash {
+struct PairHash {
     template <class T1, class T2>
     std::size_t operator()(const std::pair<T1, T2> &p) const {
         std::size_t h1 = std::hash<T1>{}(p.first);
@@ -55,7 +55,7 @@ struct pair_hash {
 
         // Mainly for demonstration purposes, i.e. works but is overly simple
         // In the real world, use sth. like boost.hash_combine
-        hash_combine(h1, h2);
+        HashCombine(h1, h2);
         return h1;
     }
 };

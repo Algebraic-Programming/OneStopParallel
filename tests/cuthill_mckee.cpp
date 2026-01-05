@@ -29,106 +29,104 @@ limitations under the License.
 
 using namespace osp;
 
-using ComputationalDag = boost_graph_int_t;
-using VertexType = vertex_idx_t<ComputationalDag>;
+using ComputationalDag = BoostGraphIntT;
+using VertexType = VertexIdxT<ComputationalDag>;
 
-BOOST_AUTO_TEST_CASE(cuthill_mckee_1) {
+BOOST_AUTO_TEST_CASE(CuthillMckee1) {
     ComputationalDag dag;
 
-    dag.add_vertex(2, 9);
-    dag.add_vertex(3, 8);
-    dag.add_vertex(4, 7);
-    dag.add_vertex(5, 6);
-    dag.add_vertex(6, 5);
-    dag.add_vertex(7, 4);
-    dag.add_vertex(8, 3);
-    dag.add_vertex(9, 2);
+    dag.AddVertex(2, 9);
+    dag.AddVertex(3, 8);
+    dag.AddVertex(4, 7);
+    dag.AddVertex(5, 6);
+    dag.AddVertex(6, 5);
+    dag.AddVertex(7, 4);
+    dag.AddVertex(8, 3);
+    dag.AddVertex(9, 2);
 
-    dag.add_edge(0, 1, 2);
-    dag.add_edge(0, 2, 3);
-    dag.add_edge(0, 3, 4);
-    dag.add_edge(1, 4, 5);
-    dag.add_edge(2, 4, 6);
-    dag.add_edge(2, 5, 7);
-    dag.add_edge(1, 6, 8);
-    dag.add_edge(4, 7, 9);
-    dag.add_edge(3, 7, 9);
+    dag.AddEdge(0, 1, 2);
+    dag.AddEdge(0, 2, 3);
+    dag.AddEdge(0, 3, 4);
+    dag.AddEdge(1, 4, 5);
+    dag.AddEdge(2, 4, 6);
+    dag.AddEdge(2, 5, 7);
+    dag.AddEdge(1, 6, 8);
+    dag.AddEdge(4, 7, 9);
+    dag.AddEdge(3, 7, 9);
 
-    std::vector<VertexType> cm_wavefront = cuthill_mckee_wavefront(dag);
-    std::vector<unsigned> expected_cm_wavefront = {0, 3, 1, 2, 6, 4, 5, 7};
+    std::vector<VertexType> cmWavefront = CuthillMckeeWavefront(dag);
+    std::vector<unsigned> expectedCmWavefront = {0, 3, 1, 2, 6, 4, 5, 7};
+    BOOST_CHECK_EQUAL_COLLECTIONS(cmWavefront.begin(), cmWavefront.end(), expectedCmWavefront.begin(), expectedCmWavefront.end());
+
+    cmWavefront = CuthillMckeeWavefront(dag, true);
+    expectedCmWavefront = {0, 2, 3, 1, 5, 6, 4, 7};
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(cmWavefront.begin(), cmWavefront.end(), expectedCmWavefront.begin(), expectedCmWavefront.end());
+
+    std::vector<VertexType> cmUndirected;
+    std::vector<unsigned> expectedCmUndirected;
+
+    cmUndirected = CuthillMckeeUndirected(dag, true);
+    expectedCmUndirected = {7, 3, 4, 0, 1, 2, 6, 5};
     BOOST_CHECK_EQUAL_COLLECTIONS(
-        cm_wavefront.begin(), cm_wavefront.end(), expected_cm_wavefront.begin(), expected_cm_wavefront.end());
+        cmUndirected.begin(), cmUndirected.end(), expectedCmUndirected.begin(), expectedCmUndirected.end());
 
-    cm_wavefront = cuthill_mckee_wavefront(dag, true);
-    expected_cm_wavefront = {0, 2, 3, 1, 5, 6, 4, 7};
-
+    cmUndirected = CuthillMckeeUndirected(dag, false);
+    expectedCmUndirected = {0, 3, 1, 2, 7, 6, 4, 5};
     BOOST_CHECK_EQUAL_COLLECTIONS(
-        cm_wavefront.begin(), cm_wavefront.end(), expected_cm_wavefront.begin(), expected_cm_wavefront.end());
+        cmUndirected.begin(), cmUndirected.end(), expectedCmUndirected.begin(), expectedCmUndirected.end());
 
-    std::vector<VertexType> cm_undirected;
-    std::vector<unsigned> expected_cm_undirected;
-
-    cm_undirected = cuthill_mckee_undirected(dag, true);
-    expected_cm_undirected = {7, 3, 4, 0, 1, 2, 6, 5};
+    cmUndirected = CuthillMckeeUndirected(dag, true, true);
+    expectedCmUndirected = {3, 4, 5, 1, 2, 7, 6, 0};
     BOOST_CHECK_EQUAL_COLLECTIONS(
-        cm_undirected.begin(), cm_undirected.end(), expected_cm_undirected.begin(), expected_cm_undirected.end());
+        cmUndirected.begin(), cmUndirected.end(), expectedCmUndirected.begin(), expectedCmUndirected.end());
 
-    cm_undirected = cuthill_mckee_undirected(dag, false);
-    expected_cm_undirected = {0, 3, 1, 2, 7, 6, 4, 5};
-    BOOST_CHECK_EQUAL_COLLECTIONS(
-        cm_undirected.begin(), cm_undirected.end(), expected_cm_undirected.begin(), expected_cm_undirected.end());
-
-    cm_undirected = cuthill_mckee_undirected(dag, true, true);
-    expected_cm_undirected = {3, 4, 5, 1, 2, 7, 6, 0};
-    BOOST_CHECK_EQUAL_COLLECTIONS(
-        cm_undirected.begin(), cm_undirected.end(), expected_cm_undirected.begin(), expected_cm_undirected.end());
-
-    std::vector<VertexType> top_sort;
-    for (const auto &vertex : priority_vec_top_sort_view(dag, cm_undirected)) {
-        top_sort.push_back(vertex);
+    std::vector<VertexType> topSort;
+    for (const auto &vertex : PriorityVecTopSortView(dag, cmUndirected)) {
+        topSort.push_back(vertex);
     }
-    std::vector<unsigned> expected_top_sort = {0, 2, 5, 1, 6, 4, 3, 7};
+    std::vector<unsigned> expectedTopSort = {0, 2, 5, 1, 6, 4, 3, 7};
 
-    BOOST_CHECK_EQUAL_COLLECTIONS(top_sort.begin(), top_sort.end(), expected_top_sort.begin(), expected_top_sort.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(topSort.begin(), topSort.end(), expectedTopSort.begin(), expectedTopSort.end());
 
-    cm_undirected = cuthill_mckee_undirected(dag, false, true);
-    expected_cm_undirected = {0, 2, 3, 1, 6, 7, 5, 4};
+    cmUndirected = CuthillMckeeUndirected(dag, false, true);
+    expectedCmUndirected = {0, 2, 3, 1, 6, 7, 5, 4};
     BOOST_CHECK_EQUAL_COLLECTIONS(
-        cm_undirected.begin(), cm_undirected.end(), expected_cm_undirected.begin(), expected_cm_undirected.end());
+        cmUndirected.begin(), cmUndirected.end(), expectedCmUndirected.begin(), expectedCmUndirected.end());
 
-    dag.add_edge(8, 9);
-    dag.add_edge(9, 10);
+    dag.AddEdge(8, 9);
+    dag.AddEdge(9, 10);
 
-    cm_undirected = cuthill_mckee_undirected(dag, true);
-    expected_cm_undirected = {7, 3, 4, 0, 1, 2, 6, 5, 10, 9, 8};
+    cmUndirected = CuthillMckeeUndirected(dag, true);
+    expectedCmUndirected = {7, 3, 4, 0, 1, 2, 6, 5, 10, 9, 8};
     BOOST_CHECK_EQUAL_COLLECTIONS(
-        cm_undirected.begin(), cm_undirected.end(), expected_cm_undirected.begin(), expected_cm_undirected.end());
+        cmUndirected.begin(), cmUndirected.end(), expectedCmUndirected.begin(), expectedCmUndirected.end());
 
-    cm_undirected = cuthill_mckee_undirected(dag, false);
-    expected_cm_undirected = {0, 3, 1, 2, 7, 6, 4, 5, 8, 9, 10};
+    cmUndirected = CuthillMckeeUndirected(dag, false);
+    expectedCmUndirected = {0, 3, 1, 2, 7, 6, 4, 5, 8, 9, 10};
     BOOST_CHECK_EQUAL_COLLECTIONS(
-        cm_undirected.begin(), cm_undirected.end(), expected_cm_undirected.begin(), expected_cm_undirected.end());
+        cmUndirected.begin(), cmUndirected.end(), expectedCmUndirected.begin(), expectedCmUndirected.end());
 }
 
-bool is_permutation(const std::vector<VertexType> &vec) {
-    std::vector<VertexType> sorted_vec = vec;
-    std::sort(sorted_vec.begin(), sorted_vec.end());
-    for (unsigned i = 0; i < sorted_vec.size(); ++i) {
-        if (sorted_vec[i] != i) {
+bool IsPermutation(const std::vector<VertexType> &vec) {
+    std::vector<VertexType> sortedVec = vec;
+    std::sort(sortedVec.begin(), sortedVec.end());
+    for (unsigned i = 0; i < sortedVec.size(); ++i) {
+        if (sortedVec[i] != i) {
             return false;
         }
     }
     return true;
 }
 
-bool is_top_sort(const std::vector<VertexType> &vec, const ComputationalDag &dag) {
+bool IsTopSort(const std::vector<VertexType> &vec, const ComputationalDag &dag) {
     std::unordered_map<VertexType, VertexType> position;
     for (VertexType i = 0; i < vec.size(); ++i) {
         position[vec[i]] = i;
     }
 
-    for (const auto &vertex : dag.vertices()) {
-        for (const auto &child : dag.children(vertex)) {
+    for (const auto &vertex : dag.Vertices()) {
+        for (const auto &child : dag.Children(vertex)) {
             if (position[vertex] > position[child]) {
                 return false;
             }
@@ -138,8 +136,8 @@ bool is_top_sort(const std::vector<VertexType> &vec, const ComputationalDag &dag
     return true;
 }
 
-BOOST_AUTO_TEST_CASE(cuthill_mckee_2) {
-    std::vector<std::string> filenames_graph = tiny_spaa_graphs();
+BOOST_AUTO_TEST_CASE(CuthillMckee2) {
+    std::vector<std::string> filenamesGraph = TinySpaaGraphs();
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -149,33 +147,33 @@ BOOST_AUTO_TEST_CASE(cuthill_mckee_2) {
         std::cout << cwd << std::endl;
     }
 
-    for (auto &filename_graph : filenames_graph) {
+    for (auto &filenameGraph : filenamesGraph) {
         ComputationalDag graph;
-        auto status_graph = file_reader::readComputationalDagHyperdagFormatDB((cwd / filename_graph).string(), graph);
+        auto statusGraph = file_reader::ReadComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(), graph);
 
-        if (!status_graph) {
+        if (!statusGraph) {
             std::cout << "Reading files failed." << std::endl;
             BOOST_CHECK(false);
         } else {
-            std::cout << "File read:" << filename_graph << std::endl;
+            std::cout << "File read:" << filenameGraph << std::endl;
         }
 
-        std::vector<VertexType> wavefront = cuthill_mckee_wavefront(graph);
-        BOOST_CHECK(is_permutation(wavefront));
+        std::vector<VertexType> wavefront = CuthillMckeeWavefront(graph);
+        BOOST_CHECK(IsPermutation(wavefront));
 
-        wavefront = cuthill_mckee_wavefront(graph, true);
-        BOOST_CHECK(is_permutation(wavefront));
+        wavefront = CuthillMckeeWavefront(graph, true);
+        BOOST_CHECK(IsPermutation(wavefront));
 
-        const auto cm_undirected = cuthill_mckee_undirected(graph, true, true);
-        BOOST_CHECK(is_permutation(cm_undirected));
+        const auto cmUndirected = CuthillMckeeUndirected(graph, true, true);
+        BOOST_CHECK(IsPermutation(cmUndirected));
 
-        std::vector<VertexType> top_sort;
+        std::vector<VertexType> topSort;
 
-        for (const auto &vertex : priority_vec_top_sort_view(graph, cm_undirected)) {
-            top_sort.push_back(vertex);
+        for (const auto &vertex : PriorityVecTopSortView(graph, cmUndirected)) {
+            topSort.push_back(vertex);
         }
 
-        BOOST_CHECK(is_permutation(top_sort));
-        BOOST_CHECK(is_top_sort(top_sort, graph));
+        BOOST_CHECK(IsPermutation(topSort));
+        BOOST_CHECK(IsTopSort(topSort, graph));
     }
 }

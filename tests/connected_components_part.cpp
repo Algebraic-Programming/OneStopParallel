@@ -27,97 +27,97 @@ limitations under the License.
 
 using namespace osp;
 
-BOOST_AUTO_TEST_CASE(ConnectedComponentPart_test) {
-    BspInstance<computational_dag_vector_impl_def_int_t> instance;
-    computational_dag_vector_impl_def_int_t &dag = instance.getComputationalDag();
-    using VertexType = vertex_idx_t<computational_dag_vector_impl_def_int_t>;
+BOOST_AUTO_TEST_CASE(ConnectedComponentPartTest) {
+    BspInstance<ComputationalDagVectorImplDefIntT> instance;
+    ComputationalDagVectorImplDefIntT &dag = instance.GetComputationalDag();
+    using VertexType = VertexIdxT<ComputationalDagVectorImplDefIntT>;
 
-    BOOST_CHECK_EQUAL(dag.num_vertices(), 0);
-    BOOST_CHECK_EQUAL(dag.num_edges(), 0);
+    BOOST_CHECK_EQUAL(dag.NumVertices(), 0);
+    BOOST_CHECK_EQUAL(dag.NumEdges(), 0);
 
-    VertexType v1 = dag.add_vertex(2, 1, 2);
-    VertexType v2 = dag.add_vertex(3, 1, 2);
-    VertexType v3 = dag.add_vertex(4, 1, 2);
-    VertexType v4 = dag.add_vertex(5, 1, 2);
-    VertexType v5 = dag.add_vertex(6, 1, 2);
-    VertexType v6 = dag.add_vertex(7, 1, 2);
-    VertexType v7 = dag.add_vertex(8, 1, 2);
-    VertexType v8 = dag.add_vertex(9, 1, 2);
+    VertexType v1 = dag.AddVertex(2, 1, 2);
+    VertexType v2 = dag.AddVertex(3, 1, 2);
+    VertexType v3 = dag.AddVertex(4, 1, 2);
+    VertexType v4 = dag.AddVertex(5, 1, 2);
+    VertexType v5 = dag.AddVertex(6, 1, 2);
+    VertexType v6 = dag.AddVertex(7, 1, 2);
+    VertexType v7 = dag.AddVertex(8, 1, 2);
+    VertexType v8 = dag.AddVertex(9, 1, 2);
 
-    BOOST_CHECK_EQUAL(dag.num_vertices(), 8);
-    BOOST_CHECK_EQUAL(dag.num_edges(), 0);
+    BOOST_CHECK_EQUAL(dag.NumVertices(), 8);
+    BOOST_CHECK_EQUAL(dag.NumEdges(), 0);
 
-    dag.add_edge(v1, v2);
-    dag.add_edge(v1, v3);
-    dag.add_edge(v1, v4);
-    dag.add_edge(v2, v5);
-    dag.add_edge(v3, v6);
-    dag.add_edge(v3, v5);
-    dag.add_edge(v2, v7);
-    dag.add_edge(v5, v8);
-    dag.add_edge(v4, v8);
+    dag.AddEdge(v1, v2);
+    dag.AddEdge(v1, v3);
+    dag.AddEdge(v1, v4);
+    dag.AddEdge(v2, v5);
+    dag.AddEdge(v3, v6);
+    dag.AddEdge(v3, v5);
+    dag.AddEdge(v2, v7);
+    dag.AddEdge(v5, v8);
+    dag.AddEdge(v4, v8);
 
-    ConnectedComponentDivider<computational_dag_vector_impl_def_int_t, computational_dag_vector_impl_def_int_t> partitioner;
+    ConnectedComponentDivider<ComputationalDagVectorImplDefIntT, ComputationalDagVectorImplDefIntT> partitioner;
 
-    partitioner.divide(dag);
+    partitioner.Divide(dag);
 
-    GreedyBspScheduler<boost_graph_int_t> bsp_scheduler;
-    ConnectedComponentScheduler<computational_dag_vector_impl_def_int_t, boost_graph_int_t> scheduler(bsp_scheduler);
+    GreedyBspScheduler<BoostGraphIntT> bspScheduler;
+    ConnectedComponentScheduler<ComputationalDagVectorImplDefIntT, BoostGraphIntT> scheduler(bspScheduler);
 
-    BspArchitecture<computational_dag_vector_impl_def_int_t> arch = instance.getArchitecture();
-    arch.setNumberOfProcessors(6);
+    BspArchitecture<ComputationalDagVectorImplDefIntT> arch = instance.GetArchitecture();
+    arch.SetNumberOfProcessors(6);
 
-    BspSchedule<computational_dag_vector_impl_def_int_t> schedule(instance);
-    auto status = scheduler.computeSchedule(schedule);
+    BspSchedule<ComputationalDagVectorImplDefIntT> schedule(instance);
+    auto status = scheduler.ComputeSchedule(schedule);
 
-    BOOST_CHECK_EQUAL(status, RETURN_STATUS::OSP_SUCCESS);
-    BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+    BOOST_CHECK_EQUAL(status, ReturnStatus::OSP_SUCCESS);
+    BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
 
-    BOOST_CHECK(partitioner.get_sub_dags().size() == 1);
-    BOOST_CHECK(partitioner.get_sub_dags()[0].num_vertices() == 8);
-    BOOST_CHECK(partitioner.get_sub_dags()[0].num_edges() == 9);
+    BOOST_CHECK(partitioner.GetSubDags().size() == 1);
+    BOOST_CHECK(partitioner.GetSubDags()[0].NumVertices() == 8);
+    BOOST_CHECK(partitioner.GetSubDags()[0].NumEdges() == 9);
 
     for (unsigned i = 0; i < 8; i++) {
-        BOOST_CHECK_EQUAL(partitioner.get_component()[i], 0);
-        BOOST_CHECK(partitioner.get_vertex_map()[i] <= i + 1);
-        BOOST_CHECK(partitioner.get_vertex_mapping()[0].at(i) <= 1 + i);
+        BOOST_CHECK_EQUAL(partitioner.GetComponent()[i], 0);
+        BOOST_CHECK(partitioner.GetVertexMap()[i] <= i + 1);
+        BOOST_CHECK(partitioner.GetVertexMapping()[0].at(i) <= 1 + i);
     }
 
-    VertexType v9 = dag.add_vertex(2, 1, 4);
-    VertexType v10 = dag.add_vertex(3, 1, 6);
-    VertexType v11 = dag.add_vertex(4, 1, 6);
-    VertexType v12 = dag.add_vertex(5, 1, 6);
+    VertexType v9 = dag.AddVertex(2, 1, 4);
+    VertexType v10 = dag.AddVertex(3, 1, 6);
+    VertexType v11 = dag.AddVertex(4, 1, 6);
+    VertexType v12 = dag.AddVertex(5, 1, 6);
 
-    dag.add_edge(v9, v10);
-    dag.add_edge(v9, v11);
-    dag.add_edge(v9, v12);
-    dag.add_edge(v10, v11);
+    dag.AddEdge(v9, v10);
+    dag.AddEdge(v9, v11);
+    dag.AddEdge(v9, v12);
+    dag.AddEdge(v10, v11);
 
-    partitioner.compute_connected_components(dag);
+    partitioner.ComputeConnectedComponents(dag);
 
-    BOOST_CHECK_EQUAL(partitioner.get_sub_dags().size(), 2);
-    BOOST_CHECK_EQUAL(partitioner.get_sub_dags()[0].num_vertices(), 8);
-    BOOST_CHECK_EQUAL(partitioner.get_sub_dags()[0].num_edges(), 9);
-    BOOST_CHECK_EQUAL(partitioner.get_sub_dags()[1].num_vertices(), 4);
-    BOOST_CHECK_EQUAL(partitioner.get_sub_dags()[1].num_edges(), 4);
+    BOOST_CHECK_EQUAL(partitioner.GetSubDags().size(), 2);
+    BOOST_CHECK_EQUAL(partitioner.GetSubDags()[0].NumVertices(), 8);
+    BOOST_CHECK_EQUAL(partitioner.GetSubDags()[0].NumEdges(), 9);
+    BOOST_CHECK_EQUAL(partitioner.GetSubDags()[1].NumVertices(), 4);
+    BOOST_CHECK_EQUAL(partitioner.GetSubDags()[1].NumEdges(), 4);
 
     for (unsigned i = 0; i < 8; i++) {
-        BOOST_CHECK_EQUAL(partitioner.get_component()[i], 0);
-        BOOST_CHECK(partitioner.get_vertex_map()[i] <= i + 1);
-        BOOST_CHECK(partitioner.get_vertex_mapping()[0].at(i) <= 1 + i);
+        BOOST_CHECK_EQUAL(partitioner.GetComponent()[i], 0);
+        BOOST_CHECK(partitioner.GetVertexMap()[i] <= i + 1);
+        BOOST_CHECK(partitioner.GetVertexMapping()[0].at(i) <= 1 + i);
     }
 
     for (unsigned i = 8; i < 12; i++) {
-        BOOST_CHECK_EQUAL(partitioner.get_component()[i], 1);
-        BOOST_CHECK(partitioner.get_vertex_map()[i] <= 1 + i - 8);
-        BOOST_CHECK(partitioner.get_vertex_mapping()[1].at(i - 8) <= 1 + i);
+        BOOST_CHECK_EQUAL(partitioner.GetComponent()[i], 1);
+        BOOST_CHECK(partitioner.GetVertexMap()[i] <= 1 + i - 8);
+        BOOST_CHECK(partitioner.GetVertexMapping()[1].at(i - 8) <= 1 + i);
     }
 
-    BspInstance<computational_dag_vector_impl_def_int_t> instance_new(dag, arch);
-    BspSchedule<computational_dag_vector_impl_def_int_t> schedule_new(instance_new);
+    BspInstance<ComputationalDagVectorImplDefIntT> instanceNew(dag, arch);
+    BspSchedule<ComputationalDagVectorImplDefIntT> scheduleNew(instanceNew);
 
-    auto status_new = scheduler.computeSchedule(schedule_new);
+    auto statusNew = scheduler.ComputeSchedule(scheduleNew);
 
-    BOOST_CHECK_EQUAL(status_new, RETURN_STATUS::OSP_SUCCESS);
-    BOOST_CHECK(schedule_new.satisfiesPrecedenceConstraints());
+    BOOST_CHECK_EQUAL(statusNew, ReturnStatus::OSP_SUCCESS);
+    BOOST_CHECK(scheduleNew.SatisfiesPrecedenceConstraints());
 }

@@ -35,128 +35,128 @@ namespace osp {
 
 // summing up weights
 
-template <typename hypergraph_t>
-typename hypergraph_t::vertex_work_weight_type compute_total_vertex_work_weight(const hypergraph_t &hgraph) {
-    using index_type = typename hypergraph_t::vertex_idx;
-    using workw_type = typename hypergraph_t::vertex_work_weight_type;
+template <typename HypergraphT>
+typename HypergraphT::VertexWorkWeightType ComputeTotalVertexWorkWeight(const HypergraphT &hgraph) {
+    using IndexType = typename HypergraphT::VertexIdx;
+    using WorkwType = typename HypergraphT::VertexWorkWeightType;
 
-    workw_type total = 0;
-    for (index_type node = 0; node < hgraph.num_vertices(); ++node) {
-        total += hgraph.get_vertex_work_weight(node);
+    WorkwType total = 0;
+    for (IndexType node = 0; node < hgraph.NumVertices(); ++node) {
+        total += hgraph.GetVertexWorkWeight(node);
     }
     return total;
 }
 
-template <typename hypergraph_t>
-typename hypergraph_t::vertex_mem_weight_type compute_total_vertex_memory_weight(const hypergraph_t &hgraph) {
-    using index_type = typename hypergraph_t::vertex_idx;
-    using memw_type = typename hypergraph_t::vertex_mem_weight_type;
+template <typename HypergraphT>
+typename HypergraphT::VertexMemWeightType ComputeTotalVertexMemoryWeight(const HypergraphT &hgraph) {
+    using IndexType = typename HypergraphT::VertexIdx;
+    using MemwType = typename HypergraphT::VertexMemWeightType;
 
-    memw_type total = 0;
-    for (index_type node = 0; node < hgraph.num_vertices(); ++node) {
-        total += hgraph.get_vertex_memory_weight(node);
+    MemwType total = 0;
+    for (IndexType node = 0; node < hgraph.NumVertices(); ++node) {
+        total += hgraph.GetVertexMemoryWeight(node);
     }
     return total;
 }
 
 // get induced subhypergraph
 
-template <typename hypergraph_t>
-hypergraph_t create_induced_hypergraph(const hypergraph_t &hgraph, const std::vector<bool> &include) {
-    if (include.size() != hgraph.num_vertices()) {
+template <typename HypergraphT>
+HypergraphT CreateInducedHypergraph(const HypergraphT &hgraph, const std::vector<bool> &include) {
+    if (include.size() != hgraph.NumVertices()) {
         throw std::invalid_argument("Invalid Argument while extracting induced hypergraph: input bool array has incorrect size.");
     }
 
-    using index_type = typename hypergraph_t::vertex_idx;
+    using IndexType = typename HypergraphT::VertexIdx;
 
-    std::vector<index_type> new_index(hgraph.num_vertices());
-    unsigned current_index = 0;
-    for (index_type node = 0; node < hgraph.num_vertices(); ++node) {
+    std::vector<IndexType> newIndex(hgraph.NumVertices());
+    unsigned currentIndex = 0;
+    for (IndexType node = 0; node < hgraph.NumVertices(); ++node) {
         if (include[node]) {
-            new_index[node] = current_index++;
+            newIndex[node] = currentIndex++;
         }
     }
 
-    hypergraph_t new_hgraph(current_index, 0);
-    for (index_type node = 0; node < hgraph.num_vertices(); ++node) {
+    HypergraphT newHgraph(currentIndex, 0);
+    for (IndexType node = 0; node < hgraph.NumVertices(); ++node) {
         if (include[node]) {
-            new_hgraph.set_vertex_work_weight(new_index[node], hgraph.get_vertex_work_weight(node));
-            new_hgraph.set_vertex_memory_weight(new_index[node], hgraph.get_vertex_memory_weight(node));
+            newHgraph.SetVertexWorkWeight(newIndex[node], hgraph.GetVertexWorkWeight(node));
+            newHgraph.SetVertexMemoryWeight(newIndex[node], hgraph.GetVertexMemoryWeight(node));
         }
     }
 
-    for (index_type hyperedge = 0; hyperedge < hgraph.num_hyperedges(); ++hyperedge) {
-        unsigned nr_induced_pins = 0;
-        std::vector<index_type> induced_hyperedge;
-        for (index_type node : hgraph.get_vertices_in_hyperedge(hyperedge)) {
+    for (IndexType hyperedge = 0; hyperedge < hgraph.NumHyperedges(); ++hyperedge) {
+        unsigned nrInducedPins = 0;
+        std::vector<IndexType> inducedHyperedge;
+        for (IndexType node : hgraph.GetVerticesInHyperedge(hyperedge)) {
             if (include[node]) {
-                induced_hyperedge.push_back(new_index[node]);
-                ++nr_induced_pins;
+                inducedHyperedge.push_back(newIndex[node]);
+                ++nrInducedPins;
             }
         }
 
-        if (nr_induced_pins >= 2) {
-            new_hgraph.add_hyperedge(induced_hyperedge, hgraph.get_hyperedge_weight(hyperedge));
+        if (nrInducedPins >= 2) {
+            newHgraph.AddHyperedge(inducedHyperedge, hgraph.GetHyperedgeWeight(hyperedge));
         }
     }
-    return new_hgraph;
+    return newHgraph;
 }
 
 // conversion
 
-template <typename hypergraph_t, typename Graph_t>
-hypergraph_t convert_from_cdag_as_dag(const Graph_t &dag) {
-    using index_type = typename hypergraph_t::vertex_idx;
-    using workw_type = typename hypergraph_t::vertex_work_weight_type;
-    using memw_type = typename hypergraph_t::vertex_mem_weight_type;
-    using commw_type = typename hypergraph_t::vertex_comm_weight_type;
+template <typename HypergraphT, typename GraphT>
+HypergraphT ConvertFromCdagAsDag(const GraphT &dag) {
+    using IndexType = typename HypergraphT::VertexIdx;
+    using WorkwType = typename HypergraphT::VertexWorkWeightType;
+    using MemwType = typename HypergraphT::VertexMemWeightType;
+    using CommwType = typename HypergraphT::VertexCommWeightType;
 
-    static_assert(std::is_same_v<vertex_idx_t<Graph_t>, index_type>, "Index type mismatch, cannot convert DAG to hypergraph.");
-    static_assert(std::is_same_v<v_workw_t<Graph_t>, workw_type>, "Work weight type mismatch, cannot convert DAG to hypergraph.");
-    static_assert(std::is_same_v<v_memw_t<Graph_t>, memw_type>, "Memory weight type mismatch, cannot convert DAG to hypergraph.");
-    static_assert(!has_edge_weights_v<Graph_t> || std::is_same_v<e_commw_t<Graph_t>, commw_type>,
+    static_assert(std::is_same_v<VertexIdxT<GraphT>, IndexType>, "Index type mismatch, cannot convert DAG to hypergraph.");
+    static_assert(std::is_same_v<VWorkwT<GraphT>, WorkwType>, "Work weight type mismatch, cannot convert DAG to hypergraph.");
+    static_assert(std::is_same_v<VMemwT<GraphT>, MemwType>, "Memory weight type mismatch, cannot convert DAG to hypergraph.");
+    static_assert(!hasEdgeWeightsV<GraphT> || std::is_same_v<ECommwT<GraphT>, CommwType>,
                   "Communication weight type mismatch, cannot convert DAG to hypergraph.");
 
-    hypergraph_t hgraph(dag.num_vertices(), 0);
-    for (const auto &node : dag.vertices()) {
-        hgraph.set_vertex_work_weight(node, dag.vertex_work_weight(node));
-        hgraph.set_vertex_memory_weight(node, dag.vertex_mem_weight(node));
-        for (const auto &child : dag.children(node)) {
-            if constexpr (has_edge_weights_v<Graph_t>) {
-                hgraph.add_hyperedge({node, child}, dag.edge_comm_weight(edge_desc(node, child, dag).first));
+    HypergraphT hgraph(dag.NumVertices(), 0);
+    for (const auto &node : dag.Vertices()) {
+        hgraph.SetVertexWorkWeight(node, dag.VertexWorkWeight(node));
+        hgraph.SetVertexMemoryWeight(node, dag.VertexMemWeight(node));
+        for (const auto &child : dag.Children(node)) {
+            if constexpr (hasEdgeWeightsV<GraphT>) {
+                hgraph.AddHyperedge({node, child}, dag.EdgeCommWeight(EdgeDesc(node, child, dag).first));
             } else {
-                hgraph.add_hyperedge({node, child});
+                hgraph.AddHyperedge({node, child});
             }
         }
     }
     return hgraph;
 }
 
-template <typename hypergraph_t, typename Graph_t>
-hypergraph_t convert_from_cdag_as_hyperdag(const Graph_t &dag) {
-    using index_type = typename hypergraph_t::vertex_idx;
-    using workw_type = typename hypergraph_t::vertex_work_weight_type;
-    using memw_type = typename hypergraph_t::vertex_mem_weight_type;
-    using commw_type = typename hypergraph_t::vertex_comm_weight_type;
+template <typename HypergraphT, typename GraphT>
+HypergraphT ConvertFromCdagAsHyperdag(const GraphT &dag) {
+    using IndexType = typename HypergraphT::VertexIdx;
+    using WorkwType = typename HypergraphT::VertexWorkWeightType;
+    using MemwType = typename HypergraphT::VertexMemWeightType;
+    using CommwType = typename HypergraphT::VertexCommWeightType;
 
-    static_assert(std::is_same_v<vertex_idx_t<Graph_t>, index_type>, "Index type mismatch, cannot convert DAG to hypergraph.");
-    static_assert(std::is_same_v<v_workw_t<Graph_t>, workw_type>, "Work weight type mismatch, cannot convert DAG to hypergraph.");
-    static_assert(std::is_same_v<v_memw_t<Graph_t>, memw_type>, "Memory weight type mismatch, cannot convert DAG to hypergraph.");
-    static_assert(std::is_same_v<v_commw_t<Graph_t>, commw_type>,
+    static_assert(std::is_same_v<VertexIdxT<GraphT>, IndexType>, "Index type mismatch, cannot convert DAG to hypergraph.");
+    static_assert(std::is_same_v<VWorkwT<GraphT>, WorkwType>, "Work weight type mismatch, cannot convert DAG to hypergraph.");
+    static_assert(std::is_same_v<VMemwT<GraphT>, MemwType>, "Memory weight type mismatch, cannot convert DAG to hypergraph.");
+    static_assert(std::is_same_v<VCommwT<GraphT>, CommwType>,
                   "Communication weight type mismatch, cannot convert DAG to hypergraph.");
 
-    hypergraph_t hgraph(dag.num_vertices(), 0);
-    for (const auto &node : dag.vertices()) {
-        hgraph.set_vertex_work_weight(node, dag.vertex_work_weight(node));
-        hgraph.set_vertex_memory_weight(node, dag.vertex_mem_weight(node));
-        if (dag.out_degree(node) == 0) {
+    HypergraphT hgraph(dag.NumVertices(), 0);
+    for (const auto &node : dag.Vertices()) {
+        hgraph.SetVertexWorkWeight(node, dag.VertexWorkWeight(node));
+        hgraph.SetVertexMemoryWeight(node, dag.VertexMemWeight(node));
+        if (dag.OutDegree(node) == 0) {
             continue;
         }
-        std::vector<index_type> new_hyperedge({node});
-        for (const auto &child : dag.children(node)) {
-            new_hyperedge.push_back(child);
+        std::vector<IndexType> newHyperedge({node});
+        for (const auto &child : dag.Children(node)) {
+            newHyperedge.push_back(child);
         }
-        hgraph.add_hyperedge(new_hyperedge, dag.vertex_comm_weight(node));
+        hgraph.AddHyperedge(newHyperedge, dag.VertexCommWeight(node));
     }
     return hgraph;
 }

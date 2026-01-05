@@ -27,24 +27,24 @@ limitations under the License.
 
 namespace osp {
 
-template <typename Graph_t, typename Constr_Graph_t>
+template <typename GraphT, typename ConstrGraphT>
 class IsomorphismGroups {
   private:
-    std::vector<std::vector<std::vector<std::size_t>>> isomorphism_groups;
+    std::vector<std::vector<std::vector<std::size_t>>> isomorphismGroups_;
 
-    std::vector<std::vector<Constr_Graph_t>> isomorphism_groups_subgraphs;
+    std::vector<std::vector<ConstrGraphT>> isomorphismGroupsSubgraphs_;
 
-    void print_isomorphism_groups() const {
+    void PrintIsomorphismGroups() const {
         std::cout << "Isomorphism groups: " << std::endl;
-        for (std::size_t i = 0; i < isomorphism_groups.size(); i++) {
+        for (std::size_t i = 0; i < isomorphismGroups_.size(); i++) {
             std::cout << "Level " << i << std::endl;
-            for (size_t j = 0; j < isomorphism_groups[i].size(); j++) {
-                std::cout << "Group " << j << " of size " << isomorphism_groups_subgraphs[i][j].num_vertices() << " : ";
+            for (size_t j = 0; j < isomorphismGroups_[i].size(); j++) {
+                std::cout << "Group " << j << " of size " << isomorphismGroupsSubgraphs_[i][j].NumVertices() << " : ";
 
                 // ComputationalDagWriter writer(isomorphism_groups_subgraphs[i][j]);
                 // writer.write_dot("isomorphism_group_" + std::to_string(i) + "_" + std::to_string(j) + ".dot");
 
-                for (const auto &vertex : isomorphism_groups[i][j]) {
+                for (const auto &vertex : isomorphismGroups_[i][j]) {
                     std::cout << vertex << " ";
                 }
                 std::cout << std::endl;
@@ -69,9 +69,9 @@ class IsomorphismGroups {
      * @return const std::vector<std::vector<std::vector<unsigned>>>&
      *         A constant reference to the vertex maps.
      */
-    const std::vector<std::vector<std::vector<std::size_t>>> &get_isomorphism_groups() const { return isomorphism_groups; }
+    const std::vector<std::vector<std::vector<std::size_t>>> &GetIsomorphismGroups() const { return isomorphismGroups_; }
 
-    std::vector<std::vector<std::vector<std::size_t>>> &get_isomorphism_groups() { return isomorphism_groups; }
+    std::vector<std::vector<std::vector<std::size_t>>> &GetIsomorphismGroups() { return isomorphismGroups_; }
 
     /**
      * @brief Retrieves the isomorphism groups subgraphs.
@@ -82,14 +82,12 @@ class IsomorphismGroups {
      * - The second dimension represents the groups of isomorphic connected components.
      * - The third dimension contains the subgraph of the isomorphism group.
      *
-     * @return const std::vector<std::vector<Graph_t>>& A constant reference
+     * @return const std::vector<std::vector<GraphT>>& A constant reference
      * to the isomorphism groups subgraphs.
      */
-    const std::vector<std::vector<Constr_Graph_t>> &get_isomorphism_groups_subgraphs() const {
-        return isomorphism_groups_subgraphs;
-    }
+    const std::vector<std::vector<ConstrGraphT>> &GetIsomorphismGroupsSubgraphs() const { return isomorphismGroupsSubgraphs_; }
 
-    std::vector<std::vector<Constr_Graph_t>> &get_isomorphism_groups_subgraphs() { return isomorphism_groups_subgraphs; }
+    std::vector<std::vector<ConstrGraphT>> &GetIsomorphismGroupsSubgraphs() { return isomorphismGroupsSubgraphs_; }
 
     /**
      * @brief Computes the isomorphism map for a computed division of the current DAG.
@@ -98,102 +96,102 @@ class IsomorphismGroups {
      *
      * Reqires the dag to be divided before calling this function.
      */
-    void compute_isomorphism_groups(std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> &vertex_maps, const Graph_t &dag) {
-        isomorphism_groups = std::vector<std::vector<std::vector<std::size_t>>>(vertex_maps.size());
+    void ComputeIsomorphismGroups(std::vector<std::vector<std::vector<VertexIdxT<GraphT>>>> &vertexMaps, const GraphT &dag) {
+        isomorphismGroups_ = std::vector<std::vector<std::vector<std::size_t>>>(vertexMaps.size());
 
-        isomorphism_groups_subgraphs = std::vector<std::vector<Constr_Graph_t>>(vertex_maps.size());
+        isomorphismGroupsSubgraphs_ = std::vector<std::vector<ConstrGraphT>>(vertexMaps.size());
 
-        for (size_t i = 0; i < vertex_maps.size(); i++) {
-            for (std::size_t j = 0; j < vertex_maps[i].size(); j++) {
-                Constr_Graph_t current_subgraph;
-                create_induced_subgraph(dag, current_subgraph, vertex_maps[i][j]);
+        for (size_t i = 0; i < vertexMaps.size(); i++) {
+            for (std::size_t j = 0; j < vertexMaps[i].size(); j++) {
+                ConstrGraphT currentSubgraph;
+                CreateInducedSubgraph(dag, currentSubgraph, vertexMaps[i][j]);
 
-                bool isomorphism_group_found = false;
-                for (size_t k = 0; k < isomorphism_groups[i].size(); k++) {
-                    if (are_isomorphic_by_merkle_hash(isomorphism_groups_subgraphs[i][k], current_subgraph)) {
-                        isomorphism_groups[i][k].emplace_back(j);
-                        isomorphism_group_found = true;
+                bool isomorphismGroupFound = false;
+                for (size_t k = 0; k < isomorphismGroups_[i].size(); k++) {
+                    if (AreIsomorphicByMerkleHash(isomorphismGroupsSubgraphs_[i][k], currentSubgraph)) {
+                        isomorphismGroups_[i][k].emplace_back(j);
+                        isomorphismGroupFound = true;
                         break;
                     }
                 }
 
-                if (!isomorphism_group_found) {
-                    isomorphism_groups[i].emplace_back(std::vector<std::size_t>{j});
-                    isomorphism_groups_subgraphs[i].emplace_back(std::move(current_subgraph));
+                if (!isomorphismGroupFound) {
+                    isomorphismGroups_[i].emplace_back(std::vector<std::size_t>{j});
+                    isomorphismGroupsSubgraphs_[i].emplace_back(std::move(currentSubgraph));
                 }
             }
         }
 
-        print_isomorphism_groups();
+        PrintIsomorphismGroups();
     }
 
     /**
      * @brief Merges large isomorphism groups to avoid resource scarcity in the scheduler.
-     * * @param vertex_maps The original vertex maps, which will be modified in place.
+     * * @param vertexMaps The original vertex maps, which will be modified in place.
      * @param dag The full computational DAG.
      * @param merge_threshold If a group has more members than this, it will be merged.
      * @param target_group_count The number of larger groups to create from a single large group.
      */
-    void merge_large_isomorphism_groups(std::vector<std::vector<std::vector<vertex_idx_t<Graph_t>>>> &vertex_maps,
-                                        const Graph_t &dag,
-                                        size_t merge_threshold,
-                                        size_t target_group_count = 8) {
+    void MergeLargeIsomorphismGroups(std::vector<std::vector<std::vector<VertexIdxT<GraphT>>>> &vertexMaps,
+                                     const GraphT &dag,
+                                     size_t mergeThreshold,
+                                     size_t targetGroupCount = 8) {
         // Ensure the merge logic is sound: the threshold must be larger than the target.
-        assert(merge_threshold > target_group_count);
+        assert(mergeThreshold > targetGroupCount);
 
-        for (size_t i = 0; i < isomorphism_groups.size(); ++i) {
-            std::vector<std::vector<vertex_idx_t<Graph_t>>> new_vertex_maps_for_level;
-            std::vector<std::vector<std::size_t>> new_iso_groups_for_level;
-            std::vector<Constr_Graph_t> new_iso_subgraphs_for_level;
+        for (size_t i = 0; i < isomorphismGroups_.size(); ++i) {
+            std::vector<std::vector<VertexIdxT<GraphT>>> newVertexMapsForLevel;
+            std::vector<std::vector<std::size_t>> newIsoGroupsForLevel;
+            std::vector<ConstrGraphT> newIsoSubgraphsForLevel;
 
-            size_t new_component_idx = 0;
+            size_t newComponentIdx = 0;
 
-            for (size_t j = 0; j < isomorphism_groups[i].size(); ++j) {
-                const auto &group = isomorphism_groups[i][j];
+            for (size_t j = 0; j < isomorphismGroups_[i].size(); ++j) {
+                const auto &group = isomorphismGroups_[i][j];
 
-                if (group.size() <= merge_threshold) {
+                if (group.size() <= mergeThreshold) {
                     // This group is small enough, copy it over as is.
-                    std::vector<std::size_t> new_group;
-                    for (const auto &original_comp_idx : group) {
-                        new_vertex_maps_for_level.push_back(vertex_maps[i][original_comp_idx]);
-                        new_group.push_back(new_component_idx++);
+                    std::vector<std::size_t> newGroup;
+                    for (const auto &originalCompIdx : group) {
+                        newVertexMapsForLevel.push_back(vertexMaps[i][originalCompIdx]);
+                        newGroup.push_back(newComponentIdx++);
                     }
-                    new_iso_groups_for_level.push_back(new_group);
-                    new_iso_subgraphs_for_level.push_back(isomorphism_groups_subgraphs[i][j]);
+                    newIsoGroupsForLevel.push_back(newGroup);
+                    newIsoSubgraphsForLevel.push_back(isomorphismGroupsSubgraphs_[i][j]);
                 } else {
                     // This group is too large and needs to be merged.
-                    std::cout << "Merging iso group of size " << group.size() << " into " << target_group_count << " new groups."
+                    std::cout << "Merging iso group of size " << group.size() << " into " << targetGroupCount << " new groups."
                               << std::endl;
 
-                    size_t base_mult = group.size() / target_group_count;
-                    size_t remainder = group.size() % target_group_count;
+                    size_t baseMult = group.size() / targetGroupCount;
+                    size_t remainder = group.size() % targetGroupCount;
 
-                    std::vector<std::size_t> new_merged_group_indices;
-                    size_t current_original_idx = 0;
+                    std::vector<std::size_t> newMergedGroupIndices;
+                    size_t currentOriginalIdx = 0;
 
-                    for (size_t k = 0; k < target_group_count; ++k) {
-                        std::vector<vertex_idx_t<Graph_t>> merged_component;
-                        size_t num_to_merge = base_mult + (k < remainder ? 1 : 0);
+                    for (size_t k = 0; k < targetGroupCount; ++k) {
+                        std::vector<VertexIdxT<GraphT>> mergedComponent;
+                        size_t numToMerge = baseMult + (k < remainder ? 1 : 0);
 
-                        for (size_t m = 0; m < num_to_merge; ++m) {
-                            const auto &original_comp = vertex_maps[i][group[current_original_idx++]];
-                            merged_component.insert(merged_component.end(), original_comp.begin(), original_comp.end());
+                        for (size_t m = 0; m < numToMerge; ++m) {
+                            const auto &originalComp = vertexMaps[i][group[currentOriginalIdx++]];
+                            mergedComponent.insert(mergedComponent.end(), originalComp.begin(), originalComp.end());
                         }
-                        std::sort(merged_component.begin(), merged_component.end());
-                        new_vertex_maps_for_level.push_back(merged_component);
-                        new_merged_group_indices.push_back(new_component_idx++);
+                        std::sort(mergedComponent.begin(), mergedComponent.end());
+                        newVertexMapsForLevel.push_back(mergedComponent);
+                        newMergedGroupIndices.push_back(newComponentIdx++);
                     }
 
-                    new_iso_groups_for_level.push_back(new_merged_group_indices);
-                    Constr_Graph_t new_rep_subgraph;
-                    create_induced_subgraph(dag, new_rep_subgraph, new_vertex_maps_for_level.back());
-                    new_iso_subgraphs_for_level.push_back(new_rep_subgraph);
+                    newIsoGroupsForLevel.push_back(newMergedGroupIndices);
+                    ConstrGraphT newRepSubgraph;
+                    CreateInducedSubgraph(dag, newRepSubgraph, newVertexMapsForLevel.back());
+                    newIsoSubgraphsForLevel.push_back(newRepSubgraph);
                 }
             }
             // Replace the old level data with the new, potentially merged data.
-            vertex_maps[i] = new_vertex_maps_for_level;
-            isomorphism_groups[i] = new_iso_groups_for_level;
-            isomorphism_groups_subgraphs[i] = new_iso_subgraphs_for_level;
+            vertexMaps[i] = newVertexMapsForLevel;
+            isomorphismGroups_[i] = newIsoGroupsForLevel;
+            isomorphismGroupsSubgraphs_[i] = newIsoSubgraphsForLevel;
         }
         // print_isomorphism_groups();
     }

@@ -31,13 +31,13 @@ namespace osp {
  * @brief Abstract base class for coarsening ComputationalDags.
  *
  */
-template <typename Graph_t_in, typename Graph_t_out>
-class BspScheduleCoarser : public CoarserGenContractionMap<Graph_t_in, Graph_t_out> {
+template <typename GraphTIn, typename GraphTOut>
+class BspScheduleCoarser : public CoarserGenContractionMap<GraphTIn, GraphTOut> {
   private:
-    const BspSchedule<Graph_t_in> *schedule;
+    const BspSchedule<GraphTIn> *schedule_;
 
   public:
-    BspScheduleCoarser(const BspSchedule<Graph_t_in> &_schedule) : schedule(&_schedule) {}
+    BspScheduleCoarser(const BspSchedule<GraphTIn> &schedule) : schedule_(&schedule) {}
 
     /**
      * @brief Destructor for the Coarser class.
@@ -48,58 +48,58 @@ class BspScheduleCoarser : public CoarserGenContractionMap<Graph_t_in, Graph_t_o
      * @brief Get the name of the coarsening algorithm.
      * @return The name of the coarsening algorithm.
      */
-    virtual std::string getCoarserName() const override { return "BspScheduleCoarser"; }
+    virtual std::string GetCoarserName() const override { return "BspScheduleCoarser"; }
 
-    // virtual bool coarseDag(const Graph_t_in &dag_in, Graph_t_out &dag_out,
-    //                        std::vector<std::vector<vertex_idx_t<Graph_t_in>>> &vertex_map,
-    //                        std::vector<vertex_idx_t<Graph_t_out>> &reverse_vertex_map) override {
+    // virtual bool coarseDag(const GraphTIn &dag_in, GraphTOut &dag_out,
+    //                        std::vector<std::vector<VertexIdxT<GraphTIn>>> &vertex_map,
+    //                        std::vector<VertexIdxT<GraphTOut>> &reverse_vertex_map) override {
 
-    virtual std::vector<vertex_idx_t<Graph_t_out>> generate_vertex_contraction_map(const Graph_t_in &dag_in) override {
-        using VertexType_in = vertex_idx_t<Graph_t_in>;
-        using VertexType_out = vertex_idx_t<Graph_t_out>;
+    virtual std::vector<VertexIdxT<GraphTOut>> GenerateVertexContractionMap(const GraphTIn &dagIn) override {
+        using VertexTypeIn = VertexIdxT<GraphTIn>;
+        using VertexTypeOut = VertexIdxT<GraphTOut>;
 
-        assert(&dag_in == &schedule->getInstance().getComputationalDag());
-        assert(schedule->satisfiesPrecedenceConstraints());
+        assert(&dagIn == &schedule_->GetInstance().GetComputationalDag());
+        assert(schedule_->SatisfiesPrecedenceConstraints());
 
-        SetSchedule<Graph_t_in> set_schedule(*schedule);
-        std::vector<VertexType_out> reverse_vertex_map(dag_in.num_vertices(), 0);
-        std::vector<std::vector<VertexType_in>> vertex_map;
+        SetSchedule<GraphTIn> setSchedule(*schedule_);
+        std::vector<VertexTypeOut> reverseVertexMap(dagIn.NumVertices(), 0);
+        std::vector<std::vector<VertexTypeIn>> vertexMap;
 
-        bool schedule_respects_types = true;
+        bool scheduleRespectsTypes = true;
 
-        for (unsigned step = 0; step < schedule->numberOfSupersteps(); step++) {
-            for (unsigned proc = 0; proc < schedule->getInstance().numberOfProcessors(); proc++) {
-                if (set_schedule.step_processor_vertices[step][proc].size() > 0) {
-                    v_workw_t<Graph_t_in> total_work = 0;
-                    v_memw_t<Graph_t_in> total_memory = 0;
-                    v_commw_t<Graph_t_in> total_communication = 0;
+        for (unsigned step = 0; step < schedule_->NumberOfSupersteps(); step++) {
+            for (unsigned proc = 0; proc < schedule_->GetInstance().NumberOfProcessors(); proc++) {
+                if (setSchedule.stepProcessorVertices_[step][proc].size() > 0) {
+                    VWorkwT<GraphTIn> totalWork = 0;
+                    VMemwT<GraphTIn> totalMemory = 0;
+                    VCommwT<GraphTIn> totalCommunication = 0;
 
-                    vertex_map.push_back(std::vector<VertexType_in>());
+                    vertexMap.push_back(std::vector<VertexTypeIn>());
 
-                    v_type_t<Graph_t_in> type = dag_in.vertex_type(*(set_schedule.step_processor_vertices[step][proc].begin()));
-                    bool homogeneous_types = true;
+                    VTypeT<GraphTIn> type = dagIn.VertexType(*(setSchedule.stepProcessorVertices_[step][proc].begin()));
+                    bool homogeneousTypes = true;
 
-                    for (const auto &vertex : set_schedule.step_processor_vertices[step][proc]) {
-                        if (dag_in.vertex_type(vertex) != type) {
-                            homogeneous_types = false;
+                    for (const auto &vertex : setSchedule.stepProcessorVertices_[step][proc]) {
+                        if (dagIn.VertexType(vertex) != type) {
+                            homogeneousTypes = false;
                         }
 
-                        vertex_map.back().push_back(vertex);
-                        reverse_vertex_map[vertex] = vertex_map.size() - 1;
+                        vertexMap.back().push_back(vertex);
+                        reverseVertexMap[vertex] = vertexMap.size() - 1;
 
-                        total_work += dag_in.vertex_work_weight(vertex);
-                        total_communication += dag_in.vertex_comm_weight(vertex);
-                        total_memory += dag_in.vertex_mem_weight(vertex);
+                        totalWork += dagIn.VertexWorkWeight(vertex);
+                        totalCommunication += dagIn.VertexCommWeight(vertex);
+                        totalMemory += dagIn.VertexMemWeight(vertex);
                     }
 
-                    if (schedule_respects_types) {
-                        schedule_respects_types = homogeneous_types;
+                    if (scheduleRespectsTypes) {
+                        scheduleRespectsTypes = homogeneousTypes;
                     }
                 }
             }
         }
 
-        return reverse_vertex_map;
+        return reverseVertexMap;
     }
 };
 

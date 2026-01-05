@@ -44,19 +44,19 @@ namespace osp {
  * @tparam T The type to check.
  */
 template <typename T, typename = void>
-struct is_forward_iterator : std::false_type {};
+struct IsForwardIterator : std::false_type {};
 
 template <typename T>
-struct is_forward_iterator<T,
-                           std::void_t<typename std::iterator_traits<T>::difference_type,
-                                       typename std::iterator_traits<T>::value_type,
-                                       typename std::iterator_traits<T>::pointer,
-                                       typename std::iterator_traits<T>::reference,
-                                       typename std::iterator_traits<T>::iterator_category>>
+struct IsForwardIterator<T,
+                         std::void_t<typename std::iterator_traits<T>::difference_type,
+                                     typename std::iterator_traits<T>::value_type,
+                                     typename std::iterator_traits<T>::pointer,
+                                     typename std::iterator_traits<T>::reference,
+                                     typename std::iterator_traits<T>::iterator_category>>
     : std::conjunction<std::is_base_of<std::forward_iterator_tag, typename std::iterator_traits<T>::iterator_category>> {};
 
 template <typename T>
-inline constexpr bool is_forward_iterator_v = is_forward_iterator<T>::value;
+inline constexpr bool isForwardIteratorV = IsForwardIterator<T>::value;
 
 /**
  * @brief Checks if a type is a range of forward iterators with a specific value type.
@@ -70,16 +70,16 @@ inline constexpr bool is_forward_iterator_v = is_forward_iterator<T>::value;
  * @tparam ValueType The expected value type of the range.
  */
 template <typename T, typename ValueType, typename = void>
-struct is_forward_range_of : std::false_type {};
+struct IsForwardRangeOf : std::false_type {};
 
 template <typename T, typename ValueType>
-struct is_forward_range_of<T, ValueType, std::void_t<decltype(std::begin(std::declval<T>())), decltype(std::end(std::declval<T>()))>>
-    : std::conjunction<is_forward_iterator<decltype(std::begin(std::declval<T>()))>,
+struct IsForwardRangeOf<T, ValueType, std::void_t<decltype(std::begin(std::declval<T>())), decltype(std::end(std::declval<T>()))>>
+    : std::conjunction<IsForwardIterator<decltype(std::begin(std::declval<T>()))>,
                        std::is_same<ValueType, typename std::iterator_traits<decltype(std::begin(std::declval<T>()))>::value_type>> {
 };
 
 template <typename T, typename ValueType>
-inline constexpr bool is_forward_range_of_v = is_forward_range_of<T, ValueType>::value;
+inline constexpr bool isForwardRangeOfV = IsForwardRangeOf<T, ValueType>::value;
 
 /**
  * @brief Checks if a type is a container (sized forward range).
@@ -93,14 +93,14 @@ inline constexpr bool is_forward_range_of_v = is_forward_range_of<T, ValueType>:
  * @tparam ValueType The expected value type of the container.
  */
 template <typename T, typename ValueType, typename = void>
-struct is_container_of : std::false_type {};
+struct IsContainerOf : std::false_type {};
 
 template <typename T, typename ValueType>
-struct is_container_of<T, ValueType, std::void_t<decltype(std::size(std::declval<T>()))>>
-    : std::conjunction<is_forward_range_of<T, ValueType>> {};
+struct IsContainerOf<T, ValueType, std::void_t<decltype(std::size(std::declval<T>()))>>
+    : std::conjunction<IsForwardRangeOf<T, ValueType>> {};
 
 template <typename T, typename ValueType>
-inline constexpr bool is_container_of_v = is_container_of<T, ValueType>::value;
+inline constexpr bool isContainerOfV = IsContainerOf<T, ValueType>::value;
 
 /**
  * @brief Checks if a type is an input iterator.
@@ -114,19 +114,19 @@ inline constexpr bool is_container_of_v = is_container_of<T, ValueType>::value;
  * @tparam T The type to check.
  */
 template <typename T, typename = void>
-struct is_input_iterator : std::false_type {};
+struct IsInputIterator : std::false_type {};
 
 template <typename T>
-struct is_input_iterator<T,
-                         std::void_t<typename std::iterator_traits<T>::difference_type,
-                                     typename std::iterator_traits<T>::value_type,
-                                     typename std::iterator_traits<T>::pointer,
-                                     typename std::iterator_traits<T>::reference,
-                                     typename std::iterator_traits<T>::iterator_category>>
+struct IsInputIterator<T,
+                       std::void_t<typename std::iterator_traits<T>::difference_type,
+                                   typename std::iterator_traits<T>::value_type,
+                                   typename std::iterator_traits<T>::pointer,
+                                   typename std::iterator_traits<T>::reference,
+                                   typename std::iterator_traits<T>::iterator_category>>
     : std::conjunction<std::is_base_of<std::input_iterator_tag, typename std::iterator_traits<T>::iterator_category>> {};
 
 template <typename T>
-inline constexpr bool is_input_iterator_v = is_input_iterator<T>::value;
+inline constexpr bool isInputIteratorV = IsInputIterator<T>::value;
 
 /**
  * @brief Checks if a type is a range of input iterators with a specific value type.
@@ -140,15 +140,15 @@ inline constexpr bool is_input_iterator_v = is_input_iterator<T>::value;
  * @tparam ValueType The expected value type of the range.
  */
 template <typename T, typename ValueType, typename = void>
-struct is_input_range_of : std::false_type {};
+struct IsInputRangeOf : std::false_type {};
 
 template <typename T, typename ValueType>
-struct is_input_range_of<T, ValueType, std::void_t<decltype(std::begin(std::declval<T>())), decltype(std::end(std::declval<T>()))>>
-    : std::conjunction<is_input_iterator<decltype(std::begin(std::declval<T>()))>,
+struct IsInputRangeOf<T, ValueType, std::void_t<decltype(std::begin(std::declval<T>())), decltype(std::end(std::declval<T>()))>>
+    : std::conjunction<IsInputIterator<decltype(std::begin(std::declval<T>()))>,
                        std::is_same<ValueType, typename std::iterator_traits<decltype(std::begin(std::declval<T>()))>::value_type>> {
 };
 
 template <typename T, typename ValueType>
-inline constexpr bool is_input_range_of_v = is_input_range_of<T, ValueType>::value;
+inline constexpr bool isInputRangeOfV = IsInputRangeOf<T, ValueType>::value;
 
 }    // namespace osp

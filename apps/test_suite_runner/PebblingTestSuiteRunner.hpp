@@ -25,50 +25,50 @@ limitations under the License.
 
 namespace osp {
 
-template <typename Graph_t>
-class BasicPebblingStatsModule : public IStatisticModule<PebblingSchedule<Graph_t>> {
+template <typename GraphT>
+class BasicPebblingStatsModule : public IStatisticModule<PebblingSchedule<GraphT>> {
   public:
   private:
-    const std::vector<std::string> metric_headers = {"PebblingCost", "AsynchronousPebblingCost", "Supersteps"};
+    const std::vector<std::string> metricHeaders_ = {"PebblingCost", "AsynchronousPebblingCost", "Supersteps"};
 
   public:
     std::vector<std::string> get_metric_headers() const override { return metric_headers; }
 
-    std::map<std::string, std::string> record_statistics(const PebblingSchedule<Graph_t> &schedule,
+    std::map<std::string, std::string> record_statistics(const PebblingSchedule<GraphT> &schedule,
                                                          std::ofstream & /*log_stream*/) const override {
         std::map<std::string, std::string> stats;
-        stats["PebblingCost"] = std::to_string(schedule.computeCosts());
+        stats["PebblingCost"] = std::to_string(schedule.ComputeCosts());
         stats["AsynchronousPebblingCost"] = std::to_string(computeAsynchronousCost());
-        stats["Supersteps"] = std::to_string(schedule.numberOfSupersteps());
+        stats["Supersteps"] = std::to_string(schedule.NumberOfSupersteps());
         return stats;
     }
 };
 
-template <typename concrete_graph_t>
-class PebblingTestSuiteRunner : public AbstractTestSuiteRunner<PebblingSchedule<concrete_graph_t>, concrete_graph_t> {
+template <typename ConcreteGraphT>
+class PebblingTestSuiteRunner : public AbstractTestSuiteRunner<PebblingSchedule<ConcreteGraphT>, ConcreteGraphT> {
   private:
-    bool use_memory_constraint;
+    bool useMemoryConstraint_;
 
   protected:
-    RETURN_STATUS compute_target_object_impl(const BspInstance<concrete_graph_t> &instance,
-                                             std::unique_ptr<PebblingSchedule<concrete_graph_t>> &schedule,
-                                             const pt::ptree &algo_config,
-                                             long long &computation_time_ms) override {
-        schedule = std::make_unique<PebblingSchedule<concrete_graph_t>>(instance);
+    ReturnStatus compute_target_object_impl(const BspInstance<ConcreteGraphT> &instance,
+                                            std::unique_ptr<PebblingSchedule<concrete_graph_t>> &schedule,
+                                            const pt::ptree &algoConfig,
+                                            long long &computationTimeMs) override {
+        schedule = std::make_unique<PebblingSchedule<ConcreteGraphT>>(instance);
 
-        const auto start_time = std::chrono::high_resolution_clock::now();
+        const auto startTime = std::chrono::high_resolution_clock::now();
 
-        RETURN_STATUS status = run_pebbler(this->parser, algo_config, *schedule);
+        ReturnStatus status = run_pebbler(this->parser, algoConfig, *schedule);
 
-        const auto finish_time = std::chrono::high_resolution_clock::now();
-        computation_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(finish_time - start_time).count();
+        const auto finishTime = std::chrono::high_resolution_clock::now();
+        computationTimeMs = std::chrono::duration_cast<std::chrono::milliseconds>(finishTime - startTime).count();
 
         return status;
     }
 
-    void create_and_register_statistic_modules(const std::string &module_name) override {
-        if (module_name == "BasicPebblingStats") {
-            this->active_stats_modules.push_back(std::make_unique<BasicPebblingStatsModule<concrete_graph_t>>());
+    void create_and_register_statistic_modules(const std::string &moduleName) override {
+        if (moduleName == "BasicPebblingStats") {
+            this->active_stats_modules.push_back(std::make_unique<BasicPebblingStatsModule<ConcreteGraphT>>());
         }
     }
 
@@ -82,7 +82,7 @@ class PebblingTestSuiteRunner : public AbstractTestSuiteRunner<PebblingSchedule<
     // }
 
   public:
-    PebblingTestSuiteRunner() : AbstractTestSuiteRunner<PebblingSchedule<concrete_graph_t>, concrete_graph_t>() {}
+    PebblingTestSuiteRunner() : AbstractTestSuiteRunner<PebblingSchedule<ConcreteGraphT>, ConcreteGraphT>() {}
 };
 
 }    // namespace osp

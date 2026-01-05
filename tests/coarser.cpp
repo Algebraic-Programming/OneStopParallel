@@ -44,9 +44,9 @@ limitations under the License.
 
 using namespace osp;
 
-using VertexType = vertex_idx_t<computational_dag_edge_idx_vector_impl_def_t>;
+using VertexType = VertexIdxT<ComputationalDagEdgeIdxVectorImplDefT>;
 
-bool check_vertex_map(std::vector<std::vector<VertexType>> &map, std::size_t size) {
+bool CheckVertexMap(std::vector<std::vector<VertexType>> &map, std::size_t size) {
     std::unordered_set<VertexType> vertices;
 
     for (auto &v : map) {
@@ -62,47 +62,47 @@ bool check_vertex_map(std::vector<std::vector<VertexType>> &map, std::size_t siz
 }
 
 template <typename ComputationalDag>
-bool check_vertex_map_constraints(std::vector<std::vector<VertexType>> &map,
-                                  ComputationalDag &dag,
-                                  v_type_t<ComputationalDag> size_threshold,
-                                  v_memw_t<ComputationalDag> memory_threshold,
-                                  v_workw_t<ComputationalDag> work_threshold,
-                                  v_commw_t<ComputationalDag> communication_threshold) {
+bool CheckVertexMapConstraints(std::vector<std::vector<VertexType>> &map,
+                               ComputationalDag &dag,
+                               VTypeT<ComputationalDag> sizeThreshold,
+                               VMemwT<ComputationalDag> memoryThreshold,
+                               VWorkwT<ComputationalDag> workThreshold,
+                               VCommwT<ComputationalDag> communicationThreshold) {
     std::unordered_set<VertexType> vertices;
 
-    for (auto &super_node : map) {
-        v_memw_t<ComputationalDag> memory = 0;
-        v_workw_t<ComputationalDag> work = 0;
-        v_commw_t<ComputationalDag> communication = 0;
+    for (auto &superNode : map) {
+        VMemwT<ComputationalDag> memory = 0;
+        VWorkwT<ComputationalDag> work = 0;
+        VCommwT<ComputationalDag> communication = 0;
 
-        if (super_node.size() > size_threshold) {
+        if (superNode.size() > sizeThreshold) {
             return false;
         }
 
-        if (super_node.size() == 0) {
+        if (superNode.size() == 0) {
             return false;
         }
 
-        for (auto &v : super_node) {
-            memory += dag.vertex_mem_weight(v);
-            work += dag.vertex_work_weight(v);
-            communication += dag.vertex_comm_weight(v);
+        for (auto &v : superNode) {
+            memory += dag.VertexMemWeight(v);
+            work += dag.VertexWorkWeight(v);
+            communication += dag.VertexCommWeight(v);
 
-            if (dag.vertex_type(v) != dag.vertex_type(super_node[0])) {
+            if (dag.VertexType(v) != dag.VertexType(superNode[0])) {
                 return false;
             }
         }
 
-        if (memory > memory_threshold || work > work_threshold || communication > communication_threshold) {
+        if (memory > memoryThreshold || work > workThreshold || communication > communicationThreshold) {
             return false;
         }
     }
     return true;
 }
 
-BOOST_AUTO_TEST_CASE(coarser_hdagg_test) {
+BOOST_AUTO_TEST_CASE(CoarserHdaggTest) {
     // static_assert(std::is_base_of<Scheduler, T>::value, "Class is not a scheduler!");
-    std::vector<std::string> filenames_graph = tiny_spaa_graphs();
+    std::vector<std::string> filenamesGraph = TinySpaaGraphs();
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -112,66 +112,66 @@ BOOST_AUTO_TEST_CASE(coarser_hdagg_test) {
         std::cout << cwd << std::endl;
     }
 
-    for (auto &filename_graph : filenames_graph) {
-        std::string name_graph = filename_graph.substr(filename_graph.find_last_of("/\\") + 1);
-        name_graph = name_graph.substr(0, name_graph.find_last_of("."));
+    for (auto &filenameGraph : filenamesGraph) {
+        std::string nameGraph = filenameGraph.substr(filenameGraph.find_last_of("/\\") + 1);
+        nameGraph = nameGraph.substr(0, nameGraph.find_last_of("."));
 
-        std::cout << std::endl << "Graph: " << name_graph << std::endl;
+        std::cout << std::endl << "Graph: " << nameGraph << std::endl;
 
-        using graph_t = computational_dag_edge_idx_vector_impl_def_t;
+        using GraphT = ComputationalDagEdgeIdxVectorImplDefT;
 
-        BspInstance<graph_t> instance;
+        BspInstance<GraphT> instance;
 
-        bool status_graph = file_reader::readGraph((cwd / filename_graph).string(), instance.getComputationalDag());
+        bool statusGraph = file_reader::ReadGraph((cwd / filenameGraph).string(), instance.GetComputationalDag());
 
-        bool status_architecture
-            = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.getArchitecture());
+        bool statusArchitecture
+            = file_reader::ReadBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
 
-        if (!status_graph || !status_architecture) {
+        if (!statusGraph || !statusArchitecture) {
             std::cout << "Reading files failed." << std::endl;
             BOOST_CHECK(false);
         }
 
-        BspInstance<graph_t> coarse_instance;
-        coarse_instance.getArchitecture() = instance.getArchitecture();
-        std::vector<std::vector<VertexType>> vertex_map;
-        std::vector<VertexType> reverse_vertex_map;
+        BspInstance<GraphT> coarseInstance;
+        coarseInstance.GetArchitecture() = instance.GetArchitecture();
+        std::vector<std::vector<VertexType>> vertexMap;
+        std::vector<VertexType> reverseVertexMap;
 
-        hdagg_coarser<graph_t, graph_t> coarser;
+        HdaggCoarser<GraphT, GraphT> coarser;
 
-        BOOST_CHECK_EQUAL(coarser.getCoarserName(), "hdagg_coarser");
+        BOOST_CHECK_EQUAL(coarser.GetCoarserName(), "hdagg_coarser");
 
-        coarser.coarsenDag(instance.getComputationalDag(), coarse_instance.getComputationalDag(), reverse_vertex_map);
+        coarser.CoarsenDag(instance.GetComputationalDag(), coarseInstance.GetComputationalDag(), reverseVertexMap);
 
-        vertex_map = coarser_util::invert_vertex_contraction_map<graph_t, graph_t>(reverse_vertex_map);
+        vertexMap = coarser_util::InvertVertexContractionMap<GraphT, GraphT>(reverseVertexMap);
 
-        BOOST_CHECK(check_vertex_map(vertex_map, instance.getComputationalDag().num_vertices()));
+        BOOST_CHECK(CheckVertexMap(vertexMap, instance.GetComputationalDag().NumVertices()));
 
-        GreedyBspScheduler<graph_t> scheduler;
-        BspSchedule<graph_t> schedule(coarse_instance);
+        GreedyBspScheduler<GraphT> scheduler;
+        BspSchedule<GraphT> schedule(coarseInstance);
 
-        const auto status_sched = scheduler.computeSchedule(schedule);
+        const auto statusSched = scheduler.ComputeSchedule(schedule);
 
-        BOOST_CHECK(status_sched == RETURN_STATUS::OSP_SUCCESS);
-        BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+        BOOST_CHECK(statusSched == ReturnStatus::OSP_SUCCESS);
+        BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
 
-        BspSchedule<graph_t> schedule_out(instance);
+        BspSchedule<GraphT> scheduleOut(instance);
 
-        BOOST_CHECK_EQUAL(coarser_util::pull_back_schedule(schedule, vertex_map, schedule_out), true);
-        BOOST_CHECK(schedule_out.satisfiesPrecedenceConstraints());
+        BOOST_CHECK_EQUAL(coarser_util::PullBackSchedule(schedule, vertexMap, scheduleOut), true);
+        BOOST_CHECK(scheduleOut.SatisfiesPrecedenceConstraints());
 
-        CoarseAndSchedule<graph_t, graph_t> coarse_and_schedule(coarser, scheduler);
-        BspSchedule<graph_t> schedule2(instance);
+        CoarseAndSchedule<GraphT, GraphT> coarseAndSchedule(coarser, scheduler);
+        BspSchedule<GraphT> schedule2(instance);
 
-        const auto status = coarse_and_schedule.computeSchedule(schedule2);
-        BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
-        BOOST_CHECK(schedule2.satisfiesPrecedenceConstraints());
+        const auto status = coarseAndSchedule.ComputeSchedule(schedule2);
+        BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
+        BOOST_CHECK(schedule2.SatisfiesPrecedenceConstraints());
     }
 }
 
-BOOST_AUTO_TEST_CASE(coarser_hdagg_test_diff_graph_impl) {
+BOOST_AUTO_TEST_CASE(CoarserHdaggTestDiffGraphImpl) {
     // static_assert(std::is_base_of<Scheduler, T>::value, "Class is not a scheduler!");
-    std::vector<std::string> filenames_graph = tiny_spaa_graphs();
+    std::vector<std::string> filenamesGraph = TinySpaaGraphs();
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -181,66 +181,66 @@ BOOST_AUTO_TEST_CASE(coarser_hdagg_test_diff_graph_impl) {
         std::cout << cwd << std::endl;
     }
 
-    for (auto &filename_graph : filenames_graph) {
-        std::string name_graph = filename_graph.substr(filename_graph.find_last_of("/\\") + 1);
-        name_graph = name_graph.substr(0, name_graph.find_last_of("."));
+    for (auto &filenameGraph : filenamesGraph) {
+        std::string nameGraph = filenameGraph.substr(filenameGraph.find_last_of("/\\") + 1);
+        nameGraph = nameGraph.substr(0, nameGraph.find_last_of("."));
 
-        std::cout << std::endl << "Graph: " << name_graph << std::endl;
+        std::cout << std::endl << "Graph: " << nameGraph << std::endl;
 
-        using graph_t1 = computational_dag_edge_idx_vector_impl_def_t;
-        using graph_t2 = computational_dag_vector_impl_def_t;
+        using GraphT1 = ComputationalDagEdgeIdxVectorImplDefT;
+        using GraphT2 = ComputationalDagVectorImplDefUnsignedT;
 
-        BspInstance<graph_t1> instance;
+        BspInstance<GraphT1> instance;
 
-        bool status_graph = file_reader::readGraph((cwd / filename_graph).string(), instance.getComputationalDag());
+        bool statusGraph = file_reader::ReadGraph((cwd / filenameGraph).string(), instance.GetComputationalDag());
 
-        bool status_architecture
-            = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.getArchitecture());
+        bool statusArchitecture
+            = file_reader::ReadBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
 
-        if (!status_graph || !status_architecture) {
+        if (!statusGraph || !statusArchitecture) {
             std::cout << "Reading files failed." << std::endl;
             BOOST_CHECK(false);
         }
 
-        BspInstance<graph_t2> coarse_instance;
-        BspArchitecture<graph_t2> architecture_t2(instance.getArchitecture());
-        coarse_instance.getArchitecture() = architecture_t2;
-        std::vector<std::vector<VertexType>> vertex_map;
-        std::vector<VertexType> reverse_vertex_map;
+        BspInstance<GraphT2> coarseInstance;
+        BspArchitecture<GraphT2> architectureT2(instance.GetArchitecture());
+        coarseInstance.GetArchitecture() = architectureT2;
+        std::vector<std::vector<VertexType>> vertexMap;
+        std::vector<VertexType> reverseVertexMap;
 
-        hdagg_coarser<graph_t1, graph_t2> coarser;
+        HdaggCoarser<GraphT1, GraphT2> coarser;
 
-        coarser.coarsenDag(instance.getComputationalDag(), coarse_instance.getComputationalDag(), reverse_vertex_map);
+        coarser.CoarsenDag(instance.GetComputationalDag(), coarseInstance.GetComputationalDag(), reverseVertexMap);
 
-        vertex_map = coarser_util::invert_vertex_contraction_map<graph_t1, graph_t2>(reverse_vertex_map);
+        vertexMap = coarser_util::InvertVertexContractionMap<GraphT1, GraphT2>(reverseVertexMap);
 
-        BOOST_CHECK(check_vertex_map(vertex_map, instance.getComputationalDag().num_vertices()));
+        BOOST_CHECK(CheckVertexMap(vertexMap, instance.GetComputationalDag().NumVertices()));
 
-        GreedyBspScheduler<graph_t2> scheduler;
-        BspSchedule<graph_t2> schedule(coarse_instance);
+        GreedyBspScheduler<GraphT2> scheduler;
+        BspSchedule<GraphT2> schedule(coarseInstance);
 
-        auto status_sched = scheduler.computeSchedule(schedule);
+        auto statusSched = scheduler.ComputeSchedule(schedule);
 
-        BOOST_CHECK(status_sched == RETURN_STATUS::OSP_SUCCESS);
-        BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+        BOOST_CHECK(statusSched == ReturnStatus::OSP_SUCCESS);
+        BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
 
-        BspSchedule<graph_t1> schedule_out(instance);
+        BspSchedule<GraphT1> scheduleOut(instance);
 
-        BOOST_CHECK_EQUAL(coarser_util::pull_back_schedule(schedule, vertex_map, schedule_out), true);
-        BOOST_CHECK(schedule_out.satisfiesPrecedenceConstraints());
+        BOOST_CHECK_EQUAL(coarser_util::PullBackSchedule(schedule, vertexMap, scheduleOut), true);
+        BOOST_CHECK(scheduleOut.SatisfiesPrecedenceConstraints());
 
-        CoarseAndSchedule<graph_t1, graph_t2> coarse_and_schedule(coarser, scheduler);
-        BspSchedule<graph_t1> schedule2(instance);
+        CoarseAndSchedule<GraphT1, GraphT2> coarseAndSchedule(coarser, scheduler);
+        BspSchedule<GraphT1> schedule2(instance);
 
-        auto status = coarse_and_schedule.computeSchedule(schedule2);
-        BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
-        BOOST_CHECK(schedule2.satisfiesPrecedenceConstraints());
+        auto status = coarseAndSchedule.ComputeSchedule(schedule2);
+        BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
+        BOOST_CHECK(schedule2.SatisfiesPrecedenceConstraints());
     }
 }
 
-BOOST_AUTO_TEST_CASE(coarser_bspschedule_test) {
+BOOST_AUTO_TEST_CASE(CoarserBspscheduleTest) {
     // static_assert(std::is_base_of<Scheduler, T>::value, "Class is not a scheduler!");
-    std::vector<std::string> filenames_graph = tiny_spaa_graphs();
+    std::vector<std::string> filenamesGraph = TinySpaaGraphs();
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -250,73 +250,73 @@ BOOST_AUTO_TEST_CASE(coarser_bspschedule_test) {
         std::cout << cwd << std::endl;
     }
 
-    for (auto &filename_graph : filenames_graph) {
-        std::string name_graph = filename_graph.substr(filename_graph.find_last_of("/\\") + 1);
-        name_graph = name_graph.substr(0, name_graph.find_last_of("."));
+    for (auto &filenameGraph : filenamesGraph) {
+        std::string nameGraph = filenameGraph.substr(filenameGraph.find_last_of("/\\") + 1);
+        nameGraph = nameGraph.substr(0, nameGraph.find_last_of("."));
 
-        std::cout << std::endl << "Graph: " << name_graph << std::endl;
+        std::cout << std::endl << "Graph: " << nameGraph << std::endl;
 
-        using graph_t = computational_dag_edge_idx_vector_impl_def_t;
+        using GraphT = ComputationalDagEdgeIdxVectorImplDefT;
 
-        BspInstance<graph_t> instance;
+        BspInstance<GraphT> instance;
 
-        bool status_graph = file_reader::readGraph((cwd / filename_graph).string(), instance.getComputationalDag());
+        bool statusGraph = file_reader::ReadGraph((cwd / filenameGraph).string(), instance.GetComputationalDag());
 
-        bool status_architecture
-            = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.getArchitecture());
+        bool statusArchitecture
+            = file_reader::ReadBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
 
-        if (!status_graph || !status_architecture) {
+        if (!statusGraph || !statusArchitecture) {
             std::cout << "Reading files failed." << std::endl;
             BOOST_CHECK(false);
         }
 
-        BspInstance<graph_t> coarse_instance;
-        coarse_instance.getArchitecture() = instance.getArchitecture();
-        std::vector<std::vector<VertexType>> vertex_map;
-        std::vector<VertexType> reverse_vertex_map;
+        BspInstance<GraphT> coarseInstance;
+        coarseInstance.GetArchitecture() = instance.GetArchitecture();
+        std::vector<std::vector<VertexType>> vertexMap;
+        std::vector<VertexType> reverseVertexMap;
 
-        GreedyBspScheduler<graph_t> scheduler;
-        BspSchedule<graph_t> schedule_orig(instance);
+        GreedyBspScheduler<GraphT> scheduler;
+        BspSchedule<GraphT> scheduleOrig(instance);
 
-        const auto status_sched_orig = scheduler.computeSchedule(schedule_orig);
+        const auto statusSchedOrig = scheduler.ComputeSchedule(scheduleOrig);
 
-        BOOST_CHECK(status_sched_orig == RETURN_STATUS::OSP_SUCCESS);
-        BOOST_CHECK(schedule_orig.satisfiesPrecedenceConstraints());
+        BOOST_CHECK(statusSchedOrig == ReturnStatus::OSP_SUCCESS);
+        BOOST_CHECK(scheduleOrig.SatisfiesPrecedenceConstraints());
 
-        BspScheduleCoarser<graph_t, graph_t> coarser(schedule_orig);
+        BspScheduleCoarser<GraphT, GraphT> coarser(scheduleOrig);
 
-        coarser.coarsenDag(instance.getComputationalDag(), coarse_instance.getComputationalDag(), reverse_vertex_map);
+        coarser.CoarsenDag(instance.GetComputationalDag(), coarseInstance.GetComputationalDag(), reverseVertexMap);
 
-        vertex_map = coarser_util::invert_vertex_contraction_map<graph_t, graph_t>(reverse_vertex_map);
+        vertexMap = coarser_util::InvertVertexContractionMap<GraphT, GraphT>(reverseVertexMap);
 
-        BOOST_CHECK(check_vertex_map(vertex_map, instance.getComputationalDag().num_vertices()));
+        BOOST_CHECK(CheckVertexMap(vertexMap, instance.GetComputationalDag().NumVertices()));
 
-        BspSchedule<graph_t> schedule(coarse_instance);
+        BspSchedule<GraphT> schedule(coarseInstance);
 
-        const auto status_sched = scheduler.computeSchedule(schedule);
+        const auto statusSched = scheduler.ComputeSchedule(schedule);
 
-        BOOST_CHECK(status_sched == RETURN_STATUS::OSP_SUCCESS);
-        BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+        BOOST_CHECK(statusSched == ReturnStatus::OSP_SUCCESS);
+        BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
 
-        BspSchedule<graph_t> schedule_out(instance);
+        BspSchedule<GraphT> scheduleOut(instance);
 
-        BOOST_CHECK_EQUAL(coarser_util::pull_back_schedule(schedule, vertex_map, schedule_out), true);
-        BOOST_CHECK(schedule_out.satisfiesPrecedenceConstraints());
+        BOOST_CHECK_EQUAL(coarser_util::PullBackSchedule(schedule, vertexMap, scheduleOut), true);
+        BOOST_CHECK(scheduleOut.SatisfiesPrecedenceConstraints());
 
-        CoarseAndSchedule<graph_t, graph_t> coarse_and_schedule(coarser, scheduler);
-        BspSchedule<graph_t> schedule2(instance);
+        CoarseAndSchedule<GraphT, GraphT> coarseAndSchedule(coarser, scheduler);
+        BspSchedule<GraphT> schedule2(instance);
 
-        const auto status = coarse_and_schedule.computeSchedule(schedule2);
-        BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
-        BOOST_CHECK(schedule2.satisfiesPrecedenceConstraints());
+        const auto status = coarseAndSchedule.ComputeSchedule(schedule2);
+        BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
+        BOOST_CHECK(schedule2.SatisfiesPrecedenceConstraints());
     }
 }
 
-template <typename graph_t>
-void test_coarser_same_graph(Coarser<graph_t, graph_t> &coarser) {
+template <typename GraphT>
+void TestCoarserSameGraph(Coarser<GraphT, GraphT> &coarser) {
     // BOOST_AUTO_TEST_CASE(coarser_bspschedule_test) {
     // static_assert(std::is_base_of<Scheduler, T>::value, "Class is not a scheduler!");
-    std::vector<std::string> filenames_graph = tiny_spaa_graphs();
+    std::vector<std::string> filenamesGraph = TinySpaaGraphs();
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -326,125 +326,125 @@ void test_coarser_same_graph(Coarser<graph_t, graph_t> &coarser) {
         std::cout << cwd << std::endl;
     }
 
-    for (auto &filename_graph : filenames_graph) {
-        std::string name_graph = filename_graph.substr(filename_graph.find_last_of("/\\") + 1);
-        name_graph = name_graph.substr(0, name_graph.find_last_of("."));
+    for (auto &filenameGraph : filenamesGraph) {
+        std::string nameGraph = filenameGraph.substr(filenameGraph.find_last_of("/\\") + 1);
+        nameGraph = nameGraph.substr(0, nameGraph.find_last_of("."));
 
-        std::cout << std::endl << "Graph: " << name_graph << std::endl;
+        std::cout << std::endl << "Graph: " << nameGraph << std::endl;
 
-        BspInstance<graph_t> instance;
+        BspInstance<GraphT> instance;
 
-        bool status_graph = file_reader::readGraph((cwd / filename_graph).string(), instance.getComputationalDag());
+        bool statusGraph = file_reader::ReadGraph((cwd / filenameGraph).string(), instance.GetComputationalDag());
 
-        bool status_architecture
-            = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.getArchitecture());
+        bool statusArchitecture
+            = file_reader::ReadBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
 
-        if (!status_graph || !status_architecture) {
+        if (!statusGraph || !statusArchitecture) {
             std::cout << "Reading files failed." << std::endl;
             BOOST_CHECK(false);
         }
 
-        BspInstance<graph_t> coarse_instance;
-        coarse_instance.getArchitecture() = instance.getArchitecture();
-        std::vector<std::vector<VertexType>> vertex_map;
-        std::vector<VertexType> reverse_vertex_map;
+        BspInstance<GraphT> coarseInstance;
+        coarseInstance.GetArchitecture() = instance.GetArchitecture();
+        std::vector<std::vector<VertexType>> vertexMap;
+        std::vector<VertexType> reverseVertexMap;
 
-        GreedyBspScheduler<graph_t> scheduler;
+        GreedyBspScheduler<GraphT> scheduler;
 
-        bool coarse_success
-            = coarser.coarsenDag(instance.getComputationalDag(), coarse_instance.getComputationalDag(), reverse_vertex_map);
-        BOOST_CHECK(coarse_success);
+        bool coarseSuccess
+            = coarser.CoarsenDag(instance.GetComputationalDag(), coarseInstance.GetComputationalDag(), reverseVertexMap);
+        BOOST_CHECK(coarseSuccess);
 
-        vertex_map = coarser_util::invert_vertex_contraction_map<graph_t, graph_t>(reverse_vertex_map);
+        vertexMap = coarser_util::InvertVertexContractionMap<GraphT, GraphT>(reverseVertexMap);
 
-        BOOST_CHECK(check_vertex_map(vertex_map, instance.getComputationalDag().num_vertices()));
+        BOOST_CHECK(CheckVertexMap(vertexMap, instance.GetComputationalDag().NumVertices()));
 
-        BspSchedule<graph_t> schedule(coarse_instance);
+        BspSchedule<GraphT> schedule(coarseInstance);
 
-        const auto status_sched = scheduler.computeSchedule(schedule);
+        const auto statusSched = scheduler.ComputeSchedule(schedule);
 
-        BOOST_CHECK(status_sched == RETURN_STATUS::OSP_SUCCESS);
-        BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+        BOOST_CHECK(statusSched == ReturnStatus::OSP_SUCCESS);
+        BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
 
-        BspSchedule<graph_t> schedule_out(instance);
+        BspSchedule<GraphT> scheduleOut(instance);
 
-        BOOST_CHECK_EQUAL(coarser_util::pull_back_schedule(schedule, vertex_map, schedule_out), true);
-        BOOST_CHECK(schedule_out.satisfiesPrecedenceConstraints());
+        BOOST_CHECK_EQUAL(coarser_util::PullBackSchedule(schedule, vertexMap, scheduleOut), true);
+        BOOST_CHECK(scheduleOut.SatisfiesPrecedenceConstraints());
 
-        CoarseAndSchedule<graph_t, graph_t> coarse_and_schedule(coarser, scheduler);
-        BspSchedule<graph_t> schedule2(instance);
+        CoarseAndSchedule<GraphT, GraphT> coarseAndSchedule(coarser, scheduler);
+        BspSchedule<GraphT> schedule2(instance);
 
-        const auto status = coarse_and_schedule.computeSchedule(schedule2);
-        BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
-        BOOST_CHECK(schedule2.satisfiesPrecedenceConstraints());
+        const auto status = coarseAndSchedule.ComputeSchedule(schedule2);
+        BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
+        BOOST_CHECK(schedule2.SatisfiesPrecedenceConstraints());
     }
 }
 
-BOOST_AUTO_TEST_CASE(coarser_funndel_bfs_test) {
-    using graph_t = computational_dag_edge_idx_vector_impl_def_t;
-    FunnelBfs<graph_t, graph_t> coarser;
+BOOST_AUTO_TEST_CASE(CoarserFunndelBfsTest) {
+    using GraphT = ComputationalDagEdgeIdxVectorImplDefT;
+    FunnelBfs<GraphT, GraphT> coarser;
 
-    test_coarser_same_graph<graph_t>(coarser);
+    TestCoarserSameGraph<GraphT>(coarser);
 
-    FunnelBfs<graph_t, graph_t>::FunnelBfs_parameters params{std::numeric_limits<v_workw_t<graph_t>>::max(),
-                                                             std::numeric_limits<v_memw_t<graph_t>>::max(),
-                                                             std::numeric_limits<unsigned>::max(),
-                                                             false,
-                                                             true};
+    FunnelBfs<GraphT, GraphT>::FunnelBfsParameters params{std::numeric_limits<VWorkwT<GraphT>>::max(),
+                                                          std::numeric_limits<VMemwT<GraphT>>::max(),
+                                                          std::numeric_limits<unsigned>::max(),
+                                                          false,
+                                                          true};
 
-    FunnelBfs<graph_t, graph_t> coarser_params(params);
+    FunnelBfs<GraphT, GraphT> coarserParams(params);
 
-    test_coarser_same_graph<graph_t>(coarser_params);
+    TestCoarserSameGraph<GraphT>(coarserParams);
 
-    params.max_depth = 2;
-    FunnelBfs<graph_t, graph_t> coarser_params_2(params);
+    params.maxDepth_ = 2;
+    FunnelBfs<GraphT, GraphT> coarserParams2(params);
 
-    test_coarser_same_graph<graph_t>(coarser_params_2);
+    TestCoarserSameGraph<GraphT>(coarserParams2);
 }
 
-BOOST_AUTO_TEST_CASE(coarser_top_sort_test) {
-    using graph_t = computational_dag_edge_idx_vector_impl_def_t;
-    top_order_coarser<graph_t, graph_t, GetTopOrder> coarser;
+BOOST_AUTO_TEST_CASE(CoarserTopSortTest) {
+    using GraphT = ComputationalDagEdgeIdxVectorImplDefT;
+    TopOrderCoarser<GraphT, GraphT, GetTopOrder> coarser;
 
-    test_coarser_same_graph<graph_t>(coarser);
+    TestCoarserSameGraph<GraphT>(coarser);
 
-    top_order_coarser<graph_t, graph_t, GetTopOrderMaxChildren> coarser_2;
+    TopOrderCoarser<GraphT, GraphT, GetTopOrderMaxChildren> coarser2;
 
-    test_coarser_same_graph<graph_t>(coarser_2);
+    TestCoarserSameGraph<GraphT>(coarser2);
 
-    top_order_coarser<graph_t, graph_t, GetTopOrderGorder> coarser_3;
+    TopOrderCoarser<GraphT, GraphT, GetTopOrderGorder> coarser3;
 
-    test_coarser_same_graph<graph_t>(coarser_3);
+    TestCoarserSameGraph<GraphT>(coarser3);
 }
 
-BOOST_AUTO_TEST_CASE(squashA_test) {
-    using graph_t = computational_dag_edge_idx_vector_impl_def_t;
-    // using graph_t = computational_dag_vector_impl_def_t;
+BOOST_AUTO_TEST_CASE(SquashATest) {
+    using GraphT = ComputationalDagEdgeIdxVectorImplDefT;
+    // using graph_t = ComputationalDagVectorImplDefUnsignedT;
 
-    SquashAParams::Parameters params;
-    params.mode = SquashAParams::Mode::EDGE_WEIGHT;
-    params.use_structured_poset = false;
+    squash_a_params::Parameters params;
+    params.mode_ = squash_a_params::Mode::EDGE_WEIGHT;
+    params.useStructuredPoset_ = false;
 
-    SquashA<graph_t, graph_t> coarser(params);
+    SquashA<GraphT, GraphT> coarser(params);
 
-    test_coarser_same_graph<graph_t>(coarser);
+    TestCoarserSameGraph<GraphT>(coarser);
 
-    params.mode = SquashAParams::Mode::TRIANGLES;
-    params.use_structured_poset = true;
-    params.use_top_poset = true;
-    coarser.setParams(params);
+    params.mode_ = squash_a_params::Mode::TRIANGLES;
+    params.useStructuredPoset_ = true;
+    params.useTopPoset_ = true;
+    coarser.SetParams(params);
 
-    test_coarser_same_graph<graph_t>(coarser);
+    TestCoarserSameGraph<GraphT>(coarser);
 
-    params.use_top_poset = false;
-    coarser.setParams(params);
+    params.useTopPoset_ = false;
+    coarser.SetParams(params);
 
-    test_coarser_same_graph<graph_t>(coarser);
+    TestCoarserSameGraph<GraphT>(coarser);
 }
 
-BOOST_AUTO_TEST_CASE(coarser_SquashA_test_diff_graph_impl_CSG) {
+BOOST_AUTO_TEST_CASE(CoarserSquashATestDiffGraphImplCsg) {
     // static_assert(std::is_base_of<Scheduler, T>::value, "Class is not a scheduler!");
-    std::vector<std::string> filenames_graph = tiny_spaa_graphs();
+    std::vector<std::string> filenamesGraph = TinySpaaGraphs();
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -454,70 +454,70 @@ BOOST_AUTO_TEST_CASE(coarser_SquashA_test_diff_graph_impl_CSG) {
         std::cout << cwd << std::endl;
     }
 
-    for (auto &filename_graph : filenames_graph) {
-        std::string name_graph = filename_graph.substr(filename_graph.find_last_of("/\\") + 1);
-        name_graph = name_graph.substr(0, name_graph.find_last_of("."));
+    for (auto &filenameGraph : filenamesGraph) {
+        std::string nameGraph = filenameGraph.substr(filenameGraph.find_last_of("/\\") + 1);
+        nameGraph = nameGraph.substr(0, nameGraph.find_last_of("."));
 
-        std::cout << std::endl << "Graph: " << name_graph << std::endl;
+        std::cout << std::endl << "Graph: " << nameGraph << std::endl;
 
-        using graph_t1 = computational_dag_edge_idx_vector_impl_def_t;
-        using graph_t2 = CSG;
+        using GraphT1 = ComputationalDagEdgeIdxVectorImplDefT;
+        using GraphT2 = CSG;
 
-        BspInstance<graph_t1> instance;
+        BspInstance<GraphT1> instance;
 
-        bool status_graph = file_reader::readGraph((cwd / filename_graph).string(), instance.getComputationalDag());
+        bool statusGraph = file_reader::ReadGraph((cwd / filenameGraph).string(), instance.GetComputationalDag());
 
-        bool status_architecture
-            = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.getArchitecture());
+        bool statusArchitecture
+            = file_reader::ReadBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
 
-        if (!status_graph || !status_architecture) {
+        if (!statusGraph || !statusArchitecture) {
             std::cout << "Reading files failed." << std::endl;
             BOOST_CHECK(false);
         }
 
-        BspInstance<graph_t2> coarse_instance;
-        BspArchitecture<graph_t2> architecture_t2(instance.getArchitecture());
-        coarse_instance.getArchitecture() = architecture_t2;
-        std::vector<std::vector<VertexType>> vertex_map;
-        std::vector<VertexType> reverse_vertex_map;
+        BspInstance<GraphT2> coarseInstance;
+        BspArchitecture<GraphT2> architectureT2(instance.GetArchitecture());
+        coarseInstance.GetArchitecture() = architectureT2;
+        std::vector<std::vector<VertexType>> vertexMap;
+        std::vector<VertexType> reverseVertexMap;
 
-        SquashAParams::Parameters params;
-        params.mode = SquashAParams::Mode::EDGE_WEIGHT;
-        params.use_structured_poset = false;
+        squash_a_params::Parameters params;
+        params.mode_ = squash_a_params::Mode::EDGE_WEIGHT;
+        params.useStructuredPoset_ = false;
 
-        SquashA<graph_t1, graph_t2> coarser(params);
+        SquashA<GraphT1, GraphT2> coarser(params);
 
-        coarser.coarsenDag(instance.getComputationalDag(), coarse_instance.getComputationalDag(), reverse_vertex_map);
+        coarser.CoarsenDag(instance.GetComputationalDag(), coarseInstance.GetComputationalDag(), reverseVertexMap);
 
-        vertex_map = coarser_util::invert_vertex_contraction_map<graph_t1, graph_t2>(reverse_vertex_map);
+        vertexMap = coarser_util::InvertVertexContractionMap<GraphT1, GraphT2>(reverseVertexMap);
 
-        BOOST_CHECK(check_vertex_map(vertex_map, instance.getComputationalDag().num_vertices()));
+        BOOST_CHECK(CheckVertexMap(vertexMap, instance.GetComputationalDag().NumVertices()));
 
-        GreedyBspScheduler<graph_t2> scheduler;
-        BspSchedule<graph_t2> schedule(coarse_instance);
+        GreedyBspScheduler<GraphT2> scheduler;
+        BspSchedule<GraphT2> schedule(coarseInstance);
 
-        auto status_sched = scheduler.computeSchedule(schedule);
+        auto statusSched = scheduler.ComputeSchedule(schedule);
 
-        BOOST_CHECK(status_sched == RETURN_STATUS::OSP_SUCCESS);
-        BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+        BOOST_CHECK(statusSched == ReturnStatus::OSP_SUCCESS);
+        BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
 
-        BspSchedule<graph_t1> schedule_out(instance);
+        BspSchedule<GraphT1> scheduleOut(instance);
 
-        BOOST_CHECK_EQUAL(coarser_util::pull_back_schedule(schedule, vertex_map, schedule_out), true);
-        BOOST_CHECK(schedule_out.satisfiesPrecedenceConstraints());
+        BOOST_CHECK_EQUAL(coarser_util::PullBackSchedule(schedule, vertexMap, scheduleOut), true);
+        BOOST_CHECK(scheduleOut.SatisfiesPrecedenceConstraints());
 
-        CoarseAndSchedule<graph_t1, graph_t2> coarse_and_schedule(coarser, scheduler);
-        BspSchedule<graph_t1> schedule2(instance);
+        CoarseAndSchedule<GraphT1, GraphT2> coarseAndSchedule(coarser, scheduler);
+        BspSchedule<GraphT1> schedule2(instance);
 
-        auto status = coarse_and_schedule.computeSchedule(schedule2);
-        BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
-        BOOST_CHECK(schedule2.satisfiesPrecedenceConstraints());
+        auto status = coarseAndSchedule.ComputeSchedule(schedule2);
+        BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
+        BOOST_CHECK(schedule2.SatisfiesPrecedenceConstraints());
     }
 }
 
-BOOST_AUTO_TEST_CASE(coarser_SquashA_test_diff_graph_impl_CSGE) {
+BOOST_AUTO_TEST_CASE(CoarserSquashATestDiffGraphImplCsge) {
     // static_assert(std::is_base_of<Scheduler, T>::value, "Class is not a scheduler!");
-    std::vector<std::string> filenames_graph = tiny_spaa_graphs();
+    std::vector<std::string> filenamesGraph = TinySpaaGraphs();
 
     // Getting root git directory
     std::filesystem::path cwd = std::filesystem::current_path();
@@ -527,153 +527,153 @@ BOOST_AUTO_TEST_CASE(coarser_SquashA_test_diff_graph_impl_CSGE) {
         std::cout << cwd << std::endl;
     }
 
-    for (auto &filename_graph : filenames_graph) {
-        std::string name_graph = filename_graph.substr(filename_graph.find_last_of("/\\") + 1);
-        name_graph = name_graph.substr(0, name_graph.find_last_of("."));
+    for (auto &filenameGraph : filenamesGraph) {
+        std::string nameGraph = filenameGraph.substr(filenameGraph.find_last_of("/\\") + 1);
+        nameGraph = nameGraph.substr(0, nameGraph.find_last_of("."));
 
-        std::cout << std::endl << "Graph: " << name_graph << std::endl;
+        std::cout << std::endl << "Graph: " << nameGraph << std::endl;
 
-        using graph_t1 = computational_dag_edge_idx_vector_impl_def_t;
-        using graph_t2 = CSGE;
+        using GraphT1 = ComputationalDagEdgeIdxVectorImplDefT;
+        using GraphT2 = CSGE;
 
-        BspInstance<graph_t1> instance;
+        BspInstance<GraphT1> instance;
 
-        bool status_graph = file_reader::readGraph((cwd / filename_graph).string(), instance.getComputationalDag());
+        bool statusGraph = file_reader::ReadGraph((cwd / filenameGraph).string(), instance.GetComputationalDag());
 
-        bool status_architecture
-            = file_reader::readBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.getArchitecture());
+        bool statusArchitecture
+            = file_reader::ReadBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
 
-        if (!status_graph || !status_architecture) {
+        if (!statusGraph || !statusArchitecture) {
             std::cout << "Reading files failed." << std::endl;
             BOOST_CHECK(false);
         }
 
-        BspInstance<graph_t2> coarse_instance;
-        BspArchitecture<graph_t2> architecture_t2(instance.getArchitecture());
-        coarse_instance.getArchitecture() = architecture_t2;
-        std::vector<std::vector<VertexType>> vertex_map;
-        std::vector<VertexType> reverse_vertex_map;
+        BspInstance<GraphT2> coarseInstance;
+        BspArchitecture<GraphT2> architectureT2(instance.GetArchitecture());
+        coarseInstance.GetArchitecture() = architectureT2;
+        std::vector<std::vector<VertexType>> vertexMap;
+        std::vector<VertexType> reverseVertexMap;
 
-        SquashAParams::Parameters params;
-        params.mode = SquashAParams::Mode::EDGE_WEIGHT;
-        params.use_structured_poset = false;
+        squash_a_params::Parameters params;
+        params.mode_ = squash_a_params::Mode::EDGE_WEIGHT;
+        params.useStructuredPoset_ = false;
 
-        SquashA<graph_t1, graph_t2> coarser(params);
+        SquashA<GraphT1, GraphT2> coarser(params);
 
-        coarser.coarsenDag(instance.getComputationalDag(), coarse_instance.getComputationalDag(), reverse_vertex_map);
+        coarser.CoarsenDag(instance.GetComputationalDag(), coarseInstance.GetComputationalDag(), reverseVertexMap);
 
-        vertex_map = coarser_util::invert_vertex_contraction_map<graph_t1, graph_t2>(reverse_vertex_map);
+        vertexMap = coarser_util::InvertVertexContractionMap<GraphT1, GraphT2>(reverseVertexMap);
 
-        BOOST_CHECK(check_vertex_map(vertex_map, instance.getComputationalDag().num_vertices()));
+        BOOST_CHECK(CheckVertexMap(vertexMap, instance.GetComputationalDag().NumVertices()));
 
-        GreedyBspScheduler<graph_t2> scheduler;
-        BspSchedule<graph_t2> schedule(coarse_instance);
+        GreedyBspScheduler<GraphT2> scheduler;
+        BspSchedule<GraphT2> schedule(coarseInstance);
 
-        auto status_sched = scheduler.computeSchedule(schedule);
+        auto statusSched = scheduler.ComputeSchedule(schedule);
 
-        BOOST_CHECK(status_sched == RETURN_STATUS::OSP_SUCCESS);
-        BOOST_CHECK(schedule.satisfiesPrecedenceConstraints());
+        BOOST_CHECK(statusSched == ReturnStatus::OSP_SUCCESS);
+        BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
 
-        BspSchedule<graph_t1> schedule_out(instance);
+        BspSchedule<GraphT1> scheduleOut(instance);
 
-        BOOST_CHECK_EQUAL(coarser_util::pull_back_schedule(schedule, vertex_map, schedule_out), true);
-        BOOST_CHECK(schedule_out.satisfiesPrecedenceConstraints());
+        BOOST_CHECK_EQUAL(coarser_util::PullBackSchedule(schedule, vertexMap, scheduleOut), true);
+        BOOST_CHECK(scheduleOut.SatisfiesPrecedenceConstraints());
 
-        CoarseAndSchedule<graph_t1, graph_t2> coarse_and_schedule(coarser, scheduler);
-        BspSchedule<graph_t1> schedule2(instance);
+        CoarseAndSchedule<GraphT1, GraphT2> coarseAndSchedule(coarser, scheduler);
+        BspSchedule<GraphT1> schedule2(instance);
 
-        auto status = coarse_and_schedule.computeSchedule(schedule2);
-        BOOST_CHECK(status == RETURN_STATUS::OSP_SUCCESS || status == RETURN_STATUS::BEST_FOUND);
-        BOOST_CHECK(schedule2.satisfiesPrecedenceConstraints());
+        auto status = coarseAndSchedule.ComputeSchedule(schedule2);
+        BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
+        BOOST_CHECK(schedule2.SatisfiesPrecedenceConstraints());
     }
 }
 
-BOOST_AUTO_TEST_CASE(Sarkar_test) {
-    using graph_t = computational_dag_edge_idx_vector_impl_def_t;
-    // using graph_t = computational_dag_vector_impl_def_t;
+BOOST_AUTO_TEST_CASE(SarkarTest) {
+    using GraphT = ComputationalDagEdgeIdxVectorImplDefT;
+    // using graph_t = ComputationalDagVectorImplDefUnsignedT;
 
-    SarkarParams::Parameters<v_workw_t<graph_t>> params;
-    params.mode = SarkarParams::Mode::LINES;
-    params.commCost = 100;
-    params.useTopPoset = true;
+    sarkar_params::Parameters<VWorkwT<GraphT>> params;
+    params.mode_ = sarkar_params::Mode::LINES;
+    params.commCost_ = 100;
+    params.useTopPoset_ = true;
 
-    Sarkar<graph_t, graph_t> coarser(params);
+    Sarkar<GraphT, GraphT> coarser(params);
 
-    test_coarser_same_graph<graph_t>(coarser);
+    TestCoarserSameGraph<GraphT>(coarser);
 
-    params.useTopPoset = false;
-    coarser.setParameters(params);
-    test_coarser_same_graph<graph_t>(coarser);
+    params.useTopPoset_ = false;
+    coarser.SetParameters(params);
+    TestCoarserSameGraph<GraphT>(coarser);
 
-    params.mode = SarkarParams::Mode::FAN_IN_FULL;
-    coarser.setParameters(params);
-    test_coarser_same_graph<graph_t>(coarser);
+    params.mode_ = sarkar_params::Mode::FAN_IN_FULL;
+    coarser.SetParameters(params);
+    TestCoarserSameGraph<GraphT>(coarser);
 
-    params.mode = SarkarParams::Mode::FAN_IN_PARTIAL;
-    coarser.setParameters(params);
-    test_coarser_same_graph<graph_t>(coarser);
+    params.mode_ = sarkar_params::Mode::FAN_IN_PARTIAL;
+    coarser.SetParameters(params);
+    TestCoarserSameGraph<GraphT>(coarser);
 
-    params.mode = SarkarParams::Mode::FAN_OUT_FULL;
-    coarser.setParameters(params);
-    test_coarser_same_graph<graph_t>(coarser);
+    params.mode_ = sarkar_params::Mode::FAN_OUT_FULL;
+    coarser.SetParameters(params);
+    TestCoarserSameGraph<GraphT>(coarser);
 
-    params.mode = SarkarParams::Mode::FAN_OUT_PARTIAL;
-    coarser.setParameters(params);
-    test_coarser_same_graph<graph_t>(coarser);
+    params.mode_ = sarkar_params::Mode::FAN_OUT_PARTIAL;
+    coarser.SetParameters(params);
+    TestCoarserSameGraph<GraphT>(coarser);
 
-    params.mode = SarkarParams::Mode::LEVEL_EVEN;
-    coarser.setParameters(params);
-    test_coarser_same_graph<graph_t>(coarser);
+    params.mode_ = sarkar_params::Mode::LEVEL_EVEN;
+    coarser.SetParameters(params);
+    TestCoarserSameGraph<GraphT>(coarser);
 
-    params.mode = SarkarParams::Mode::LEVEL_ODD;
-    coarser.setParameters(params);
-    test_coarser_same_graph<graph_t>(coarser);
+    params.mode_ = sarkar_params::Mode::LEVEL_ODD;
+    coarser.SetParameters(params);
+    TestCoarserSameGraph<GraphT>(coarser);
 
-    params.mode = SarkarParams::Mode::FAN_IN_BUFFER;
-    coarser.setParameters(params);
-    test_coarser_same_graph<graph_t>(coarser);
+    params.mode_ = sarkar_params::Mode::FAN_IN_BUFFER;
+    coarser.SetParameters(params);
+    TestCoarserSameGraph<GraphT>(coarser);
 
-    params.mode = SarkarParams::Mode::FAN_OUT_BUFFER;
-    coarser.setParameters(params);
-    test_coarser_same_graph<graph_t>(coarser);
+    params.mode_ = sarkar_params::Mode::FAN_OUT_BUFFER;
+    coarser.SetParameters(params);
+    TestCoarserSameGraph<GraphT>(coarser);
 
-    params.mode = SarkarParams::Mode::HOMOGENEOUS_BUFFER;
-    coarser.setParameters(params);
-    test_coarser_same_graph<graph_t>(coarser);
+    params.mode_ = sarkar_params::Mode::HOMOGENEOUS_BUFFER;
+    coarser.SetParameters(params);
+    TestCoarserSameGraph<GraphT>(coarser);
 }
 
-BOOST_AUTO_TEST_CASE(SarkarML_test) {
-    using graph_t = computational_dag_edge_idx_vector_impl_def_t;
-    // using graph_t = computational_dag_vector_impl_def_t;
+BOOST_AUTO_TEST_CASE(SarkarMlTest) {
+    using GraphT = ComputationalDagEdgeIdxVectorImplDefT;
+    // using graph_t = ComputationalDagVectorImplDefUnsignedT;
 
-    SarkarParams::MulParameters<v_workw_t<graph_t>> params;
-    params.commCostVec = {100};
+    sarkar_params::MulParameters<VWorkwT<GraphT>> params;
+    params.commCostVec_ = {100};
 
-    SarkarMul<graph_t, graph_t> coarser;
-    coarser.setParameters(params);
+    SarkarMul<GraphT, GraphT> coarser;
+    coarser.SetParameters(params);
 
-    test_coarser_same_graph<graph_t>(coarser);
+    TestCoarserSameGraph<GraphT>(coarser);
 }
 
-BOOST_AUTO_TEST_CASE(SarkarMLBufferMerge_test) {
-    using graph_t = computational_dag_edge_idx_vector_impl_def_t;
-    // using graph_t = computational_dag_vector_impl_def_t;
+BOOST_AUTO_TEST_CASE(SarkarMlBufferMergeTest) {
+    using GraphT = ComputationalDagEdgeIdxVectorImplDefT;
+    // using graph_t = ComputationalDagVectorImplDefUnsignedT;
 
-    SarkarParams::MulParameters<v_workw_t<graph_t>> params;
-    params.commCostVec = {1, 2, 10, 50, 100};
-    params.buffer_merge_mode = SarkarParams::BufferMergeMode::FULL;
+    sarkar_params::MulParameters<VWorkwT<GraphT>> params;
+    params.commCostVec_ = {1, 2, 10, 50, 100};
+    params.bufferMergeMode_ = sarkar_params::BufferMergeMode::FULL;
 
-    SarkarMul<graph_t, graph_t> coarser;
-    coarser.setParameters(params);
+    SarkarMul<GraphT, GraphT> coarser;
+    coarser.SetParameters(params);
 
-    test_coarser_same_graph<graph_t>(coarser);
+    TestCoarserSameGraph<GraphT>(coarser);
 }
 
-BOOST_AUTO_TEST_CASE(SquashAML_test) {
-    using graph_t = computational_dag_edge_idx_vector_impl_def_t;
-    // using graph_t = computational_dag_vector_impl_def_t;
+BOOST_AUTO_TEST_CASE(SquashAmlTest) {
+    using GraphT = ComputationalDagEdgeIdxVectorImplDefT;
+    // using graph_t = ComputationalDagVectorImplDefUnsignedT;
 
-    SquashAMul<graph_t, graph_t> coarser;
+    SquashAMul<GraphT, GraphT> coarser;
 
-    test_coarser_same_graph<graph_t>(coarser);
+    TestCoarserSameGraph<GraphT>(coarser);
 }
