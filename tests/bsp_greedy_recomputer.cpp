@@ -101,8 +101,8 @@ BOOST_AUTO_TEST_CASE(TestRecomputer) {
 
         scheduler.ComputeRecompScheduleAdvanced(scheduleInitCs3, schedule);
         BOOST_CHECK(schedule.SatisfiesConstraints());
-        BOOST_CHECK(schedule.ComputeCosts() < scheduleInitCs3.computeCosts());
-        std::cout << "Cost decrease by greedy recomp (advanced): " << scheduleInitCs3.computeCosts() << " -> " << schedule.ComputeCosts()
+        BOOST_CHECK(schedule.ComputeCosts() < scheduleInitCs3.ComputeCosts());
+        std::cout << "Cost decrease by greedy recomp (advanced): " << scheduleInitCs3.ComputeCosts() << " -> " << schedule.ComputeCosts()
                     << std::endl;
     }
 

@@ -330,23 +330,23 @@ template<typename Graph_t>
 void BspScheduleRecomp<Graph_t>::CleanSchedule()
 {
     // I. Data that is already present before it arrives
-    std::vector<std::vector<std::multiset<unsigned>>> arrives_at(instance->NumberOfVertices(),
-                                                                    std::vector<std::multiset<unsigned>>(instance->NumberOfProcessors()));
-    for (const auto &node : instance->getComputationalDag().Vertices()) {
-        for (const auto &proc_and_step : nodeToProcessorAndSupertepAssignment_[node]) {
-            arrives_at[node][proc_and_step.first].insert(proc_and_step.second);
+    std::vector<std::vector<std::multiset<unsigned>>> arrivesAt(instance_->NumberOfVertices(),
+                                                                    std::vector<std::multiset<unsigned>>(instance_->NumberOfProcessors()));
+    for (const auto &node : instance_->GetComputationalDag().Vertices()) {
+        for (const auto &procAndStep : nodeToProcessorAndSupertepAssignment_[node]) {
+            arrivesAt[node][procAndStep.first].insert(procAndStep.second);
         }
     }
 
     for (auto const &[key, val] : commSchedule_) {
-        arrives_at[std::get<0>(key)][std::get<2>(key)].insert(val);
+        arrivesAt[std::get<0>(key)][std::get<2>(key)].insert(val);
     }
     
     // - computation steps
-    for (const auto &node : instance->GetComputationalDag().Vertices()) {
+    for (const auto &node : instance_->GetComputationalDag().Vertices()) {
         for (unsigned index = 0; index < nodeToProcessorAndSupertepAssignment_[node].size(); ) {
-            const auto &proc_and_step = nodeToProcessorAndSupertepAssignment_[node][index];
-            if(*arrives_at[node][proc_and_step.first].begin() < proc_and_step.second) {
+            const auto &procAndStep = nodeToProcessorAndSupertepAssignment_[node][index];
+            if(*arrivesAt[node][procAndStep.first].begin() < procAndStep.second) {
                 nodeToProcessorAndSupertepAssignment_[node][index] = nodeToProcessorAndSupertepAssignment_[node].back();
                 nodeToProcessorAndSupertepAssignment_[node].pop_back();
             } else {
@@ -358,12 +358,12 @@ void BspScheduleRecomp<Graph_t>::CleanSchedule()
     // - communication steps
     std::vector<KeyTriple> toErase;
     for (auto const &[key, val] : commSchedule_) {
-        auto itr = arrives_at[std::get<0>(key)][std::get<2>(key)].begin();
+        auto itr = arrivesAt[std::get<0>(key)][std::get<2>(key)].begin();
         if (*itr < val) {
             toErase.push_back(key);
-        } else if (*itr == val && ++itr != arrives_at[std::get<0>(key)][std::get<2>(key)].end() && *itr == val) {
+        } else if (*itr == val && ++itr != arrivesAt[std::get<0>(key)][std::get<2>(key)].end() && *itr == val) {
             toErase.push_back(key);
-            arrives_at[std::get<0>(key)][std::get<2>(key)].erase(itr);
+            arrivesAt[std::get<0>(key)][std::get<2>(key)].erase(itr);
         }
     }
 
@@ -372,25 +372,25 @@ void BspScheduleRecomp<Graph_t>::CleanSchedule()
     }
 
     // II. Data that is not used after being computed/sent
-    std::vector<std::vector<std::multiset<unsigned>>> used_at(instance->NumberOfVertices(),
-                                                                std::vector<std::multiset<unsigned>>(instance->NumberOfProcessors()));
-    for (const auto &node : instance->GetComputationalDag().vertices()) {
-        for (const auto &child : instance->GetComputationalDag().children(node)) {
-            for (const auto &proc_and_step : nodeToProcessorAndSupertepAssignment_[child]) {
-                used_at[node][proc_and_step.first].insert(proc_and_step.second);
+    std::vector<std::vector<std::multiset<unsigned>>> usedAt(instance_->NumberOfVertices(),
+                                                                std::vector<std::multiset<unsigned>>(instance_->NumberOfProcessors()));
+    for (const auto &node : instance_->GetComputationalDag().Vertices()) {
+        for (const auto &child : instance_->GetComputationalDag().Children(node)) {
+            for (const auto &procAndStep : nodeToProcessorAndSupertepAssignment_[child]) {
+                usedAt[node][procAndStep.first].insert(procAndStep.second);
             }
         }
     }
 
     for (auto const &[key, val] : commSchedule_) {
-        used_at[std::get<0>(key)][std::get<1>(key)].insert(val);
+        usedAt[std::get<0>(key)][std::get<1>(key)].insert(val);
     }
 
     // - computation steps    
-    for (const auto &node : instance->GetComputationalDag().Vertices()) {
+    for (const auto &node : instance_->GetComputationalDag().Vertices()) {
         for (unsigned index = 0; index < nodeToProcessorAndSupertepAssignment_[node].size(); ) {
-            const auto &proc_and_step = nodeToProcessorAndSupertepAssignment_[node][index];
-            if ((used_at[node][proc_and_step.first].empty() || *used_at[node][proc_and_step.first].rbegin() < proc_and_step.second)
+            const auto &procAndStep = nodeToProcessorAndSupertepAssignment_[node][index];
+            if ((usedAt[node][procAndStep.first].empty() || *usedAt[node][procAndStep.first].rbegin() < procAndStep.second)
                 && index > 0)
             {
                 nodeToProcessorAndSupertepAssignment_[node][index] = nodeToProcessorAndSupertepAssignment_[node].back();
@@ -410,11 +410,11 @@ void BspScheduleRecomp<Graph_t>::CleanSchedule()
     toErase.clear();
     for (unsigned step = numberOfSupersteps_ - 1; step < numberOfSupersteps_; --step) {
         for (const KeyTriple &key : entries[step]) {
-            if (used_at[std::get<0>(key)][std::get<2>(key)].empty()
-                || *used_at[std::get<0>(key)][std::get<2>(key)].rbegin() <= step) {
+            if (usedAt[std::get<0>(key)][std::get<2>(key)].empty()
+                || *usedAt[std::get<0>(key)][std::get<2>(key)].rbegin() <= step) {
                 toErase.push_back(key);
-                auto itr = used_at[std::get<0>(key)][std::get<1>(key)].find(step);
-                used_at[std::get<0>(key)][std::get<1>(key)].erase(itr);
+                auto itr = usedAt[std::get<0>(key)][std::get<1>(key)].find(step);
+                usedAt[std::get<0>(key)][std::get<1>(key)].erase(itr);
             }
         }
     }
