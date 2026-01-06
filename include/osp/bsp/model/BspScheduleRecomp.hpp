@@ -126,6 +126,7 @@ class BspScheduleRecomp : public IBspScheduleEval<GraphT> {
     VertexIdx GetTotalAssignments() const;
 
     void MergeSupersteps();
+    void CleanSchedule();
 };
 
 template <typename GraphT>
@@ -322,6 +323,105 @@ void BspScheduleRecomp<GraphT>::MergeSupersteps() {
     }
 
     numberOfSupersteps_ = currentStepIdx;
+}
+
+// remove unneeded comm. schedule entries - these can happen in several algorithms
+template<typename Graph_t>
+void BspScheduleRecomp<Graph_t>::CleanSchedule()
+{
+    // I. Data that is already present before it arrives
+    std::vector<std::vector<std::multiset<unsigned>>> arrivesAt(instance_->NumberOfVertices(),
+                                                                    std::vector<std::multiset<unsigned>>(instance_->NumberOfProcessors()));
+    for (const auto &node : instance_->GetComputationalDag().Vertices()) {
+        for (const auto &procAndStep : nodeToProcessorAndSupertepAssignment_[node]) {
+            arrivesAt[node][procAndStep.first].insert(procAndStep.second);
+        }
+    }
+
+    for (auto const &[key, val] : commSchedule_) {
+        arrivesAt[std::get<0>(key)][std::get<2>(key)].insert(val);
+    }
+    
+    // - computation steps
+    for (const auto &node : instance_->GetComputationalDag().Vertices()) {
+        for (unsigned index = 0; index < nodeToProcessorAndSupertepAssignment_[node].size(); ) {
+            const auto &procAndStep = nodeToProcessorAndSupertepAssignment_[node][index];
+            if(*arrivesAt[node][procAndStep.first].begin() < procAndStep.second) {
+                nodeToProcessorAndSupertepAssignment_[node][index] = nodeToProcessorAndSupertepAssignment_[node].back();
+                nodeToProcessorAndSupertepAssignment_[node].pop_back();
+            } else {
+                ++index;
+            }
+        }
+    }
+
+    // - communication steps
+    std::vector<KeyTriple> toErase;
+    for (auto const &[key, val] : commSchedule_) {
+        auto itr = arrivesAt[std::get<0>(key)][std::get<2>(key)].begin();
+        if (*itr < val) {
+            toErase.push_back(key);
+        } else if (*itr == val && ++itr != arrivesAt[std::get<0>(key)][std::get<2>(key)].end() && *itr == val) {
+            toErase.push_back(key);
+            arrivesAt[std::get<0>(key)][std::get<2>(key)].erase(itr);
+        }
+    }
+
+    for (const KeyTriple &key : toErase) {
+        commSchedule_.erase(key);
+    }
+
+    // II. Data that is not used after being computed/sent
+    std::vector<std::vector<std::multiset<unsigned>>> usedAt(instance_->NumberOfVertices(),
+                                                                std::vector<std::multiset<unsigned>>(instance_->NumberOfProcessors()));
+    for (const auto &node : instance_->GetComputationalDag().Vertices()) {
+        for (const auto &child : instance_->GetComputationalDag().Children(node)) {
+            for (const auto &procAndStep : nodeToProcessorAndSupertepAssignment_[child]) {
+                usedAt[node][procAndStep.first].insert(procAndStep.second);
+            }
+        }
+    }
+
+    for (auto const &[key, val] : commSchedule_) {
+        usedAt[std::get<0>(key)][std::get<1>(key)].insert(val);
+    }
+
+    // - computation steps    
+    for (const auto &node : instance_->GetComputationalDag().Vertices()) {
+        for (unsigned index = 0; index < nodeToProcessorAndSupertepAssignment_[node].size(); ) {
+            const auto &procAndStep = nodeToProcessorAndSupertepAssignment_[node][index];
+            if ((usedAt[node][procAndStep.first].empty() || *usedAt[node][procAndStep.first].rbegin() < procAndStep.second)
+                && index > 0)
+            {
+                nodeToProcessorAndSupertepAssignment_[node][index] = nodeToProcessorAndSupertepAssignment_[node].back();
+                nodeToProcessorAndSupertepAssignment_[node].pop_back();
+            } else {
+                ++index;
+            }
+        }
+    }
+
+    // - communication steps (need to visit cs entries in reverse superstep order here)
+    std::vector<std::vector<KeyTriple>> entries(numberOfSupersteps_);
+    for (auto const &[key, val] : commSchedule_) {
+        entries[val].push_back(key);
+    }
+
+    toErase.clear();
+    for (unsigned step = numberOfSupersteps_ - 1; step < numberOfSupersteps_; --step) {
+        for (const KeyTriple &key : entries[step]) {
+            if (usedAt[std::get<0>(key)][std::get<2>(key)].empty()
+                || *usedAt[std::get<0>(key)][std::get<2>(key)].rbegin() <= step) {
+                toErase.push_back(key);
+                auto itr = usedAt[std::get<0>(key)][std::get<1>(key)].find(step);
+                usedAt[std::get<0>(key)][std::get<1>(key)].erase(itr);
+            }
+        }
+    }
+
+    for (const KeyTriple &key : toErase) {
+        commSchedule_.erase(key);
+    }
 }
 
 }    // namespace osp
