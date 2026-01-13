@@ -38,7 +38,8 @@ using ComputationalDag = ComputationalDagEdgeIdxVectorImplDefIntT;
 
 int main(int argc, char *argv[]) {
     if (argc < 4) {
-        std::cerr << "Usage: " << argv[0] << " <input_file> <machine_file> <max_number_step> <optional:recomp>" << std::endl;
+        std::cerr << "Usage: " << argv[0] << " <input_file> <machine_file> <max_number_step> [time_limit_seconds] [recomp]"
+                  << std::endl;
         return 1;
     }
 
@@ -57,16 +58,32 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    unsigned steps = static_cast<unsigned>(stepInt);
+
+    // Default time limit: 3600 seconds (1 hour)
+    unsigned timeLimitSeconds = 3600;
     bool recomp = false;
 
-    if (argc > 4 && std::string(argv[4]) == "recomp") {
-        recomp = true;
-    } else if (argc > 4) {
-        std::cerr << "Unknown argument: " << argv[4] << ". Expected 'recomp' for recomputation." << std::endl;
-        return 1;
+    // Parse optional arguments
+    for (int i = 4; i < argc; ++i) {
+        std::string arg = argv[i];
+        if (arg == "recomp") {
+            recomp = true;
+        } else {
+            // Try to parse as time limit
+            try {
+                int timeLimitInt = std::stoi(arg);
+                if (timeLimitInt < 1) {
+                    std::cerr << "Argument time_limit_seconds must be a positive integer: " << timeLimitInt << std::endl;
+                    return 1;
+                }
+                timeLimitSeconds = static_cast<unsigned>(timeLimitInt);
+            } catch (const std::exception &) {
+                std::cerr << "Unknown argument: " << arg << ". Expected a time limit (integer) or 'recomp'." << std::endl;
+                return 1;
+            }
+        }
     }
-
-    unsigned steps = static_cast<unsigned>(stepInt);
 
     BspInstance<ComputationalDag> instance;
     ComputationalDag &graph = instance.GetComputationalDag();
@@ -88,7 +105,9 @@ int main(int argc, char *argv[]) {
 
     CoptFullScheduler<ComputationalDag> scheduler;
     scheduler.SetMaxNumberOfSupersteps(steps);
-    scheduler.SetTimeLimitSeconds(10800);
+    scheduler.SetTimeLimitSeconds(timeLimitSeconds);
+
+    std::cout << "Time limit set to " << timeLimitSeconds << " seconds." << std::endl;
 
     if (recomp) {
         BspScheduleRecomp<ComputationalDag> schedule(instance);

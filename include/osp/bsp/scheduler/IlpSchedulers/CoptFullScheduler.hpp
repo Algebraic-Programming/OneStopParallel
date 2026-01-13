@@ -277,7 +277,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
 
         for (unsigned node = 0; node < schedule.GetInstance().NumberOfVertices(); node++) {
             for (unsigned processor = 0; processor < schedule.GetInstance().NumberOfProcessors(); processor++) {
-                for (unsigned step = 0; step < numberOfSupersteps - 1; step++) {
+                for (unsigned step = 0; step < numberOfSupersteps; step++) {
                     if (nodeToProcessorSuperstepVar_[node][processor][static_cast<int>(step)].Get(COPT_DBLINFO_VALUE) >= .99) {
                         schedule.Assignments(node).emplace_back(processor, step);
                     }
@@ -290,7 +290,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
             for (unsigned int pFrom = 0; pFrom < schedule.GetInstance().NumberOfProcessors(); pFrom++) {
                 for (unsigned int pTo = 0; pTo < schedule.GetInstance().NumberOfProcessors(); pTo++) {
                     if (pFrom != pTo) {
-                        for (unsigned int step = 0; step < maxNumberSupersteps_; step++) {
+                        for (unsigned int step = 0; step < numberOfSupersteps - 1; step++) {
                             if (commProcessorToProcessorSuperstepNodeVar_[pFrom][pTo][step][static_cast<int>(node)].Get(
                                     COPT_DBLINFO_VALUE)
                                 >= .99) {
