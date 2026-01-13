@@ -67,7 +67,7 @@ class CoptFullScheduler : public Scheduler<GraphT> {
     bool writeSolutionsFound_;
     bool isMaxBsp_ = false;
 
-    unsigned timeLimitSeconds_ = 0;
+    unsigned timeLimitSeconds_ = 3600;
 
     const BspScheduleCS<GraphT> *initialSchedule_;
     const BspScheduleRecomp<GraphT> *initialScheduleRecomp_;
