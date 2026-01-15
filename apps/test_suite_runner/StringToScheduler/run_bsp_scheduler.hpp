@@ -79,9 +79,9 @@ std::unique_ptr<ImprovementScheduler<GraphT>> GetBspImproverByName(const ConfigP
     const std::string improverName = algorithm.get_child("name").get_value<std::string>();
 
     if (improverName == "kl_total_comm") {
-        return std::make_unique<KlTotalCommImproverMt<GraphT>>();
+        return std::make_unique<KlTotalCommImproverMt<GraphT>>(0);
     } else if (improverName == "kl_total_lambda_comm") {
-        return std::make_unique<KlTotalLambdaCommImproverMt<GraphT>>();
+        return std::make_unique<KlTotalLambdaCommImproverMt<GraphT>>(0);
     } else if (improverName == "hill_climb") {
         return std::make_unique<HillClimbingScheduler<GraphT>>();
     }

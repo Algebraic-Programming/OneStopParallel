@@ -79,8 +79,12 @@ int main(int argc, char *argv[]) {
             continue;
         }
 
-        std::cout << "Warning: assuming all node types can be scheduled on all processor types!\n";
-        bspInstance.SetAllOnesCompatibilityMatrix();
+        if (bspInstance.GetComputationalDag().NumVertexTypes() == bspInstance.GetArchitecture().GetNumberOfProcessorTypes()) {
+            bspInstance.SetDiagonalCompatibilityMatrix(bspInstance.GetComputationalDag().NumVertexTypes());
+        } else {
+            std::cout << "Warning: Mismatch in number of node & processor types - assuming full compatibility instead!\n";
+            bspInstance.SetAllOnesCompatibilityMatrix();
+        }
 
         std::vector<std::string> schedulersName(parser.scheduler_.size(), "");
         std::vector<bool> schedulersFailed(parser.scheduler_.size(), false);
@@ -92,6 +96,14 @@ int main(int argc, char *argv[]) {
         size_t algorithmCounter = 0;
         for (auto &algorithm : parser.scheduler_) {
             schedulersName[algorithmCounter] = algorithm.second.get_child("name").get_value<std::string>();
+
+            if (schedulersName[algorithmCounter].find("GrowLocal") != std::string::npos && bspInstance.HasAnyTypeRestrictions()) {
+                schedulersFailed[algorithmCounter] = true;
+                std::cerr << "Error: Algorithm" + algorithm.second.get_child("name").get_value<std::string>()
+                                + " skipped, since GrowLocal cannot handle heterogeneous problem instances." << std::endl;
+                algorithmCounter++;
+                continue;
+            }
 
             const auto startTime = std::chrono::high_resolution_clock::now();
 
@@ -105,6 +117,7 @@ int main(int argc, char *argv[]) {
                 std::cerr << "Error during execution of Scheduler " + algorithm.second.get_child("name").get_value<std::string>()
                                  + "."
                           << std::endl;
+                algorithmCounter++;
                 continue;
             }
 
@@ -198,13 +211,12 @@ int main(int argc, char *argv[]) {
         std::cout << "Number of Vertices: " + std::to_string(bspInstance.GetComputationalDag().NumVertices())
                          + "  Number of Edges: " + std::to_string(bspInstance.GetComputationalDag().NumEdges())
                   << std::endl;
+        std::vector<std::string> listOfFailed;
         for (size_t j = 0; j < parser.scheduler_.size(); j++) {
-            size_t i = j;
-
-            i = ordering[j];
+            size_t i = ordering[j];
 
             if (schedulersFailed[i]) {
-                std::cout << "scheduler " << schedulersName[i] << " failed." << std::endl;
+                listOfFailed.push_back(schedulersName[i]);
             } else {
                 std::cout << "total costs:  " << std::right << std::setw(tw) << schedulersCosts[i]
                           << "     work costs:  " << std::right << std::setw(ww) << schedulersWorkCosts[i]
@@ -213,6 +225,13 @@ int main(int argc, char *argv[]) {
                           << "     compute time:  " << std::right << std::setw(ct) << schedulersComputeTime[i] << "ms"
                           << "     scheduler:  " << schedulersName[i] << std::endl;
             }
+        }
+        if (listOfFailed.size() > 0) {
+            std::cout << "The following schedulers failed: ";
+            for(unsigned i = 0; i < listOfFailed.size(); ++i) {
+                std::cout << ((i > 0) ? ", " : "") << listOfFailed[i];
+            }
+            std::cout << std::endl;
         }
     }
 

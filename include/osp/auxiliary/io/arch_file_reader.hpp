@@ -89,6 +89,27 @@ bool ReadBspArchitecture(std::ifstream &infile, BspArchitecture<GraphT> &archite
         return false;
     }
 
+    // Read indicator bit of whether we have processor types
+    bool hasProcTypes;
+    if ((iss >> hasProcTypes) && hasProcTypes) {
+
+        // next line must have p non-negative integers with the processor types
+        while (std::getline(infile, line)) {
+            if (!line.empty() && line[0] != '%') {
+                break;
+            }
+        }
+        std::istringstream procTypes(line);
+        unsigned type;
+        for (unsigned proc = 0; proc < p; ++proc) {
+            if (!(procTypes >> type)) {
+                std::cerr << "Error: Failed to parse processor types in second line.\n";
+                return false;
+            }
+            architecture.SetProcessorType(proc, type);
+        }
+    }
+
     // Parse NUMA matrix (p x p entries)
     for (unsigned i = 0; i < p * p; ++i) {
         do {

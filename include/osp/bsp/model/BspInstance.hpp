@@ -314,6 +314,20 @@ class BspInstance {
     }
 
     /**
+     * @brief Checks if tehre are any incompatible nodetype-processortype pairs in the instance.
+     */
+    bool HasAnyTypeRestrictions() const {
+        for (VertexTypeTOrDefault node_type = 0; node_type < nodeProcessorCompatibility_.size(); ++node_type) {
+            for (VertexTypeTOrDefault proc_type = 0; proc_type < nodeProcessorCompatibility_[node_type].size(); ++proc_type) {
+                if(!nodeProcessorCompatibility_[node_type][proc_type]) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
      * @brief Returns false if there is a node whose weight does not fit on any of its compatible processors.
      * @return True if the memory constraints are feasible, false otherwise.
      */
