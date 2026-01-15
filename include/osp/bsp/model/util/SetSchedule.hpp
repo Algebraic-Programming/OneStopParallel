@@ -237,10 +237,8 @@ class SetSchedule : public IBspSchedule<GraphT> {
             }
         }
 
-        // Resize to remove the merged steps
         numberOfSupersteps_ -= shift;
         stepProcessorVertices_.resize(numberOfSupersteps_);
-        // Inner vectors (processors) are already correct size for the kept steps
     }
 
     /**

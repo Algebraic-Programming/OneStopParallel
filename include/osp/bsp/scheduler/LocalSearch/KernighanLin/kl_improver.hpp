@@ -1257,8 +1257,8 @@ class KlImprover : public ImprovementScheduler<GraphT> {
 
         for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); proc++) {
             const std::vector<VertexType> stepProcNodeVec(
-                activeSchedule_.GetSetSchedule().stepProcessorVertices_[step][proc].begin(),
-                activeSchedule_.GetSetSchedule().stepProcessorVertices_[step][proc].end());
+                activeSchedule_.GetSetSchedule().GetProcessorStepVertices()[step][proc].begin(),
+                activeSchedule_.GetSetSchedule().GetProcessorStepVertices()[step][proc].end());
             for (const auto &node : stepProcNodeVec) {
                 threadData.rewardPenaltyStrat_.InitRewardPenalty(
                     static_cast<double>(threadData.activeScheduleData_.currentViolations_.size()) + 1.0);
