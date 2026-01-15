@@ -314,7 +314,7 @@ class BspInstance {
     }
 
     /**
-     * @brief Checks if tehre are any incompatible nodetype-processortype pairs in the instance.
+     * @brief Checks if there are any incompatible nodetype-processortype pairs in the instance.
      */
     bool HasAnyTypeRestrictions() const {
         for (VertexTypeTOrDefault node_type = 0; node_type < nodeProcessorCompatibility_.size(); ++node_type) {
