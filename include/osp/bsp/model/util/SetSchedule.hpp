@@ -28,24 +28,15 @@ namespace osp {
 
 /**
  * @class SetSchedule
- * @brief Represents a working schedule set for the BSP scheduling algorithm.
  *
- * This class implements the `IBspSchedule` interface and provides functionality to manage the assignment of nodes to
- * processors and supersteps. It stores the assignment information in a data structure called `stepProcessorVertices_`,
- * which is a 2D vector of unordered sets. Each element in the `stepProcessorVertices_` vector represents a superstep
- * and a processor, and contains a set of nodes assigned to that processor and superstep.
- *
- * The `SetSchedule` class provides methods to set and retrieve the assigned processor and superstep for a given
- * node as well as to manipulate the schedule.
- *
- * @warning The getter and setter methods for individual nodes are inefficient (O(P * S)) as they require searching
- * through all processor-superstep sets. This class is useful for cases where all nodes of a superstep/processor
- * pair need to be enumerated often.
+ * The SetSchedule stores the assignment of nodes to processors and supersteps in a vector of unordered sets.
+ * Each element in the vector represents a superstep and contains a set of nodes for each processor.
+ * This class is useful for cases where all nodes of a superstep/processor pair need to be enumerated often.
  *
  * @tparam GraphT The type of the computational DAG.
  */
 template <typename GraphT>
-class SetSchedule : public IBspSchedule<GraphT> {
+class SetSchedule {
     static_assert(isComputationalDagV<GraphT>, "SetSchedule can only be used with computational DAGs.");
 
   private:
@@ -58,15 +49,6 @@ class SetSchedule : public IBspSchedule<GraphT> {
 
   public:
     SetSchedule() = default;
-
-    /**
-     * @brief Constructs a SetSchedule with a given BSP instance and number of supersteps.
-     * @param inst The BSP instance.
-     * @param numSupersteps The number of supersteps to initialize.
-     */
-    SetSchedule(const BspInstance<GraphT> &inst, unsigned numSupersteps) : instance_(&inst), numberOfSupersteps_(numSupersteps) {
-        stepProcessorVertices_.resize(numSupersteps, std::vector<std::unordered_set<VertexIdx>>(inst.NumberOfProcessors()));
-    }
 
     /**
      * @brief Constructs a SetSchedule from another IBspSchedule.
@@ -87,7 +69,7 @@ class SetSchedule : public IBspSchedule<GraphT> {
         }
     }
 
-    ~SetSchedule() override = default;
+    ~SetSchedule() = default;
 
     /**
      * @brief Clears the schedule assignments and resets the number of supersteps to 0.
@@ -102,113 +84,9 @@ class SetSchedule : public IBspSchedule<GraphT> {
      *
      * @return The BSP instance.
      */
-    [[nodiscard]] const BspInstance<GraphT> &GetInstance() const override { return *instance_; }
+    [[nodiscard]] const BspInstance<GraphT> &GetInstance() const { return *instance_; }
 
-    [[nodiscard]] unsigned NumberOfSupersteps() const override { return numberOfSupersteps_; }
-
-    /**
-     * @brief Sets the assigned superstep for a node.
-     *
-     * @warning This operation has a complexity of O(P * S), where P is the number of processors
-     * and S is the number of supersteps, as it requires searching for the node in all sets.
-     *
-     * @param node The node index.
-     * @param superstep The assigned superstep.
-     */
-    void SetAssignedSuperstep(VertexIdx node, unsigned superstep) override {
-        unsigned assignedProcessor = 0;
-        bool found = false;
-
-        // Find current assignment
-        for (unsigned step = 0; step < numberOfSupersteps_; step++) {
-            for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); proc++) {
-                if (stepProcessorVertices_[step][proc].erase(node) > 0) {
-                    assignedProcessor = proc;
-                    found = true;
-                    break;
-                }
-            }
-            if (found) {
-                break;
-            }
-        }
-
-        if (superstep < numberOfSupersteps_) {
-            stepProcessorVertices_[superstep][assignedProcessor].insert(node);
-        }
-    }
-
-    /**
-     * @brief Sets the assigned processor for a node.
-     *
-     * @warning This operation has a complexity of O(P * S), where P is the number of processors
-     * and S is the number of supersteps, as it requires searching for the node in all sets.
-     *
-     * @param node The node index.
-     * @param processor The assigned processor.
-     */
-    void SetAssignedProcessor(VertexIdx node, unsigned processor) override {
-        unsigned assignedStep = 0;
-        bool found = false;
-
-        // Find current assignment
-        for (unsigned step = 0; step < numberOfSupersteps_; step++) {
-            for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); proc++) {
-                if (stepProcessorVertices_[step][proc].erase(node) > 0) {
-                    assignedStep = step;
-                    found = true;
-                    break;
-                }
-            }
-            if (found) {
-                break;
-            }
-        }
-
-        if (assignedStep < numberOfSupersteps_ && processor < instance_->NumberOfProcessors()) {
-            stepProcessorVertices_[assignedStep][processor].insert(node);
-        }
-    }
-
-    /**
-     * @brief Get the assigned superstep of a node.
-     *
-     * @warning This query has a complexity of O(P * S), where P is the number of processors
-     * and S is the number of supersteps.
-     *
-     * @param node The node index.
-     * @return The assigned superstep.
-     */
-    [[nodiscard]] unsigned AssignedSuperstep(VertexIdx node) const override {
-        for (unsigned step = 0; step < numberOfSupersteps_; step++) {
-            for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); proc++) {
-                if (stepProcessorVertices_[step][proc].find(node) != stepProcessorVertices_[step][proc].end()) {
-                    return step;
-                }
-            }
-        }
-        return numberOfSupersteps_;
-    }
-
-    /**
-     * @brief Get the assigned processor of a node.
-     *
-     * @warning This query has a complexity of O(P * S), where P is the number of processors
-     * and S is the number of supersteps.
-     *
-     * @param node The node index.
-     * @return The assigned processor.
-     */
-    [[nodiscard]] unsigned AssignedProcessor(VertexIdx node) const override {
-        for (unsigned step = 0; step < numberOfSupersteps_; step++) {
-            for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); proc++) {
-                if (stepProcessorVertices_[step][proc].find(node) != stepProcessorVertices_[step][proc].end()) {
-                    return proc;
-                }
-            }
-        }
-        return instance_->NumberOfProcessors();
-    }
+    [[nodiscard]] unsigned NumberOfSupersteps() const { return numberOfSupersteps_; }
 
     /**
      * @brief Merges a range of supersteps into a single superstep (the startStep).

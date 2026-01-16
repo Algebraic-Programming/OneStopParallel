@@ -27,7 +27,6 @@ limitations under the License.
 #include "osp/bsp/model/BspScheduleRecomp.hpp"
 #include "osp/bsp/model/MaxBspSchedule.hpp"
 #include "osp/bsp/model/MaxBspScheduleCS.hpp"
-#include "osp/bsp/model/util/VectorSchedule.hpp"
 #include "osp/bsp/scheduler/Scheduler.hpp"
 
 namespace osp {
