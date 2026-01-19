@@ -46,7 +46,6 @@ enum class MemoryConstraintType {
     GLOBAL, /** The memory bounds apply to the sum of memory weights of the nodes assigned to the same processor. */
     PERSISTENT_AND_TRANSIENT, /** Memory bounds apply to the sum of memory weights of nodes assigned to the same processor plus
                                  the maximum communication weight of a node assigned to a processor. */
-    LOCAL_IN_OUT,             /** Memory constraints are local in-out. Experimental. */
     LOCAL_INC_EDGES,          /** Memory constraints are local incident edges. Experimental. */
     LOCAL_SOURCES_INC_EDGES   /** Memory constraints are local source incident edges. Experimental. */
 };
@@ -65,8 +64,6 @@ inline const char *ToString(MemoryConstraintType type) {
             return "GLOBAL";
         case MemoryConstraintType::PERSISTENT_AND_TRANSIENT:
             return "PERSISTENT_AND_TRANSIENT";
-        case MemoryConstraintType::LOCAL_IN_OUT:
-            return "LOCAL_IN_OUT";
         case MemoryConstraintType::LOCAL_INC_EDGES:
             return "LOCAL_INC_EDGES";
         case MemoryConstraintType::LOCAL_SOURCES_INC_EDGES:
