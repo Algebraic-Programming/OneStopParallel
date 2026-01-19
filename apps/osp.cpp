@@ -99,7 +99,7 @@ int main(int argc, char *argv[]) {
 
             if (schedulersName[algorithmCounter].find("GrowLocal") != std::string::npos && bspInstance.HasAnyTypeRestrictions()) {
                 schedulersFailed[algorithmCounter] = true;
-                std::cerr << "Error: Algorithm" + algorithm.second.get_child("name").get_value<std::string>()
+                std::cout << "Error: Algorithm" + algorithm.second.get_child("name").get_value<std::string>()
                                 + " skipped, since GrowLocal cannot handle heterogeneous problem instances." << std::endl;
                 algorithmCounter++;
                 continue;
