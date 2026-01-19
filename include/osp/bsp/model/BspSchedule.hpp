@@ -457,9 +457,6 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
             case MemoryConstraintType::GLOBAL:
                 return SatisfiesGlobalMemoryConstraints();
 
-            case MemoryConstraintType::LOCAL_IN_OUT:
-                return SatisfiesLocalInOutMemoryConstraints();
-
             case MemoryConstraintType::LOCAL_INC_EDGES:
                 return SatisfiesLocalIncEdgesMemoryConstraints();
 
