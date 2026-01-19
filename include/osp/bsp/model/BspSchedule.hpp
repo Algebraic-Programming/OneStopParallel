@@ -605,16 +605,17 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
      * @return True if local memory constraints are satisfied, false otherwise.
      */
     bool SatisfiesLocalMemoryConstraints() const {
-        SetSchedule setSchedule = SetSchedule(*this);
+        std::vector<std::vector<VMemwT<GraphT>>> memory(numberOfSupersteps_,
+                                                        std::vector<VMemwT<GraphT>>(instance_->NumberOfProcessors(), 0));
+
+        for (const auto &node : instance_->Vertices()) {
+            memory[nodeToSuperstepAssignment_[node]][nodeToProcessorAssignment_[node]]
+                += instance_->GetComputationalDag().VertexMemWeight(node);
+        }
 
         for (unsigned step = 0; step < numberOfSupersteps_; step++) {
             for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); proc++) {
-                VMemwT<GraphT> memory = 0;
-                for (const auto &node : setSchedule.GetProcessorStepVertices()[step][proc]) {
-                    memory += instance_->GetComputationalDag().VertexMemWeight(node);
-                }
-
-                if (memory > instance_->GetArchitecture().MemoryBound(proc)) {
+                if (memory[step][proc] > instance_->GetArchitecture().MemoryBound(proc)) {
                     return false;
                 }
             }
@@ -668,32 +669,6 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
                 return false;
             }
         }
-        return true;
-    }
-
-    bool SatisfiesLocalInOutMemoryConstraints() const {
-        SetSchedule setSchedule = SetSchedule(*this);
-
-        for (unsigned step = 0; step < numberOfSupersteps_; step++) {
-            for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); proc++) {
-                VMemwT<GraphT> memory = 0;
-                for (const auto &node : setSchedule.GetProcessorStepVertices()[step][proc]) {
-                    memory += instance_->GetComputationalDag().VertexMemWeight(node)
-                              + instance_->GetComputationalDag().VertexCommWeight(node);
-
-                    for (const auto &parent : instance_->GetComputationalDag().Parents(node)) {
-                        if (nodeToProcessorAssignment_[parent] == proc && nodeToSuperstepAssignment_[parent] == step) {
-                            memory -= instance_->GetComputationalDag().VertexCommWeight(parent);
-                        }
-                    }
-                }
-
-                if (memory > instance_->GetArchitecture().MemoryBound(proc)) {
-                    return false;
-                }
-            }
-        }
-
         return true;
     }
 
