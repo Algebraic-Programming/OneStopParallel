@@ -212,62 +212,6 @@ template <typename T>
 inline constexpr bool isMemoryConstraintScheduleV = IsMemoryConstraintSchedule<T>::value;
 
 template <typename GraphT>
-struct LocalInOutMemoryConstraint {
-    static_assert(std::is_convertible_v<VCommwT<GraphT>, VMemwT<GraphT>>,
-                  "LocalInOutMemoryConstraint requires that memory and communication weights are convertible.");
-
-    using GraphImplT = GraphT;
-
-    const BspInstance<GraphT> *instance_;
-    const BspSchedule<GraphT> *schedule_;
-
-    const unsigned *currentSuperstep_ = 0;
-
-    std::vector<VMemwT<GraphT>> currentProcMemory_;
-
-    LocalInOutMemoryConstraint() : instance_(nullptr), schedule_(nullptr) {}
-
-    inline void Initialize(const BspSchedule<GraphT> &schedule, const unsigned &supstepIdx) {
-        currentSuperstep_ = &supstepIdx;
-        schedule_ = &schedule;
-        instance_ = &schedule_->GetInstance();
-        currentProcMemory_.assign(instance_->NumberOfProcessors(), 0);
-
-        if (instance_->GetArchitecture().GetMemoryConstraintType() != MemoryConstraintType::LOCAL_IN_OUT) {
-            throw std::invalid_argument("Memory constraint type is not LOCAL_IN_OUT");
-        }
-    }
-
-    inline bool CanAdd(const VertexIdxT<GraphT> &v, const unsigned proc) const {
-        VMemwT<GraphT> incMemory
-            = instance_->GetComputationalDag().VertexMemWeight(v) + instance_->GetComputationalDag().VertexCommWeight(v);
-
-        for (const auto &pred : instance_->GetComputationalDag().Parents(v)) {
-            if (schedule_->AssignedProcessor(pred) == schedule_->AssignedProcessor(v)
-                && schedule_->AssignedSuperstep(pred) == *currentSuperstep_) {
-                incMemory -= instance_->GetComputationalDag().VertexCommWeight(pred);
-            }
-        }
-
-        return currentProcMemory_[proc] + incMemory <= instance_->GetArchitecture().MemoryBound(proc);
-    }
-
-    inline void Add(const VertexIdxT<GraphT> &v, const unsigned proc) {
-        currentProcMemory_[proc]
-            += instance_->GetComputationalDag().VertexMemWeight(v) + instance_->GetComputationalDag().VertexCommWeight(v);
-
-        for (const auto &pred : instance_->GetComputationalDag().Parents(v)) {
-            if (schedule_->AssignedProcessor(pred) == schedule_->AssignedProcessor(v)
-                && schedule_->AssignedSuperstep(pred) == *currentSuperstep_) {
-                currentProcMemory_[proc] -= instance_->GetComputationalDag().VertexCommWeight(pred);
-            }
-        }
-    }
-
-    inline void Reset(const unsigned proc) { currentProcMemory_[proc] = 0; }
-};
-
-template <typename GraphT>
 struct LocalIncEdgesMemoryConstraint {
     using GraphImplT = GraphT;
 

@@ -22,46 +22,83 @@ limitations under the License.
 
 namespace osp {
 
-/// @class IBspSchedule
-/// @brief Interface for a BSP (Bulk Synchronous Parallel) schedule.
+/**
+ * @class IBspSchedule
+ * @brief Pure interface class to organize the interaction with a BSP schedule.
+ *
+ * A BSP schedule assigns nodes to processors and supersteps, is based on an instance, and has a number of supersteps.
+ * It provides unified access for different data implementations.
+ *
+ * - The class `BspSchedule` implements the assignments as vectors.
+ * - The class `SetBspSchedule` implements containers that contain all nodes assigned to a pair of processor and superstep.
+ *
+ * @tparam GraphT The type of the computational DAG, which must satisfy `is_computational_dag_v`.
+ * @see BspInstance
+ * @see BspSchedule
+ * @see SetBspSchedule
+ */
 template <typename GraphT>
 class IBspSchedule {
     using VertexIdx = VertexIdxT<GraphT>;
 
+    static_assert(isComputationalDagV<GraphT>, "IBspSchedule can only be used with computational DAGs.");
+
   public:
-    /// @brief Destructor.
     virtual ~IBspSchedule() = default;
 
-    virtual const BspInstance<GraphT> &GetInstance() const = 0;
+    /**
+     * @brief Get the BSP instance associated with this schedule.
+     *
+     * @return The BSP instance.
+     */
+    [[nodiscard]] virtual const BspInstance<GraphT> &GetInstance() const = 0;
 
-    /// @brief Set the assigned superstep for a node.
-    /// @param node The node index.
-    /// @param superstep The assigned superstep.
+    /**
+     * @brief Set the assigned superstep for a node.
+     *
+     * @param node The node index.
+     * @param superstep The assigned superstep.
+     */
     virtual void SetAssignedSuperstep(VertexIdx node, unsigned int superstep) = 0;
 
-    /// @brief Set the assigned processor for a node.
-    /// @param node The node index.
-    /// @param processor The assigned processor.
+    /**
+     * @brief Set the assigned processor for a node.
+     *
+     * @param node The node index.
+     * @param processor The assigned processor.
+     */
     virtual void SetAssignedProcessor(VertexIdx node, unsigned int processor) = 0;
 
-    /// @brief Get the assigned superstep of a node.
-    /// @param node The node index.
-    /// @return The assigned superstep of the node.
-    ///         If the node is not assigned to a superstep, this.NumberOfSupersteps() is returned.
-    virtual unsigned AssignedSuperstep(VertexIdx node) const = 0;
+    /**
+     * @brief Get the assigned superstep of a node.
+     *
+     * @param node The node index.
+     * @return The assigned superstep of the node.
+     *         If the node is not assigned to a superstep, this.NumberOfSupersteps() is returned.
+     */
+    [[nodiscard]] virtual unsigned AssignedSuperstep(VertexIdx node) const = 0;
 
-    /// @brief Get the assigned processor of a node.
-    /// @param node The node index.
-    /// @return The assigned processor of the node.
-    ///         If the node is not assigned to a processor, this.GetInstance().NumberOfProcessors() is returned.
-    virtual unsigned AssignedProcessor(VertexIdx node) const = 0;
+    /**
+     * @brief Get the assigned processor of a node.
+     *
+     * @param node The node index.
+     * @return The assigned processor of the node.
+     *         If the node is not assigned to a processor, this.GetInstance().NumberOfProcessors() is returned.
+     */
+    [[nodiscard]] virtual unsigned AssignedProcessor(VertexIdx node) const = 0;
 
-    /// @brief Get the number of supersteps in the schedule.
-    /// @return The number of supersteps in the schedule.
-    virtual unsigned NumberOfSupersteps() const = 0;
+    /**
+     * @brief Get the number of supersteps in the schedule.
+     *
+     * @return The number of supersteps in the schedule.
+     */
+    [[nodiscard]] virtual unsigned NumberOfSupersteps() const = 0;
 
-    /// @brief Get the staleness of the schedule.
-    /// @return The staleness of the schedule.
+    /**
+     * @brief Get the staleness of the schedule.
+     *
+     * @return The staleness of the schedule.
+     */
     virtual unsigned GetStaleness() const { return 1; }
 };
 

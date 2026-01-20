@@ -329,7 +329,7 @@ struct VertexSelectionStrategy {
 
         const unsigned numProcs = activeSchedule_->GetInstance().NumberOfProcessors();
         for (unsigned step = startStep; step <= endStep; ++step) {
-            const auto &processorVertices = activeSchedule_->GetSetSchedule().stepProcessorVertices_[step];
+            const auto &processorVertices = activeSchedule_->GetSetSchedule().GetProcessorStepVertices()[step];
             for (unsigned proc = 0; proc < numProcs; ++proc) {
                 for (const auto node : processorVertices[proc]) {
                     permutation_.push_back(node);
@@ -421,7 +421,7 @@ struct VertexSelectionStrategy {
         for (unsigned idx = 0; idx < numMaxWorkProc; idx++) {
             const unsigned proc = activeSchedule_->workDatastructures_.stepProcessorWork_[step][idx].proc_;
             const std::unordered_set<VertexIdxT<GraphT>> stepProcVert
-                = activeSchedule_->GetSetSchedule().stepProcessorVertices_[step][proc];
+                = activeSchedule_->GetSetSchedule().GetProcessorStepVertices()[step][proc];
             const size_t numInsert = std::min(threshold - nodeSelection.size(), stepProcVert.size());
             auto endIt = stepProcVert.begin();
             std::advance(endIt, numInsert);

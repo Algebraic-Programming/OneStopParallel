@@ -361,8 +361,8 @@ BOOST_AUTO_TEST_CASE(ActiveScheduleApplyMoveTest) {
     activeSchedule_.ApplyMove(move, threadData);
 
     BOOST_CHECK_EQUAL(activeSchedule_.AssignedSuperstep(1), 0);
-    BOOST_CHECK_EQUAL(activeSchedule_.GetSetSchedule().stepProcessorVertices_[1][1].count(1), 0);
-    BOOST_CHECK_EQUAL(activeSchedule_.GetSetSchedule().stepProcessorVertices_[0][1].count(1), 1);
+    BOOST_CHECK_EQUAL(activeSchedule_.GetSetSchedule().GetProcessorStepVertices()[1][1].count(1), 0);
+    BOOST_CHECK_EQUAL(activeSchedule_.GetSetSchedule().GetProcessorStepVertices()[0][1].count(1), 1);
 
     BOOST_CHECK(!threadData.feasible_);
     BOOST_CHECK_EQUAL(threadData.currentViolations_.size(), 1);

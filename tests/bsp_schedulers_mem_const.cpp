@@ -166,63 +166,6 @@ void RunTestPersistentTransientMemory(Scheduler<GraphT> *testScheduler) {
 }
 
 template <typename GraphT>
-void RunTestLocalInOutMemory(Scheduler<GraphT> *testScheduler) {
-    // static_assert(std::is_base_of<Scheduler, T>::value, "Class is not a scheduler!");
-    std::vector<std::string> filenamesGraph = TestGraphs();
-    std::vector<std::string> filenamesArchitectures = TestArchitectures();
-
-    // Getting root git directory
-    std::filesystem::path cwd = std::filesystem::current_path();
-    std::cout << cwd << std::endl;
-    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
-        cwd = cwd.parent_path();
-        std::cout << cwd << std::endl;
-    }
-
-    for (auto &filenameGraph : filenamesGraph) {
-        for (auto &filenameMachine : filenamesArchitectures) {
-            std::string nameGraph = filenameGraph.substr(filenameGraph.find_last_of("/\\") + 1);
-            nameGraph = nameGraph.substr(0, nameGraph.find_last_of("."));
-            std::string nameMachine = filenameMachine.substr(filenameMachine.find_last_of("/\\") + 1);
-            nameMachine = nameMachine.substr(0, nameMachine.rfind("."));
-
-            std::cout << std::endl << "Scheduler: " << testScheduler->GetScheduleName() << std::endl;
-            std::cout << "Graph: " << nameGraph << std::endl;
-            std::cout << "Architecture: " << nameMachine << std::endl;
-
-            BspInstance<GraphT> instance;
-
-            bool statusGraph = file_reader::ReadComputationalDagHyperdagFormatDB((cwd / filenameGraph).string(),
-                                                                                 instance.GetComputationalDag());
-            bool statusArchitecture
-                = file_reader::ReadBspArchitecture((cwd / "data/machine_params/p3.arch").string(), instance.GetArchitecture());
-
-            AddMemWeights(instance.GetComputationalDag());
-            instance.GetArchitecture().SetMemoryConstraintType(MemoryConstraintType::LOCAL_IN_OUT);
-            std::cout << "Memory constraint type: LOCAL_IN_OUT" << std::endl;
-
-            if (!statusGraph || !statusArchitecture) {
-                std::cout << "Reading files failed." << std::endl;
-                BOOST_CHECK(false);
-            }
-
-            const std::vector<VMemwT<GraphT>> boundsToTest = {10, 20, 50, 100};
-
-            for (const auto &bound : boundsToTest) {
-                instance.GetArchitecture().SetMemoryBound(bound);
-
-                BspSchedule<GraphT> schedule(instance);
-                const auto result = testScheduler->ComputeSchedule(schedule);
-
-                BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
-                BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
-                BOOST_CHECK(schedule.SatisfiesMemoryConstraints());
-            }
-        }
-    }
-}
-
-template <typename GraphT>
 void RunTestLocalIncEdgesMemory(Scheduler<GraphT> *testScheduler) {
     // static_assert(std::is_base_of<Scheduler, T>::value, "Class is not a scheduler!");
     std::vector<std::string> filenamesGraph = TestGraphs();
@@ -342,9 +285,6 @@ BOOST_AUTO_TEST_CASE(GreedyBspSchedulerLocalTest) {
     GreedyBspScheduler<GraphImplT, LocalMemoryConstraint<GraphImplT>> test1;
     RunTestLocalMemory(&test1);
 
-    GreedyBspScheduler<GraphImplT, LocalInOutMemoryConstraint<GraphImplT>> test2;
-    RunTestLocalInOutMemory(&test2);
-
     GreedyBspScheduler<GraphImplT, LocalIncEdgesMemoryConstraint<GraphImplT>> test3;
     RunTestLocalIncEdgesMemory(&test3);
 
@@ -357,9 +297,6 @@ BOOST_AUTO_TEST_CASE(GrowLocalAutoCoresLocalTest) {
 
     GrowLocalAutoCores<GraphImplT, LocalMemoryConstraint<GraphImplT>> test1;
     RunTestLocalMemory(&test1);
-
-    GrowLocalAutoCores<GraphImplT, LocalInOutMemoryConstraint<GraphImplT>> test2;
-    RunTestLocalInOutMemory(&test2);
 
     GrowLocalAutoCores<GraphImplT, LocalIncEdgesMemoryConstraint<GraphImplT>> test3;
     RunTestLocalIncEdgesMemory(&test3);
@@ -374,9 +311,6 @@ BOOST_AUTO_TEST_CASE(BspLockingLocalTest) {
     BspLocking<GraphImplT, LocalMemoryConstraint<GraphImplT>> test1;
     RunTestLocalMemory(&test1);
 
-    BspLocking<GraphImplT, LocalInOutMemoryConstraint<GraphImplT>> test2;
-    RunTestLocalInOutMemory(&test2);
-
     BspLocking<GraphImplT, LocalIncEdgesMemoryConstraint<GraphImplT>> test3;
     RunTestLocalIncEdgesMemory(&test3);
 
@@ -388,20 +322,6 @@ BOOST_AUTO_TEST_CASE(VarianceLocalTest) {
     VarianceFillup<ComputationalDagEdgeIdxVectorImplDefT, LocalMemoryConstraint<ComputationalDagEdgeIdxVectorImplDefT>> test;
     RunTestLocalMemory(&test);
 }
-
-// BOOST_AUTO_TEST_CASE(kl_local_test) {
-
-//     VarianceFillup<ComputationalDagEdgeIdxVectorImplDefT,
-//                    LocalMemoryConstraint<ComputationalDagEdgeIdxVectorImplDefT>>
-//         test;
-
-//     kl_total_comm<ComputationalDagEdgeIdxVectorImplDefT,
-//     local_search_local_memory_constraint<ComputationalDagEdgeIdxVectorImplDefT>> kl;
-
-//     ComboScheduler<ComputationalDagEdgeIdxVectorImplDefT> combo_test(test, kl);
-
-//     run_test_local_memory(&combo_test);
-// };
 
 BOOST_AUTO_TEST_CASE(GreedyBspSchedulerPersistentTransientTest) {
     GreedyBspScheduler<ComputationalDagEdgeIdxVectorImplDefT, PersistentTransientMemoryConstraint<ComputationalDagEdgeIdxVectorImplDefT>>
