@@ -105,7 +105,6 @@ class EftSubgraphScheduler {
         JobStatus status_ = JobStatus::WAITING;
         VWorkwT<GraphT> upwardRank_ = 0.0;
 
-        // --- Execution Tracking Members ---
         std::vector<unsigned> assignedWorkers_;
         double startTime_ = -1.0;
         double finishTime_ = -1.0;
@@ -321,8 +320,6 @@ class EftSubgraphScheduler {
     void ProcessCompletedJobs(std::vector<JobIdT> &runningJobs, std::vector<unsigned> &availableWorkers, unsigned &completedCount,
                               double currentTime, const GraphT &graph) {
         const size_t numWorkerTypes = availableWorkers.size();
-
-        // Optimize removal loop
         for (size_t i = 0; i < runningJobs.size();) {
             Job &job = jobs_.at(runningJobs[i]);
             if (job.finishTime_ <= currentTime) {
@@ -344,7 +341,6 @@ class EftSubgraphScheduler {
                     }
                 }
 
-                // Fast removal: swap with last and pop
                 runningJobs[i] = runningJobs.back();
                 runningJobs.pop_back();
             } else {

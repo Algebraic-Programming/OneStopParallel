@@ -3,7 +3,7 @@ Copyright 2024 Huawei Technologies Co., Ltd.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+you may obtain a copy of the License at
 
     http://www.apache.org/licenses/LICENSE-2.0
 
@@ -26,6 +26,7 @@ limitations under the License.
 namespace osp {
 
 /**
+ * @class PrecomputedHashComputer
  * @brief A class to store precomputed hash values for a set of objects and provide an orbit-based interface.
  *
  * This class takes a vector of hash values for objects indexed from 0 to n-1. It then computes the orbits
@@ -43,7 +44,7 @@ class PrecomputedHashComputer : public HashComputer<IndexType> {
     /**
      * @brief Construct a new Precomputed Hash Computer object.
      *
-     * @param precomputed_hashes A vector of hash values for objects 0 to n-1.
+     * @param precomputedHashes A vector of hash values for objects 0 to n-1.
      */
     PrecomputedHashComputer(const std::vector<std::size_t> &precomputedHashes) : vertexHashes_(precomputedHashes) {
         for (std::size_t i = 0; i < vertexHashes_.size(); ++i) {
@@ -52,21 +53,21 @@ class PrecomputedHashComputer : public HashComputer<IndexType> {
         }
     }
 
-    virtual ~PrecomputedHashComputer() override = default;
+    ~PrecomputedHashComputer() override = default;
 
-    inline std::size_t GetVertexHash(const IndexType &v) const override { return vertexHashes_[v]; }
+    std::size_t GetVertexHash(const IndexType &v) const override { return vertexHashes_[v]; }
 
-    inline const std::vector<std::size_t> &GetVertexHashes() const override { return vertexHashes_; }
+    const std::vector<std::size_t> &GetVertexHashes() const override { return vertexHashes_; }
 
-    inline std::size_t NumOrbits() const override { return orbits_.size(); }
+    std::size_t NumOrbits() const override { return orbits_.size(); }
 
-    inline const std::vector<IndexType> &GetOrbit(const IndexType &v) const override {
+    const std::vector<IndexType> &GetOrbit(const IndexType &v) const override {
         return this->GetOrbitFromHash(this->GetVertexHash(v));
     }
 
-    inline const std::unordered_map<std::size_t, std::vector<IndexType>> &GetOrbits() const override { return orbits_; }
+    const std::unordered_map<std::size_t, std::vector<IndexType>> &GetOrbits() const override { return orbits_; }
 
-    inline const std::vector<IndexType> &GetOrbitFromHash(const std::size_t &hash) const override { return orbits_.at(hash); }
+    const std::vector<IndexType> &GetOrbitFromHash(const std::size_t &hash) const override { return orbits_.at(hash); }
 };
 
 }    // namespace osp
