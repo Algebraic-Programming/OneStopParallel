@@ -3,7 +3,7 @@ Copyright 2024 Huawei Technologies Co., Ltd.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+you may obtain a copy of the License at
 
     http://www.apache.org/licenses/LICENSE-2.0
 
@@ -18,8 +18,9 @@ limitations under the License.
 
 #pragma once
 
-#include <iostream>
 #include <numeric>
+#include <string>
+#include <vector>
 
 #include "osp/bsp/scheduler/Scheduler.hpp"
 #include "osp/graph_algorithms/computational_dag_util.hpp"
@@ -28,22 +29,26 @@ limitations under the License.
 namespace osp {
 
 /**
- * @brief A scheduler for a single trimmed group, which consists of multiple isomorphic connected components.
- *
  * @class TrimmedGroupScheduler
+ * @brief A scheduler for a single trimmed group consisting of multiple isomorphic connected components.
  *
- * This scheduler functions similarly to the ConnectedComponentScheduler but is tailored for a single,
- * potentially disconnected, subgraph that resulted from merging smaller isomorphic subgraphs. It divides
- * the input graph into its weakly connected components and schedules them on proportionally allocated processors.
+ * This scheduler partitions a disconnected subgraph (a pruned group) into its weakly connected components.
+ * It assumes these components are isomorphic and distributes them among the available processor groups
+ * to balance the load.
+ *
+ * @tparam ConstrGraphT The type of the graph.
  */
 template <typename ConstrGraphT>
 class TrimmedGroupScheduler : public Scheduler<ConstrGraphT> {
     Scheduler<ConstrGraphT> *subScheduler_;
     unsigned minNonZeroProcs_;
 
-    static constexpr bool verbose_ = false;
-
   public:
+    /**
+     * @brief Constructs a TrimmedGroupScheduler.
+     * @param scheduler The sub-scheduler to use for scheduling individual component groups.
+     * @param minNonZeroProcs The minimum number of non-zero processors to utilize.
+     */
     TrimmedGroupScheduler(Scheduler<ConstrGraphT> &scheduler, unsigned minNonZeroProcs)
         : subScheduler_(&scheduler), minNonZeroProcs_(minNonZeroProcs) {}
 
@@ -52,9 +57,7 @@ class TrimmedGroupScheduler : public Scheduler<ConstrGraphT> {
     ReturnStatus ComputeSchedule(BspSchedule<ConstrGraphT> &schedule) override {
         const auto &instance = schedule.GetInstance();
         const ConstrGraphT &dag = instance.GetComputationalDag();
-        const BspArchitecture<ConstrGraphT> &arch = instance.GetArchitecture();
 
-        // Find the weakly connected components. These are assumed to be isomorphic subgraphs.
         std::vector<VertexIdxT<ConstrGraphT>> componentMap(dag.NumVertices());
         size_t numComponents = ComputeWeaklyConnectedComponents(dag, componentMap);
 
@@ -63,20 +66,24 @@ class TrimmedGroupScheduler : public Scheduler<ConstrGraphT> {
             return ReturnStatus::OSP_SUCCESS;
         }
 
-        if constexpr (verbose_) {
-            std::cout << "  [TrimmedGroupScheduler] min_non_zero_procs: " << minNonZeroProcs_
-                      << ", num_components: " << numComponents << std::endl;
-        }
-
-        // Group vertices by component.
         std::vector<std::vector<VertexIdxT<ConstrGraphT>>> componentsVertices(numComponents);
         for (VertexIdxT<ConstrGraphT> v = 0; v < dag.NumVertices(); ++v) {
             componentsVertices[componentMap[v]].push_back(v);
         }
 
-        // Distribute components among processor types.
-        // The goal is to assign `base_count` components to each processor type group,
-        // plus one extra for the first `remainder` groups.
+        auto componentIndicesPerGroup = DistributeComponents(numComponents);
+        auto subArch = BuildSubArchitecture(instance.GetArchitecture());
+
+        return SolveAndMapSubProblems(schedule, componentIndicesPerGroup, componentsVertices, subArch);
+    }
+
+  private:
+    /**
+     * @brief Distributes components among the processor groups.
+     * @param numComponents Total number of components.
+     * @return A vector where each element is a list of component indices assigned to a processor group.
+     */
+    std::vector<std::vector<unsigned>> DistributeComponents(size_t numComponents) {
         const unsigned baseCount = static_cast<unsigned>(numComponents) / minNonZeroProcs_;
         const unsigned remainder = static_cast<unsigned>(numComponents) % minNonZeroProcs_;
 
@@ -90,43 +97,58 @@ class TrimmedGroupScheduler : public Scheduler<ConstrGraphT> {
                 }
             }
         }
+        return componentIndicesPerGroup;
+    }
 
-        // Determine the processor allocation for a single sub-problem.
-        // Calculate offsets for processor types within the main 'arch' (passed to TrimmedGroupScheduler)
+    /**
+     * @brief Builds the architecture for a single sub-problem (one processor group).
+     * @param arch The global architecture.
+     * @return The sub-architecture.
+     */
+    BspArchitecture<ConstrGraphT> BuildSubArchitecture(const BspArchitecture<ConstrGraphT> &arch) {
+        std::vector<unsigned> subProcCounts(arch.GetNumberOfProcessorTypes());
+        std::vector<VMemwT<ConstrGraphT>> memWeights(arch.GetNumberOfProcessorTypes(), 0);
+
+        for (unsigned typeIdx = 0; typeIdx < arch.GetNumberOfProcessorTypes(); ++typeIdx) {
+            subProcCounts[typeIdx] = arch.GetProcessorTypeCount()[typeIdx] / minNonZeroProcs_;
+            memWeights[typeIdx] = static_cast<VMemwT<ConstrGraphT>>(arch.MaxMemoryBoundProcType(typeIdx));
+        }
+
+        BspArchitecture<ConstrGraphT> subArch(arch);
+        subArch.SetProcessorsConsequTypes(subProcCounts, memWeights);
+        return subArch;
+    }
+
+    /**
+     * @brief Solves the sub-schedule for each group and maps the results back to the global schedule.
+     */
+    ReturnStatus SolveAndMapSubProblems(BspSchedule<ConstrGraphT> &schedule,
+                                        const std::vector<std::vector<unsigned>> &componentIndicesPerGroup,
+                                        const std::vector<std::vector<VertexIdxT<ConstrGraphT>>> &componentsVertices,
+                                        const BspArchitecture<ConstrGraphT> &subArch) {
+        const auto &instance = schedule.GetInstance();
+        const auto &arch = instance.GetArchitecture();
+        const auto &dag = instance.GetComputationalDag();
+
+        // Calculate offsets for mapping local sub-processor IDs to global processor IDs
         std::vector<unsigned> archProcTypeOffsets(arch.GetNumberOfProcessorTypes(), 0);
         const auto &archProcTypeCounts = arch.GetProcessorTypeCount();
         for (unsigned typeIdx = 1; typeIdx < arch.GetNumberOfProcessorTypes(); ++typeIdx) {
             archProcTypeOffsets[typeIdx] = archProcTypeOffsets[typeIdx - 1] + archProcTypeCounts[typeIdx - 1];
         }
 
-        std::vector<unsigned> subProcCounts(arch.GetNumberOfProcessorTypes());
-        std::vector<VMemwT<ConstrGraphT>> memWeights(arch.GetNumberOfProcessorTypes(), 0);
-        for (unsigned typeIdx = 0; typeIdx < arch.GetNumberOfProcessorTypes(); ++typeIdx) {
-            subProcCounts[typeIdx] = arch.GetProcessorTypeCount()[typeIdx] / minNonZeroProcs_;
-            memWeights[typeIdx] = static_cast<VMemwT<ConstrGraphT>>(arch.MaxMemoryBoundProcType(typeIdx));
-        }
-
-        if constexpr (verbose_) {
-            std::cout << "  [TrimmedGroupScheduler] Sub-problem processor counts per type: ";
-            for (size_t typeIdx = 0; typeIdx < subProcCounts.size(); ++typeIdx) {
-                std::cout << "T" << typeIdx << ":" << subProcCounts[typeIdx] << " ";
-            }
-            std::cout << std::endl;
-        }
-
-        // Create the sub-architecture for one sub-problem.
-        BspArchitecture<ConstrGraphT> subArch(arch);
-        subArch.SetProcessorsConsequTypes(subProcCounts, memWeights);
-
-        // Calculate offsets for processor types within the 'sub_arch'
         std::vector<unsigned> subArchProcTypeOffsets(subArch.GetNumberOfProcessorTypes(), 0);
         const auto &subArchProcTypeCounts = subArch.GetProcessorTypeCount();
         for (unsigned typeIdx = 1; typeIdx < subArch.GetNumberOfProcessorTypes(); ++typeIdx) {
             subArchProcTypeOffsets[typeIdx] = subArchProcTypeOffsets[typeIdx - 1] + subArchProcTypeCounts[typeIdx - 1];
         }
 
+        std::vector<unsigned> subProcCounts = subArch.GetProcessorTypeCount();
         unsigned maxSupersteps = 0;
+
         for (unsigned i = 0; i < minNonZeroProcs_; ++i) {
+            if (componentIndicesPerGroup[i].empty()) continue;
+
             std::vector<VertexIdxT<ConstrGraphT>> groupVertices;
             for (unsigned compIdx : componentIndicesPerGroup[i]) {
                 groupVertices.insert(groupVertices.end(), componentsVertices[compIdx].begin(), componentsVertices[compIdx].end());
@@ -135,34 +157,26 @@ class TrimmedGroupScheduler : public Scheduler<ConstrGraphT> {
 
             BspInstance<ConstrGraphT> subInstance;
             subInstance.GetArchitecture() = subArch;
-            subInstance.SetNodeProcessorCompatibility(instance.GetNodeProcessorCompatibilityMatrix());    // Inherit compatibility
-            auto globalToLocalMap
-                = CreateInducedSubgraphMap(dag, subInstance.GetComputationalDag(), groupVertices);    // Create induced subgraph
+            subInstance.SetNodeProcessorCompatibility(instance.GetNodeProcessorCompatibilityMatrix());
 
-            // Create a schedule object for the sub-problem
+            auto globalToLocalMap = CreateInducedSubgraphMap(dag, subInstance.GetComputationalDag(), groupVertices);
+
             BspSchedule<ConstrGraphT> subSchedule(subInstance);
-
-            // Call the sub-scheduler to compute the schedule for this group of components
             auto status = subScheduler_->ComputeSchedule(subSchedule);
+
             if (status != ReturnStatus::OSP_SUCCESS && status != ReturnStatus::BEST_FOUND) {
                 return status;
             }
 
-            // Map the sub-schedule back to the main schedule.
             for (const auto &vGlobal : groupVertices) {
                 const auto vLocal = globalToLocalMap.at(vGlobal);
                 const unsigned subProc = subSchedule.AssignedProcessor(vLocal);
                 const unsigned subSuperstep = subSchedule.AssignedSuperstep(vLocal);
 
-                // Determine the processor type and its local index within that type in the sub_arch
                 const unsigned procType = subArch.ProcessorType(subProc);
                 const unsigned localIdxWithinType = subProc - subArchProcTypeOffsets[procType];
-
-                // Calculate the global processor ID by combining:
-                // The base offset of this processor type in the main 'arch'.
-                // The offset for the current 'i'-th block of processors of this type.
-                // The local index within that type block.
                 const unsigned globalProc = archProcTypeOffsets[procType] + (i * subProcCounts[procType]) + localIdxWithinType;
+
                 schedule.SetAssignedProcessor(vGlobal, globalProc);
                 schedule.SetAssignedSuperstep(vGlobal, subSuperstep);
             }
