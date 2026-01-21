@@ -3,7 +3,7 @@ Copyright 2024 Huawei Technologies Co., Ltd.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+you may obtain a copy of the License at
 
     http://www.apache.org/licenses/LICENSE-2.0
 
@@ -18,9 +18,12 @@ limitations under the License.
 
 #pragma once
 
+#include <algorithm>
 #include <set>
 #include <stdexcept>
+#include <type_traits>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "osp/auxiliary/hash_util.hpp"
@@ -32,6 +35,7 @@ limitations under the License.
 namespace osp {
 
 /**
+ * @class MerkleHashComputer
  * @brief Computes Merkle hashes for graph vertices to identify isomorphic orbits.
  *
  * The Merkle hash of a vertex is computed recursively based on its own properties
@@ -57,7 +61,7 @@ class MerkleHashComputer : public HashComputer<VertexIdxT<GraphT>> {
 
     NodeHashFuncT nodeHashFunc_;
 
-    inline void ComputeHashesHelper(const VertexType &v, std::vector<std::size_t> &parentChildHashes) {
+    void ComputeHashesHelper(const VertexType &v, std::vector<std::size_t> &parentChildHashes) {
         std::sort(parentChildHashes.begin(), parentChildHashes.end());
 
         std::size_t hash = nodeHashFunc_(v);
@@ -76,64 +80,84 @@ class MerkleHashComputer : public HashComputer<VertexIdxT<GraphT>> {
 
     template <typename RetT = void>
     std::enable_if_t<forward, RetT> ComputeHashes(const GraphT &graph) {
-        vertexHashes_.resize(graph.NumVertices());
+        const size_t numVertices = graph.NumVertices();
+        vertexHashes_.resize(numVertices);
+        std::vector<std::size_t> neighborHashes;
 
         for (const VertexType &v : TopSortView(graph)) {
-            std::vector<std::size_t> parentHashes;
+            neighborHashes.clear();
             for (const VertexType &parent : graph.Parents(v)) {
-                parentHashes.push_back(vertexHashes_[parent]);
+                neighborHashes.push_back(vertexHashes_[parent]);
             }
-            ComputeHashesHelper(v, parentHashes);
+            ComputeHashesHelper(v, neighborHashes);
         }
     }
 
     template <typename RetT = void>
     std::enable_if_t<not forward, RetT> ComputeHashes(const GraphT &graph) {
-        vertexHashes_.resize(graph.NumVertices());
+        const size_t numVertices = graph.NumVertices();
+        vertexHashes_.resize(numVertices);
+        std::vector<std::size_t> neighborHashes;
 
         const auto topSort = GetTopOrderReverse(graph);
         for (auto it = topSort.cbegin(); it != topSort.cend(); ++it) {
             const VertexType &v = *it;
-            std::vector<std::size_t> childHashes;
+            neighborHashes.clear();
             for (const VertexType &child : graph.Children(v)) {
-                childHashes.push_back(vertexHashes_[child]);
+                neighborHashes.push_back(vertexHashes_[child]);
             }
-            ComputeHashesHelper(v, childHashes);
+            ComputeHashesHelper(v, neighborHashes);
         }
     }
 
   public:
+    /**
+     * @brief Constructs the MerkleHashComputer and immediately computes the hashes.
+     * @tparam Args Arguments forwarded to the NodeHashFuncT constructor.
+     * @param graph The graph to process.
+     * @param args Arguments for the node hash function.
+     */
     template <typename... Args>
     MerkleHashComputer(const GraphT &graph, Args &&...args)
         : HashComputer<VertexType>(), nodeHashFunc_(std::forward<Args>(args)...) {
         ComputeHashes(graph);
     }
 
-    virtual ~MerkleHashComputer() override = default;
+    ~MerkleHashComputer() override = default;
 
-    inline std::size_t GetVertexHash(const VertexType &v) const override { return vertexHashes_[v]; }
+    std::size_t GetVertexHash(const VertexType &v) const override { return vertexHashes_[v]; }
 
-    inline const std::vector<std::size_t> &GetVertexHashes() const override { return vertexHashes_; }
+    const std::vector<std::size_t> &GetVertexHashes() const override { return vertexHashes_; }
 
-    inline std::size_t NumOrbits() const override { return orbits_.size(); }
+    std::size_t NumOrbits() const override { return orbits_.size(); }
 
-    inline const std::vector<VertexType> &GetOrbit(const VertexType &v) const override {
+    const std::vector<VertexType> &GetOrbit(const VertexType &v) const override {
         return this->GetOrbitFromHash(this->GetVertexHash(v));
     }
 
-    inline const std::unordered_map<std::size_t, std::vector<VertexType>> &GetOrbits() const override { return orbits_; }
+    const std::unordered_map<std::size_t, std::vector<VertexType>> &GetOrbits() const override { return orbits_; }
 
-    inline const std::vector<VertexType> &GetOrbitFromHash(const std::size_t &hash) const override { return orbits_.at(hash); }
+    const std::vector<VertexType> &GetOrbitFromHash(const std::size_t &hash) const override { return orbits_.at(hash); }
 };
 
+/**
+ * @brief Checks if two graphs are isomorphic based on Merkle hashes.
+ * @note This is a necessary but not sufficient condition for graph isomorphism in general cases,
+ *       but sufficient for the kinds of DAGs often encountered in this context.
+ *
+ * @tparam GraphT The graph type.
+ * @tparam NodeHashFuncT The node hash function type.
+ * @tparam forward Direction of hash computation.
+ * @param g1 The first graph.
+ * @param g2 The second graph.
+ * @return True if they have the same orbit structure, false otherwise.
+ */
 template <typename GraphT, typename NodeHashFuncT = UniformNodeHashFunc<VertexIdxT<GraphT>>, bool forward = true>
 bool AreIsomorphicByMerkleHash(const GraphT &g1, const GraphT &g2) {
-    // Basic check: Different numbers of vertices or edges mean they can't be isomorphic.
     if (g1.NumVertices() != g2.NumVertices() || g1.NumEdges() != g2.NumEdges()) {
         return false;
     }
 
-    // --- Compute Hashes in the Specified Direction ---
     MerkleHashComputer<GraphT, NodeHashFuncT, forward> hash1(g1);
     MerkleHashComputer<GraphT, NodeHashFuncT, forward> hash2(g2);
 
