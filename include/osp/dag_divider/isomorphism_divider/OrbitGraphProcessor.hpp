@@ -30,7 +30,6 @@ limitations under the License.
 #include "osp/graph_algorithms/directed_graph_path_util.hpp"
 #include "osp/graph_algorithms/directed_graph_util.hpp"
 #include "osp/graph_algorithms/subgraph_algorithms.hpp"
-#include "osp/graph_algorithms/transitive_reduction.hpp"
 
 namespace osp {
 
