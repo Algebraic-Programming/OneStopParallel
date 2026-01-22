@@ -55,7 +55,7 @@ class HypergraphPartitioningILPBase {
 
 template <typename HypergraphT>
 void HypergraphPartitioningILPBase<HypergraphT>::SolveIlp(Model &model) {
-    model.SetIntParam(COPT_INTPARAM_LOGTOCONSOLE, 0);
+    // model.SetIntParam(COPT_INTPARAM_LOGTOCONSOLE, 0);
 
     model.SetDblParam(COPT_DBLPARAM_TIMELIMIT, timeLimitSeconds_);
     model.SetIntParam(COPT_INTPARAM_THREADS, 128);
