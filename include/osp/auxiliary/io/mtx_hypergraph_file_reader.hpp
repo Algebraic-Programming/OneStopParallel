@@ -32,9 +32,14 @@ limitations under the License.
 namespace osp {
 namespace file_reader {
 
-// reads a matrix into Hypergraph format, where nonzeros are vertices, and rows/columns are hyperedges
+enum class MatrixToHypergraphFormat { FINE_GRAINED, ROW_NET };
+
+// reads a matrix into Hypergraph format, covering two different formats:
+// - fine-grained: nonzeros are vertices, and rows/columns are hyperedges
+// - row-net: columns are vertices, rows are hyperedges
 template <typename IndexType, typename WorkwType, typename MemwType, typename CommwType>
-bool ReadHypergraphMartixMarketFormat(std::ifstream &infile, Hypergraph<IndexType, WorkwType, MemwType, CommwType> &hgraph) {
+bool ReadHypergraphMartixMarketFormat(std::ifstream &infile, Hypergraph<IndexType, WorkwType, MemwType, CommwType> &hgraph,
+                                        MatrixToHypergraphFormat format = MatrixToHypergraphFormat::FINE_GRAINED) {
     std::string line;
 
     // Skip comments or empty lines (robustly)
@@ -69,16 +74,20 @@ bool ReadHypergraphMartixMarketFormat(std::ifstream &infile, Hypergraph<IndexTyp
         return false;
     }
 
-    const IndexType numNodes = static_cast<IndexType>(nEntries);
+    const IndexType numNodes = (format == MatrixToHypergraphFormat::FINE_GRAINED)
+                                ? static_cast<IndexType>(nEntries)
+                                : static_cast<IndexType>(mCol);
 
     hgraph.Reset(numNodes, 0);
-    for (IndexType node = 0; node < numNodes; ++node) {
-        hgraph.SetVertexWorkWeight(node, static_cast<WorkwType>(1));
-        hgraph.SetVertexMemoryWeight(node, static_cast<MemwType>(1));
-    }
 
     std::vector<std::vector<IndexType>> rowHyperedges(static_cast<IndexType>(mRow));
-    std::vector<std::vector<IndexType>> columnHyperedges(static_cast<IndexType>(mCol));
+    std::vector<std::vector<IndexType>> columnHyperedges;
+    std::vector<WorkwType> nrNonZerosInColumn;
+    if (format == MatrixToHypergraphFormat::FINE_GRAINED) {
+        columnHyperedges.resize(static_cast<IndexType>(mCol));
+    } else {
+        nrNonZerosInColumn.resize(static_cast<IndexType>(mCol), 0);
+    }
 
     int entriesRead = 0;
     while (entriesRead < nEntries && std::getline(infile, line)) {
@@ -107,13 +116,20 @@ bool ReadHypergraphMartixMarketFormat(std::ifstream &infile, Hypergraph<IndexTyp
             return false;
         }
 
-        if (static_cast<IndexType>(row) >= numNodes || static_cast<IndexType>(col) >= numNodes) {
+        IndexType rowFormatLimit = (format == MatrixToHypergraphFormat::FINE_GRAINED) ? numNodes : static_cast<IndexType>(mRow);
+        if (static_cast<IndexType>(row) >= rowFormatLimit || static_cast<IndexType>(col) >= numNodes) {
             std::cerr << "Error: Index exceeds vertex type limit.\n";
             return false;
         }
 
-        rowHyperedges[static_cast<IndexType>(row)].push_back(static_cast<IndexType>(entriesRead));
-        columnHyperedges[static_cast<IndexType>(col)].push_back(static_cast<IndexType>(entriesRead));
+        if (format == MatrixToHypergraphFormat::FINE_GRAINED)
+        {
+            rowHyperedges[static_cast<IndexType>(row)].push_back(static_cast<IndexType>(entriesRead));
+            columnHyperedges[static_cast<IndexType>(col)].push_back(static_cast<IndexType>(entriesRead));
+        } else {
+            rowHyperedges[static_cast<IndexType>(row)].push_back(static_cast<IndexType>(col));
+            ++nrNonZerosInColumn[static_cast<IndexType>(col)];
+        }
 
         ++entriesRead;
     }
@@ -136,9 +152,20 @@ bool ReadHypergraphMartixMarketFormat(std::ifstream &infile, Hypergraph<IndexTyp
         }
     }
 
-    for (IndexType col = 0; col < static_cast<IndexType>(mCol); ++col) {
-        if (!columnHyperedges[col].empty()) {
-            hgraph.AddHyperedge(columnHyperedges[col]);
+    if (format == MatrixToHypergraphFormat::FINE_GRAINED) {
+        for (IndexType col = 0; col < static_cast<IndexType>(mCol); ++col) {
+            if (!columnHyperedges[col].empty()) {
+                hgraph.AddHyperedge(columnHyperedges[col]);
+            }
+        }
+        for (IndexType node = 0; node < numNodes; ++node) {
+            hgraph.SetVertexWorkWeight(node, static_cast<WorkwType>(1));
+            hgraph.SetVertexMemoryWeight(node, static_cast<MemwType>(1));
+        }
+    } else {
+        for (IndexType node = 0; node < numNodes; ++node) {
+            hgraph.SetVertexWorkWeight(node, nrNonZerosInColumn[node]);
+            hgraph.SetVertexMemoryWeight(node, static_cast<MemwType>(1));
         }
     }
 
@@ -146,7 +173,8 @@ bool ReadHypergraphMartixMarketFormat(std::ifstream &infile, Hypergraph<IndexTyp
 }
 
 template <typename IndexType, typename WorkwType, typename MemwType, typename CommwType>
-bool ReadHypergraphMartixMarketFormat(const std::string &filename, Hypergraph<IndexType, WorkwType, MemwType, CommwType> &hgraph) {
+bool ReadHypergraphMartixMarketFormat(const std::string &filename, Hypergraph<IndexType, WorkwType, MemwType, CommwType> &hgraph,
+                                        MatrixToHypergraphFormat format = MatrixToHypergraphFormat::FINE_GRAINED) {
     // Ensure the file is .mtx format
     if (std::filesystem::path(filename).extension() != ".mtx") {
         std::cerr << "Error: Only .mtx files are accepted.\n";
@@ -174,7 +202,7 @@ bool ReadHypergraphMartixMarketFormat(const std::string &filename, Hypergraph<In
         return false;
     }
 
-    return ReadHypergraphMartixMarketFormat(infile, hgraph);
+    return ReadHypergraphMartixMarketFormat(infile, hgraph, format);
 }
 
 }    // namespace file_reader

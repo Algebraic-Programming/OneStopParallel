@@ -239,9 +239,9 @@ class MultiProcessorPebbling : public Scheduler<GraphT> {
 
 template <typename GraphT>
 void MultiProcessorPebbling<GraphT>::SolveIlp() {
-    if (!verbose_) {
-        model_.SetIntParam(COPT_INTPARAM_LOGTOCONSOLE, 0);
-    }
+    // if (!verbose_) {
+    //     model_.SetIntParam(COPT_INTPARAM_LOGTOCONSOLE, 0);
+    // }
 
     model_.SetDblParam(COPT_DBLPARAM_TIMELIMIT, timeLimitSeconds_);
     model_.SetIntParam(COPT_INTPARAM_THREADS, 128);
