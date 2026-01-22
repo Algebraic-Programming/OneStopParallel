@@ -39,11 +39,11 @@ namespace osp {
  */
 template <typename T, typename IndexT, typename WorkwT, typename MemwT>
 struct UnionFindObject {
-    const T name_; /** Unique identifier of the object. */
+    const T name_;       /** Unique identifier of the object. */
     IndexT parentIndex_; /** Index of the parent object in the union-find tree. */
-    unsigned rank_; /** Rank of the object, used for union operation optimization. */
-    WorkwT weight_; /** Weight associated with the object. */
-    MemwT memory_; /** Memory associated with the object. */
+    unsigned rank_;      /** Rank of the object, used for union operation optimization. */
+    WorkwT weight_;      /** Weight associated with the object. */
+    MemwT memory_;       /** Memory associated with the object. */
 
     /**
      * @brief Constructs a new UnionFindObject.
@@ -125,11 +125,17 @@ class UnionFindUniverse {
         }
 
         // Reserve map to avoid rehashes
-        namesToIndices_.reserve(namesToIndices_.size() + additionalSize);
+        IndexT currentMapSize = static_cast<IndexT>(namesToIndices_.size());
+        IndexT currentMapCapacity = static_cast<IndexT>(namesToIndices_.bucket_count() * namesToIndices_.max_load_factor());
+
+        if (currentMapSize + addSize > currentMapCapacity) {
+            IndexT newMinMapCapacity = std::max((currentMapCapacity + 1) / 2 * 3, currentMapSize + addSize);
+            namesToIndices_.reserve(newMinMapCapacity);
+        }
     }
 
     void AddObjectInternal(const T &name, WorkwT weight, MemwT memory) {
-         if (namesToIndices_.find(name) != namesToIndices_.end()) {
+        if (namesToIndices_.find(name) != namesToIndices_.end()) {
             throw std::runtime_error("This name already exists in the universe.");
         }
         IndexT newIndex = static_cast<IndexT>(universe_.size());
@@ -139,8 +145,8 @@ class UnionFindUniverse {
     }
 
   public:
-
     explicit UnionFindUniverse() = default;
+
     explicit UnionFindUniverse(const std::vector<T> &names) { AddObject(names); }
 
     /**
@@ -361,18 +367,14 @@ class UnionFindUniverse {
      * @brief Adds a single object to the universe.
      * @param name Name of the object.
      */
-    void AddObject(const T &name) {
-        AddObjectInternal(name, 0, 0);
-    }
+    void AddObject(const T &name) { AddObjectInternal(name, 0, 0); }
 
     /**
      * @brief Adds a single object with weight.
      * @param name Name of the object.
      * @param weight Weight of the object.
      */
-    void AddObject(const T &name, const WorkwT weight) {
-        AddObjectInternal(name, weight, 0);
-    }
+    void AddObject(const T &name, const WorkwT weight) { AddObjectInternal(name, weight, 0); }
 
     /**
      * @brief Adds a single object with weight and memory.
@@ -380,9 +382,7 @@ class UnionFindUniverse {
      * @param weight Weight of the object.
      * @param memory Memory of the object.
      */
-    void AddObject(const T &name, const WorkwT weight, const MemwT memory) {
-        AddObjectInternal(name, weight, memory);
-    }
+    void AddObject(const T &name, const WorkwT weight, const MemwT memory) { AddObjectInternal(name, weight, memory); }
 
     /**
      * @brief Adds multiple objects to the universe.
