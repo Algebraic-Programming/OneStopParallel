@@ -126,7 +126,8 @@ class UnionFindUniverse {
 
         // Reserve map to avoid rehashes
         IndexT currentMapSize = static_cast<IndexT>(namesToIndices_.size());
-        IndexT currentMapCapacity = static_cast<IndexT>(namesToIndices_.bucket_count() * namesToIndices_.max_load_factor());
+        IndexT currentMapCapacity
+            = static_cast<IndexT>(static_cast<float>(namesToIndices_.bucket_count()) * namesToIndices_.max_load_factor());
 
         if (currentMapSize + addSize > currentMapCapacity) {
             IndexT newMinMapCapacity = std::max((currentMapCapacity + 1) / 2 * 3, currentMapSize + addSize);
