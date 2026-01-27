@@ -181,7 +181,7 @@ template <typename GraphTIn, typename GraphTOut>
 VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::SingleContraction(
     VWorkwT<GraphTIn> commCost, const GraphTIn &graph, std::vector<std::vector<VertexIdxT<GraphTIn>>> &expansionMapOutput) const {
     using VertexType = VertexIdxT<GraphTIn>;
-    assert(expansionMapOutput.size() == 0);
+    expansionMapOutput.clear();
 
     const std::vector<VertexIdxT<GraphTIn>> vertexPoset
         = params_.useTopPoset_ ? GetTopNodeDistance<GraphTIn, VertexIdxT<GraphTIn>>(graph) : GetBotPosetMap(graph);
@@ -271,16 +271,10 @@ VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::SingleContraction(
         }
 
         // Check whether we can glue
-        if (partitionedSourceFlag[edgeSrc]) {
+        if (partitionedSourceFlag[edgeSrc] || partitionedTargetFlag[edgeSrc]) {
             continue;
         }
-        if (partitionedSourceFlag[edgeTgt]) {
-            continue;
-        }
-        if (partitionedTargetFlag[edgeSrc]) {
-            continue;
-        }
-        if (partitionedTargetFlag[edgeTgt]) {
+        if (partitionedSourceFlag[edgeTgt] || partitionedTargetFlag[edgeTgt]) {
             continue;
         }
 
@@ -314,13 +308,9 @@ VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::SingleContraction(
 
     expansionMapOutput.reserve(graph.NumVertices() - counter);
     for (const VertexType &vert : graph.Vertices()) {
-        if (partitionedSourceFlag[vert]) {
+        if (partitionedSourceFlag[vert] || partitionedTargetFlag[vert]) {
             continue;
         }
-        if (partitionedTargetFlag[vert]) {
-            continue;
-        }
-
         expansionMapOutput.emplace_back(std::initializer_list<VertexType>{vert});
     }
 
@@ -331,7 +321,7 @@ template <typename GraphTIn, typename GraphTOut>
 VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::AllChildrenContraction(
     VWorkwT<GraphTIn> commCost, const GraphTIn &graph, std::vector<std::vector<VertexIdxT<GraphTIn>>> &expansionMapOutput) const {
     using VertexType = VertexIdxT<GraphTIn>;
-    assert(expansionMapOutput.size() == 0);
+    expansionMapOutput.clear();
 
     const std::vector<VertexIdxT<GraphTIn>> vertexPoset = GetTopNodeDistance<GraphTIn, VertexIdxT<GraphTIn>>(graph);
     const std::vector<VWorkwT<GraphTIn>> topDist = GetTopDistance(commCost, graph);
@@ -477,7 +467,7 @@ template <typename GraphTIn, typename GraphTOut>
 VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::AllParentsContraction(
     VWorkwT<GraphTIn> commCost, const GraphTIn &graph, std::vector<std::vector<VertexIdxT<GraphTIn>>> &expansionMapOutput) const {
     using VertexType = VertexIdxT<GraphTIn>;
-    assert(expansionMapOutput.size() == 0);
+    expansionMapOutput.clear();
 
     const std::vector<VertexIdxT<GraphTIn>> vertexPoset = GetBotPosetMap(graph);
     const std::vector<VWorkwT<GraphTIn>> topDist = GetTopDistance(commCost, graph);
@@ -680,7 +670,7 @@ template <typename GraphTIn, typename GraphTOut>
 VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::SomeChildrenContraction(
     VWorkwT<GraphTIn> commCost, const GraphTIn &graph, std::vector<std::vector<VertexIdxT<GraphTIn>>> &expansionMapOutput) const {
     using VertexType = VertexIdxT<GraphTIn>;
-    assert(expansionMapOutput.size() == 0);
+    expansionMapOutput.clear();
 
     const std::vector<VertexIdxT<GraphTIn>> vertexPoset = GetTopNodeDistance<GraphTIn, VertexIdxT<GraphTIn>>(graph);
     const std::vector<VWorkwT<GraphTIn>> topDist = GetTopDistance(commCost, graph);
@@ -866,7 +856,7 @@ template <typename GraphTIn, typename GraphTOut>
 VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::SomeParentsContraction(
     VWorkwT<GraphTIn> commCost, const GraphTIn &graph, std::vector<std::vector<VertexIdxT<GraphTIn>>> &expansionMapOutput) const {
     using VertexType = VertexIdxT<GraphTIn>;
-    assert(expansionMapOutput.size() == 0);
+    expansionMapOutput.clear();
 
     const std::vector<VertexIdxT<GraphTIn>> vertexPoset = GetBotPosetMap(graph);
     const std::vector<VWorkwT<GraphTIn>> topDist = GetTopDistance(commCost, graph);
@@ -1052,7 +1042,7 @@ template <typename GraphTIn, typename GraphTOut>
 VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::LevelContraction(
     VWorkwT<GraphTIn> commCost, const GraphTIn &graph, std::vector<std::vector<VertexIdxT<GraphTIn>>> &expansionMapOutput) const {
     using VertexType = VertexIdxT<GraphTIn>;
-    assert(expansionMapOutput.size() == 0);
+    expansionMapOutput.clear();
 
     const std::vector<VertexIdxT<GraphTIn>> vertexPoset
         = params_.useTopPoset_ ? GetTopNodeDistance<GraphTIn, VertexIdxT<GraphTIn>>(graph) : GetBotPosetMap(graph);
@@ -1297,7 +1287,7 @@ template <typename GraphTIn, typename GraphTOut>
 VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::HomogeneousBufferMerge(
     VWorkwT<GraphTIn> commCost, const GraphTIn &graph, std::vector<std::vector<VertexIdxT<GraphTIn>>> &expansionMapOutput) const {
     using VertexType = VertexIdxT<GraphTIn>;
-    assert(expansionMapOutput.size() == 0);
+    expansionMapOutput.clear();
 
     const std::vector<VertexIdxT<GraphTIn>> vertexTopPoset = GetTopNodeDistance<GraphTIn, VertexIdxT<GraphTIn>>(graph);
     const std::vector<VertexIdxT<GraphTIn>> vertexBotPoset = GetBotPosetMap(graph);
