@@ -67,6 +67,11 @@ class SarkarMul : public MultilevelCoarser<GraphT, GraphTCoarse> {
     ReturnStatus RunContractions(VWorkwT<GraphT> commCost);
     ReturnStatus RunContractions() override;
 
+    ReturnStatus RunLineContractions(bool &change);
+    ReturnStatus RunPartialFanContractions(bool &change);
+    ReturnStatus RunFullFanContractions(bool &change);
+    ReturnStatus RunLevelContractions(bool &change);
+
   public:
     void SetParameters(sarkar_params::MulParameters<VWorkwT<GraphT>> mlParams) {
         mlParams_ = std::move(mlParams);
@@ -152,6 +157,96 @@ ReturnStatus SarkarMul<GraphT, GraphTCoarse>::RunSingleContractionMode(VertexIdx
 }
 
 template <typename GraphT, typename GraphTCoarse>
+ReturnStatus SarkarMul<GraphT, GraphTCoarse>::RunLineContractions(bool &change) {
+    ReturnStatus status = ReturnStatus::OSP_SUCCESS;
+    VertexIdxT<GraphT> diff = 0;
+    unsigned innerNoChange = 0;
+    while (innerNoChange < mlParams_.maxNumIterationWithoutChanges_) {
+        params_.mode_ = sarkar_params::Mode::LINES;
+        params_.useTopPoset_ = thueCoin_.GetFlip();
+        UpdateParams();
+
+        status = std::max(status, RunSingleContractionMode(diff));
+
+        if (diff > 0) {
+            change = true;
+            innerNoChange = 0;
+        } else {
+            innerNoChange++;
+        }
+    }
+    return status;
+}
+
+template <typename GraphT, typename GraphTCoarse>
+ReturnStatus SarkarMul<GraphT, GraphTCoarse>::RunPartialFanContractions(bool &change) {
+    ReturnStatus status = ReturnStatus::OSP_SUCCESS;
+    VertexIdxT<GraphT> diff = 0;
+    unsigned innerNoChange = 0;
+    while (innerNoChange < mlParams_.maxNumIterationWithoutChanges_) {
+        params_.mode_ = thueCoin_.GetFlip() ? sarkar_params::Mode::FAN_IN_PARTIAL : sarkar_params::Mode::FAN_OUT_PARTIAL;
+        UpdateParams();
+
+        status = std::max(status, RunSingleContractionMode(diff));
+
+        if (diff > 0) {
+            change = true;
+            innerNoChange = 0;
+        } else {
+            innerNoChange++;
+        }
+    }
+    return status;
+}
+
+template <typename GraphT, typename GraphTCoarse>
+ReturnStatus SarkarMul<GraphT, GraphTCoarse>::RunFullFanContractions(bool &change) {
+    ReturnStatus status = ReturnStatus::OSP_SUCCESS;
+    VertexIdxT<GraphT> diff = 0;
+    unsigned innerNoChange = 0;
+
+    while (innerNoChange < mlParams_.maxNumIterationWithoutChanges_) {
+        params_.mode_ = thueCoin_.GetFlip() ? sarkar_params::Mode::FAN_IN_FULL : sarkar_params::Mode::FAN_OUT_FULL;
+        UpdateParams();
+
+        status = std::max(status, RunSingleContractionMode(diff));
+
+        if (diff > 0) {
+            change = true;
+            innerNoChange = 0;
+        } else {
+            innerNoChange++;
+        }
+    }
+
+    return status;
+}
+
+template <typename GraphT, typename GraphTCoarse>
+ReturnStatus SarkarMul<GraphT, GraphTCoarse>::RunLevelContractions(bool &change) {
+    ReturnStatus status = ReturnStatus::OSP_SUCCESS;
+    VertexIdxT<GraphT> diff = 0;
+    unsigned innerNoChange = 0;
+
+    while (innerNoChange < mlParams_.maxNumIterationWithoutChanges_) {
+        params_.mode_ = thueCoin_.GetFlip() ? sarkar_params::Mode::LEVEL_EVEN : sarkar_params::Mode::LEVEL_ODD;
+        params_.useTopPoset_ = balancedRandom_.GetFlip();
+        UpdateParams();
+
+        status = std::max(status, RunSingleContractionMode(diff));
+
+        if (diff > 0) {
+            change = true;
+            innerNoChange = 0;
+        } else {
+            innerNoChange++;
+        }
+    }
+
+    return status;
+}
+
+template <typename GraphT, typename GraphTCoarse>
 ReturnStatus SarkarMul<GraphT, GraphTCoarse>::RunContractions(VWorkwT<GraphT> commCost) {
     ReturnStatus status = ReturnStatus::OSP_SUCCESS;
     VertexIdxT<GraphT> diff = 0;
@@ -165,69 +260,16 @@ ReturnStatus SarkarMul<GraphT, GraphTCoarse>::RunContractions(VWorkwT<GraphT> co
         bool outerChange = false;
 
         // Lines
-        while (innerNoChange < mlParams_.maxNumIterationWithoutChanges_) {
-            params_.mode_ = sarkar_params::Mode::LINES;
-            params_.useTopPoset_ = thueCoin_.GetFlip();
-            UpdateParams();
-
-            status = std::max(status, RunSingleContractionMode(diff));
-
-            if (diff > 0) {
-                outerChange = true;
-                innerNoChange = 0;
-            } else {
-                innerNoChange++;
-            }
-        }
-        innerNoChange = 0;
+        status = std::max(status, RunLineContractions(outerChange));
 
         // Partial Fans
-        while (innerNoChange < mlParams_.maxNumIterationWithoutChanges_) {
-            params_.mode_ = thueCoin_.GetFlip() ? sarkar_params::Mode::FAN_IN_PARTIAL : sarkar_params::Mode::FAN_OUT_PARTIAL;
-            UpdateParams();
-
-            status = std::max(status, RunSingleContractionMode(diff));
-
-            if (diff > 0) {
-                outerChange = true;
-                innerNoChange = 0;
-            } else {
-                innerNoChange++;
-            }
-        }
-        innerNoChange = 0;
+        status = std::max(status, RunPartialFanContractions(outerChange));
 
         // Full Fans
-        while (innerNoChange < mlParams_.maxNumIterationWithoutChanges_) {
-            params_.mode_ = thueCoin_.GetFlip() ? sarkar_params::Mode::FAN_IN_FULL : sarkar_params::Mode::FAN_OUT_FULL;
-            UpdateParams();
-
-            status = std::max(status, RunSingleContractionMode(diff));
-
-            if (diff > 0) {
-                outerChange = true;
-                innerNoChange = 0;
-            } else {
-                innerNoChange++;
-            }
-        }
-        innerNoChange = 0;
+        status = std::max(status, RunFullFanContractions(outerChange));
 
         // Levels
-        while (innerNoChange < mlParams_.maxNumIterationWithoutChanges_) {
-            params_.mode_ = thueCoin_.GetFlip() ? sarkar_params::Mode::LEVEL_EVEN : sarkar_params::Mode::LEVEL_ODD;
-            params_.useTopPoset_ = balancedRandom_.GetFlip();
-            UpdateParams();
-
-            status = std::max(status, RunSingleContractionMode(diff));
-
-            if (diff > 0) {
-                outerChange = true;
-                innerNoChange = 0;
-            } else {
-                innerNoChange++;
-            }
-        }
+        status = std::max(status, RunLevelContractions(outerChange));
 
         if (outerChange) {
             outerNoChange = 0;
