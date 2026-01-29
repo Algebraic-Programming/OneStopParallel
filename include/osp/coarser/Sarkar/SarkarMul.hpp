@@ -289,7 +289,7 @@ ReturnStatus SarkarMul<GraphT, GraphTCoarse>::RunBufferMerges() {
     while (noChange < mlParams_.maxNumIterationWithoutChanges_) {
         VertexIdxT<GraphT> diff = 0;
         if ((mlParams_.bufferMergeMode_ == sarkar_params::BufferMergeMode::HOMOGENEOUS)
-            || (mlParams_.bufferMergeMode_ == sarkar_params::BufferMergeMode::FULL && diff == 0)) {
+            || (mlParams_.bufferMergeMode_ == sarkar_params::BufferMergeMode::FULL)) {
             params_.mode_ = sarkar_params::Mode::HOMOGENEOUS_BUFFER;
             UpdateParams();
             status = std::max(status, RunSingleContractionMode(diff));
