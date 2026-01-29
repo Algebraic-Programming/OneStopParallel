@@ -523,7 +523,13 @@ class BspArchitecture {
      * @brief Returns the maximum memory bound over all processors.
      * @return The maximum memory bound.
      */
-    [[nodiscard]] VMemwT<GraphT> MaxMemoryBound() const { return *(std::max_element(memoryBound_.begin(), memoryBound_.end())); }
+    [[nodiscard]] VMemwT<GraphT> MaxMemoryBound() const {
+        if (memoryBound_.size() == 0U) {
+            return std::numeric_limits<VMemwT<GraphT>>::max();
+        } else {
+            return *(std::max_element(memoryBound_.begin(), memoryBound_.end()));
+        }
+    }
 
     /**
      * @brief Returns the maximum memory bound over all processors of a specific type.

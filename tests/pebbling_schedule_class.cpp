@@ -95,7 +95,7 @@ void RunTest(Scheduler<GraphT> *testScheduler) {
 
             std::vector<VMemwT<GraphT> > minimumMemoryRequiredVector
                 = PebblingSchedule<GraphT>::MinimumMemoryRequiredPerNodeType(instance);
-            VMemwT<GraphT> maxRequired = *std::max_element(minimumMemoryRequiredVector.begin(), minimumMemoryRequiredVector.end());
+            VMemwT<GraphT> maxRequired = minimumMemoryRequiredVector.size() == 0U ? std::numeric_limits<VMemwT<GraphT>>::max() : *std::max_element(minimumMemoryRequiredVector.begin(), minimumMemoryRequiredVector.end());
             instance.GetArchitecture().SetMemoryBound(maxRequired);
 
             PebblingSchedule<GraphT> memSchedule1(bspSchedule, PebblingSchedule<GraphT>::CacheEvictionStrategy::LARGEST_ID);
@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE(TestPebblingScheduleWriter) {
     BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
 
     std::vector<VMemwT<Graph> > minimumMemoryRequiredVector = PebblingSchedule<Graph>::MinimumMemoryRequiredPerNodeType(instance);
-    VMemwT<Graph> maxRequired = *std::max_element(minimumMemoryRequiredVector.begin(), minimumMemoryRequiredVector.end());
+    VMemwT<Graph> maxRequired = minimumMemoryRequiredVector.size() == 0U ? std::numeric_limits<VMemwT<Graph>>::max() - 3 : *std::max_element(minimumMemoryRequiredVector.begin(), minimumMemoryRequiredVector.end());
     instance.GetArchitecture().SetMemoryBound(maxRequired + 3);
 
     PebblingSchedule<Graph> memSchedule(bspSchedule, PebblingSchedule<Graph>::CacheEvictionStrategy::LEAST_RECENTLY_USED);
