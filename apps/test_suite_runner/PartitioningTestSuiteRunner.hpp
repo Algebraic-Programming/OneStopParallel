@@ -20,10 +20,11 @@ limitations under the License.
 
 #include "AbstractTestSuiteRunner.hpp"
 #include "StringToScheduler/run_partitioner.hpp"
+#include "osp/auxiliary/io/mtx_hypergraph_file_reader.hpp"
+#include "osp/bsp/model/BspSchedule.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 #include "osp/partitioning/model/partitioning.hpp"
 #include "osp/partitioning/model/partitioning_replication.hpp"
-#include "osp/bsp/model/BspSchedule.hpp"
 
 namespace osp {
 
@@ -32,7 +33,7 @@ class PartitioningStatsModule : public IStatisticModule<Partitioning<HypergraphD
     std::vector<std::string> GetMetricHeaders() const override { return {"Cost", "CutNet"}; }
 
     std::map<std::string, std::string> RecordStatistics(const Partitioning<HypergraphDefT> &partitioning,
-                                                         std::ofstream & /*log_stream*/) const override {
+                                                        std::ofstream & /*log_stream*/) const override {
         std::map<std::string, std::string> stats;
         stats["Cost"] = std::to_string(partitioning.ComputeConnectivityCost());
         stats["CutNet"] = std::to_string(partitioning.ComputeCutNetCost());
@@ -43,13 +44,12 @@ class PartitioningStatsModule : public IStatisticModule<Partitioning<HypergraphD
 template <typename GraphType>
 class PartitioningTestSuiteRunner : public AbstractTestSuiteRunner<Partitioning<HypergraphDefT>, GraphType> {
   private:
-
   protected:
     ReturnStatus ComputeTargetObjectImpl(const BspInstance<GraphType> &instance,
-                                            std::unique_ptr<Partitioning<HypergraphDefT> > &targetObject,
-                                            const pt::ptree &algoConfig,
-                                            long long &computationTimeMs) override {
-        return ReturnStatus::ERROR; //unused
+                                         std::unique_ptr<Partitioning<HypergraphDefT>> &targetObject,
+                                         const pt::ptree &algoConfig,
+                                         long long &computationTimeMs) override {
+        return ReturnStatus::ERROR;    // unused
     }
 
     void CreateAndRegisterStatisticModules(const std::string &moduleName) override {
@@ -102,7 +102,7 @@ int PartitioningTestSuiteRunner<GraphType>::Run(int argc, char *argv[]) {
             continue;
         }
         this->logStream_ << "Start Machine: " + filenameMachine + "\n";
-
+        std::cout << "Start Machine: " + filenameMachine + "\n";
 
         for (const auto &graphEntry : std::filesystem::recursive_directory_iterator(this->graphDirPath_)) {
             if (std::filesystem::is_directory(graphEntry)) {
@@ -115,24 +115,42 @@ int PartitioningTestSuiteRunner<GraphType>::Run(int argc, char *argv[]) {
                 nameGraph = nameGraph.substr(0, nameGraph.rfind('.'));
             }
             this->logStream_ << "Start Hypergraph: " + filenameGraph + "\n";
+            std::cout << "Start Hypergraph: " + filenameGraph + "\n";
 
             bool graphStatus = false;
             GraphType dag;
-            graphStatus = file_reader::ReadGraph(filenameGraph, dag);
+
+            std::string fileEnding = filename.substr(filenameGraph.rfind(".") + 1);
+
+            PartitioningProblem<HypergraphT>
+                instance;    //(ConvertFromCdagAsHyperdag<HypergraphT, GraphType>(dag), arch.NumberOfProcessors());
+            instance.SetNumberOfPartitions(arch.NumberOfProcessors());
+            instance.SetMaxWorkWeightViaImbalanceFactor(static_cast<double>(arch.CommunicationCosts()) / 100.0);
+
+            if (fileEnding == "mtx") {
+                graphStatus = file_reader::ReadHypergraphMartixMarketFormat(
+                    filenameGraph, instance.getHypergraph(), MatrixToHypergraphFormat::FINE_GRAINED);
+
+            } else if (fileEnding == "mtx2") {
+                graphStatus = file_reader::ReadHypergraphMartixMarketFormat(
+                    filenameGraph, instance.getHypergraph(), MatrixToHypergraphFormat::ROW_NET);
+
+            } else {
+                graphStatus = file_reader::ReadGraph(filenameGraph, dag);
+                instance.setHypergraph(ConvertFromCdagAsHyperdag<HypergraphT, GraphType>(dag));
+            }
 
             if (!graphStatus) {
                 this->logStream_ << "Reading graph file " << filenameGraph << " failed." << std::endl;
                 continue;
             }
 
-            PartitioningProblem<HypergraphT> instance(ConvertFromCdagAsHyperdag<HypergraphT, GraphType>(dag), arch.NumberOfProcessors());
-            instance.SetMaxWorkWeightViaImbalanceFactor(static_cast<double>(arch.CommunicationCosts()) / 100.0);        
-
             for (auto &algorithmConfigPair : this->parser_.scheduler_) {
                 const pt::ptree &algoConfig = algorithmConfigPair.second;
 
                 std::string currentAlgoName = algoConfig.get_child("name").get_value<std::string>();
                 this->logStream_ << "Start Algorithm " + currentAlgoName + "\n";
+                std::cout << "Start Algorithm " + currentAlgoName + "\n";
 
                 long long computationTimeMs;
                 const auto startTime = std::chrono::high_resolution_clock::now();
@@ -164,7 +182,8 @@ int PartitioningTestSuiteRunner<GraphType>::Run(int argc, char *argv[]) {
                     currentRowValues["CutNet"] = std::to_string(cost.second);
 
                     for (size_t i = 0; i < this->allCsvHeaders_.size(); ++i) {
-                        this->statsOutStream_ << currentRowValues[this->allCsvHeaders_[i]] << (i == this->allCsvHeaders_.size() - 1 ? "" : ",");
+                        this->statsOutStream_ << currentRowValues[this->allCsvHeaders_[i]]
+                                              << (i == this->allCsvHeaders_.size() - 1 ? "" : ",");
                     }
                     this->statsOutStream_ << "\n";
                 }
