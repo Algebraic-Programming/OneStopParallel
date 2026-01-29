@@ -120,7 +120,7 @@ int PartitioningTestSuiteRunner<GraphType>::Run(int argc, char *argv[]) {
             bool graphStatus = false;
             GraphType dag;
 
-            std::string fileEnding = filename.substr(filenameGraph.rfind(".") + 1);
+            std::string fileEnding = filenameGraph.substr(filenameGraph.rfind(".") + 1);
 
             PartitioningProblem<HypergraphT>
                 instance;    //(ConvertFromCdagAsHyperdag<HypergraphT, GraphType>(dag), arch.NumberOfProcessors());
