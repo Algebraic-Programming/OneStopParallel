@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(TestFull) {
     BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, greedy.ComputeSchedule(bspInitial));
 
     std::vector<VMemwT<graph> > minimumMemoryRequiredVector = PebblingSchedule<graph>::MinimumMemoryRequiredPerNodeType(instance);
-    VMemwT<graph> maxRequired = *std::max_element(minimumMemoryRequiredVector.begin(), minimumMemoryRequiredVector.end());
+    VMemwT<graph> maxRequired = minimumMemoryRequiredVector.size() == 0U ? std::numeric_limits<VMemwT<graph>>::max() : *std::max_element(minimumMemoryRequiredVector.begin(), minimumMemoryRequiredVector.end());
     instance.GetArchitecture().SetMemoryBound(maxRequired);
 
     PebblingSchedule<graph> initialSol(bspInitial, PebblingSchedule<graph>::CacheEvictionStrategy::FORESIGHT);
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(TestPartial) {
     BOOST_CHECK(status);
 
     std::vector<VMemwT<graph> > minimumMemoryRequiredVector = PebblingSchedule<graph>::MinimumMemoryRequiredPerNodeType(instance);
-    VMemwT<graph> maxRequired = *std::max_element(minimumMemoryRequiredVector.begin(), minimumMemoryRequiredVector.end());
+    VMemwT<graph> maxRequired = minimumMemoryRequiredVector.size() == 0U ? std::numeric_limits<VMemwT<graph>>::max() : *std::max_element(minimumMemoryRequiredVector.begin(), minimumMemoryRequiredVector.end());
     instance.GetArchitecture().SetMemoryBound(maxRequired);
 
     PebblingPartialILP<graph> mpp;
