@@ -129,11 +129,11 @@ int PartitioningTestSuiteRunner<GraphType>::Run(int argc, char *argv[]) {
 
             if (fileEnding == "mtx") {
                 graphStatus = file_reader::ReadHypergraphMartixMarketFormat(
-                    filenameGraph, instance.GetHypergraph(), MatrixToHypergraphFormat::FINE_GRAINED);
+                    filenameGraph, instance.GetHypergraph(), file_reader::MatrixToHypergraphFormat::FINE_GRAINED);
 
             } else if (fileEnding == "mtx2") {
                 graphStatus = file_reader::ReadHypergraphMartixMarketFormat(
-                    filenameGraph, instance.GetHypergraph(), MatrixToHypergraphFormat::ROW_NET);
+                    filenameGraph, instance.GetHypergraph(), file_reader::MatrixToHypergraphFormat::ROW_NET);
 
             } else {
                 graphStatus = file_reader::ReadGraph(filenameGraph, dag);
