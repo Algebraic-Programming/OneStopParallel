@@ -125,7 +125,6 @@ int PartitioningTestSuiteRunner<GraphType>::Run(int argc, char *argv[]) {
             PartitioningProblem<HypergraphT>
                 instance;    //(ConvertFromCdagAsHyperdag<HypergraphT, GraphType>(dag), arch.NumberOfProcessors());
             instance.SetNumberOfPartitions(arch.NumberOfProcessors());
-            instance.SetMaxWorkWeightViaImbalanceFactor(static_cast<double>(arch.CommunicationCosts()) / 100.0);
 
             if (fileEnding == "mtx") {
                 graphStatus = file_reader::ReadHypergraphMartixMarketFormat(
@@ -144,6 +143,8 @@ int PartitioningTestSuiteRunner<GraphType>::Run(int argc, char *argv[]) {
                 this->logStream_ << "Reading graph file " << filenameGraph << " failed." << std::endl;
                 continue;
             }
+
+            instance.SetMaxWorkWeightViaImbalanceFactor(static_cast<double>(arch.CommunicationCosts()) / 100.0);
 
             for (auto &algorithmConfigPair : this->parser_.scheduler_) {
                 const pt::ptree &algoConfig = algorithmConfigPair.second;
