@@ -38,8 +38,9 @@ enum class MatrixToHypergraphFormat { FINE_GRAINED, ROW_NET };
 // - fine-grained: nonzeros are vertices, and rows/columns are hyperedges
 // - row-net: columns are vertices, rows are hyperedges
 template <typename IndexType, typename WorkwType, typename MemwType, typename CommwType>
-bool ReadHypergraphMartixMarketFormat(std::ifstream &infile, Hypergraph<IndexType, WorkwType, MemwType, CommwType> &hgraph,
-                                        MatrixToHypergraphFormat format = MatrixToHypergraphFormat::FINE_GRAINED) {
+bool ReadHypergraphMartixMarketFormat(std::ifstream &infile,
+                                      Hypergraph<IndexType, WorkwType, MemwType, CommwType> &hgraph,
+                                      MatrixToHypergraphFormat format = MatrixToHypergraphFormat::FINE_GRAINED) {
     std::string line;
 
     // Skip comments or empty lines (robustly)
@@ -74,9 +75,8 @@ bool ReadHypergraphMartixMarketFormat(std::ifstream &infile, Hypergraph<IndexTyp
         return false;
     }
 
-    const IndexType numNodes = (format == MatrixToHypergraphFormat::FINE_GRAINED)
-                                ? static_cast<IndexType>(nEntries)
-                                : static_cast<IndexType>(mCol);
+    const IndexType numNodes = (format == MatrixToHypergraphFormat::FINE_GRAINED) ? static_cast<IndexType>(nEntries)
+                                                                                  : static_cast<IndexType>(mCol);
 
     hgraph.Reset(numNodes, 0);
 
@@ -122,8 +122,7 @@ bool ReadHypergraphMartixMarketFormat(std::ifstream &infile, Hypergraph<IndexTyp
             return false;
         }
 
-        if (format == MatrixToHypergraphFormat::FINE_GRAINED)
-        {
+        if (format == MatrixToHypergraphFormat::FINE_GRAINED) {
             rowHyperedges[static_cast<IndexType>(row)].push_back(static_cast<IndexType>(entriesRead));
             columnHyperedges[static_cast<IndexType>(col)].push_back(static_cast<IndexType>(entriesRead));
         } else {
@@ -173,10 +172,11 @@ bool ReadHypergraphMartixMarketFormat(std::ifstream &infile, Hypergraph<IndexTyp
 }
 
 template <typename IndexType, typename WorkwType, typename MemwType, typename CommwType>
-bool ReadHypergraphMartixMarketFormat(const std::string &filename, Hypergraph<IndexType, WorkwType, MemwType, CommwType> &hgraph,
-                                        MatrixToHypergraphFormat format = MatrixToHypergraphFormat::FINE_GRAINED) {
+bool ReadHypergraphMartixMarketFormat(const std::string &filename,
+                                      Hypergraph<IndexType, WorkwType, MemwType, CommwType> &hgraph,
+                                      MatrixToHypergraphFormat format = MatrixToHypergraphFormat::FINE_GRAINED) {
     // Ensure the file is .mtx format
-    if (std::filesystem::path(filename).extension() != ".mtx") {
+    if (std::filesystem::path(filename).extension() != ".mtx" && std::filesystem::path(filename).extension() != ".mtx2") {
         std::cerr << "Error: Only .mtx files are accepted.\n";
         return false;
     }
