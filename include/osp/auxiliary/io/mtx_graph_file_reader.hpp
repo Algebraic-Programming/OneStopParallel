@@ -102,6 +102,8 @@ bool ReadComputationalDagMartixMarketFormat(std::ifstream &infile, GraphT &graph
             return false;
         }
 
+        std::cout << "row: " << row << " col: " << col << " val: " << val << std::endl;
+
         row -= 1;
         col -= 1;    // Convert to 0-based
 
