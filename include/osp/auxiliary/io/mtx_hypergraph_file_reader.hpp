@@ -101,9 +101,8 @@ bool ReadHypergraphMartixMarketFormat(std::ifstream &infile,
 
         std::istringstream entryStream(line);
         int row = -1, col = -1;
-        double val = 0.0;
 
-        if (!(entryStream >> row >> col >> val)) {
+        if (!(entryStream >> row >> col)) {
             std::cerr << "Error: Malformed matrix entry.\n";
             return false;
         }
