@@ -156,7 +156,7 @@ class AcyclicPartitioningILP {
 
 template <typename GraphT>
 void AcyclicPartitioningILP<GraphT>::SolveIlp() {
-    model_.SetIntParam(COPT_INTPARAM_LOGTOCONSOLE, 0);
+    // model_.SetIntParam(COPT_INTPARAM_LOGTOCONSOLE, 0);
 
     model_.SetDblParam(COPT_DBLPARAM_TIMELIMIT, timeLimitSeconds_);
     model_.SetIntParam(COPT_INTPARAM_THREADS, 128);

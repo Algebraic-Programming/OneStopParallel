@@ -189,7 +189,7 @@ class AbstractTestSuiteRunner {
         }
     }
 
-    int Run(int argc, char *argv[]) {
+    int virtual Run(int argc, char *argv[]) {
         try {
             parser_.ParseArgs(argc, argv);
         } catch (const std::exception &e) {

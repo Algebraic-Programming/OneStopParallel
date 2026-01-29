@@ -39,8 +39,8 @@ class PartitioningProblem {
     HypergraphT hgraph_;
 
     unsigned nrOfPartitions_;
-    WorkwType maxWorkWeightPerPartition_;
-    MemwType maxMemoryWeightPerPartition_;
+    WorkwType maxWorkWeightPerPartition_ = std::numeric_limits<WorkwType>::max();
+    MemwType maxMemoryWeightPerPartition_ = std::numeric_limits<MemwType>::max();
 
     bool allowsReplication_ = false;
 

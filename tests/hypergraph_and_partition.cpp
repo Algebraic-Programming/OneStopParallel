@@ -59,6 +59,13 @@ BOOST_AUTO_TEST_CASE(HypergraphAndPartitionTest) {
     BOOST_CHECK_EQUAL(hgraph.NumVertices(), 27);
     BOOST_CHECK_EQUAL(hgraph.NumHyperedges(), 16);
 
+    // Matrix format, columns are vertices, rows are hyperedges
+    status = file_reader::ReadHypergraphMartixMarketFormat((cwd / "data/mtx_tests/ErdosRenyi_8_19_A.mtx").string(), hgraph, 
+        file_reader::MatrixToHypergraphFormat::ROW_NET);
+    BOOST_CHECK(status);
+    BOOST_CHECK_EQUAL(hgraph.NumVertices(), 8);
+    BOOST_CHECK_EQUAL(hgraph.NumHyperedges(), 8);
+
     // DAG format, all hyperedges have size 2
     hgraph = ConvertFromCdagAsDag<HypergraphImpl, Graph>(dag);
     BOOST_CHECK_EQUAL(dag.NumVertices(), hgraph.NumVertices());
