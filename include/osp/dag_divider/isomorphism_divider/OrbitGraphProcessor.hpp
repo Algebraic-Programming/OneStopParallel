@@ -29,6 +29,7 @@ limitations under the License.
 #include "osp/dag_divider/isomorphism_divider/MerkleHashComputer.hpp"
 #include "osp/graph_algorithms/directed_graph_path_util.hpp"
 #include "osp/graph_algorithms/directed_graph_util.hpp"
+#include "osp/graph_algorithms/specialised_graph_algorithms/subgraph_algorithms.hpp"
 #include "osp/graph_algorithms/subgraph_algorithms.hpp"
 
 namespace osp {
@@ -64,7 +65,8 @@ class OrbitGraphProcessor {
 
     static_assert(isComputationalDagV<GraphT>, "Graph must be a computational DAG");
     static_assert(isComputationalDagV<ConstrGraphT>, "ConstrGraphT must be a computational DAG");
-    static_assert(isConstructableCdagV<ConstrGraphT>, "ConstrGraphT must satisfy the constructable_cdag_vertex concept");
+    static_assert(isConstructableCdagV<ConstrGraphT> || isDirectConstructableCdagV<ConstrGraphT>,
+                  "ConstrGraphT must satisfy the constructable_cdag_vertex concept or be directly constructible");
     static_assert(std::is_same_v<VertexIdxT<GraphT>, VertexIdxT<ConstrGraphT>>,
                   "GraphT and ConstrGraphT must have the same VertexIdx types");
 
@@ -1017,7 +1019,7 @@ class OrbitGraphProcessor {
         if (numComponents > 1) {
             const size_t firstSgSize = outNewSubgraphs[0].size();
             ConstrGraphT repSg;
-            CreateInducedSubgraph(originalDag, repSg, outNewSubgraphs[0]);
+            CreateInducedSubgraphMap(originalDag, repSg, outNewSubgraphs[0]);
 
             for (size_t i = 1; i < numComponents; ++i) {
                 if (outNewSubgraphs[i].size() != firstSgSize) {
@@ -1025,7 +1027,7 @@ class OrbitGraphProcessor {
                 }
 
                 ConstrGraphT currentSg;
-                CreateInducedSubgraph(originalDag, currentSg, outNewSubgraphs[i]);
+                CreateInducedSubgraphMap(originalDag, currentSg, outNewSubgraphs[i]);
                 if (!AreIsomorphicByMerkleHash(repSg, currentSg)) {
                     return false;
                 }

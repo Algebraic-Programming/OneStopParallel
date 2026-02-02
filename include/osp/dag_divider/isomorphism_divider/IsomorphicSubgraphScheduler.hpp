@@ -28,6 +28,7 @@ limitations under the License.
 #include "TrimmedGroupScheduler.hpp"
 #include "osp/auxiliary/io/DotFileWriter.hpp"
 #include "osp/bsp/scheduler/Scheduler.hpp"
+#include "osp/graph_algorithms/specialised_graph_algorithms/subgraph_algorithms.hpp"
 #include "osp/graph_algorithms/subgraph_algorithms.hpp"
 
 namespace osp {
@@ -54,7 +55,8 @@ template <typename GraphT, typename ConstrGraphT>
 class IsomorphicSubgraphScheduler {
     static_assert(isComputationalDagV<GraphT>, "Graph must be a computational DAG");
     static_assert(isComputationalDagV<ConstrGraphT>, "ConstrGraphT must be a computational DAG");
-    static_assert(isConstructableCdagV<ConstrGraphT>, "ConstrGraphT must satisfy the constructable_cdag_vertex concept");
+    static_assert(isConstructableCdagV<ConstrGraphT> || isDirectConstructableCdagV<ConstrGraphT>,
+                  "ConstrGraphT must satisfy the constructable_cdag_vertex concept or be directly constructible");
     static_assert(std::is_same_v<VertexIdxT<GraphT>, VertexIdxT<ConstrGraphT>>,
                   "GraphT and ConstrGraphT must have the same VertexIdx types");
 
@@ -534,7 +536,13 @@ class IsomorphicSubgraphScheduler {
                     currentVertexToRepLocalIdx = std::move(repGlobalToLocalMap);
                 } else {    // For other subgraphs, build the isomorphic mapping
                     ConstrGraphT currentSubgraphGraph;
-                    CreateInducedSubgraph(instance.GetComputationalDag(), currentSubgraphGraph, currentSubgraphVerticesSorted);
+                    auto originalToLocalMap = CreateInducedSubgraphMap(
+                        instance.GetComputationalDag(), currentSubgraphGraph, currentSubgraphVerticesSorted);
+
+                    std::vector<VertexIdxT<GraphT>> localToOriginal(currentSubgraphGraph.NumVertices());
+                    for (const auto &[orig, local] : originalToLocalMap) {
+                        localToOriginal[local] = orig;
+                    }
 
                     MerkleHashComputer<ConstrGraphT> currentHasher(currentSubgraphGraph);
 
@@ -542,7 +550,7 @@ class IsomorphicSubgraphScheduler {
                         const auto &currentOrbitNodes = currentHasher.GetOrbitFromHash(hash);
                         for (size_t k = 0; k < repOrbitNodes.size(); ++k) {
                             // Map: current_subgraph_vertex -> representative_subgraph_local_idx
-                            currentVertexToRepLocalIdx[currentSubgraphVerticesSorted[currentOrbitNodes[k]]]
+                            currentVertexToRepLocalIdx[localToOriginal[currentOrbitNodes[k]]]
                                 = static_cast<VertexIdxT<ConstrGraphT>>(repOrbitNodes[k]);
                         }
                     }
