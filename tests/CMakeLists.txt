@@ -69,6 +69,7 @@ _add_test( heaps )
 _add_test( kl_mem_constr )
 
 _add_test( isomorphic_subgraph_scheduler )
+_add_test( isomorphic_subgraph_scheduler_compact_sparse )
 
 _add_test( trimmed_group_scheduler )
 
@@ -77,6 +78,7 @@ _add_test( isomorphism_mapper )
 _add_test( merkle_hash_computer )
 
 _add_test( orbit_graph_processor )
+_add_test( orbit_graph_processor_compact_sparse )
 
 _add_test( eft_subgraph_scheduler )
 
