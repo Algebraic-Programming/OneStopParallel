@@ -24,6 +24,7 @@ limitations under the License.
 
 #include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 #include "osp/auxiliary/io/mtx_hypergraph_file_reader.hpp"
+#include "osp/auxiliary/io/hmetis_hypergraph_file_reader.hpp"
 #include "osp/auxiliary/io/partitioning_file_writer.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 #include "osp/partitioning/model/hypergraph_utility.hpp"
@@ -60,11 +61,19 @@ BOOST_AUTO_TEST_CASE(HypergraphAndPartitionTest) {
     BOOST_CHECK_EQUAL(hgraph.NumHyperedges(), 16);
 
     // Matrix format, columns are vertices, rows are hyperedges
-    status = file_reader::ReadHypergraphMartixMarketFormat((cwd / "data/mtx_tests/ErdosRenyi_8_19_A.mtx").string(), hgraph, 
+    status = file_reader::ReadHypergraphMartixMarketFormat((cwd / "data/mtx_tests/ErdosRenyi_8_19_A.mtx").string(), hgraph,
         file_reader::MatrixToHypergraphFormat::ROW_NET);
     BOOST_CHECK(status);
     BOOST_CHECK_EQUAL(hgraph.NumVertices(), 8);
     BOOST_CHECK_EQUAL(hgraph.NumHyperedges(), 8);
+
+    // Hmetis format for hypergraphs
+    status = file_reader::ReadHypergraphMetisFormat((cwd / "data/hmetis/example01.hmetis").string(), hgraph);
+    BOOST_CHECK(status);
+    BOOST_CHECK_EQUAL(hgraph.NumVertices(), 8);
+    BOOST_CHECK_EQUAL(hgraph.NumHyperedges(), 6);
+    BOOST_CHECK_EQUAL(hgraph.GetVertexWorkWeight(0), 1);
+    BOOST_CHECK_EQUAL(hgraph.GetHyperedgeWeight(0), 1);
 
     // DAG format, all hyperedges have size 2
     hgraph = ConvertFromCdagAsDag<HypergraphImpl, Graph>(dag);
