@@ -1037,11 +1037,11 @@ class OrbitGraphProcessor {
     }
 
   public:
-    const GraphT &GetCoarseGraph() const { return coarseGraph_; }
+    const ConstrGraphT &GetCoarseGraph() const { return coarseGraph_; }
 
     const std::vector<VertexType> &GetContractionMap() const { return contractionMap_; }
 
-    const GraphT &GetFinalCoarseGraph() const { return finalCoarseGraph_; }
+    const ConstrGraphT &GetFinalCoarseGraph() const { return finalCoarseGraph_; }
 
     const std::vector<VertexType> &GetFinalContractionMap() const { return finalContractionMap_; }
 

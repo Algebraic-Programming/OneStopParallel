@@ -33,7 +33,8 @@ using GraphT = ComputationalDagVectorImplDefUnsignedT;
 // Using the specialization parameters for CompactSparseGraph
 // <keepVertexOrder, useWorkWeights, useCommWeights, useMemWeights, useVertTypes, VertT, EdgeT, WorkWeightType, CommWeightType,
 // MemWeightType, VertexTypeTemplateType>
-using ConstrGraphT = CompactSparseGraph<true, true, true, true, true, unsigned, unsigned, unsigned, unsigned, unsigned, unsigned>;
+using ConstrGraphT
+    = CompactSparseGraph<true, true, true, true, true, std::size_t, unsigned, unsigned, unsigned, unsigned, unsigned>;
 
 using GroupT = typename OrbitGraphProcessor<GraphT, ConstrGraphT>::Group;
 
