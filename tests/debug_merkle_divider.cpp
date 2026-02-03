@@ -28,6 +28,8 @@ limitations under the License.
 #include "osp/bsp/scheduler/Serial.hpp"
 #include "osp/coarser/coarser_util.hpp"
 #include "osp/dag_divider/isomorphism_divider/IsomorphicSubgraphScheduler.hpp"
+#include "osp/graph_algorithms/specialised_graph_algorithms/subgraph_algorithms.hpp"
+#include "osp/graph_implementations/adj_list_impl/compact_sparse_graph.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 
 using namespace osp;
@@ -63,8 +65,8 @@ int main(int argc, char *argv[]) {
 
     std::string dotFilePath = argv[1];
 
-    using GraphT = ComputationalDagVectorImplDefUnsignedT;
-    using GraphT2 = GraphT;
+    using GraphT = CSG;
+    using GraphT2 = ComputationalDagVectorImplDefUnsignedT;
 
     BspInstance<GraphT2> instance;
     if (!file_reader::ReadComputationalDagDotFormat(dotFilePath, instance.GetComputationalDag())) {

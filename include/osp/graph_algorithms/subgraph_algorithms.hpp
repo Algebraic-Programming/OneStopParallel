@@ -219,51 +219,95 @@ std::unordered_map<VertexIdxT<GraphTIn>, VertexIdxT<GraphTOut>> CreateInducedSub
     static_assert(std::is_same_v<VertexIdxT<GraphTIn>, VertexIdxT<GraphTOut>>,
                   "GraphTIn and out must have the same VertexIdx types");
 
-    static_assert(isConstructableCdagVertexV<GraphTOut>, "GraphTOut must satisfy the constructable_cdag_vertex concept");
+    static_assert(isConstructableCdagV<GraphTOut> || isDirectConstructableCdagV<GraphTOut>,
+                  "GraphTOut must satisfy the constructable_cdag_vertex concept or be directly constructible");
 
-    static_assert(isConstructableCdagEdgeV<GraphTOut>, "GraphTOut must satisfy the constructable_cdag_edge concept");
+    if constexpr (isConstructableCdagVertexV<GraphTOut>) {
+        assert(dagOut.NumVertices() == 0);
 
-    assert(dagOut.NumVertices() == 0);
+        std::unordered_map<VertexIdxT<GraphTIn>, VertexIdxT<GraphTOut>> localIdx;
+        localIdx.reserve(selectedNodes.size());
 
-    std::unordered_map<VertexIdxT<GraphTIn>, VertexIdxT<GraphTOut>> localIdx;
-    localIdx.reserve(selectedNodes.size());
+        for (const auto &node : selectedNodes) {
+            localIdx[node] = dagOut.NumVertices();
 
-    for (const auto &node : selectedNodes) {
-        localIdx[node] = dagOut.NumVertices();
+            if constexpr (isConstructableCdagTypedVertexV<GraphTOut> and hasTypedVerticesV<GraphTIn>) {
+                // add vertex with type
+                dagOut.AddVertex(
+                    dag.VertexWorkWeight(node), dag.VertexCommWeight(node), dag.VertexMemWeight(node), dag.VertexType(node));
+            } else {
+                // add vertex without type
+                dagOut.AddVertex(dag.VertexWorkWeight(node), dag.VertexCommWeight(node), dag.VertexMemWeight(node));
+            }
+        }
 
-        if constexpr (isConstructableCdagTypedVertexV<GraphTOut> and hasTypedVerticesV<GraphTIn>) {
-            // add vertex with type
-            dagOut.AddVertex(
-                dag.VertexWorkWeight(node), dag.VertexCommWeight(node), dag.VertexMemWeight(node), dag.VertexType(node));
+        if constexpr (hasEdgeWeightsV<GraphTIn> and hasEdgeWeightsV<GraphTOut>) {
+            // add edges with edge comm weights
+            for (const auto &node : selectedNodes) {
+                for (const auto &inEdge : InEdges(node, dag)) {
+                    const auto &pred = Source(inEdge, dag);
+                    if (localIdx.count(pred)) {
+                        dagOut.AddEdge(localIdx[pred], localIdx[node], dag.EdgeCommWeight(inEdge));
+                    }
+                }
+            }
+
         } else {
-            // add vertex without type
-            dagOut.AddVertex(dag.VertexWorkWeight(node), dag.VertexCommWeight(node), dag.VertexMemWeight(node));
-        }
-    }
-
-    if constexpr (hasEdgeWeightsV<GraphTIn> and hasEdgeWeightsV<GraphTOut>) {
-        // add edges with edge comm weights
-        for (const auto &node : selectedNodes) {
-            for (const auto &inEdge : InEdges(node, dag)) {
-                const auto &pred = Source(inEdge, dag);
-                if (localIdx.count(pred)) {
-                    dagOut.AddEdge(localIdx[pred], localIdx[node], dag.EdgeCommWeight(inEdge));
+            // add edges without edge comm weights
+            for (const auto &node : selectedNodes) {
+                for (const auto &pred : dag.Parents(node)) {
+                    if (localIdx.count(pred)) {
+                        dagOut.AddEdge(localIdx[pred], localIdx[node]);
+                    }
                 }
             }
         }
 
-    } else {
-        // add edges without edge comm weights
-        for (const auto &node : selectedNodes) {
-            for (const auto &pred : dag.Parents(node)) {
-                if (localIdx.count(pred)) {
-                    dagOut.AddEdge(localIdx[pred], localIdx[node]);
+        return localIdx;
+    }
+
+    if constexpr (isDirectConstructableCdagV<GraphTOut>) {
+        const std::vector<VertexIdxT<GraphTIn>> topOrder = GetTopOrder(dag);
+        std::vector<VertexIdxT<GraphTIn>> topOrderPosition(topOrder.size());
+        for (VertexIdxT<GraphTIn> pos = 0; pos < dag.NumVertices(); ++pos) {
+            topOrderPosition[topOrder[pos]] = pos;
+        }
+
+        auto topCmp = [&topOrderPosition](const VertexIdxT<GraphTIn> &lhs, const VertexIdxT<GraphTIn> &rhs) {
+            return topOrderPosition[lhs] < topOrderPosition[rhs];
+        };
+
+        std::set<VertexIdxT<GraphTIn>, decltype(topCmp)> selectedVerticesOrdered(
+            selectedNodes.begin(), selectedNodes.end(), topCmp);
+
+        std::unordered_map<VertexIdxT<GraphTIn>, VertexIdxT<GraphTIn>> localIdx;
+        localIdx.reserve(selectedNodes.size());
+
+        VertexIdxT<GraphTIn> nodeCntr = 0;
+        for (const auto &node : selectedVerticesOrdered) {
+            localIdx[node] = nodeCntr++;
+        }
+
+        std::vector<std::pair<VertexIdxT<GraphTIn>, VertexIdxT<GraphTIn>>> edges;
+        for (const auto &node : selectedVerticesOrdered) {
+            for (const auto &chld : dag.Children(node)) {
+                if (selectedVerticesOrdered.find(chld) != selectedVerticesOrdered.end()) {
+                    edges.emplace_back(localIdx.at(node), localIdx.at(chld));
                 }
             }
         }
-    }
 
-    return localIdx;
+        dagOut = GraphTOut(nodeCntr, edges);
+
+        for (const auto &[oriVert, outVert] : localIdx) {
+            dagOut.SetVertexWorkWeight(outVert, dag.VertexWorkWeight(oriVert));
+            dagOut.SetVertexCommWeight(outVert, dag.VertexCommWeight(oriVert));
+            dagOut.SetVertexMemWeight(outVert, dag.VertexMemWeight(oriVert));
+            dagOut.SetVertexType(outVert, dag.VertexType(oriVert));
+        }
+
+        return localIdx;
+    }
 }
 
 }    // end namespace osp
