@@ -261,4 +261,233 @@ BOOST_AUTO_TEST_CASE(ScheduleIsomorphicGroupShuffledIDs) {
     BOOST_CHECK_NE(partition[0], partition[2]);
 }
 
+BOOST_AUTO_TEST_CASE(ScheduleIsomorphicGroupDiamondShuffledIDs) {
+    // --- Setup ---
+    // This test ensures that the isomorphism mapping works correctly for diamond-shaped
+    // subgraphs where vertex IDs are not in the same relative order.
+    // Diamond pattern: source -> {mid1, mid2} -> sink
+    BspInstance<GraphT> instance;
+    auto &dag = instance.GetComputationalDag();
+
+    // Subgraph 1 (vertices 0-3): Standard diamond pattern
+    //     0
+    //    /
+    //   1   2
+    //    \ /
+    //     3
+    dag.AddVertex(10, 1, 1, 0);    // 0: source (work=10)
+    dag.AddVertex(20, 1, 1, 0);    // 1: mid1 (work=20)
+    dag.AddVertex(20, 1, 1, 0);    // 2: mid2 (work=20)
+    dag.AddVertex(30, 1, 1, 0);    // 3: sink (work=30)
+    dag.AddEdge(0, 1);
+    dag.AddEdge(0, 2);
+    dag.AddEdge(1, 3);
+    dag.AddEdge(2, 3);
+
+    // Subgraph 2 (vertices 4-7): Shuffled diamond pattern
+    // Vertex order: sink=4, mid2=5, source=6, mid1=7
+    //     6 (source)
+    //    /
+    //   7   5 (mid1, mid2)
+    //    \ /
+    //     4 (sink)
+    dag.AddVertex(30, 1, 1, 0);    // 4: sink (work=30, corresponds to node 3)
+    dag.AddVertex(20, 1, 1, 0);    // 5: mid2 (work=20, corresponds to node 2)
+    dag.AddVertex(10, 1, 1, 0);    // 6: source (work=10, corresponds to node 0)
+    dag.AddVertex(20, 1, 1, 0);    // 7: mid1 (work=20, corresponds to node 1)
+    dag.AddEdge(6, 7);
+    dag.AddEdge(6, 5);
+    dag.AddEdge(7, 4);
+    dag.AddEdge(5, 4);
+
+    instance.GetArchitecture().SetProcessorsWithTypes({0, 0});
+    instance.SetDiagonalCompatibilityMatrix(1);
+
+    std::vector<GroupT> isoGroups = {GroupT{{{0, 1, 2, 3}, {4, 5, 6, 7}}}};
+
+    SubgraphSchedule subSched;
+    subSched.nodeAssignedWorkerPerType_.resize(1);
+    subSched.nodeAssignedWorkerPerType_[0] = {2};
+    subSched.wasTrimmed_ = {false};
+
+    std::vector<VertexIdxT<GraphT>> partition(dag.NumVertices());
+
+    GreedyBspScheduler<ConstrGraphT> greedyScheduler;
+    IsomorphicSubgraphSchedulerTester<GraphT, ConstrGraphT> tester(greedyScheduler);
+
+    // --- Execute ---
+    tester.TestScheduleIsomorphicGroup(instance, isoGroups, subSched, partition);
+
+    // --- Assert ---
+    // Subgraph 1: All nodes should be in the same partition (single-processor assignment likely)
+    BOOST_CHECK_EQUAL(partition[0], partition[1]);
+    BOOST_CHECK_EQUAL(partition[0], partition[2]);
+    BOOST_CHECK_EQUAL(partition[0], partition[3]);
+
+    // Subgraph 2: All nodes should be in the same partition
+    BOOST_CHECK_EQUAL(partition[4], partition[5]);
+    BOOST_CHECK_EQUAL(partition[4], partition[6]);
+    BOOST_CHECK_EQUAL(partition[4], partition[7]);
+
+    // The two subgraphs should be in different partitions
+    BOOST_CHECK_NE(partition[0], partition[4]);
+}
+
+BOOST_AUTO_TEST_CASE(ScheduleIsomorphicGroupMultiLevelShuffledIDs) {
+    // --- Setup ---
+    // Three-level graph: src -> {mid1, mid2} -> sink
+    // Tests that the mapping handles multiple nodes at the middle level correctly
+    // when vertex IDs are interleaved between subgraphs.
+    BspInstance<GraphT> instance;
+    auto &dag = instance.GetComputationalDag();
+
+    // Subgraph 1: vertices in order 0 (src) -> {1, 2} (mid) -> 3 (sink)
+    dag.AddVertex(5, 1, 1, 0);     // 0: source
+    dag.AddVertex(10, 1, 1, 0);    // 1: mid1
+    dag.AddVertex(10, 1, 1, 0);    // 2: mid2
+    dag.AddVertex(15, 1, 1, 0);    // 3: sink
+
+    // Subgraph 2: vertices interleaved with different relative positions
+    // 4 (sink), 5 (mid2), 6 (mid1), 7 (src)
+    dag.AddVertex(15, 1, 1, 0);    // 4: sink
+    dag.AddVertex(10, 1, 1, 0);    // 5: mid2
+    dag.AddVertex(10, 1, 1, 0);    // 6: mid1
+    dag.AddVertex(5, 1, 1, 0);     // 7: source
+
+    // Subgraph 3: Another permutation
+    // 8 (mid1), 9 (src), 10 (sink), 11 (mid2)
+    dag.AddVertex(10, 1, 1, 0);    // 8: mid1
+    dag.AddVertex(5, 1, 1, 0);     // 9: source
+    dag.AddVertex(15, 1, 1, 0);    // 10: sink
+    dag.AddVertex(10, 1, 1, 0);    // 11: mid2
+
+    // Edges for Subgraph 1
+    dag.AddEdge(0, 1);
+    dag.AddEdge(0, 2);
+    dag.AddEdge(1, 3);
+    dag.AddEdge(2, 3);
+
+    // Edges for Subgraph 2 (7 is source, {5,6} are mid, 4 is sink)
+    dag.AddEdge(7, 5);
+    dag.AddEdge(7, 6);
+    dag.AddEdge(5, 4);
+    dag.AddEdge(6, 4);
+
+    // Edges for Subgraph 3 (9 is source, {8,11} are mid, 10 is sink)
+    dag.AddEdge(9, 8);
+    dag.AddEdge(9, 11);
+    dag.AddEdge(8, 10);
+    dag.AddEdge(11, 10);
+
+    instance.GetArchitecture().SetProcessorsWithTypes({0, 0, 0});
+    instance.SetDiagonalCompatibilityMatrix(1);
+
+    std::vector<GroupT> isoGroups = {GroupT{{{0, 1, 2, 3}, {4, 5, 6, 7}, {8, 9, 10, 11}}}};
+
+    SubgraphSchedule subSched;
+    subSched.nodeAssignedWorkerPerType_.resize(1);
+    subSched.nodeAssignedWorkerPerType_[0] = {3};    // 3 processors for 3 subgraphs
+    subSched.wasTrimmed_ = {false};
+
+    std::vector<VertexIdxT<GraphT>> partition(dag.NumVertices());
+
+    GreedyBspScheduler<ConstrGraphT> greedyScheduler;
+    IsomorphicSubgraphSchedulerTester<GraphT, ConstrGraphT> tester(greedyScheduler);
+
+    // --- Execute ---
+    tester.TestScheduleIsomorphicGroup(instance, isoGroups, subSched, partition);
+
+    // --- Assert ---
+    // Each subgraph should have all its nodes in the same partition
+    // Subgraph 1
+    BOOST_CHECK_EQUAL(partition[0], partition[1]);
+    BOOST_CHECK_EQUAL(partition[0], partition[2]);
+    BOOST_CHECK_EQUAL(partition[0], partition[3]);
+
+    // Subgraph 2
+    BOOST_CHECK_EQUAL(partition[4], partition[5]);
+    BOOST_CHECK_EQUAL(partition[4], partition[6]);
+    BOOST_CHECK_EQUAL(partition[4], partition[7]);
+
+    // Subgraph 3
+    BOOST_CHECK_EQUAL(partition[8], partition[9]);
+    BOOST_CHECK_EQUAL(partition[8], partition[10]);
+    BOOST_CHECK_EQUAL(partition[8], partition[11]);
+
+    // All three subgraphs should be in different partitions
+    BOOST_CHECK_NE(partition[0], partition[4]);
+    BOOST_CHECK_NE(partition[0], partition[8]);
+    BOOST_CHECK_NE(partition[4], partition[8]);
+}
+
+BOOST_AUTO_TEST_CASE(ScheduleIsomorphicGroupShuffledForkJoinPattern) {
+    // --- Setup ---
+    // This test ensures the mapping handles a larger fork-join pattern
+    // where the second subgraph has completely reversed vertex ordering.
+    BspInstance<GraphT> instance;
+    auto &dag = instance.GetComputationalDag();
+
+    // Subgraph 1: Fork-join with 3 parallel branches
+    // 0 -> {1, 2, 3} -> 4
+    dag.AddVertex(10, 1, 1, 0);    // 0: source
+    dag.AddVertex(25, 1, 1, 0);    // 1: branch1
+    dag.AddVertex(25, 1, 1, 0);    // 2: branch2
+    dag.AddVertex(25, 1, 1, 0);    // 3: branch3
+    dag.AddVertex(40, 1, 1, 0);    // 4: sink
+    dag.AddEdge(0, 1);
+    dag.AddEdge(0, 2);
+    dag.AddEdge(0, 3);
+    dag.AddEdge(1, 4);
+    dag.AddEdge(2, 4);
+    dag.AddEdge(3, 4);
+
+    // Subgraph 2: Same pattern but vertex IDs are completely reversed
+    // 9 (source) -> {8, 7, 6} (branches) -> 5 (sink)
+    dag.AddVertex(40, 1, 1, 0);    // 5: sink (corresponds to 4)
+    dag.AddVertex(25, 1, 1, 0);    // 6: branch3 (corresponds to 3)
+    dag.AddVertex(25, 1, 1, 0);    // 7: branch2 (corresponds to 2)
+    dag.AddVertex(25, 1, 1, 0);    // 8: branch1 (corresponds to 1)
+    dag.AddVertex(10, 1, 1, 0);    // 9: source (corresponds to 0)
+    dag.AddEdge(9, 8);
+    dag.AddEdge(9, 7);
+    dag.AddEdge(9, 6);
+    dag.AddEdge(8, 5);
+    dag.AddEdge(7, 5);
+    dag.AddEdge(6, 5);
+
+    instance.GetArchitecture().SetProcessorsWithTypes({0, 0});
+    instance.SetDiagonalCompatibilityMatrix(1);
+
+    std::vector<GroupT> isoGroups = {GroupT{{{0, 1, 2, 3, 4}, {5, 6, 7, 8, 9}}}};
+
+    SubgraphSchedule subSched;
+    subSched.nodeAssignedWorkerPerType_.resize(1);
+    subSched.nodeAssignedWorkerPerType_[0] = {2};
+    subSched.wasTrimmed_ = {false};
+
+    std::vector<VertexIdxT<GraphT>> partition(dag.NumVertices());
+
+    GreedyBspScheduler<ConstrGraphT> greedyScheduler;
+    IsomorphicSubgraphSchedulerTester<GraphT, ConstrGraphT> tester(greedyScheduler);
+
+    // --- Execute ---
+    tester.TestScheduleIsomorphicGroup(instance, isoGroups, subSched, partition);
+
+    // --- Assert ---
+    // Subgraph 1: All in same partition
+    BOOST_CHECK_EQUAL(partition[0], partition[1]);
+    BOOST_CHECK_EQUAL(partition[0], partition[2]);
+    BOOST_CHECK_EQUAL(partition[0], partition[3]);
+    BOOST_CHECK_EQUAL(partition[0], partition[4]);
+
+    // Subgraph 2: All in same partition
+    BOOST_CHECK_EQUAL(partition[5], partition[6]);
+    BOOST_CHECK_EQUAL(partition[5], partition[7]);
+    BOOST_CHECK_EQUAL(partition[5], partition[8]);
+    BOOST_CHECK_EQUAL(partition[5], partition[9]);
+
+    // The two subgraphs should be in different partitions
+    BOOST_CHECK_NE(partition[0], partition[5]);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
