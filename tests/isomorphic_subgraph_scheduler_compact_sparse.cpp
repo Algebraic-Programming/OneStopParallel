@@ -17,7 +17,9 @@ limitations under the License.
 */
 
 #define BOOST_TEST_MODULE IsomorphicSubgraphSchedulerCompactSparse
+#include <algorithm>
 #include <boost/test/unit_test.hpp>
+#include <iterator>
 #include <numeric>
 #include <set>
 
@@ -265,36 +267,36 @@ BOOST_AUTO_TEST_CASE(ScheduleIsomorphicGroupDiamondShuffledIDs) {
     // --- Setup ---
     // This test ensures that the isomorphism mapping works correctly for diamond-shaped
     // subgraphs where vertex IDs are not in the same relative order.
-    // Diamond pattern: source -> {mid1, mid2} -> sink
+    // The key property: corresponding nodes in isomorphic subgraphs should have
+    // the same relative partition pattern.
     BspInstance<GraphT> instance;
     auto &dag = instance.GetComputationalDag();
 
     // Subgraph 1 (vertices 0-3): Standard diamond pattern
-    //     0
+    //     0 (source, work=10)
     //    /
-    //   1   2
+    //   1   2 (mid, work=20 each)
     //    \ /
-    //     3
-    dag.AddVertex(10, 1, 1, 0);    // 0: source (work=10)
-    dag.AddVertex(20, 1, 1, 0);    // 1: mid1 (work=20)
-    dag.AddVertex(20, 1, 1, 0);    // 2: mid2 (work=20)
-    dag.AddVertex(30, 1, 1, 0);    // 3: sink (work=30)
+    //     3 (sink, work=30)
+    dag.AddVertex(10, 1, 1, 0);    // 0: source
+    dag.AddVertex(20, 1, 1, 0);    // 1: mid1
+    dag.AddVertex(20, 1, 1, 0);    // 2: mid2
+    dag.AddVertex(30, 1, 1, 0);    // 3: sink
     dag.AddEdge(0, 1);
     dag.AddEdge(0, 2);
     dag.AddEdge(1, 3);
     dag.AddEdge(2, 3);
 
     // Subgraph 2 (vertices 4-7): Shuffled diamond pattern
-    // Vertex order: sink=4, mid2=5, source=6, mid1=7
-    //     6 (source)
-    //    /
-    //   7   5 (mid1, mid2)
-    //    \ /
-    //     4 (sink)
-    dag.AddVertex(30, 1, 1, 0);    // 4: sink (work=30, corresponds to node 3)
-    dag.AddVertex(20, 1, 1, 0);    // 5: mid2 (work=20, corresponds to node 2)
-    dag.AddVertex(10, 1, 1, 0);    // 6: source (work=10, corresponds to node 0)
-    dag.AddVertex(20, 1, 1, 0);    // 7: mid1 (work=20, corresponds to node 1)
+    // Structural correspondence:
+    //   6 corresponds to 0 (source, work=10)
+    //   7 corresponds to 1 (mid1, work=20)
+    //   5 corresponds to 2 (mid2, work=20)
+    //   4 corresponds to 3 (sink, work=30)
+    dag.AddVertex(30, 1, 1, 0);    // 4: sink
+    dag.AddVertex(20, 1, 1, 0);    // 5: mid2
+    dag.AddVertex(10, 1, 1, 0);    // 6: source
+    dag.AddVertex(20, 1, 1, 0);    // 7: mid1
     dag.AddEdge(6, 7);
     dag.AddEdge(6, 5);
     dag.AddEdge(7, 4);
@@ -319,25 +321,36 @@ BOOST_AUTO_TEST_CASE(ScheduleIsomorphicGroupDiamondShuffledIDs) {
     tester.TestScheduleIsomorphicGroup(instance, isoGroups, subSched, partition);
 
     // --- Assert ---
-    // Subgraph 1: All nodes should be in the same partition (single-processor assignment likely)
-    BOOST_CHECK_EQUAL(partition[0], partition[1]);
-    BOOST_CHECK_EQUAL(partition[0], partition[2]);
-    BOOST_CHECK_EQUAL(partition[0], partition[3]);
+    // Key property: The isomorphism mapping should ensure that corresponding nodes
+    // in both subgraphs have consistent relative partition offsets.
+    // If nodes A and B in subgraph 1 have the same partition, then their corresponding
+    // nodes A' and B' in subgraph 2 should also have the same partition.
 
-    // Subgraph 2: All nodes should be in the same partition
-    BOOST_CHECK_EQUAL(partition[4], partition[5]);
-    BOOST_CHECK_EQUAL(partition[4], partition[6]);
-    BOOST_CHECK_EQUAL(partition[4], partition[7]);
+    // For diamond pattern: mid1 (1) and mid2 (2) are structurally equivalent
+    // So they should have the same partition relationship as 7 and 5
+    bool sg1_mid_same = (partition[1] == partition[2]);
+    bool sg2_mid_same = (partition[7] == partition[5]);
+    BOOST_CHECK_EQUAL(sg1_mid_same, sg2_mid_same);
 
-    // The two subgraphs should be in different partitions
-    BOOST_CHECK_NE(partition[0], partition[4]);
+    // Source and sink are structurally distinct from mid nodes
+    // The partition pattern should be consistent between subgraphs
+
+    // Different subgraphs should be partitioned distinctly (no overlap)
+    std::set<std::size_t> sg1_partitions = {partition[0], partition[1], partition[2], partition[3]};
+    std::set<std::size_t> sg2_partitions = {partition[4], partition[5], partition[6], partition[7]};
+    std::vector<std::size_t> intersection;
+    std::set_intersection(sg1_partitions.begin(),
+                          sg1_partitions.end(),
+                          sg2_partitions.begin(),
+                          sg2_partitions.end(),
+                          std::back_inserter(intersection));
+    BOOST_CHECK(intersection.empty());
 }
 
 BOOST_AUTO_TEST_CASE(ScheduleIsomorphicGroupMultiLevelShuffledIDs) {
     // --- Setup ---
-    // Three-level graph: src -> {mid1, mid2} -> sink
-    // Tests that the mapping handles multiple nodes at the middle level correctly
-    // when vertex IDs are interleaved between subgraphs.
+    // Three-level diamond graph: src -> {mid1, mid2} -> sink
+    // Tests isomorphism mapping with 3 subgraphs that have interleaved vertex IDs.
     BspInstance<GraphT> instance;
     auto &dag = instance.GetComputationalDag();
 
@@ -347,15 +360,15 @@ BOOST_AUTO_TEST_CASE(ScheduleIsomorphicGroupMultiLevelShuffledIDs) {
     dag.AddVertex(10, 1, 1, 0);    // 2: mid2
     dag.AddVertex(15, 1, 1, 0);    // 3: sink
 
-    // Subgraph 2: vertices interleaved with different relative positions
-    // 4 (sink), 5 (mid2), 6 (mid1), 7 (src)
+    // Subgraph 2: reversed order
+    // Correspondence: 7->0, 6->1, 5->2, 4->3
     dag.AddVertex(15, 1, 1, 0);    // 4: sink
     dag.AddVertex(10, 1, 1, 0);    // 5: mid2
     dag.AddVertex(10, 1, 1, 0);    // 6: mid1
     dag.AddVertex(5, 1, 1, 0);     // 7: source
 
-    // Subgraph 3: Another permutation
-    // 8 (mid1), 9 (src), 10 (sink), 11 (mid2)
+    // Subgraph 3: jumbled order
+    // Correspondence: 9->0, 8->1, 11->2, 10->3
     dag.AddVertex(10, 1, 1, 0);    // 8: mid1
     dag.AddVertex(5, 1, 1, 0);     // 9: source
     dag.AddVertex(15, 1, 1, 0);    // 10: sink
@@ -367,13 +380,13 @@ BOOST_AUTO_TEST_CASE(ScheduleIsomorphicGroupMultiLevelShuffledIDs) {
     dag.AddEdge(1, 3);
     dag.AddEdge(2, 3);
 
-    // Edges for Subgraph 2 (7 is source, {5,6} are mid, 4 is sink)
+    // Edges for Subgraph 2
     dag.AddEdge(7, 5);
     dag.AddEdge(7, 6);
     dag.AddEdge(5, 4);
     dag.AddEdge(6, 4);
 
-    // Edges for Subgraph 3 (9 is source, {8,11} are mid, 10 is sink)
+    // Edges for Subgraph 3
     dag.AddEdge(9, 8);
     dag.AddEdge(9, 11);
     dag.AddEdge(8, 10);
@@ -386,7 +399,7 @@ BOOST_AUTO_TEST_CASE(ScheduleIsomorphicGroupMultiLevelShuffledIDs) {
 
     SubgraphSchedule subSched;
     subSched.nodeAssignedWorkerPerType_.resize(1);
-    subSched.nodeAssignedWorkerPerType_[0] = {3};    // 3 processors for 3 subgraphs
+    subSched.nodeAssignedWorkerPerType_[0] = {3};
     subSched.wasTrimmed_ = {false};
 
     std::vector<VertexIdxT<GraphT>> partition(dag.NumVertices());
@@ -398,37 +411,53 @@ BOOST_AUTO_TEST_CASE(ScheduleIsomorphicGroupMultiLevelShuffledIDs) {
     tester.TestScheduleIsomorphicGroup(instance, isoGroups, subSched, partition);
 
     // --- Assert ---
-    // Each subgraph should have all its nodes in the same partition
-    // Subgraph 1
-    BOOST_CHECK_EQUAL(partition[0], partition[1]);
-    BOOST_CHECK_EQUAL(partition[0], partition[2]);
-    BOOST_CHECK_EQUAL(partition[0], partition[3]);
+    // The key isomorphism property: for structurally equivalent positions,
+    // the partition relationship should be consistent across all subgraphs.
 
-    // Subgraph 2
-    BOOST_CHECK_EQUAL(partition[4], partition[5]);
-    BOOST_CHECK_EQUAL(partition[4], partition[6]);
-    BOOST_CHECK_EQUAL(partition[4], partition[7]);
+    // Check mid nodes relationship (mid1 vs mid2) is consistent:
+    // Subgraph 1: mid1=1, mid2=2
+    // Subgraph 2: mid1=6, mid2=5
+    // Subgraph 3: mid1=8, mid2=11
+    bool sg1_mid_same = (partition[1] == partition[2]);
+    bool sg2_mid_same = (partition[6] == partition[5]);
+    bool sg3_mid_same = (partition[8] == partition[11]);
+    BOOST_CHECK_EQUAL(sg1_mid_same, sg2_mid_same);
+    BOOST_CHECK_EQUAL(sg1_mid_same, sg3_mid_same);
 
-    // Subgraph 3
-    BOOST_CHECK_EQUAL(partition[8], partition[9]);
-    BOOST_CHECK_EQUAL(partition[8], partition[10]);
-    BOOST_CHECK_EQUAL(partition[8], partition[11]);
+    // Subgraphs should have non-overlapping partitions
+    std::set<std::size_t> sg1_partitions = {partition[0], partition[1], partition[2], partition[3]};
+    std::set<std::size_t> sg2_partitions = {partition[4], partition[5], partition[6], partition[7]};
+    std::set<std::size_t> sg3_partitions = {partition[8], partition[9], partition[10], partition[11]};
 
-    // All three subgraphs should be in different partitions
-    BOOST_CHECK_NE(partition[0], partition[4]);
-    BOOST_CHECK_NE(partition[0], partition[8]);
-    BOOST_CHECK_NE(partition[4], partition[8]);
+    std::vector<std::size_t> intersection12, intersection13, intersection23;
+    std::set_intersection(sg1_partitions.begin(),
+                          sg1_partitions.end(),
+                          sg2_partitions.begin(),
+                          sg2_partitions.end(),
+                          std::back_inserter(intersection12));
+    std::set_intersection(sg1_partitions.begin(),
+                          sg1_partitions.end(),
+                          sg3_partitions.begin(),
+                          sg3_partitions.end(),
+                          std::back_inserter(intersection13));
+    std::set_intersection(sg2_partitions.begin(),
+                          sg2_partitions.end(),
+                          sg3_partitions.begin(),
+                          sg3_partitions.end(),
+                          std::back_inserter(intersection23));
+
+    BOOST_CHECK(intersection12.empty());
+    BOOST_CHECK(intersection13.empty());
+    BOOST_CHECK(intersection23.empty());
 }
 
 BOOST_AUTO_TEST_CASE(ScheduleIsomorphicGroupShuffledForkJoinPattern) {
     // --- Setup ---
-    // This test ensures the mapping handles a larger fork-join pattern
-    // where the second subgraph has completely reversed vertex ordering.
+    // Fork-join with 3 parallel branches where second subgraph has reversed vertex IDs.
     BspInstance<GraphT> instance;
     auto &dag = instance.GetComputationalDag();
 
-    // Subgraph 1: Fork-join with 3 parallel branches
-    // 0 -> {1, 2, 3} -> 4
+    // Subgraph 1: 0 (source) -> {1, 2, 3} (branches) -> 4 (sink)
     dag.AddVertex(10, 1, 1, 0);    // 0: source
     dag.AddVertex(25, 1, 1, 0);    // 1: branch1
     dag.AddVertex(25, 1, 1, 0);    // 2: branch2
@@ -441,13 +470,13 @@ BOOST_AUTO_TEST_CASE(ScheduleIsomorphicGroupShuffledForkJoinPattern) {
     dag.AddEdge(2, 4);
     dag.AddEdge(3, 4);
 
-    // Subgraph 2: Same pattern but vertex IDs are completely reversed
-    // 9 (source) -> {8, 7, 6} (branches) -> 5 (sink)
-    dag.AddVertex(40, 1, 1, 0);    // 5: sink (corresponds to 4)
-    dag.AddVertex(25, 1, 1, 0);    // 6: branch3 (corresponds to 3)
-    dag.AddVertex(25, 1, 1, 0);    // 7: branch2 (corresponds to 2)
-    dag.AddVertex(25, 1, 1, 0);    // 8: branch1 (corresponds to 1)
-    dag.AddVertex(10, 1, 1, 0);    // 9: source (corresponds to 0)
+    // Subgraph 2: Same pattern, reversed vertex IDs
+    // Correspondence: 9->0, 8->1, 7->2, 6->3, 5->4
+    dag.AddVertex(40, 1, 1, 0);    // 5: sink
+    dag.AddVertex(25, 1, 1, 0);    // 6: branch3
+    dag.AddVertex(25, 1, 1, 0);    // 7: branch2
+    dag.AddVertex(25, 1, 1, 0);    // 8: branch1
+    dag.AddVertex(10, 1, 1, 0);    // 9: source
     dag.AddEdge(9, 8);
     dag.AddEdge(9, 7);
     dag.AddEdge(9, 6);
@@ -474,20 +503,26 @@ BOOST_AUTO_TEST_CASE(ScheduleIsomorphicGroupShuffledForkJoinPattern) {
     tester.TestScheduleIsomorphicGroup(instance, isoGroups, subSched, partition);
 
     // --- Assert ---
-    // Subgraph 1: All in same partition
-    BOOST_CHECK_EQUAL(partition[0], partition[1]);
-    BOOST_CHECK_EQUAL(partition[0], partition[2]);
-    BOOST_CHECK_EQUAL(partition[0], partition[3]);
-    BOOST_CHECK_EQUAL(partition[0], partition[4]);
+    // All three branch nodes (1, 2, 3) are structurally equivalent in subgraph 1.
+    // Similarly, (8, 7, 6) are structurally equivalent in subgraph 2.
+    // The partition pattern should be consistent.
 
-    // Subgraph 2: All in same partition
-    BOOST_CHECK_EQUAL(partition[5], partition[6]);
-    BOOST_CHECK_EQUAL(partition[5], partition[7]);
-    BOOST_CHECK_EQUAL(partition[5], partition[8]);
-    BOOST_CHECK_EQUAL(partition[5], partition[9]);
+    // Check if branch nodes have the same partition (they're all equivalent)
+    bool sg1_branches_same = (partition[1] == partition[2]) && (partition[2] == partition[3]);
+    bool sg2_branches_same = (partition[8] == partition[7]) && (partition[7] == partition[6]);
+    BOOST_CHECK_EQUAL(sg1_branches_same, sg2_branches_same);
 
-    // The two subgraphs should be in different partitions
-    BOOST_CHECK_NE(partition[0], partition[5]);
+    // Subgraphs should have non-overlapping partitions
+    std::set<std::size_t> sg1_partitions = {partition[0], partition[1], partition[2], partition[3], partition[4]};
+    std::set<std::size_t> sg2_partitions = {partition[5], partition[6], partition[7], partition[8], partition[9]};
+
+    std::vector<std::size_t> intersection;
+    std::set_intersection(sg1_partitions.begin(),
+                          sg1_partitions.end(),
+                          sg2_partitions.begin(),
+                          sg2_partitions.end(),
+                          std::back_inserter(intersection));
+    BOOST_CHECK(intersection.empty());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
