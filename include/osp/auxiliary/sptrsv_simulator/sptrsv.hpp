@@ -25,11 +25,14 @@ limitations under the License.
 #    include <Eigen/Core>
 #    include <algorithm>
 #    include <atomic>
+#    include <chrono>
 #    include <iostream>
 #    include <list>
 #    include <map>
+#    include <memory>
 #    include <random>
 #    include <stdexcept>
+#    include <thread>
 #    include <vector>
 
 #    include "osp/bsp/model/BspInstance.hpp"
@@ -91,6 +94,8 @@ class Sptrsv {
 
     std::vector<std::vector<std::vector<EigenIdxType>>> boundsArrayL_;
     std::vector<std::vector<std::vector<EigenIdxType>>> boundsArrayU_;
+    std::unique_ptr<std::atomic<unsigned>[]> stepDone_;
+    std::size_t stepDoneSize_ = 0U;
 
     Sptrsv() = default;
 
@@ -109,6 +114,13 @@ class Sptrsv {
             schedule.NumberOfSupersteps(), std::vector<std::vector<EigenIdxType>>(schedule.GetInstance().NumberOfProcessors()));
 
         numSupersteps_ = schedule.NumberOfSupersteps();
+        if (stepDoneSize_ != static_cast<std::size_t>(numSupersteps_)) {
+            stepDone_ = std::make_unique<std::atomic<unsigned>[]>(numSupersteps_);
+            stepDoneSize_ = static_cast<std::size_t>(numSupersteps_);
+        }
+        for (std::size_t i = 0; i < stepDoneSize_; ++i) {
+            stepDone_[i].store(0U, std::memory_order_relaxed);
+        }
         size_t numberOfVertices = instance_->GetComputationalDag().NumVertices();
 
 #    pragma omp parallel num_threads(2)
@@ -508,9 +520,8 @@ class Sptrsv {
     void SspLsolveStaleness2() {
         constexpr std::size_t staleness = 2U; // Maximum allowed superstep difference
         const unsigned nthreads = instance_->NumberOfProcessors();
-        std::vector<std::atomic<unsigned>> stepDone(numSupersteps_);
-        for (auto &counter : stepDone) {
-            counter.store(0U, std::memory_order_relaxed);
+        for (std::size_t i = 0; i < stepDoneSize_; ++i) {
+            stepDone_[i].store(0U, std::memory_order_relaxed);
         }
 
         auto *csr = instance_->GetComputationalDag().GetCSR();
@@ -524,11 +535,24 @@ class Sptrsv {
             for (unsigned step = 0; step < numSupersteps_; ++step) {
                 if (step >= staleness) {
                     const unsigned waitStep = step - static_cast<unsigned>(staleness);
-                    while (stepDone[waitStep].load(std::memory_order_acquire) < nthreads) {
-                        cpu_relax();
+                    unsigned spinCount = 0U;
+                    auto backoff = std::chrono::nanoseconds(50);
+                    while (stepDone_[waitStep].load(std::memory_order_relaxed) < nthreads) {
+                        if (spinCount < 2000U) {
+                            cpu_relax();
+                            ++spinCount;
+                        } else if (spinCount < 4000U) {
+                            std::this_thread::yield();
+                            ++spinCount;
+                        } else {
+                            std::this_thread::sleep_for(backoff);
+                            if (backoff < std::chrono::nanoseconds(500)) {
+                                backoff *= 2;
+                            }
+                        }
                     }
+                    std::atomic_thread_fence(std::memory_order_acquire);
                 }
-                // Each thread processes its assigned node ranges for this superstep
                 const size_t boundsStrSize = boundsArrayL_[step][proc].size();
                 for (size_t index = 0; index < boundsStrSize; index += 2) {
                     EigenIdxType lowerB = boundsArrayL_[step][proc][index];
@@ -547,7 +571,7 @@ class Sptrsv {
                         x_[node] /= vals[outer[node + 1] - 1];
                     }
                 }
-                stepDone[step].fetch_add(1U, std::memory_order_release);
+                stepDone_[step].fetch_add(1U, std::memory_order_release);
             }
         }
     }

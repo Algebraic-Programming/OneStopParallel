@@ -103,6 +103,9 @@ int main(int argc, char* argv[]) {
     }
     std::cout << "Average SSP L-solve time (" << num_iterations << " runs): " << ssp_avg_time << " seconds" << std::endl;
     std::cout << "Average serial L-solve time (" << num_iterations << " runs): " << serial_avg_time << " seconds" << std::endl;
+    if (ssp_avg_time > 0.0) {
+        std::cout << "Speedup (serial/SSP): " << (serial_avg_time / ssp_avg_time) << "x" << std::endl;
+    }
     std::cout << "MaxBSP with staleness=2 and SSP SpTRSV executed." << std::endl;
     return 0;
 }
