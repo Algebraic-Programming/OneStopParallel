@@ -24,6 +24,7 @@ limitations under the License.
 
 #    include <Eigen/Core>
 #    include <algorithm>
+#    include <atomic>
 #    include <iostream>
 #    include <list>
 #    include <map>
@@ -36,6 +37,28 @@ limitations under the License.
 #    include "osp/graph_implementations/eigen_matrix_adapter/sparse_matrix.hpp"
 
 namespace osp {
+// Portable cpu_relax definition
+#if defined(__x86_64__) || defined(_M_X64)
+#include <immintrin.h>
+inline void cpu_relax() { _mm_pause(); }
+#elif defined(__aarch64__)
+inline void cpu_relax() { asm volatile("yield" ::: "memory"); }
+#else
+inline void cpu_relax() { std::this_thread::yield(); }
+#endif
+// SSPBarrierRaph for staleness-aware synchronization
+class SSPBarrierRaph {
+private:
+    alignas(64) std::atomic<std::size_t> threadCounter{0U};
+    void barrier_sleep() const {}
+public:
+    void arrive() { threadCounter.fetch_add(1U, std::memory_order_release); }
+    void wait(std::size_t arr_token) {
+        while ((threadCounter.load(std::memory_order_relaxed) < arr_token) || (threadCounter.load(std::memory_order_acquire) < arr_token)) {
+            cpu_relax();
+        }
+    }
+};
 
 template <typename EigenIdxType>
 class Sptrsv {
@@ -126,6 +149,8 @@ class Sptrsv {
                     do {
                         node--;
                         vectorStepProcessorVerticesU_[schedule.AssignedSuperstep(node)][schedule.AssignedProcessor(node)].push_back(
+                // --- SSP SpTRSV kernel integration from BspSptrsvCSR.hpp/cpp ---
+
                             static_cast<EigenIdxType>(node));
                     } while (node > 0);
 
@@ -478,6 +503,54 @@ class Sptrsv {
     }
 
     std::size_t GetNumberOfVertices() { return instance_->NumberOfVertices(); }
+
+    // SSP Lsolve with staleness=2 (allowing at most one superstep of lag)
+    void SspLsolveStaleness2() {
+        constexpr std::size_t staleness = 2U; // Maximum allowed superstep difference
+        const unsigned nthreads = instance_->NumberOfProcessors();
+        std::vector<std::atomic<unsigned>> stepDone(numSupersteps_);
+        for (auto &counter : stepDone) {
+            counter.store(0U, std::memory_order_relaxed);
+        }
+
+        auto *csr = instance_->GetComputationalDag().GetCSR();
+        const auto *outer = csr->outerIndexPtr();
+        const auto *inner = csr->innerIndexPtr();
+        const auto *vals = csr->valuePtr();
+
+        #pragma omp parallel num_threads(nthreads)
+        {
+            const unsigned proc = static_cast<unsigned>(omp_get_thread_num());
+            for (unsigned step = 0; step < numSupersteps_; ++step) {
+                if (step >= staleness) {
+                    const unsigned waitStep = step - static_cast<unsigned>(staleness);
+                    while (stepDone[waitStep].load(std::memory_order_acquire) < nthreads) {
+                        cpu_relax();
+                    }
+                }
+                // Each thread processes its assigned node ranges for this superstep
+                const size_t boundsStrSize = boundsArrayL_[step][proc].size();
+                for (size_t index = 0; index < boundsStrSize; index += 2) {
+                    EigenIdxType lowerB = boundsArrayL_[step][proc][index];
+                    const EigenIdxType upperB = boundsArrayL_[step][proc][index + 1];
+                    for (EigenIdxType node = lowerB; node <= upperB; ++node) {
+                        // Initialize solution for this node
+                        x_[node] = b_[node];
+                        // Perform lower-triangular solve for this node
+                        for (EigenIdxType i = outer[node];
+                             i < outer[node + 1] - 1;
+                             ++i) {
+                            // Subtract contributions from previously solved nodes
+                            x_[node] -= vals[i] * x_[inner[i]];
+                        }
+                        // Divide by diagonal element to complete solve for this node
+                        x_[node] /= vals[outer[node + 1] - 1];
+                    }
+                }
+                stepDone[step].fetch_add(1U, std::memory_order_release);
+            }
+        }
+    }
 
     virtual ~Sptrsv() = default;
 };

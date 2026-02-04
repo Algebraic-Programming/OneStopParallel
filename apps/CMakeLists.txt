@@ -55,5 +55,7 @@ endif()
 
 endif()
 
+_add_executable( maxbsp_ssp_sptrsv )
+
 # Custom target to compile all the executables
 add_custom_target( build_executables DEPENDS ${executable_list} )
