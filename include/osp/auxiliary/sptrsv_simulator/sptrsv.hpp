@@ -49,20 +49,9 @@ inline void cpu_relax() { asm volatile("yield" ::: "memory"); }
 #else
 inline void cpu_relax() { std::this_thread::yield(); }
 #endif
-// SSPBarrierRaph for staleness-aware synchronization
-class SSPBarrierRaph {
-private:
-    alignas(64) std::atomic<std::size_t> threadCounter{0U};
-    void barrier_sleep() const {}
-public:
-    void arrive() { threadCounter.fetch_add(1U, std::memory_order_release); }
-    void wait(std::size_t arr_token) {
-        while ((threadCounter.load(std::memory_order_relaxed) < arr_token) || (threadCounter.load(std::memory_order_acquire) < arr_token)) {
-            cpu_relax();
-        }
-    }
-};
 
+// Staleness-aware barrier for SSP: threads may run up to (staleness-1) steps ahead.
+// Internally tracks per-step completion counts and uses adaptive backoff to limit spinning.
 class SspStalenessBarrier {
   private:
     std::unique_ptr<std::atomic<unsigned>[]> stepDone_;
@@ -70,6 +59,7 @@ class SspStalenessBarrier {
 
   public:
     void Reset(std::size_t numSupersteps) {
+        // Reinitialize counters for a new schedule/run.
         if (stepDoneSize_ != numSupersteps) {
             stepDone_ = std::make_unique<std::atomic<unsigned>[]>(numSupersteps);
             stepDoneSize_ = numSupersteps;
@@ -80,6 +70,7 @@ class SspStalenessBarrier {
     }
 
     void WaitIfNeeded(unsigned step, unsigned staleness, unsigned nthreads) {
+        // Enforce: step may start only when all threads completed (step - staleness).
         if (step < staleness) {
             return;
         }
@@ -87,6 +78,7 @@ class SspStalenessBarrier {
         unsigned spinCount = 0U;
         auto backoff = std::chrono::nanoseconds(50);
         while (stepDone_[waitStep].load(std::memory_order_relaxed) < nthreads) {
+            // Adaptive backoff: spin -> yield -> short sleep to reduce contention.
             if (spinCount < 2000U) {
                 cpu_relax();
                 ++spinCount;
@@ -103,6 +95,7 @@ class SspStalenessBarrier {
         std::atomic_thread_fence(std::memory_order_acquire);
     }
 
+    // Mark completion of a superstep by this thread.
     void Arrive(unsigned step) { stepDone_[step].fetch_add(1U, std::memory_order_release); }
 };
 
@@ -552,10 +545,12 @@ class Sptrsv {
 
     std::size_t GetNumberOfVertices() { return instance_->NumberOfVertices(); }
 
-    // SSP Lsolve with staleness=2 (allowing at most one superstep of lag)
+    // SSP Lsolve with staleness=2 (allowing at most one superstep of lag).
+    // Uses the staleness barrier to respect dependencies between supersteps.
     void SspLsolveStaleness2() {
         constexpr std::size_t staleness = 2U; // Maximum allowed superstep difference
         const unsigned nthreads = instance_->NumberOfProcessors();
+        // Reset per-step completion counters for this run.
         sspBarrier_.Reset(static_cast<std::size_t>(numSupersteps_));
 
         auto *csr = instance_->GetComputationalDag().GetCSR();
@@ -567,7 +562,9 @@ class Sptrsv {
         {
             const unsigned proc = static_cast<unsigned>(omp_get_thread_num());
             for (unsigned step = 0; step < numSupersteps_; ++step) {
+                // Ensure we are not more than (staleness-1) supersteps ahead.
                 sspBarrier_.WaitIfNeeded(step, static_cast<unsigned>(staleness), nthreads);
+                // Process nodes assigned to this (step, proc) pair.
                 const size_t boundsStrSize = boundsArrayL_[step][proc].size();
                 for (size_t index = 0; index < boundsStrSize; index += 2) {
                     EigenIdxType lowerB = boundsArrayL_[step][proc][index];
@@ -586,6 +583,7 @@ class Sptrsv {
                         x_[node] /= vals[outer[node + 1] - 1];
                     }
                 }
+                // Signal completion of this superstep for staleness tracking.
                 sspBarrier_.Arrive(step);
             }
         }
