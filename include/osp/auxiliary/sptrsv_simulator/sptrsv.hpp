@@ -63,6 +63,49 @@ public:
     }
 };
 
+class SspStalenessBarrier {
+  private:
+    std::unique_ptr<std::atomic<unsigned>[]> stepDone_;
+    std::size_t stepDoneSize_ = 0U;
+
+  public:
+    void Reset(std::size_t numSupersteps) {
+        if (stepDoneSize_ != numSupersteps) {
+            stepDone_ = std::make_unique<std::atomic<unsigned>[]>(numSupersteps);
+            stepDoneSize_ = numSupersteps;
+        }
+        for (std::size_t i = 0; i < stepDoneSize_; ++i) {
+            stepDone_[i].store(0U, std::memory_order_relaxed);
+        }
+    }
+
+    void WaitIfNeeded(unsigned step, unsigned staleness, unsigned nthreads) {
+        if (step < staleness) {
+            return;
+        }
+        const unsigned waitStep = step - staleness;
+        unsigned spinCount = 0U;
+        auto backoff = std::chrono::nanoseconds(50);
+        while (stepDone_[waitStep].load(std::memory_order_relaxed) < nthreads) {
+            if (spinCount < 2000U) {
+                cpu_relax();
+                ++spinCount;
+            } else if (spinCount < 4000U) {
+                std::this_thread::yield();
+                ++spinCount;
+            } else {
+                std::this_thread::sleep_for(backoff);
+                if (backoff < std::chrono::nanoseconds(500)) {
+                    backoff *= 2;
+                }
+            }
+        }
+        std::atomic_thread_fence(std::memory_order_acquire);
+    }
+
+    void Arrive(unsigned step) { stepDone_[step].fetch_add(1U, std::memory_order_release); }
+};
+
 template <typename EigenIdxType>
 class Sptrsv {
     using UVertType = typename SparseMatrixImp<EigenIdxType>::VertexIdx;
@@ -94,8 +137,7 @@ class Sptrsv {
 
     std::vector<std::vector<std::vector<EigenIdxType>>> boundsArrayL_;
     std::vector<std::vector<std::vector<EigenIdxType>>> boundsArrayU_;
-    std::unique_ptr<std::atomic<unsigned>[]> stepDone_;
-    std::size_t stepDoneSize_ = 0U;
+    SspStalenessBarrier sspBarrier_;
 
     Sptrsv() = default;
 
@@ -114,13 +156,7 @@ class Sptrsv {
             schedule.NumberOfSupersteps(), std::vector<std::vector<EigenIdxType>>(schedule.GetInstance().NumberOfProcessors()));
 
         numSupersteps_ = schedule.NumberOfSupersteps();
-        if (stepDoneSize_ != static_cast<std::size_t>(numSupersteps_)) {
-            stepDone_ = std::make_unique<std::atomic<unsigned>[]>(numSupersteps_);
-            stepDoneSize_ = static_cast<std::size_t>(numSupersteps_);
-        }
-        for (std::size_t i = 0; i < stepDoneSize_; ++i) {
-            stepDone_[i].store(0U, std::memory_order_relaxed);
-        }
+        sspBarrier_.Reset(static_cast<std::size_t>(numSupersteps_));
         size_t numberOfVertices = instance_->GetComputationalDag().NumVertices();
 
 #    pragma omp parallel num_threads(2)
@@ -520,9 +556,7 @@ class Sptrsv {
     void SspLsolveStaleness2() {
         constexpr std::size_t staleness = 2U; // Maximum allowed superstep difference
         const unsigned nthreads = instance_->NumberOfProcessors();
-        for (std::size_t i = 0; i < stepDoneSize_; ++i) {
-            stepDone_[i].store(0U, std::memory_order_relaxed);
-        }
+        sspBarrier_.Reset(static_cast<std::size_t>(numSupersteps_));
 
         auto *csr = instance_->GetComputationalDag().GetCSR();
         const auto *outer = csr->outerIndexPtr();
@@ -533,26 +567,7 @@ class Sptrsv {
         {
             const unsigned proc = static_cast<unsigned>(omp_get_thread_num());
             for (unsigned step = 0; step < numSupersteps_; ++step) {
-                if (step >= staleness) {
-                    const unsigned waitStep = step - static_cast<unsigned>(staleness);
-                    unsigned spinCount = 0U;
-                    auto backoff = std::chrono::nanoseconds(50);
-                    while (stepDone_[waitStep].load(std::memory_order_relaxed) < nthreads) {
-                        if (spinCount < 2000U) {
-                            cpu_relax();
-                            ++spinCount;
-                        } else if (spinCount < 4000U) {
-                            std::this_thread::yield();
-                            ++spinCount;
-                        } else {
-                            std::this_thread::sleep_for(backoff);
-                            if (backoff < std::chrono::nanoseconds(500)) {
-                                backoff *= 2;
-                            }
-                        }
-                    }
-                    std::atomic_thread_fence(std::memory_order_acquire);
-                }
+                sspBarrier_.WaitIfNeeded(step, static_cast<unsigned>(staleness), nthreads);
                 const size_t boundsStrSize = boundsArrayL_[step][proc].size();
                 for (size_t index = 0; index < boundsStrSize; index += 2) {
                     EigenIdxType lowerB = boundsArrayL_[step][proc][index];
@@ -571,7 +586,7 @@ class Sptrsv {
                         x_[node] /= vals[outer[node + 1] - 1];
                     }
                 }
-                stepDone_[step].fetch_add(1U, std::memory_order_release);
+                sspBarrier_.Arrive(step);
             }
         }
     }
