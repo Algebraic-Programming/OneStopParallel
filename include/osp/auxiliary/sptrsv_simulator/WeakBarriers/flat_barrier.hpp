@@ -37,7 +37,7 @@ inline void cpu_relax() { std::this_thread::yield(); }
 #endif
 
 struct alignas(CACHE_LINE_SIZE) AlignedAtomicFlag {
-    std::atomic<bool> flag_;
+    std::atomic<bool> flag_{false};
     int8_t pad[CACHE_LINE_SIZE - sizeof(std::atomic<bool>)];
 
     static_assert(std::atomic<bool>::is_always_lock_free);
@@ -54,6 +54,7 @@ struct alignas(CACHE_LINE_SIZE) AlignedAtomicFlag {
  * WARNING: The reset is NOT synchronised, thus a second FlatBarrier is required to synchronise the reset of the barrier. That is
  * do NOT call "Reset" immediately after "Wait" as this could cause other threads not to see that the work has been completed.
  *
+ * WARNING: A thread calling "Wait" before calling "Arrive" with its thread id results in a deadlock.
  */
 class FlatBarrier {
   private:
@@ -81,7 +82,7 @@ inline void FlatBarrier::Wait() const {
         std::size_t cntr = 0U;
         while (not flag.flag_.load(std::memory_order_relaxed)) {
             ++cntr;
-            if (cntr % 256U == 0U) {
+            if (cntr % 128U == 0U) {
                 cpu_relax();
             }
         }

@@ -18,9 +18,13 @@ limitations under the License.
 
 #define BOOST_TEST_MODULE WeakBarrierTests
 
+#include <array>
 #include <boost/test/unit_test.hpp>
 #include <cstdint>
 #include <memory>
+#include <mutex>
+#include <thread>
+#include <vector>
 
 #include "osp/auxiliary/sptrsv_simulator/WeakBarriers/flat_barrier.hpp"
 
@@ -29,4 +33,94 @@ using namespace osp;
 BOOST_AUTO_TEST_CASE(TestAlignedAtomicFlag) {
     BOOST_CHECK_EQUAL(sizeof(AlignedAtomicFlag), 64U);
     BOOST_CHECK_EQUAL(alignof(AlignedAtomicFlag), 64U);
+}
+
+BOOST_AUTO_TEST_CASE(TestFlatBarrier_2Threads) {
+    constexpr std::size_t numThreads = 2U;
+    constexpr std::size_t numBarriers = 1024U;
+
+    std::vector<std::size_t> ans;
+    ans.reserve(numThreads * numBarriers);
+
+    std::mutex ans_mutex;
+
+    std::array<FlatBarrier, 3U> barrier{FlatBarrier{numThreads}, FlatBarrier{numThreads}, FlatBarrier{numThreads}};
+
+    std::vector<std::thread> threads(numThreads);
+
+    auto threadWork = [&ans, &ans_mutex, numBarriers, &barrier](std::size_t threadId) {
+        for (std::size_t cntr = 0U; cntr < numBarriers; ++cntr) {
+            {
+                std::lock_guard<std::mutex> lock(ans_mutex);
+                ans.emplace_back(cntr);
+            }
+            barrier[0].Arrive(threadId);
+            barrier[0].Wait();
+            barrier[2].Reset(threadId);
+            barrier[1].Arrive(threadId);
+            barrier[1].Wait();
+            barrier[0].Reset(threadId);
+            barrier[2].Arrive(threadId);
+            barrier[2].Wait();
+            barrier[1].Reset(threadId);
+        }
+    };
+
+    for (std::size_t threadId = 0U; threadId < numThreads; ++threadId) {
+        threads[threadId] = std::thread(threadWork, threadId);
+    }
+
+    for (auto &thread : threads) {
+        thread.join();
+    }
+
+    BOOST_CHECK_EQUAL(ans.size(), numThreads * numBarriers);
+    for (std::size_t ind = 0U; ind < ans.size(); ++ind) {
+        BOOST_CHECK_EQUAL(ans[ind], ind / numThreads);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(TestFlatBarrier_128Threads) {
+    constexpr std::size_t numThreads = 128U;
+    constexpr std::size_t numBarriers = 8U;
+
+    std::vector<std::size_t> ans;
+    ans.reserve(numThreads * numBarriers);
+
+    std::mutex ans_mutex;
+
+    std::array<FlatBarrier, 3U> barrier{FlatBarrier{numThreads}, FlatBarrier{numThreads}, FlatBarrier{numThreads}};
+
+    std::vector<std::thread> threads(numThreads);
+
+    auto threadWork = [&ans, &ans_mutex, numBarriers, &barrier](std::size_t threadId) {
+        for (std::size_t cntr = 0U; cntr < numBarriers; ++cntr) {
+            {
+                std::lock_guard<std::mutex> lock(ans_mutex);
+                ans.emplace_back(cntr);
+            }
+            barrier[0].Arrive(threadId);
+            barrier[0].Wait();
+            barrier[2].Reset(threadId);
+            barrier[1].Arrive(threadId);
+            barrier[1].Wait();
+            barrier[0].Reset(threadId);
+            barrier[2].Arrive(threadId);
+            barrier[2].Wait();
+            barrier[1].Reset(threadId);
+        }
+    };
+
+    for (std::size_t threadId = 0U; threadId < numThreads; ++threadId) {
+        threads[threadId] = std::thread(threadWork, threadId);
+    }
+
+    for (auto &thread : threads) {
+        thread.join();
+    }
+
+    BOOST_CHECK_EQUAL(ans.size(), numThreads * numBarriers);
+    for (std::size_t ind = 0U; ind < ans.size(); ++ind) {
+        BOOST_CHECK_EQUAL(ans[ind], ind / numThreads);
+    }
 }
