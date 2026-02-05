@@ -166,6 +166,7 @@ void HypergraphPartitioningILPWithReplication<HypergraphT>::SetupExtraVariablesC
             replicationMass += instance.GetHypergraph().GetVertexWorkWeight(node) * nodeReplicated[static_cast<int>(node)];
         }
 
+        std::cout << "Max Slack: " << maxSlack << std::endl;
         model.AddConstr(replicationMass <= maxSlack);
 
         for (IndexType node = 0; node < numberOfVertices; node++) {
@@ -315,9 +316,8 @@ void HypergraphPartitioningILPWithReplication<HypergraphT>::SetupExtraVariablesC
         // Objective Function >= FinalGlobalLB
         // (Sum(w_e * y_{e,k}) - Sum(w_e)) >= finalGlobalLB
         model.AddConstr(objExpr - totalEdgeConst >= finalGlobalLB);
-
-        std::cout << "Injecting Combinatorial Lower Bound: " << finalGlobalLB << std::endl;
     }
+    std::cout << "Injecting Combinatorial Lower Bound: " << finalGlobalLB << std::endl;
 }
 
 template <typename HypergraphT>

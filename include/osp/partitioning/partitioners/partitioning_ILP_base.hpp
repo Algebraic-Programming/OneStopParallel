@@ -60,17 +60,17 @@ void HypergraphPartitioningILPBase<HypergraphT>::SolveIlp(Model &model) {
     model.SetDblParam(COPT_DBLPARAM_TIMELIMIT, timeLimitSeconds_);
     model.SetIntParam(COPT_INTPARAM_THREADS, 128);
 
-    model.SetIntParam(COPT_INTPARAM_STRONGBRANCHING, 1);
-    model.SetIntParam(COPT_INTPARAM_LPMETHOD, 1);
-    model.SetIntParam(COPT_INTPARAM_ROUNDINGHEURLEVEL, 1);
+    // model.SetIntParam(COPT_INTPARAM_STRONGBRANCHING, 1);
+    // model.SetIntParam(COPT_INTPARAM_LPMETHOD, 1);
+    // model.SetIntParam(COPT_INTPARAM_ROUNDINGHEURLEVEL, 1);
 
-    model.SetIntParam(COPT_INTPARAM_SUBMIPHEURLEVEL, 1);
-    // model.SetIntParam(COPT_INTPARAM_PRESOLVE, 1);
-    // model.SetIntParam(COPT_INTPARAM_CUTLEVEL, 0);
-    model.SetIntParam(COPT_INTPARAM_TREECUTLEVEL, 2);
-    // model.SetIntParam(COPT_INTPARAM_DIVINGHEURLEVEL, 2);
+    // model.SetIntParam(COPT_INTPARAM_SUBMIPHEURLEVEL, 1);
+    //  model.SetIntParam(COPT_INTPARAM_PRESOLVE, 1);
+    //  model.SetIntParam(COPT_INTPARAM_CUTLEVEL, 0);
+    //  model.SetIntParam(COPT_INTPARAM_TREECUTLEVEL, 2);
+    //  model.SetIntParam(COPT_INTPARAM_DIVINGHEURLEVEL, 2);
 
-    model.Solve();
+    model.Tune();
 }
 
 template <typename HypergraphT>
