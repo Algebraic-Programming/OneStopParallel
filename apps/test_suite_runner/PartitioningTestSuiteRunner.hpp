@@ -20,8 +20,8 @@ limitations under the License.
 
 #include "AbstractTestSuiteRunner.hpp"
 #include "StringToScheduler/run_partitioner.hpp"
-#include "osp/auxiliary/io/mtx_hypergraph_file_reader.hpp"
 #include "osp/auxiliary/io/hmetis_hypergraph_file_reader.hpp"
+#include "osp/auxiliary/io/mtx_hypergraph_file_reader.hpp"
 #include "osp/bsp/model/BspSchedule.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 #include "osp/partitioning/model/partitioning.hpp"
@@ -176,6 +176,8 @@ int PartitioningTestSuiteRunner<GraphType>::Run(int argc, char *argv[]) {
                 }
 
                 // currently not writing output to file
+
+                std::cout << "OSP-Cost: " << cost.first << std::endl << "OSP-CutNet: " << cost.second << std::endl;
 
                 if (this->statsOutStream_.is_open()) {
                     std::map<std::string, std::string> currentRowValues;
