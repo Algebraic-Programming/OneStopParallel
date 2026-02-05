@@ -36,10 +36,9 @@ limitations under the License.
 #include "osp/auxiliary/misc.hpp"
 #include "osp/bsp/model/BspSchedule.hpp"
 #include "osp/bsp/scheduler/Scheduler.hpp"
+#include "osp/config/config.hpp"
 
 namespace osp {
-
-static constexpr std::size_t CACHE_LINE_SIZE = 64;
 
 template <typename VertT, typename WeightT>
 struct GrowLocalAutoCoresParallelParams {
