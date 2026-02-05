@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(TestFlatBarrier_2Threads) {
 
     std::mutex ans_mutex;
 
-    std::array<FlatBarrier, 3U> barrier{FlatBarrier{numThreads}, FlatBarrier{numThreads}, FlatBarrier{numThreads}};
+    std::array<FlatBarrier, 2U> barrier{FlatBarrier{numThreads}, FlatBarrier{numThreads}};
 
     std::vector<std::thread> threads(numThreads);
 
