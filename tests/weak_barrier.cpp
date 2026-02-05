@@ -55,14 +55,9 @@ BOOST_AUTO_TEST_CASE(TestFlatBarrier_2Threads) {
                 ans.emplace_back(cntr);
             }
             barrier[0].Arrive(threadId);
-            barrier[0].Wait();
-            barrier[2].Reset(threadId);
+            barrier[0].Wait(threadId);
             barrier[1].Arrive(threadId);
-            barrier[1].Wait();
-            barrier[0].Reset(threadId);
-            barrier[2].Arrive(threadId);
-            barrier[2].Wait();
-            barrier[1].Reset(threadId);
+            barrier[1].Wait(threadId);
         }
     };
 
@@ -100,14 +95,9 @@ BOOST_AUTO_TEST_CASE(TestFlatBarrier_128Threads) {
                 ans.emplace_back(cntr);
             }
             barrier[0].Arrive(threadId);
-            barrier[0].Wait();
-            barrier[2].Reset(threadId);
+            barrier[0].Wait(threadId);
             barrier[1].Arrive(threadId);
-            barrier[1].Wait();
-            barrier[0].Reset(threadId);
-            barrier[2].Arrive(threadId);
-            barrier[2].Wait();
-            barrier[1].Reset(threadId);
+            barrier[1].Wait(threadId);
         }
     };
 

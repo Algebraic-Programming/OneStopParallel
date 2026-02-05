@@ -49,12 +49,10 @@ struct alignas(CACHE_LINE_SIZE) AlignedAtomicFlag {
  * Instatiate with number of threads. Each thread should call "Arrive" with its thread id to indicate that its work has been
  * completed. Each thread can then call "Wait" to wait till all other threads have completed their work.
  *
- * The barrier can be reset and reused after calling "Reset" for each thread.
+ * WARNING: The barrier can be reused IF AND ONLY IF another synchronisation, i.e. through a second FlatBarrier, takes place in between
+ * the "Wait" and "Arrive".
  *
- * WARNING: The reset is NOT synchronised, thus a second FlatBarrier is required to synchronise the reset of the barrier. That is
- * do NOT call "Reset" immediately after "Wait" as this could cause other threads not to see that the work has been completed.
- *
- * WARNING: A thread calling "Wait" before calling "Arrive" with its thread id results in a deadlock.
+ * WARNING: A thread calling "Wait" before calling "Arrive" with its thread id is undefined behaviour and can result in a deadlock.
  */
 class FlatBarrier {
   private:
@@ -64,8 +62,7 @@ class FlatBarrier {
     FlatBarrier(std::size_t numThreads) : flags_(std::vector<AlignedAtomicFlag>(numThreads)) {};
 
     inline void Arrive(std::size_t threadId);
-    inline void Wait() const;
-    inline void Reset(std::size_t threadId);
+    inline void Wait(std::size_t threadId) const;
 
     FlatBarrier() = delete;
     FlatBarrier(const FlatBarrier &) = delete;
@@ -75,12 +72,16 @@ class FlatBarrier {
     ~FlatBarrier() = default;
 };
 
-inline void FlatBarrier::Arrive(std::size_t threadId) { flags_[threadId].flag_.store(true, std::memory_order_relaxed); }
+inline void FlatBarrier::Arrive(std::size_t threadId) {
+    const bool oldVal = flags_[threadId].flag_.load(std::memory_order_relaxed);
+    flags_[threadId].flag_.store(!oldVal, std::memory_order_relaxed);
+}
 
-inline void FlatBarrier::Wait() const {
+inline void FlatBarrier::Wait(std::size_t threadId) const {
+    const bool val = flags_[threadId].flag_.load(std::memory_order_relaxed);
     for (const AlignedAtomicFlag &flag : flags_) {
         std::size_t cntr = 0U;
-        while (not flag.flag_.load(std::memory_order_relaxed)) {
+        while (flag.flag_.load(std::memory_order_relaxed) != val) {
             ++cntr;
             if (cntr % 128U == 0U) {
                 cpu_relax();
@@ -88,7 +89,5 @@ inline void FlatBarrier::Wait() const {
         }
     }
 }
-
-inline void FlatBarrier::Reset(std::size_t threadId) { flags_[threadId].flag_.store(false, std::memory_order_relaxed); }
 
 }    // end namespace osp
