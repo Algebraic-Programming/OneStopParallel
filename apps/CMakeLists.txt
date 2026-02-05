@@ -36,16 +36,18 @@ if(Boost_FOUND)
 
 _add_executable( osp_turnus )
 
-_add_executable ( osp )
+_add_executable( osp )
 
 configure_file(config/osp_config.json osp_config.json COPYONLY)
 
-_add_executable ( bsp_test_suite )
+_add_executable( bsp_test_suite )
 
 _add_executable( coarser_plotter )
 
 if(Eigen3_FOUND)
-_add_executable ( sptrsv_test_suite )
+_add_executable( sptrsv_test_suite )
+
+_add_executable( maxbsp_ssp_sptrsv )
 endif()
 
 if (COPT_FOUND)
@@ -54,8 +56,6 @@ _add_executable( ilp_hypergraph_partitioner )
 endif()
 
 endif()
-
-_add_executable( maxbsp_ssp_sptrsv )
 
 # Custom target to compile all the executables
 add_custom_target( build_executables DEPENDS ${executable_list} )
