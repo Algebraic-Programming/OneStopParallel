@@ -28,6 +28,13 @@ limitations under the License.
 
 namespace osp {
 
+constexpr std::size_t RoundUpToCacheLine(std::size_t num) {
+    std::size_t size = ((num * sizeof(std::size_t) + CACHE_LINE_SIZE - 1U) / CACHE_LINE_SIZE) * CACHE_LINE_SIZE;
+    std::size_t ans = (size + sizeof(std::size_t) - 1U) / sizeof(std::size_t);
+
+    return ans;
+}
+
 struct alignas(CACHE_LINE_SIZE) AlignedAtomicCounter {
     std::atomic<std::size_t> cntr_{0U};
     int8_t pad[CACHE_LINE_SIZE - sizeof(std::atomic<std::size_t>)];
@@ -44,7 +51,8 @@ class FlatCheckpointCounterBarrier {
   public:
     FlatCheckpointCounterBarrier(std::size_t numThreads)
         : cntrs_(std::vector<AlignedAtomicCounter>(numThreads)),
-          cachedCntrs_(std::vector<std::vector<std::size_t>>(numThreads, std::vector<std::size_t>(numThreads, 0U))) {};
+          cachedCntrs_(
+              std::vector<std::vector<std::size_t>>(numThreads, std::vector<std::size_t>(RoundUpToCacheLine(numThreads), 0U))) {};
 
     inline void Arrive(const std::size_t threadId);
     inline void Wait(const std::size_t threadId, const std::size_t diff) const;

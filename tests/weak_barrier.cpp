@@ -546,3 +546,15 @@ BOOST_AUTO_TEST_CASE(TestFlatCheckpointCounterBarrierCached_SSP_128Threads) {
         }
     }
 }
+
+BOOST_AUTO_TEST_CASE(TestVectorPadding) {
+    for (std::size_t i = 0U; i < 257; ++i) {
+        const std::size_t numCacheLines = (i * sizeof(std::size_t) + CACHE_LINE_SIZE - 1U) / CACHE_LINE_SIZE;
+        const std::size_t ans = RoundUpToCacheLine(i);
+
+        BOOST_CHECK_LE(numCacheLines * CACHE_LINE_SIZE, ans * sizeof(std::size_t));
+        if (ans > 0U) {
+            BOOST_CHECK_GT(numCacheLines * CACHE_LINE_SIZE, (ans - 1U) * sizeof(std::size_t));
+        }
+    }
+}
