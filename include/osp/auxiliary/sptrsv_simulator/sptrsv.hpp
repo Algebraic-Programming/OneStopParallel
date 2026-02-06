@@ -35,20 +35,12 @@ limitations under the License.
 #    include <thread>
 #    include <vector>
 
+#    include "osp/auxiliary/sptrsv_simulator/WeakBarriers/cpu_relax.hpp"
 #    include "osp/bsp/model/BspInstance.hpp"
 #    include "osp/bsp/model/BspSchedule.hpp"
 #    include "osp/graph_implementations/eigen_matrix_adapter/sparse_matrix.hpp"
 
 namespace osp {
-// Portable cpu_relax definition
-#if defined(__x86_64__) || defined(_M_X64)
-#include <immintrin.h>
-inline void cpu_relax() { _mm_pause(); }
-#elif defined(__aarch64__)
-inline void cpu_relax() { asm volatile("yield" ::: "memory"); }
-#else
-inline void cpu_relax() { std::this_thread::yield(); }
-#endif
 
 // Staleness-aware barrier for SSP: threads may run up to (staleness-1) steps ahead.
 // Internally tracks per-step completion counts and uses adaptive backoff to limit spinning.
