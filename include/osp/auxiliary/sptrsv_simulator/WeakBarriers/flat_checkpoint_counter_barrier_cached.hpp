@@ -92,4 +92,4 @@ inline void FlatCheckpointCounterBarrierCached::Wait(const std::size_t threadId,
     }
 }
 
-}    // end namespace osp
+}

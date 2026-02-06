@@ -67,26 +67,7 @@ int main(int argc, char* argv[]) {
 
     size_t n = static_cast<size_t>(lCsc.cols());
 
-    // Benchmark SSP L-solve with cached barrier
-    double ssp_cached_total_time = 0.0;
-    std::vector<double> ssp_cached_result(n, 0.0);
-    for (int iter = 0; iter < num_iterations; ++iter) {
-        std::vector<double> x(n, 0.0);
-        std::vector<double> b(n, 1.0);
-        sptrsv_kernel.SetupCsrNoPermutation(ssp_schedule);
-        sptrsv_kernel.x_ = x.data();
-        sptrsv_kernel.b_ = b.data();
-        FlatCheckpointCounterBarrierCached barrier(num_threads);
-        auto ops = Sptrsv<int32_t>::MakeBarrierOps(barrier);
-        auto start = std::chrono::high_resolution_clock::now();
-        sptrsv_kernel.SspLsolveStaleness2(ops);
-        auto end = std::chrono::high_resolution_clock::now();
-        ssp_cached_total_time += std::chrono::duration<double>(end - start).count();
-        if (iter == 0) ssp_cached_result = std::vector<double>(x.begin(), x.end());
-    }
-    double ssp_cached_avg_time = ssp_cached_total_time / num_iterations;
-
-    // Benchmark SSP L-solve with flat barrier
+    // Benchmark SSP L-solve
     double ssp_flat_total_time = 0.0;
     std::vector<double> ssp_flat_result(n, 0.0);
     for (int iter = 0; iter < num_iterations; ++iter) {
@@ -139,80 +120,69 @@ int main(int argc, char* argv[]) {
     double serial_avg_time = serial_total_time / num_iterations;
 
     // Compare results
-    double max_diff = 0.0;
-    for (size_t i = 0; i < n; ++i) {
-        double diff = std::abs(ssp_cached_result[i] - serial_result[i]);
-        if (diff > max_diff) max_diff = diff;
-    }
-    std::cout << "Max difference between SSP (cached barrier) and serial L-solve: " << max_diff << std::endl;
-    if (max_diff < 1e-10) {
-        std::cout << "SSP (cached barrier) L-solve matches serial L-solve!" << std::endl;
-    } else {
-        std::cout << "SSP (cached barrier) L-solve does NOT match serial L-solve!" << std::endl;
-    }
-
     double max_diff_flat = 0.0;
+    double frobNorm = 0.0;
     for (size_t i = 0; i < n; ++i) {
         double diff = std::abs(ssp_flat_result[i] - serial_result[i]);
         if (diff > max_diff_flat) max_diff_flat = diff;
+        frobNorm += diff * diff;
     }
-    std::cout << "Max difference between SSP (flat barrier) and serial L-solve: " << max_diff_flat << std::endl;
-    if (max_diff_flat < 1e-10) {
-        std::cout << "SSP (flat barrier) L-solve matches serial L-solve!" << std::endl;
+    frobNorm = std::sqrt(frobNorm);
+    std::cout << "Frobenius norm of difference: " << frobNorm << std::endl;
+    std::cout << "Max difference between SSP and serial L-solve: " << max_diff_flat << std::endl;
+    if (frobNorm <= 1e-30 || max_diff_flat < 1e-10 * frobNorm) {
+        std::cout << "SSP L-solve matches serial L-solve!" << std::endl;
     } else {
-        std::cout << "SSP (flat barrier) L-solve does NOT match serial L-solve!" << std::endl;
+        std::cout << "SSP L-solve does NOT match serial L-solve!" << std::endl;
+        std::cout << "Relative error: " << (max_diff_flat / frobNorm) << std::endl;
     }
     double max_diff_growlocal = 0.0;
+    double frobNormGrowlocal = 0.0;
     for (size_t i = 0; i < n; ++i) {
         double diff = std::abs(growlocal_result[i] - serial_result[i]);
         if (diff > max_diff_growlocal) max_diff_growlocal = diff;
+        frobNormGrowlocal += diff * diff;
     }
+    frobNormGrowlocal = std::sqrt(frobNormGrowlocal);
     std::cout << "Max difference between GrowLocalAutoCores and serial L-solve: " << max_diff_growlocal << std::endl;
-    if (max_diff_growlocal < 1e-10) {
+    if (frobNormGrowlocal <= 1e-30 || max_diff_growlocal < 1e-10 * frobNormGrowlocal) {
         std::cout << "GrowLocalAutoCores L-solve matches serial L-solve!" << std::endl;
     } else {
         std::cout << "GrowLocalAutoCores L-solve does NOT match serial L-solve!" << std::endl;
+        std::cout << "Relative error: " << (max_diff_growlocal / frobNormGrowlocal) << std::endl;
     }
 
     double max_diff_ssp_growlocal = 0.0;
+    double frobNormSspGrowlocal = 0.0;
     for (size_t i = 0; i < n; ++i) {
-        double diff = std::abs(ssp_cached_result[i] - growlocal_result[i]);
+        double diff = std::abs(ssp_flat_result[i] - growlocal_result[i]);
         if (diff > max_diff_ssp_growlocal) max_diff_ssp_growlocal = diff;
+        frobNormSspGrowlocal += diff * diff;
     }
-    std::cout << "Max difference between SSP (cached barrier) and GrowLocalAutoCores L-solve: " << max_diff_ssp_growlocal
+    frobNormSspGrowlocal = std::sqrt(frobNormSspGrowlocal);
+    std::cout << "Max difference between SSP and GrowLocalAutoCores L-solve: " << max_diff_ssp_growlocal
               << std::endl;
-
-    double max_diff_ssp_flat_cached = 0.0;
-    for (size_t i = 0; i < n; ++i) {
-        double diff = std::abs(ssp_flat_result[i] - ssp_cached_result[i]);
-        if (diff > max_diff_ssp_flat_cached) max_diff_ssp_flat_cached = diff;
+    if (frobNormSspGrowlocal <= 1e-30 || max_diff_ssp_growlocal < 1e-10 * frobNormSspGrowlocal) {
+        std::cout << "SSP L-solve matches GrowLocalAutoCores L-solve!" << std::endl;
+    } else {
+        std::cout << "SSP L-solve does NOT match GrowLocalAutoCores L-solve!" << std::endl;
+        std::cout << "Relative error: " << (max_diff_ssp_growlocal / frobNormSspGrowlocal) << std::endl;
     }
-    std::cout << "Max difference between SSP (flat barrier) and SSP (cached barrier): " << max_diff_ssp_flat_cached
-              << std::endl;
 
-    std::cout << "Average SSP (cached barrier) L-solve time (" << num_iterations << " runs): " << ssp_cached_avg_time
-              << " seconds" << std::endl;
-    std::cout << "Average SSP (flat barrier) L-solve time (" << num_iterations << " runs): " << ssp_flat_avg_time
+    std::cout << "Average SSP L-solve time (" << num_iterations << " runs): " << ssp_flat_avg_time
               << " seconds" << std::endl;
     std::cout << "Average GrowLocalAutoCores L-solve time (" << num_iterations << " runs): " << growlocal_avg_time
               << " seconds" << std::endl;
     std::cout << "Average serial L-solve time (" << num_iterations << " runs): " << serial_avg_time << " seconds" << std::endl;
-    if (ssp_cached_avg_time > 0.0) {
-        std::cout << "Speedup (serial/SSP cached): " << (serial_avg_time / ssp_cached_avg_time) << "x" << std::endl;
-    }
     if (ssp_flat_avg_time > 0.0) {
-        std::cout << "Speedup (serial/SSP flat): " << (serial_avg_time / ssp_flat_avg_time) << "x" << std::endl;
+        std::cout << "Speedup (serial/SSP): " << (serial_avg_time / ssp_flat_avg_time) << "x" << std::endl;
     }
     if (growlocal_avg_time > 0.0) {
         std::cout << "Speedup (serial/GrowLocalAutoCores): " << (serial_avg_time / growlocal_avg_time) << "x" << std::endl;
     }
-    if (ssp_cached_avg_time > 0.0) {
-        std::cout << "Speedup (GrowLocalAutoCores/SSP cached): " << (growlocal_avg_time / ssp_cached_avg_time) << "x"
-                  << std::endl;
-    }
     if (ssp_flat_avg_time > 0.0) {
-        std::cout << "Speedup (GrowLocalAutoCores/SSP flat): " << (growlocal_avg_time / ssp_flat_avg_time) << "x" << std::endl;
+        std::cout << "Speedup (GrowLocalAutoCores/SSP): " << (growlocal_avg_time / ssp_flat_avg_time) << "x" << std::endl;
     }
-    std::cout << "MaxBSP staleness=2 SSP (cached+flat) and GrowLocalAutoCores SpTRSV executed." << std::endl;
+    std::cout << "MaxBSP staleness=2 SSP and GrowLocalAutoCores SpTRSV executed." << std::endl;
     return 0;
 }
