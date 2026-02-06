@@ -61,8 +61,8 @@ class FlatBarrier {
   public:
     FlatBarrier(std::size_t numThreads) : flags_(std::vector<AlignedAtomicFlag>(numThreads)) {};
 
-    inline void Arrive(std::size_t threadId);
-    inline void Wait(std::size_t threadId) const;
+    inline void Arrive(const std::size_t threadId);
+    inline void Wait(const std::size_t threadId) const;
 
     FlatBarrier() = delete;
     FlatBarrier(const FlatBarrier &) = delete;
@@ -72,16 +72,16 @@ class FlatBarrier {
     ~FlatBarrier() = default;
 };
 
-inline void FlatBarrier::Arrive(std::size_t threadId) {
+inline void FlatBarrier::Arrive(const std::size_t threadId) {
     const bool oldVal = flags_[threadId].flag_.load(std::memory_order_relaxed);
-    flags_[threadId].flag_.store(!oldVal, std::memory_order_relaxed);
+    flags_[threadId].flag_.store(!oldVal, std::memory_order_release);
 }
 
-inline void FlatBarrier::Wait(std::size_t threadId) const {
+inline void FlatBarrier::Wait(const std::size_t threadId) const {
     const bool val = flags_[threadId].flag_.load(std::memory_order_relaxed);
     for (const AlignedAtomicFlag &flag : flags_) {
         std::size_t cntr = 0U;
-        while (flag.flag_.load(std::memory_order_relaxed) != val) {
+        while (flag.flag_.load(std::memory_order_acquire) != val) {
             ++cntr;
             if (cntr % 128U == 0U) {
                 cpu_relax();

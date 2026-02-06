@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(TestFlatBarrier_2Threads) {
 
     std::vector<std::thread> threads(numThreads);
 
-    auto threadWork = [&ans, &ans_mutex, numBarriers, &barrier](std::size_t threadId) {
+    auto threadWork = [&ans, &ans_mutex, numBarriers, &barrier](const std::size_t threadId) {
         for (std::size_t cntr = 0U; cntr < numBarriers; ++cntr) {
             {
                 std::lock_guard<std::mutex> lock(ans_mutex);
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(TestFlatBarrier_128Threads) {
 
     std::vector<std::thread> threads(numThreads);
 
-    auto threadWork = [&ans, &ans_mutex, numBarriers, &barrier](std::size_t threadId) {
+    auto threadWork = [&ans, &ans_mutex, numBarriers, &barrier](const std::size_t threadId) {
         for (std::size_t cntr = 0U; cntr < numBarriers; ++cntr) {
             {
                 std::lock_guard<std::mutex> lock(ans_mutex);
@@ -112,5 +112,105 @@ BOOST_AUTO_TEST_CASE(TestFlatBarrier_128Threads) {
     BOOST_CHECK_EQUAL(ans.size(), numThreads * numBarriers);
     for (std::size_t ind = 0U; ind < ans.size(); ++ind) {
         BOOST_CHECK_EQUAL(ans[ind], ind / numThreads);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(TestFlatBarrier_SSP_2Threads) {
+    constexpr std::size_t numThreads = 2U;
+    constexpr std::size_t numBarriers = 1024U;
+
+    std::vector<std::size_t> ans;
+    ans.reserve(numThreads * numBarriers);
+
+    std::mutex ans_mutex;
+
+    constexpr std::size_t numSync = 4U;
+    std::array<FlatBarrier, numSync> barrier{
+        FlatBarrier{numThreads}, FlatBarrier{numThreads}, FlatBarrier{numThreads}, FlatBarrier{numThreads}};
+
+    for (std::size_t threadId = 0U; threadId < numThreads; ++threadId) {
+        barrier[1U].Arrive(threadId);
+        barrier[2U].Arrive(threadId);
+    }
+
+    std::vector<std::thread> threads(numThreads);
+
+    auto threadWork = [&ans, &ans_mutex, numBarriers, &barrier](const std::size_t threadId) {
+        for (std::size_t cntr = 0U; cntr < numBarriers; ++cntr) {
+            barrier[(cntr - 2U + numSync) % numSync].Wait(threadId);
+            {
+                std::lock_guard<std::mutex> lock(ans_mutex);
+                ans.emplace_back(threadId);
+            }
+            barrier[cntr % numSync].Arrive(threadId);
+        }
+    };
+
+    for (std::size_t threadId = 0U; threadId < numThreads; ++threadId) {
+        threads[threadId] = std::thread(threadWork, threadId);
+    }
+
+    for (auto &thread : threads) {
+        thread.join();
+    }
+
+    BOOST_CHECK_EQUAL(ans.size(), numThreads * numBarriers);
+
+    std::vector<std::size_t> cntrs(numThreads, 0);
+    for (const std::size_t work : ans) {
+        const std::size_t current = ++cntrs[work];
+        for (const std::size_t cntr : cntrs) {
+            BOOST_CHECK_GE(cntr, std::max(current, static_cast<std::size_t>(2U)) - 2U);
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(TestFlatBarrier_SSP_128Threads) {
+    constexpr std::size_t numThreads = 128U;
+    constexpr std::size_t numBarriers = 32U;
+
+    std::vector<std::size_t> ans;
+    ans.reserve(numThreads * numBarriers);
+
+    std::mutex ans_mutex;
+
+    constexpr std::size_t numSync = 4U;
+    std::array<FlatBarrier, numSync> barrier{
+        FlatBarrier{numThreads}, FlatBarrier{numThreads}, FlatBarrier{numThreads}, FlatBarrier{numThreads}};
+
+    for (std::size_t threadId = 0U; threadId < numThreads; ++threadId) {
+        barrier[1U].Arrive(threadId);
+        barrier[2U].Arrive(threadId);
+    }
+
+    std::vector<std::thread> threads(numThreads);
+
+    auto threadWork = [&ans, &ans_mutex, numBarriers, &barrier](const std::size_t threadId) {
+        for (std::size_t cntr = 0U; cntr < numBarriers; ++cntr) {
+            barrier[(cntr - 2U + numSync) % numSync].Wait(threadId);
+            {
+                std::lock_guard<std::mutex> lock(ans_mutex);
+                ans.emplace_back(threadId);
+            }
+            barrier[cntr % numSync].Arrive(threadId);
+        }
+    };
+
+    for (std::size_t threadId = 0U; threadId < numThreads; ++threadId) {
+        threads[threadId] = std::thread(threadWork, threadId);
+    }
+
+    for (auto &thread : threads) {
+        thread.join();
+    }
+
+    BOOST_CHECK_EQUAL(ans.size(), numThreads * numBarriers);
+
+    std::vector<std::size_t> cntrs(numThreads, 0);
+    for (const std::size_t work : ans) {
+        const std::size_t current = ++cntrs[work];
+        for (const std::size_t cntr : cntrs) {
+            BOOST_CHECK_GE(cntr, std::max(current, static_cast<std::size_t>(2U)) - 2U);
+        }
     }
 }
