@@ -21,20 +21,10 @@ limitations under the License.
 #include <atomic>
 #include <cstdint>
 
+#include "osp/auxiliary/sptrsv_simulator/WeakBarriers/cpu_relax.hpp"
 #include "osp/config/config.hpp"
 
 namespace osp {
-
-// Portable cpu_relax definition
-#if defined(__x86_64__) || defined(_M_X64)
-#    include <immintrin.h>
-
-inline void cpu_relax() { _mm_pause(); }
-#elif defined(__aarch64__)
-inline void cpu_relax() { asm volatile("yield" ::: "memory"); }
-#else
-inline void cpu_relax() { std::this_thread::yield(); }
-#endif
 
 struct alignas(CACHE_LINE_SIZE) AlignedAtomicFlag {
     std::atomic<bool> flag_{false};
