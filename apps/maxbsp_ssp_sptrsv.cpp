@@ -19,14 +19,20 @@
 using namespace osp;
 
 int main(int argc, char* argv[]) {
-    // Accept matrix filename and iteration count as arguments
+    // Accept matrix filename and iteration count as arguments (threads via OMP_NUM_THREADS or optional arg)
     std::string filename = "../data/mtx_tests/ErdosRenyi_2k_14k_A.mtx";
     int num_iterations = 1;
+    unsigned num_threads = 16U;
     if (argc > 1) {
         filename = argv[1];
     }
     if (argc > 2) {
         num_iterations = std::stoi(argv[2]);
+    }
+    if (const char *omp_env = std::getenv("OMP_NUM_THREADS")) {
+        num_threads = static_cast<unsigned>(std::stoul(omp_env));
+    } else if (argc > 3) {
+        num_threads = static_cast<unsigned>(std::stoul(argv[3]));
     }
 
     // Load matrix
@@ -43,7 +49,7 @@ int main(int argc, char* argv[]) {
     graph.SetCsr(&lCsr);
     Eigen::SparseMatrix<double, Eigen::ColMajor, int32_t> lCsc = lCsr;
     graph.SetCsc(&lCsc);
-    BspArchitecture<SparseMatrixImp<int32_t>> architecture(16, 1, 500); // 16 processors
+    BspArchitecture<SparseMatrixImp<int32_t>> architecture(num_threads, 1, 500); // configurable processors
     BspInstance<SparseMatrixImp<int32_t>> instance(graph, architecture);
 
     // Create SSP-aware schedule using GreedyVarianceSspScheduler (staleness=2)
@@ -61,22 +67,43 @@ int main(int argc, char* argv[]) {
 
     size_t n = static_cast<size_t>(lCsc.cols());
 
-    // Benchmark SSP L-solve
-    double ssp_total_time = 0.0;
-    std::vector<double> ssp_result(n, 0.0);
+    // Benchmark SSP L-solve with cached barrier
+    double ssp_cached_total_time = 0.0;
+    std::vector<double> ssp_cached_result(n, 0.0);
     for (int iter = 0; iter < num_iterations; ++iter) {
         std::vector<double> x(n, 0.0);
         std::vector<double> b(n, 1.0);
         sptrsv_kernel.SetupCsrNoPermutation(ssp_schedule);
         sptrsv_kernel.x_ = x.data();
         sptrsv_kernel.b_ = b.data();
+        FlatCheckpointCounterBarrierCached barrier(num_threads);
+        auto ops = Sptrsv<int32_t>::MakeBarrierOps(barrier);
         auto start = std::chrono::high_resolution_clock::now();
-        sptrsv_kernel.SspLsolveStaleness2();
+        sptrsv_kernel.SspLsolveStaleness2(ops);
         auto end = std::chrono::high_resolution_clock::now();
-        ssp_total_time += std::chrono::duration<double>(end - start).count();
-        if (iter == 0) ssp_result = std::vector<double>(x.begin(), x.end());
+        ssp_cached_total_time += std::chrono::duration<double>(end - start).count();
+        if (iter == 0) ssp_cached_result = std::vector<double>(x.begin(), x.end());
     }
-    double ssp_avg_time = ssp_total_time / num_iterations;
+    double ssp_cached_avg_time = ssp_cached_total_time / num_iterations;
+
+    // Benchmark SSP L-solve with flat barrier
+    double ssp_flat_total_time = 0.0;
+    std::vector<double> ssp_flat_result(n, 0.0);
+    for (int iter = 0; iter < num_iterations; ++iter) {
+        std::vector<double> x(n, 0.0);
+        std::vector<double> b(n, 1.0);
+        sptrsv_kernel.SetupCsrNoPermutation(ssp_schedule);
+        sptrsv_kernel.x_ = x.data();
+        sptrsv_kernel.b_ = b.data();
+        FlatCheckpointCounterBarrier barrier(num_threads);
+        auto ops = Sptrsv<int32_t>::MakeBarrierOps(barrier);
+        auto start = std::chrono::high_resolution_clock::now();
+        sptrsv_kernel.SspLsolveStaleness2(ops);
+        auto end = std::chrono::high_resolution_clock::now();
+        ssp_flat_total_time += std::chrono::duration<double>(end - start).count();
+        if (iter == 0) ssp_flat_result = std::vector<double>(x.begin(), x.end());
+    }
+    double ssp_flat_avg_time = ssp_flat_total_time / num_iterations;
 
     // Benchmark GrowLocalAutoCores schedule with non-SSP L-solve (no permutation)
     double growlocal_total_time = 0.0;
@@ -114,14 +141,26 @@ int main(int argc, char* argv[]) {
     // Compare results
     double max_diff = 0.0;
     for (size_t i = 0; i < n; ++i) {
-        double diff = std::abs(ssp_result[i] - serial_result[i]);
+        double diff = std::abs(ssp_cached_result[i] - serial_result[i]);
         if (diff > max_diff) max_diff = diff;
     }
-    std::cout << "Max difference between SSP and serial L-solve: " << max_diff << std::endl;
+    std::cout << "Max difference between SSP (cached barrier) and serial L-solve: " << max_diff << std::endl;
     if (max_diff < 1e-10) {
-        std::cout << "SSP L-solve matches serial L-solve!" << std::endl;
+        std::cout << "SSP (cached barrier) L-solve matches serial L-solve!" << std::endl;
     } else {
-        std::cout << "SSP L-solve does NOT match serial L-solve!" << std::endl;
+        std::cout << "SSP (cached barrier) L-solve does NOT match serial L-solve!" << std::endl;
+    }
+
+    double max_diff_flat = 0.0;
+    for (size_t i = 0; i < n; ++i) {
+        double diff = std::abs(ssp_flat_result[i] - serial_result[i]);
+        if (diff > max_diff_flat) max_diff_flat = diff;
+    }
+    std::cout << "Max difference between SSP (flat barrier) and serial L-solve: " << max_diff_flat << std::endl;
+    if (max_diff_flat < 1e-10) {
+        std::cout << "SSP (flat barrier) L-solve matches serial L-solve!" << std::endl;
+    } else {
+        std::cout << "SSP (flat barrier) L-solve does NOT match serial L-solve!" << std::endl;
     }
     double max_diff_growlocal = 0.0;
     for (size_t i = 0; i < n; ++i) {
@@ -137,24 +176,43 @@ int main(int argc, char* argv[]) {
 
     double max_diff_ssp_growlocal = 0.0;
     for (size_t i = 0; i < n; ++i) {
-        double diff = std::abs(ssp_result[i] - growlocal_result[i]);
+        double diff = std::abs(ssp_cached_result[i] - growlocal_result[i]);
         if (diff > max_diff_ssp_growlocal) max_diff_ssp_growlocal = diff;
     }
-    std::cout << "Max difference between SSP and GrowLocalAutoCores L-solve: " << max_diff_ssp_growlocal << std::endl;
+    std::cout << "Max difference between SSP (cached barrier) and GrowLocalAutoCores L-solve: " << max_diff_ssp_growlocal
+              << std::endl;
 
-    std::cout << "Average SSP L-solve time (" << num_iterations << " runs): " << ssp_avg_time << " seconds" << std::endl;
+    double max_diff_ssp_flat_cached = 0.0;
+    for (size_t i = 0; i < n; ++i) {
+        double diff = std::abs(ssp_flat_result[i] - ssp_cached_result[i]);
+        if (diff > max_diff_ssp_flat_cached) max_diff_ssp_flat_cached = diff;
+    }
+    std::cout << "Max difference between SSP (flat barrier) and SSP (cached barrier): " << max_diff_ssp_flat_cached
+              << std::endl;
+
+    std::cout << "Average SSP (cached barrier) L-solve time (" << num_iterations << " runs): " << ssp_cached_avg_time
+              << " seconds" << std::endl;
+    std::cout << "Average SSP (flat barrier) L-solve time (" << num_iterations << " runs): " << ssp_flat_avg_time
+              << " seconds" << std::endl;
     std::cout << "Average GrowLocalAutoCores L-solve time (" << num_iterations << " runs): " << growlocal_avg_time
               << " seconds" << std::endl;
     std::cout << "Average serial L-solve time (" << num_iterations << " runs): " << serial_avg_time << " seconds" << std::endl;
-    if (ssp_avg_time > 0.0) {
-        std::cout << "Speedup (serial/SSP): " << (serial_avg_time / ssp_avg_time) << "x" << std::endl;
+    if (ssp_cached_avg_time > 0.0) {
+        std::cout << "Speedup (serial/SSP cached): " << (serial_avg_time / ssp_cached_avg_time) << "x" << std::endl;
+    }
+    if (ssp_flat_avg_time > 0.0) {
+        std::cout << "Speedup (serial/SSP flat): " << (serial_avg_time / ssp_flat_avg_time) << "x" << std::endl;
     }
     if (growlocal_avg_time > 0.0) {
         std::cout << "Speedup (serial/GrowLocalAutoCores): " << (serial_avg_time / growlocal_avg_time) << "x" << std::endl;
     }
-    if (ssp_avg_time > 0.0) {
-        std::cout << "Speedup (GrowLocalAutoCores/SSP): " << (growlocal_avg_time / ssp_avg_time) << "x" << std::endl;
+    if (ssp_cached_avg_time > 0.0) {
+        std::cout << "Speedup (GrowLocalAutoCores/SSP cached): " << (growlocal_avg_time / ssp_cached_avg_time) << "x"
+                  << std::endl;
     }
-    std::cout << "MaxBSP staleness=2 SSP and GrowLocalAutoCores SpTRSV executed." << std::endl;
+    if (ssp_flat_avg_time > 0.0) {
+        std::cout << "Speedup (GrowLocalAutoCores/SSP flat): " << (growlocal_avg_time / ssp_flat_avg_time) << "x" << std::endl;
+    }
+    std::cout << "MaxBSP staleness=2 SSP (cached+flat) and GrowLocalAutoCores SpTRSV executed." << std::endl;
     return 0;
 }

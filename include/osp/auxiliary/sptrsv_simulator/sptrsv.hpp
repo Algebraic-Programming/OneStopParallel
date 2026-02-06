@@ -35,61 +35,13 @@ limitations under the License.
 #    include <thread>
 #    include <vector>
 
-#    include "osp/auxiliary/sptrsv_simulator/WeakBarriers/cpu_relax.hpp"
+#    include "osp/auxiliary/sptrsv_simulator/WeakBarriers/flat_checkpoint_counter_barrier.hpp"
+#    include "osp/auxiliary/sptrsv_simulator/WeakBarriers/flat_checkpoint_counter_barrier_cached.hpp"
 #    include "osp/bsp/model/BspInstance.hpp"
 #    include "osp/bsp/model/BspSchedule.hpp"
 #    include "osp/graph_implementations/eigen_matrix_adapter/sparse_matrix.hpp"
 
 namespace osp {
-
-// Staleness-aware barrier for SSP: threads may run up to (staleness-1) steps ahead.
-// Internally tracks per-step completion counts and uses adaptive backoff to limit spinning.
-class SspStalenessBarrier {
-  private:
-    std::unique_ptr<std::atomic<unsigned>[]> stepDone_;
-    std::size_t stepDoneSize_ = 0U;
-
-  public:
-    void Reset(std::size_t numSupersteps) {
-        // Reinitialize counters for a new schedule/run.
-        if (stepDoneSize_ != numSupersteps) {
-            stepDone_ = std::make_unique<std::atomic<unsigned>[]>(numSupersteps);
-            stepDoneSize_ = numSupersteps;
-        }
-        for (std::size_t i = 0; i < stepDoneSize_; ++i) {
-            stepDone_[i].store(0U, std::memory_order_relaxed);
-        }
-    }
-
-    void WaitIfNeeded(unsigned step, unsigned staleness, unsigned nthreads) {
-        // Enforce: step may start only when all threads completed (step - staleness).
-        if (step < staleness) {
-            return;
-        }
-        const unsigned waitStep = step - staleness;
-        unsigned spinCount = 0U;
-        auto backoff = std::chrono::nanoseconds(50);
-        while (stepDone_[waitStep].load(std::memory_order_relaxed) < nthreads) {
-            // Adaptive backoff: spin -> yield -> short sleep to reduce contention.
-            if (spinCount < 2000U) {
-                cpu_relax();
-                ++spinCount;
-            } else if (spinCount < 4000U) {
-                std::this_thread::yield();
-                ++spinCount;
-            } else {
-                std::this_thread::sleep_for(backoff);
-                if (backoff < std::chrono::nanoseconds(500)) {
-                    backoff *= 2;
-                }
-            }
-        }
-        std::atomic_thread_fence(std::memory_order_acquire);
-    }
-
-    // Mark completion of a superstep by this thread.
-    void Arrive(unsigned step) { stepDone_[step].fetch_add(1U, std::memory_order_release); }
-};
 
 template <typename EigenIdxType>
 class Sptrsv {
@@ -99,6 +51,23 @@ class Sptrsv {
     const BspInstance<SparseMatrixImp<EigenIdxType>> *instance_;
 
   public:
+    struct BarrierOps {
+        void *ctx;
+        void (*arrive)(void *ctx, std::size_t threadId);
+        void (*wait)(void *ctx, std::size_t threadId, std::size_t diff);
+    };
+
+    template <typename BarrierT>
+    static BarrierOps MakeBarrierOps(BarrierT &barrier) {
+        return BarrierOps{
+            static_cast<void *>(&barrier),
+            [](void *ctx, std::size_t threadId) {
+                static_cast<BarrierT *>(ctx)->Arrive(threadId);
+            },
+            [](void *ctx, std::size_t threadId, std::size_t diff) {
+                static_cast<BarrierT *>(ctx)->Wait(threadId, diff);
+            }};
+    }
     std::vector<double> val_;
     std::vector<double> cscVal_;
 
@@ -122,7 +91,6 @@ class Sptrsv {
 
     std::vector<std::vector<std::vector<EigenIdxType>>> boundsArrayL_;
     std::vector<std::vector<std::vector<EigenIdxType>>> boundsArrayU_;
-    SspStalenessBarrier sspBarrier_;
 
     Sptrsv() = default;
 
@@ -141,7 +109,6 @@ class Sptrsv {
             schedule.NumberOfSupersteps(), std::vector<std::vector<EigenIdxType>>(schedule.GetInstance().NumberOfProcessors()));
 
         numSupersteps_ = schedule.NumberOfSupersteps();
-        sspBarrier_.Reset(static_cast<std::size_t>(numSupersteps_));
         size_t numberOfVertices = instance_->GetComputationalDag().NumVertices();
 
 #    pragma omp parallel num_threads(2)
@@ -538,12 +505,10 @@ class Sptrsv {
     std::size_t GetNumberOfVertices() { return instance_->NumberOfVertices(); }
 
     // SSP Lsolve with staleness=2 (allowing at most one superstep of lag).
-    // Uses the staleness barrier to respect dependencies between supersteps.
-    void SspLsolveStaleness2() {
+    // Barrier operations are injected via function pointers.
+    void SspLsolveStaleness2(const BarrierOps &barrierOps) {
         constexpr std::size_t staleness = 2U; // Maximum allowed superstep difference
         const unsigned nthreads = instance_->NumberOfProcessors();
-        // Reset per-step completion counters for this run.
-        sspBarrier_.Reset(static_cast<std::size_t>(numSupersteps_));
 
         auto *csr = instance_->GetComputationalDag().GetCSR();
         const auto *outer = csr->outerIndexPtr();
@@ -552,10 +517,10 @@ class Sptrsv {
 
         #pragma omp parallel num_threads(nthreads)
         {
-            const unsigned proc = static_cast<unsigned>(omp_get_thread_num());
+            const std::size_t proc = static_cast<std::size_t>(omp_get_thread_num());
             for (unsigned step = 0; step < numSupersteps_; ++step) {
-                // Ensure we are not more than (staleness-1) supersteps ahead.
-                sspBarrier_.WaitIfNeeded(step, static_cast<unsigned>(staleness), nthreads);
+                // Enforce staleness window before starting this superstep.
+                barrierOps.wait(barrierOps.ctx, proc, staleness - 1U);
                 // Process nodes assigned to this (step, proc) pair.
                 const size_t boundsStrSize = boundsArrayL_[step][proc].size();
                 for (size_t index = 0; index < boundsStrSize; index += 2) {
@@ -565,9 +530,7 @@ class Sptrsv {
                         // Initialize solution for this node
                         x_[node] = b_[node];
                         // Perform lower-triangular solve for this node
-                        for (EigenIdxType i = outer[node];
-                             i < outer[node + 1] - 1;
-                             ++i) {
+                        for (EigenIdxType i = outer[node]; i < outer[node + 1] - 1; ++i) {
                             // Subtract contributions from previously solved nodes
                             x_[node] -= vals[i] * x_[inner[i]];
                         }
@@ -575,10 +538,18 @@ class Sptrsv {
                         x_[node] /= vals[outer[node + 1] - 1];
                     }
                 }
-                // Signal completion of this superstep for staleness tracking.
-                sspBarrier_.Arrive(step);
+                // Signal completion of this superstep.
+                barrierOps.arrive(barrierOps.ctx, proc);
             }
         }
+    }
+
+    // Default SSP Lsolve uses the cached flat checkpoint counter barrier.
+    void SspLsolveStaleness2() {
+        const unsigned nthreads = instance_->NumberOfProcessors();
+        FlatCheckpointCounterBarrierCached barrier(nthreads);
+        const BarrierOps ops = MakeBarrierOps(barrier);
+        SspLsolveStaleness2(ops);
     }
 
     virtual ~Sptrsv() = default;
