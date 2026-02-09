@@ -20,7 +20,12 @@ limitations under the License.
 
 #include <algorithm>
 #include <array>
+#include <deque>
+#include <iterator>
 #include <limits>
+#include <queue>
+#include <set>
+#include <utility>
 #include <vector>
 
 #include "osp/bsp/scheduler/MaxBspScheduler.hpp"
@@ -60,53 +65,88 @@ ReturnStatus GrowLocalSSP<GraphT>::ComputeSchedule(MaxBspSchedule<GraphT> &sched
     const VertexType numVertices = graph.NumVertices();
     const unsigned numProcs = instance.NumberOfProcessors();
 
-    std::set<VertexType> currentlyReady;
+    std::deque<VertexType> currentlyReady;    // vertices ready in current superstep
 
-    std::array<std::vector<VertexType>, staleness> futureReady;
-    std::vector<VertexType> bestFutureReady;
+    std::array<std::deque<VertexType>, staleness> futureReady;
+    // For i = 1,2,..,staleness, the vertices in futureReady[(superstep + i) % staleness] becomes ready globally in superstep + i
+    std::deque<VertexType> bestFutureReady;
+    // vertices to be added to futureReady[superstep % staleness] which become ready globally in superstep + staleness
 
-    std::array<std::vector<std::set<VertexType>>, staleness> procReady(numProcs);
-    std::vector<std::set<VertexType>> bestProcReady(numProcs);
+    std::vector<std::vector<std::pair<VertexType, unsigned>>> currentProcReadyHeaps(numProcs);
+    std::vector<std::vector<std::pair<VertexType, unsigned>>> bestCurrentProcReadyHeaps(numProcs);
+
+    std::array<std::vector<std::vector<std::pair<VertexType, unsigned>>>, staleness> procReady;
+    // For i = 0,1,2,..,staleness-1 and p processor, the vertices in procReady[(superstep + i) % staleness][p] are ready locally
+    // in superstep + i on processor p
+    std::array<std::vector<std::vector<std::pair<VertexType, unsigned>>>, staleness> procReadyAdditions;
+    std::array<std::vector<std::vector<std::pair<VertexType, unsigned>>>, staleness> bestProcReadyAdditions;
+
+    for (auto &arrVal : procReady) {
+        arrVal = std::vector<std::vector<std::pair<VertexType, unsigned>>>(numProcs);
+    }
+    for (auto &arrVal : procReadyAdditions) {
+        arrVal = std::vector<std::vector<std::pair<VertexType, unsigned>>>(numProcs);
+    }
+    for (auto &arrVal : bestProcReadyAdditions) {
+        arrVal = std::vector<std::vector<std::pair<VertexType, unsigned>>>(numProcs);
+    }
 
     std::vector<VertexType> predec(numVertices);
     for (const auto vert : graph.Vertices()) {
         predec[vert] = graph.InDegree(vert);
         if (predec[vert] == 0U) {
-            currentlyReady.insert(currentlyReady.end(), vert);
+            currentlyReady.emplace_back(vert);
         }
     }
 
     std::vector<std::vector<VertexType>> newAssignments(numProcs);
     std::vector<std::vector<VertexType>> bestNewAssignments(numProcs);
 
-    // const VWorkwT<GraphT> minWeightParallelCheck = params_.syncCostMultiplierParallelCheck_ * instance.SynchronisationCosts();
-    // const VWorkwT<GraphT> minSuperstepWeight = params_.syncCostMultiplierMinSuperstepWeight_ * instance.SynchronisationCosts();
-    // double desiredParallelism = static_cast<double>(numProcs);
+    const VWorkwT<GraphT> minWeightParallelCheck = params_.syncCostMultiplierParallelCheck_ * instance.SynchronisationCosts();
+    const VWorkwT<GraphT> minSuperstepWeight = params_.syncCostMultiplierMinSuperstepWeight_ * instance.SynchronisationCosts();
+
+    double desiredParallelism = static_cast<double>(numProcs);
 
     VertexType totalAssigned = 0;
     unsigned superStep = 0U;
 
     while (totalAssigned < numVertices) {
-        unsigned reducedSuperStep = superStep % staleness;
-        std::vector<std::set<VertexType>> &stepProcReady = procReady[reducedSuperStep];
-        std::vector<VertexType> &stepFutureReady = futureReady[reducedSuperStep];
+        const unsigned reducedSuperStep = superStep % staleness;
+
+        std::deque<VertexType> &stepFutureReady = futureReady[reducedSuperStep];
+        std::sort(stepFutureReady);
+        const std::size_t lengthCurrentlyReady = currentlyReady.size();
+        currentlyReady.insert(currentlyReady.end(), stepFutureReady.begin(), stepFutureReady.end());
+        std::inplace_merge(currentlyReady.begin(), std::next(currentlyReady.begin(), lengthCurrentlyReady), currentlyReady.end());
+
+        std::vector<std::vector<VertexType>> &stepProcReady = procReady[reducedSuperStep];
+        for (auto &procHeap : stepProcReady) {
+            std::make_heap(procHeap.begin(), procHeap.end(), std::greater<>);    // min heap
+        }
 
         VertexType limit = params_.minSuperstepSize_;
-        double bestScore = 0;
-        double bestParallelism = 0;
+        double bestScore = 0.0;
+        double bestParallelism = 0.0;
 
-        typename std::set<VertexType>::const_iterator currentlyReadyIter;
-        typename std::set<VertexType>::const_iterator bestcurrentlyReadyIter;
+        typename std::deque<VertexType>::const_iterator currentlyReadyIter;
+        typename std::deque<VertexType>::const_iterator bestcurrentlyReadyIter;
 
         bool continueSuperstepAttemps = true;
 
         while (continueSuperstepAttemps) {
-            for (unsigned proc = 0; proc < p; proc++) {
-                newAssignments[proc].clear();
+            for (auto &procAssignments : newAssignments) {
+                procAssignments.clear();
             }
             stepFutureReady.clear();
+            currentProcReadyHeaps = stepProcReady;
 
             currentlyReadyIter = currentlyReady.cbegin();
+
+            for (auto &stepProcReadyAdditions : procReadyAdditions) {
+                for (auto &localStepProcReadyAdditions : stepProcReadyAdditions) {
+                    localStepProcReadyAdditions.clear();
+                }
+            }
 
             VertexType newTotalAssigned = 0;
             VWorkwT<GraphT> weightLimit = 0;
@@ -115,12 +155,13 @@ ReturnStatus GrowLocalSSP<GraphT>::ComputeSchedule(MaxBspSchedule<GraphT> &sched
             // Processor 0
             constexpr unsigned proc0{0U};
             while (newAssignments[proc0].size() < limit) {
+                std::vector<std::pair<VertexIdxT, unsigned>> &proc0Heap = currentProcReadyHeaps[proc0];
                 VertexType chosenNode = std::numeric_limits<VertexType>::max();
                 {
-                    const auto procReadyIt = stepProcReady[proc0].cbegin();
-                    if (procReadyIt != stepProcReady[proc0].cend()) {
-                        chosenNode = *procReadyIt;
-                        stepProcReady[proc0].erase(procReadyIt);
+                    if (proc0Heap.size() != 0U) {
+                        std::pop_heap(proc0Heap.begin(), proc0Heap.end(), std::greater<>);
+                        chosenNode = proc0Heap.back().first;
+                        proc0Heap.pop_back();
                     } else if (currentlyReadyIter != currentlyReady.cend()) {
                         chosenNode = *currentlyReadyIter;
                         ++currentlyReadyIter;
@@ -131,6 +172,7 @@ ReturnStatus GrowLocalSSP<GraphT>::ComputeSchedule(MaxBspSchedule<GraphT> &sched
 
                 newAssignments[proc0].push_back(chosenNode);
                 schedule.SetAssignedProcessor(chosenNode, proc0);
+                schedule.SetAssignedSuperstepNoUpdateNumSuperstep(chosenNode, superStep);
                 ++newTotalAssigned;
                 weightLimit += graph.VertexWorkWeight(chosenNode);
 
@@ -146,15 +188,16 @@ ReturnStatus GrowLocalSSP<GraphT>::ComputeSchedule(MaxBspSchedule<GraphT> &sched
                         earliest += static_cast<unsigned>(differentProcParent) * staleness;
 
                         if (earliest <= superStep) {
-                            stepProcReady[proc0].emplace(succ);
+                            proc0Heap.emplace_back(succ, superStep + staleness);
+                            std::push_heap(proc0Heap.begin(), proc0Heap.end(), std::greater<>);
                         } else if (earliest < superStep + staleness) {
-                            procReady[earliest % staleness][proc0].emplace(succ);
+                            procReadyAdditions[earliest % staleness][proc0].emplace(succ, superStep + staleness);
                         } else {
                             stepFutureReady.emplace_back(succ);
                         }
                     }
                 }
-            } // end while assigning
+            }    // end while assigning
 
             totalWeightAssigned += weightLimit;
 
@@ -162,12 +205,13 @@ ReturnStatus GrowLocalSSP<GraphT>::ComputeSchedule(MaxBspSchedule<GraphT> &sched
             for (unsigned proc = 1U; proc < numProcs; ++proc) {
                 VWorkwT<GraphT> currentWeightAssigned = 0;
                 while (currentWeightAssigned < weightLimit) {
+                    std::vector<std::pair<VertexIdxT, unsigned>> &procHeap = currentProcReadyHeaps[proc];
                     VertexType chosenNode = std::numeric_limits<VertexType>::max();
                     {
-                        const auto procReadyIt = stepProcReady[proc].cbegin();
-                        if (procReadyIt != stepProcReady[proc].cend()) {
-                            chosenNode = *procReadyIt;
-                            stepProcReady[proc].erase(procReadyIt);
+                        if (procHeap.size() != 0U) {
+                            std::pop_heap(procHeap.begin(), procHeap.end(), std::greater<>);
+                            chosenNode = procHeap.back().first;
+                            procHeap.pop_back();
                         } else if (currentlyReadyIter != currentlyReady.cend()) {
                             chosenNode = *currentlyReadyIter;
                             ++currentlyReadyIter;
@@ -178,6 +222,7 @@ ReturnStatus GrowLocalSSP<GraphT>::ComputeSchedule(MaxBspSchedule<GraphT> &sched
 
                     newAssignments[proc].push_back(chosenNode);
                     schedule.SetAssignedProcessor(chosenNode, proc);
+                    schedule.SetAssignedSuperstepNoUpdateNumSuperstep(chosenNode, superStep);
                     ++newTotalAssigned;
                     currentWeightAssigned += graph.VertexWorkWeight(chosenNode);
 
@@ -194,21 +239,113 @@ ReturnStatus GrowLocalSSP<GraphT>::ComputeSchedule(MaxBspSchedule<GraphT> &sched
                             earliest += static_cast<unsigned>(differentProcParent) * staleness;
 
                             if (earliest <= superStep) {
-                                stepProcReady[proc].emplace(succ);
+                                procHeap.emplace_back(succ, superStep + staleness);
+                                std::push_heap(procHeap.begin(), procHeap.end(), std::greater<>);
                             } else if (earliest < superStep + staleness) {
-                                procReady[earliest % staleness][proc].emplace(succ);
+                                procReadyAdditions[earliest % staleness][proc].emplace(succ, superStep + staleness);
                             } else {
                                 stepFutureReady.emplace_back(succ);
                             }
                         }
                     }
-                } // end while assigning
+                }    // end while assigning
                 weightLimit = std::max(weightLimit, currentWeightAssigned);
                 totalWeightAssigned += currentWeightAssigned;
-            } // end processor loops
+            }    // end processor loops
 
             bool acceptStep = false;
+
+            double score
+                = static_cast<double>(totalWeightAssigned) / static_cast<double>(weightLimit + instance.SynchronisationCosts());
+            double parallelism = 0;
+            if (weightLimit > 0) {
+                parallelism = static_cast<double>(totalWeightAssigned) / static_cast<double>(weightLimit);
+            }
+
+            if (score > 0.99 * bestScore) {    // It is possible to make this less strict, i.e. score > 0.98 * best_score.
+                                               // The purpose of this would be to encourage larger supersteps.
+                bestScore = std::max(bestScore, score);
+                bestParallelism = parallelism;
+                acceptStep = true;
+            } else {
+                continueSuperstepAttemps = false;
+            }
+
+            if (weightLimit >= minWeightParallelCheck) {
+                if (parallelism < std::max(2.0, 0.8 * desiredParallelism)) {
+                    continueSuperstepAttemps = false;
+                }
+            }
+
+            if (weightLimit <= minSuperstepWeight) {
+                continueSuperstepAttemps = true;
+                if (totalAssigned + newTotalAssigned == n) {
+                    acceptStep = true;
+                    continueSuperstepAttemps = false;
+                }
+            }
+
+            if (totalAssigned + newTotalAssigned == n) {
+                continueSuperstepAttemps = false;
+            }
+
+            // Undo predec decreases
+            for (const auto &newLocalAssignments : newAssignments) {
+                for (const VertexType &node : newLocalAssignments) {
+                    for (const VertexType &succ : graph.Children(node)) {
+                        ++predec[succ];
+                    }
+                }
+            }
+
+            if (acceptStep) {
+                std::swap(bestFutureReady, stepFutureReady);
+                std::swap(bestProcReadyAdditions, procReadyAdditions);
+                std::swap(bestcurrentlyReadyIter, currentlyReadyIter);
+                std::swap(bestNewAssignments, newAssignments);
+                std::swap(bestCurrentProcReadyHeaps, currentProcReadyHeaps);
+            }
+
+            limit++;
+            limit += (limit / 2);
         }
+
+        // apply best iteration
+        currentlyReady.erase(currentlyReady.begin(), bestcurrentlyReadyIter);
+        std::swap(futureReady[reducedSuperStep], bestFutureReady);
+
+        ++superStep;
+        for (unsigned proc = 0U; proc < numProcs; ++proc) {
+            for (const auto &vertStepPair : bestCurrentProcReadyHeaps[proc]) {
+                if (vertStepPair.second <= superStep) {
+                    futureReady[superStep % staleness].emplace_back(vertStepPair.first);
+                } else {
+                    procReady[superStep % staleness][proc].emplace_back(vertStepPair);
+                }
+            }
+        }
+
+        for (std::size_t stepInd = 0U; stepInd < staleness; ++stepInd) {
+            for (unsigned proc = 0U; proc < numProcs; ++proc) {
+                procReady[stepInd][proc].insert(procReady[stepInd][proc].end(),
+                                                bestProcReadyAdditions[stepInd][proc].begin(),
+                                                bestProcReadyAdditions[stepInd][proc].end());
+            }
+        }
+
+        for (unsigned proc = 0U; proc < numProcs; ++proc) {
+            totalAssigned += bestNewAssignments[proc].size();
+            for (const VertexType &node : bestNewAssignments[proc]) {
+                schedule.SetAssignedProcessor(node, proc);
+
+                for (const VertexType &succ : graph.Children(node)) {
+                    --predec[succ];
+                }
+            }
+        }
+
+        desiredParallelism = (0.3 * desiredParallelism) + (0.6 * bestParallelism)
+                             + (0.1 * static_cast<double>(numProcs));    // weights should sum up to one
     }
 
     return ReturnStatus::OSP_SUCCESS;
