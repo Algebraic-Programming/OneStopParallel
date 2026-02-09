@@ -36,6 +36,9 @@ limitations under the License.
 
 using namespace osp;
 
+using VImpl1 = CDagVertexImpl<std::size_t, unsigned, unsigned, unsigned, unsigned>;
+using VImpl2 = CDagVertexImpl<uint32_t, unsigned, unsigned, unsigned, unsigned>;
+
 std::vector<std::string> TestArchitectures() { return {"data/machine_params/p3.arch"}; }
 
 template <typename GraphT>
@@ -63,7 +66,7 @@ void RunTest(Scheduler<GraphT> *testScheduler) {
             std::cout << "Graph: " << nameGraph << std::endl;
             std::cout << "Architecture: " << nameMachine << std::endl;
 
-            ComputationalDagEdgeIdxVectorImplDefIntT graph;
+            ComputationalDagVectorImpl<VImpl1> graph;
             BspArchitecture<GraphT> arch;
 
             bool statusGraph = file_reader::ReadGraph((cwd / filenameGraph).string(), graph);
@@ -108,7 +111,7 @@ void RunTestMaxBsp(MaxBspScheduler<GraphT> *testScheduler) {
                       << "Graph: " << nameGraph << std::endl
                       << "Architecture: " << nameMachine << std::endl;
 
-            ComputationalDagEdgeIdxVectorImplDefIntT graph;
+            ComputationalDagVectorImpl<VImpl1> graph;
             BspArchitecture<GraphT> arch;
 
             bool statusGraph = file_reader::ReadGraph((cwd / filenameGraph).string(), graph);
@@ -131,30 +134,30 @@ void RunTestMaxBsp(MaxBspScheduler<GraphT> *testScheduler) {
 
 // Tests ComputeSchedule(BspSchedule&) → staleness = 1
 BOOST_AUTO_TEST_CASE(GreedyVarianceSspSchedulerTestVectorImpl) {
-    GreedyVarianceSspScheduler<ComputationalDagVectorImplDefUnsignedT> test;
+    GreedyVarianceSspScheduler<ComputationalDagVectorImpl<VImpl1>> test;
     RunTest(&test);
 }
 
 // Tests ComputeSchedule(BspSchedule&) → staleness = 1 (different graph impl)
 BOOST_AUTO_TEST_CASE(GreedyVarianceSspSchedulerTestEdgeIdxImpl) {
-    GreedyVarianceSspScheduler<ComputationalDagEdgeIdxVectorImplDefT> test;
+    GreedyVarianceSspScheduler<ComputationalDagVectorImpl<VImpl2>> test;
     RunTest(&test);
 }
 
 // Tests ComputeSchedule(MaxBspSchedule&) → staleness = 2
 BOOST_AUTO_TEST_CASE(GreedyVarianceSspSchedulerMaxBspScheduleLargeTest) {
-    GreedyVarianceSspScheduler<ComputationalDagEdgeIdxVectorImplDefIntT> test;
+    GreedyVarianceSspScheduler<ComputationalDagVectorImpl<VImpl1>> test;
     RunTestMaxBsp(&test);
 }
 
 // Tests ComputeSchedule(BspSchedule&) → staleness = 1
 BOOST_AUTO_TEST_CASE(GrowLocalSSPBspScheduleLargeTest) {
-    GrowLocalSSP<CompactSparseGraph<false>> test;
+    GrowLocalSSP<CompactSparseGraph<true, true, true, true, true>> test;
     RunTest(&test);
 }
 
 // Tests ComputeSchedule(MaxBspSchedule&) → staleness = 2
 BOOST_AUTO_TEST_CASE(GrowLocalSSPMaxBspScheduleLargeTest) {
-    GrowLocalSSP<CompactSparseGraph<false>> test;
+    GrowLocalSSP<CompactSparseGraph<true, true, true, true, true>> test;
     RunTestMaxBsp(&test);
 }

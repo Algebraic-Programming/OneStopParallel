@@ -107,10 +107,20 @@ class BspInstance {
      * @param cdag The computational DAG for the instance.
      * @param architecture The BSP architecture for the instance.
      */
-    BspInstance(const GraphT &cdag,
+    template <typename OtherGraphT>
+    BspInstance(const OtherGraphT &cdag,
                 const BspArchitecture<GraphT> &architecture,
                 std::vector<std::vector<bool>> nodeProcessorCompatibility = std::vector<std::vector<bool>>({{true}}))
-        : cdag_(cdag), architecture_(architecture), nodeProcessorCompatibility_(nodeProcessorCompatibility) {}
+        : cdag_(cdag), architecture_(architecture), nodeProcessorCompatibility_(nodeProcessorCompatibility) {
+        static_assert(std::is_same_v<VMemwT<GraphT>, VMemwT<OtherGraphT>>,
+                      "BspArchitecture: GraphT and Graph_t_other have the same memory weight type.");
+
+        static_assert(std::is_same_v<VCommwT<GraphT>, VCommwT<OtherGraphT>>,
+                      "BspArchitecture: GraphT and Graph_t_other have the same communication weight type.");
+
+        static_assert(std::is_same_v<VTypeT<GraphT>, VTypeT<OtherGraphT>>,
+                      "BspArchitecture: GraphT and Graph_t_other have the same processor type.");
+    }
 
     /**
      * @brief Constructs a BspInstance object with the specified computational DAG and BSP architecture.
@@ -319,7 +329,7 @@ class BspInstance {
     bool HasAnyTypeRestrictions() const {
         for (VertexTypeTOrDefault node_type = 0; node_type < nodeProcessorCompatibility_.size(); ++node_type) {
             for (VertexTypeTOrDefault proc_type = 0; proc_type < nodeProcessorCompatibility_[node_type].size(); ++proc_type) {
-                if(!nodeProcessorCompatibility_[node_type][proc_type]) {
+                if (!nodeProcessorCompatibility_[node_type][proc_type]) {
                     return true;
                 }
             }

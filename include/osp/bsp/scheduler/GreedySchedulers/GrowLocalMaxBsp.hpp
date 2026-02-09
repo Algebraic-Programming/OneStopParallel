@@ -49,7 +49,7 @@ class GrowLocalSSP : public MaxBspScheduler<GraphT> {
   private:
     using VertexType = VertexIdxT<GraphT>;
 
-    static constexpr std::size_t staleness{2U};
+    static constexpr unsigned staleness{2U};
     GrowLocalSSPParams<VertexIdxT<GraphT>, VWorkwT<GraphT>> params_;
 
   public:
@@ -123,12 +123,12 @@ ReturnStatus GrowLocalSSP<GraphT>::ComputeSchedule(MaxBspSchedule<GraphT> &sched
         const unsigned reducedSuperStep = superStep % staleness;
 
         std::deque<VertexType> &stepFutureReady = futureReady[reducedSuperStep];
-        std::sort(stepFutureReady);
-        const std::size_t lengthCurrentlyReady = currentlyReady.size();
+        std::sort(stepFutureReady.begin(), stepFutureReady.end(), std::less<>{});
+        const typename std::deque<VertexType>::difference_type lengthCurrentlyReady = std::distance(currentlyReady.begin(), currentlyReady.end());
         currentlyReady.insert(currentlyReady.end(), stepFutureReady.begin(), stepFutureReady.end());
         std::inplace_merge(currentlyReady.begin(), std::next(currentlyReady.begin(), lengthCurrentlyReady), currentlyReady.end());
 
-        std::vector<std::vector<VertexType>> &stepProcReady = procReady[reducedSuperStep];
+        std::vector<std::vector<std::pair<VertexType, unsigned>>> &stepProcReady = procReady[reducedSuperStep];
         for (auto &procHeap : stepProcReady) {
             std::make_heap(procHeap.begin(), procHeap.end(), std::greater<>{});    // min heap
         }
@@ -192,7 +192,7 @@ ReturnStatus GrowLocalSSP<GraphT>::ComputeSchedule(MaxBspSchedule<GraphT> &sched
                         for (const VertexType &par : graph.Parents(succ)) {
                             const bool differentProc = (schedule.AssignedProcessor(par) != proc0);
                             differentProcParent |= differentProc;
-                            earliest = std::max(earliest, static_cast<unsigned>(differentProc) * schedule.AssignedSuperStep(par));
+                            earliest = std::max(earliest, static_cast<unsigned>(differentProc) * schedule.AssignedSuperstep(par));
                         }
                         earliest += static_cast<unsigned>(differentProcParent) * staleness;
 
@@ -200,7 +200,7 @@ ReturnStatus GrowLocalSSP<GraphT>::ComputeSchedule(MaxBspSchedule<GraphT> &sched
                             proc0Heap.emplace_back(succ, superStep + staleness);
                             std::push_heap(proc0Heap.begin(), proc0Heap.end(), std::greater<>{});
                         } else if (earliest < superStep + staleness) {
-                            procReadyAdditions[earliest % staleness][proc0].emplace(succ, superStep + staleness);
+                            procReadyAdditions[earliest % staleness][proc0].emplace_back(succ, superStep + staleness);
                         } else {
                             stepFutureReady.emplace_back(succ);
                         }
@@ -243,7 +243,7 @@ ReturnStatus GrowLocalSSP<GraphT>::ComputeSchedule(MaxBspSchedule<GraphT> &sched
                                 const bool differentProc = (schedule.AssignedProcessor(par) != proc);
                                 differentProcParent |= differentProc;
                                 earliest
-                                    = std::max(earliest, static_cast<unsigned>(differentProc) * schedule.AssignedSuperStep(par));
+                                    = std::max(earliest, static_cast<unsigned>(differentProc) * schedule.AssignedSuperstep(par));
                             }
                             earliest += static_cast<unsigned>(differentProcParent) * staleness;
 
@@ -251,7 +251,7 @@ ReturnStatus GrowLocalSSP<GraphT>::ComputeSchedule(MaxBspSchedule<GraphT> &sched
                                 procHeap.emplace_back(succ, superStep + staleness);
                                 std::push_heap(procHeap.begin(), procHeap.end(), std::greater<>{});
                             } else if (earliest < superStep + staleness) {
-                                procReadyAdditions[earliest % staleness][proc].emplace(succ, superStep + staleness);
+                                procReadyAdditions[earliest % staleness][proc].emplace_back(succ, superStep + staleness);
                             } else {
                                 stepFutureReady.emplace_back(succ);
                             }
