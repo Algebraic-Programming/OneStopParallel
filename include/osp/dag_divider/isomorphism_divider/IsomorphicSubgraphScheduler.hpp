@@ -261,8 +261,9 @@ class IsomorphicSubgraphScheduler {
                     const auto &typeCount = instance.GetArchitecture().GetProcessorTypeCount();
                     if (typeCount.empty()) {
                         effectiveMinProcTypeCount = 0;
+                    } else {
+                        effectiveMinProcTypeCount = *std::min_element(typeCount.begin(), typeCount.end());
                     }
-                    effectiveMinProcTypeCount = *std::min_element(typeCount.begin(), typeCount.end());
                     if constexpr (verbose_) {
                         std::cout << "Group " << groupIdx << " (size " << groupSize
                                   << "): Multi-type or untyped group. Using default min_proc_type_count: "

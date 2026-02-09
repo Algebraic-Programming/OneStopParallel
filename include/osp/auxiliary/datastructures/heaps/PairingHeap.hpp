@@ -26,6 +26,17 @@ limitations under the License.
 
 namespace osp {
 
+/**
+ * @class PairingHeap
+ * @brief A pairing heap implementation.
+ *
+ * This class implements a pairing heap, which is a type of heap data structure with excellent amortized performance.
+ * It supports standard heap operations such as insertion, finding the minimum element, and deleting the minimum element.
+ *
+ * @tparam Key The type of the keys stored in the heap. keys must be hashable and comparable.
+ * @tparam Value The type of the values associated with the keys. Values are used for ordering the heap.
+ * @tparam Compare The comparison function object type. Defaults to std::less<Value> for a min-heap.
+ */
 template <typename Key, typename Value, typename Compare>
 class PairingHeap {
   private:
@@ -124,10 +135,14 @@ class PairingHeap {
     }
 
   public:
-    PairingHeap() = default;
 
+    PairingHeap() = default;
     ~PairingHeap() { Clear(); }
 
+    /**
+     * @brief Copy constructor.
+     * @param other The PairingHeap to copy from.
+     */
     PairingHeap(const PairingHeap &other) : numElements_(other.numElements_), comp_(other.comp_) {
         root_ = nullptr;
         if (!other.root_) {
@@ -179,6 +194,11 @@ class PairingHeap {
         }
     }
 
+    /**
+     * @brief Copy assignment operator.
+     * @param other The PairingHeap to assign from.
+     * @return Reference to this heap.
+     */
     PairingHeap &operator=(const PairingHeap &other) {
         if (this != &other) {
             PairingHeap temp(other);
@@ -190,19 +210,41 @@ class PairingHeap {
         return *this;
     }
 
+    /**
+     * @brief Move constructor.
+     */
     PairingHeap(PairingHeap &&) = default;
+
+    /**
+     * @brief Move assignment operator.
+     */
     PairingHeap &operator=(PairingHeap &&) = default;
 
-    // Checks if the heap is empty.
-    bool IsEmpty() const { return root_ == nullptr; }
+    /**
+     * @brief Checks if the heap is empty.
+     * @return True if the heap is empty, false otherwise.
+     */
+    [[nodiscard]] bool IsEmpty() const noexcept { return root_ == nullptr; }
 
-    // Returns the number of elements in the heap.
-    size_t size() const { return numElements_; }
+    /**
+     * @brief Returns the number of elements in the heap.
+     * @return The number of elements.
+     */
+    [[nodiscard]] size_t size() const noexcept { return numElements_; }
 
-    // Checks if a key exists in the heap.
-    bool Contains(const Key &key) const { return nodeMap_.count(key); }
+    /**
+     * @brief Checks if a key exists in the heap.
+     * @param key The key to check.
+     * @return True if the key exists, false otherwise.
+     */
+    [[nodiscard]] bool Contains(const Key &key) const noexcept { return nodeMap_.count(key); }
 
-    // Inserts a new key-value pair into the heap.
+    /**
+     * @brief Inserts a new key-value pair into the heap.
+     * @param key The key to insert.
+     * @param value The value associated with the key.
+     * @throws std::invalid_argument If the key already exists in the heap.
+     */
     void Push(const Key &key, const Value &value) {
         Node *newNode = new Node{key, value};
         // emplace and check for success to avoid a separate lookup with contains()
@@ -216,15 +258,23 @@ class PairingHeap {
         numElements_++;
     }
 
-    // Returns the key with the minimum value without removing it.
-    const Key &Top() const {
+    /**
+     * @brief Returns the key with the minimum (or maximum) value depending on Compare.
+     * @return The key at the top of the heap.
+     * @throws std::out_of_range If the heap is empty.
+     */
+    [[nodiscard]] const Key &Top() const {
         if (IsEmpty()) {
             throw std::out_of_range("Heap is empty.");
         }
         return root_->key_;
     }
 
-    // Removes and returns the key with the minimum value.
+    /**
+     * @brief Removes and returns the key with the minimum (or maximum) value.
+     * @return The key that was at the top of the heap.
+     * @throws std::out_of_range If the heap is empty.
+     */
     Key Pop() {
         if (IsEmpty()) {
             throw std::out_of_range("Heap is empty.");
@@ -242,7 +292,12 @@ class PairingHeap {
         return topKey;
     }
 
-    // Updates the value of an existing key.
+    /**
+     * @brief Updates the value of an existing key.
+     * @param key The key whose value to update.
+     * @param newValue The new value.
+     * @throws std::invalid_argument If the key does not exist in the heap.
+     */
     void Update(const Key &key, const Value &newValue) {
         auto it = nodeMap_.find(key);
         if (it == nodeMap_.end()) {
@@ -281,7 +336,11 @@ class PairingHeap {
         // If values are equal, do nothing.
     }
 
-    // Removes an arbitrary key from the heap.
+    /**
+     * @brief Removes an arbitrary key from the heap.
+     * @param key The key to remove.
+     * @throws std::invalid_argument If the key does not exist in the heap.
+     */
     void Erase(const Key &key) {
         auto it = nodeMap_.find(key);
         if (it == nodeMap_.end()) {
@@ -307,8 +366,13 @@ class PairingHeap {
         numElements_--;
     }
 
-    // Gets the value for a given key.
-    const Value &GetValue(const Key &key) const {
+    /**
+     * @brief Gets the value for a given key.
+     * @param key The key to look up.
+     * @return The value associated with the key.
+     * @throws std::out_of_range If the key does not exist in the heap.
+     */
+    [[nodiscard]] const Value &GetValue(const Key &key) const {
         auto it = nodeMap_.find(key);
         if (it == nodeMap_.end()) {
             throw std::out_of_range("Key does not exist in the heap.");
@@ -316,7 +380,9 @@ class PairingHeap {
         return it->second->value_;
     }
 
-    // Removes all elements from the heap.
+    /**
+     * @brief Removes all elements from the heap.
+     */
     void Clear() {
         if (!root_) {
             return;
@@ -346,9 +412,12 @@ class PairingHeap {
         numElements_ = 0;
     }
 
-    // Retrieves keys with the top value, up to a specified limit.
-    // If limit is 0, all keys with the top value are returned.
-    std::vector<Key> GetTopKeys(size_t limit = 0) const {
+    /**
+     * @brief Retrieves keys with the top value, up to a specified limit.
+     * @param limit The maximum number of keys to return. If 0, all keys with the top value are returned.
+     * @return A vector of keys.
+     */
+    [[nodiscard]] std::vector<Key> GetTopKeys(size_t limit = 0) const {
         std::vector<Key> topKeys;
         if (IsEmpty()) {
             return topKeys;
@@ -385,9 +454,15 @@ class PairingHeap {
     }
 };
 
+/**
+ * @brief Alias for a max-pairing heap.
+ */
 template <typename Key, typename Value>
 using MaxPairingHeap = PairingHeap<Key, Value, std::greater<Value>>;
 
+/**
+ * @brief Alias for a min-pairing heap.
+ */
 template <typename Key, typename Value>
 using MinPairingHeap = PairingHeap<Key, Value, std::less<Value>>;
 

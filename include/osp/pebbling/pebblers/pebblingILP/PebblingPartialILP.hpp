@@ -98,7 +98,7 @@ ReturnStatus PebblingPartialILP<GraphT>::ComputePebbling(PebblingSchedule<GraphT
     AcyclicDagDivider<GraphT> dagDivider;
     dagDivider.SetMinAndMaxSize({minPartitionSize_, maxPartitionSize_});
     std::vector<unsigned> assignmentToParts = dagDivider.ComputePartitioning(instance);
-    unsigned nrParts = *std::max_element(assignmentToParts.begin(), assignmentToParts.end()) + 1;
+    unsigned nrParts = assignmentToParts.size() == 0U? 0U : *std::max_element(assignmentToParts.begin(), assignmentToParts.end()) + 1;
 
     // TODO remove source nodes before this?
     GraphT contractedDag = ContractByPartition(instance, assignmentToParts);

@@ -30,20 +30,50 @@ namespace osp {
  * This class provides an interface for obtaining hash values for individual vertices,
  * the full list of vertex hashes, the number of unique orbits, and the vertices belonging to specific orbits.
  *
- * @tparam index_type The type used for indexing vertices in the graph.
+ * @tparam IndexType The type used for indexing vertices in the graph.
  */
 template <typename IndexType>
 class HashComputer {
   public:
     virtual ~HashComputer() = default;
 
+    /**
+     * @brief Gets the hash value of a specific vertex.
+     * @param v The vertex index.
+     * @return The computed hash value of the vertex.
+     */
     virtual std::size_t GetVertexHash(const IndexType &v) const = 0;
+
+    /**
+     * @brief Gets the reference to the vector of all vertex hashes.
+     * @return A const reference to the vector containing hashes for all vertices.
+     */
     virtual const std::vector<std::size_t> &GetVertexHashes() const = 0;
+
+    /**
+     * @brief Gets the number of unique orbits (equivalence classes) found.
+     * @return The number of orbits.
+     */
     virtual std::size_t NumOrbits() const = 0;
 
+    /**
+     * @brief Gets the orbit (list of equivalent vertices) that a specific vertex belongs to.
+     * @param v The vertex index.
+     * @return A const reference to the vector of indices in the same orbit.
+     */
     virtual const std::vector<IndexType> &GetOrbit(const IndexType &v) const = 0;
+
+    /**
+     * @brief Gets the map of all orbits.
+     * @return A const reference to the map where keys are hash values and values are vectors of vertex indices.
+     */
     virtual const std::unordered_map<std::size_t, std::vector<IndexType>> &GetOrbits() const = 0;
 
+    /**
+     * @brief Gets the orbit corresponding to a specific hash value.
+     * @param hash The hash value of the orbit.
+     * @return A const reference to the vector of vertex indices in the orbit.
+     */
     virtual const std::vector<IndexType> &GetOrbitFromHash(const std::size_t &hash) const = 0;
 };
 

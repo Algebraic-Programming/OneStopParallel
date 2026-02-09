@@ -125,7 +125,7 @@ template <typename GraphTIn, typename GraphTOut>
 std::vector<VertexIdxT<GraphTIn>> Sarkar<GraphTIn, GraphTOut>::GetBotPosetMap(const GraphTIn &graph) const {
     std::vector<VertexIdxT<GraphTIn>> botPosetMap = GetBottomNodeDistance<GraphTIn, VertexIdxT<GraphTIn>>(graph);
 
-    VertexIdxT<GraphTIn> max = *std::max_element(botPosetMap.begin(), botPosetMap.end());
+    VertexIdxT<GraphTIn> max = botPosetMap.size() == 0U? 0 : *std::max_element(botPosetMap.begin(), botPosetMap.end());
     ++max;
 
     for (std::size_t i = 0; i < botPosetMap.size(); i++) {
@@ -1064,8 +1064,8 @@ VertexIdxT<GraphTIn> Sarkar<GraphTIn, GraphTOut>::LevelContraction(
     };
     std::set<std::pair<long, std::vector<VertexType>>, decltype(cmp)> vertPriority(cmp);
 
-    const VertexIdxT<GraphTIn> minLevel = *std::min_element(vertexPoset.cbegin(), vertexPoset.cend());
-    const VertexIdxT<GraphTIn> maxLevel = *std::max_element(vertexPoset.cbegin(), vertexPoset.cend());
+    const VertexIdxT<GraphTIn> minLevel = vertexPoset.size() == 0U? 0 : *std::min_element(vertexPoset.cbegin(), vertexPoset.cend());
+    const VertexIdxT<GraphTIn> maxLevel = vertexPoset.size() == 0U? 0 : *std::max_element(vertexPoset.cbegin(), vertexPoset.cend());
 
     const VertexIdxT<GraphTIn> parity = params_.mode_ == sarkar_params::Mode::LEVEL_EVEN ? 0 : 1;
 
