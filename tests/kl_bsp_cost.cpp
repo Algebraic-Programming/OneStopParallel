@@ -624,10 +624,9 @@ BOOST_AUTO_TEST_CASE(TestCrossStepMoves) {
     BOOST_CHECK_EQUAL(commDs.StepProcSend(0, 0), 0);    // All local at P0
 }
 
-BOOST_AUTO_TEST_CASE(TestComplexScenarioUserProvided) {
+BOOST_AUTO_TEST_CASE(TestComplexScenario) {
     Graph dag;
 
-    // Vertices from user request
     // v1(0): w=2, c=9, m=2
     const auto v1 = dag.AddVertex(2, 9, 2);
     const auto v2 = dag.AddVertex(3, 8, 4);
