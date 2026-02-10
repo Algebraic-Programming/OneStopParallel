@@ -188,14 +188,12 @@ ReturnStatus GrowLocalSSP<GraphT>::ComputeSchedule(MaxBspSchedule<GraphT> &sched
 
                 for (const VertexType &succ : graph.Children(chosenNode)) {
                     if (--predec[succ] == 0) {
-                        unsigned earliest = 0U;
-                        bool differentProcParent = false;
+                        unsigned earliest = superStep;
                         for (const VertexType &par : graph.Parents(succ)) {
-                            const bool differentProc = (schedule.AssignedProcessor(par) != proc0);
-                            differentProcParent |= differentProc;
-                            earliest = std::max(earliest, static_cast<unsigned>(differentProc) * schedule.AssignedSuperstep(par));
+                            const bool sameProc = (schedule.AssignedProcessor(par) == proc0);
+                            const unsigned constraint = sameProc ? superStep : schedule.AssignedSuperstep(par) + staleness;
+                            earliest = std::max(earliest, constraint);
                         }
-                        earliest += static_cast<unsigned>(differentProcParent) * staleness;
 
                         if (earliest <= superStep) {
                             proc0Heap.emplace_back(succ, superStep + staleness);
@@ -238,15 +236,12 @@ ReturnStatus GrowLocalSSP<GraphT>::ComputeSchedule(MaxBspSchedule<GraphT> &sched
 
                     for (const VertexType &succ : graph.Children(chosenNode)) {
                         if (--predec[succ] == 0) {
-                            unsigned earliest = 0U;
-                            bool differentProcParent = false;
+                            unsigned earliest = superStep;
                             for (const VertexType &par : graph.Parents(succ)) {
-                                const bool differentProc = (schedule.AssignedProcessor(par) != proc);
-                                differentProcParent |= differentProc;
-                                earliest
-                                    = std::max(earliest, static_cast<unsigned>(differentProc) * schedule.AssignedSuperstep(par));
+                                const bool sameProc = (schedule.AssignedProcessor(par) == proc);
+                                const unsigned constraint = sameProc ? superStep : schedule.AssignedSuperstep(par) + staleness;
+                                earliest = std::max(earliest, constraint);
                             }
-                            earliest += static_cast<unsigned>(differentProcParent) * staleness;
 
                             if (earliest <= superStep) {
                                 procHeap.emplace_back(succ, superStep + staleness);
@@ -328,13 +323,13 @@ ReturnStatus GrowLocalSSP<GraphT>::ComputeSchedule(MaxBspSchedule<GraphT> &sched
         currentlyReady.erase(currentlyReady.begin(), bestcurrentlyReadyIter);
         std::swap(futureReady[reducedSuperStep], bestFutureReady);
 
-        ++superStep;
+        const unsigned nextSuperStep = superStep + 1U;
         for (unsigned proc = 0U; proc < numProcs; ++proc) {
             for (const auto &vertStepPair : bestCurrentProcReadyHeaps[proc]) {
-                if (vertStepPair.second <= superStep) {
-                    futureReady[superStep % staleness].emplace_back(vertStepPair.first);
+                if (vertStepPair.second <= nextSuperStep) {
+                    futureReady[nextSuperStep % staleness].emplace_back(vertStepPair.first);
                 } else {
-                    procReady[superStep % staleness][proc].emplace_back(vertStepPair);
+                    procReady[nextSuperStep % staleness][proc].emplace_back(vertStepPair);
                 }
             }
         }
@@ -351,6 +346,7 @@ ReturnStatus GrowLocalSSP<GraphT>::ComputeSchedule(MaxBspSchedule<GraphT> &sched
             totalAssigned += bestNewAssignments[proc].size();
             for (const VertexType &node : bestNewAssignments[proc]) {
                 schedule.SetAssignedProcessor(node, proc);
+                // schedule.SetAssignedSuperstepNoUpdateNumSuperstep(node, superStep);
 
                 for (const VertexType &succ : graph.Children(node)) {
                     --predec[succ];
@@ -358,6 +354,7 @@ ReturnStatus GrowLocalSSP<GraphT>::ComputeSchedule(MaxBspSchedule<GraphT> &sched
             }
         }
 
+        ++superStep;
         desiredParallelism = (0.3 * desiredParallelism) + (0.6 * bestParallelism)
                              + (0.1 * static_cast<double>(numProcs));    // weights should sum up to one
     }
