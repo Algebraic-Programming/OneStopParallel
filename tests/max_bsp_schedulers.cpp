@@ -42,6 +42,23 @@ using VImpl2 = CDagVertexImpl<uint32_t, unsigned, unsigned, unsigned, unsigned>;
 std::vector<std::string> TestArchitectures() { return {"data/machine_params/p3.arch"}; }
 
 template <typename GraphT>
+void checkPrecedenceContraints(const BspSchedule<GraphT> &schedule, const unsigned staleness) {
+    for (const auto &v : schedule.GetInstance().GetComputationalDag().Vertices()) {
+        BOOST_CHECK_LT(schedule.AssignedSuperstep(v), schedule.NumberOfSupersteps());
+
+        for (const auto &chld : schedule.GetInstance().GetComputationalDag().Children(v)) {
+            const unsigned differentProcessors
+                = (schedule.AssignedProcessor(v) == schedule.AssignedProcessor(chld)) ? 0U : staleness;
+
+            BOOST_CHECK_LE(schedule.AssignedSuperstep(v) + differentProcessors, schedule.AssignedSuperstep(chld));
+            if (schedule.AssignedSuperstep(v) + differentProcessors > schedule.AssignedSuperstep(chld)) {
+                std::cout << "Vertex: " << v << " Child: " << chld << '\n';
+            }
+        }
+    }
+}
+
+template <typename GraphT>
 void RunTest(Scheduler<GraphT> *testScheduler) {
     // static_assert(std::is_base_of<Scheduler, T>::value, "Class is not a scheduler!");
     std::vector<std::string> filenamesGraph = TinySpaaGraphs();
@@ -84,6 +101,7 @@ void RunTest(Scheduler<GraphT> *testScheduler) {
 
             BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
             BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
+            checkPrecedenceContraints(schedule, 1U);
         }
     }
 }
@@ -128,6 +146,7 @@ void RunTestMaxBsp(MaxBspScheduler<GraphT> *testScheduler) {
 
             BOOST_CHECK_EQUAL(result, ReturnStatus::OSP_SUCCESS);
             BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
+            checkPrecedenceContraints(schedule, 2U);
         }
     }
 }
@@ -152,12 +171,12 @@ BOOST_AUTO_TEST_CASE(GreedyVarianceSspSchedulerMaxBspScheduleLargeTest) {
 
 // Tests ComputeSchedule(BspSchedule&) → staleness = 1
 BOOST_AUTO_TEST_CASE(GrowLocalSSPBspScheduleLargeTest) {
-    GrowLocalSSP<CompactSparseGraph<true, true, true, true, true>> test;
+    GrowLocalSSP<CompactSparseGraph<false, true, true, true, true>> test;
     RunTest(&test);
 }
 
 // Tests ComputeSchedule(MaxBspSchedule&) → staleness = 2
 BOOST_AUTO_TEST_CASE(GrowLocalSSPMaxBspScheduleLargeTest) {
-    GrowLocalSSP<CompactSparseGraph<true, true, true, true, true>> test;
+    GrowLocalSSP<CompactSparseGraph<false, true, true, true, true>> test;
     RunTestMaxBsp(&test);
 }

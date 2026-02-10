@@ -124,7 +124,8 @@ ReturnStatus GrowLocalSSP<GraphT>::ComputeSchedule(MaxBspSchedule<GraphT> &sched
 
         std::deque<VertexType> &stepFutureReady = futureReady[reducedSuperStep];
         std::sort(stepFutureReady.begin(), stepFutureReady.end(), std::less<>{});
-        const typename std::deque<VertexType>::difference_type lengthCurrentlyReady = std::distance(currentlyReady.begin(), currentlyReady.end());
+        const typename std::deque<VertexType>::difference_type lengthCurrentlyReady
+            = std::distance(currentlyReady.begin(), currentlyReady.end());
         currentlyReady.insert(currentlyReady.end(), stepFutureReady.begin(), stepFutureReady.end());
         std::inplace_merge(currentlyReady.begin(), std::next(currentlyReady.begin(), lengthCurrentlyReady), currentlyReady.end());
 
@@ -134,7 +135,7 @@ ReturnStatus GrowLocalSSP<GraphT>::ComputeSchedule(MaxBspSchedule<GraphT> &sched
         }
 
         VertexType limit = params_.minSuperstepSize_;
-        double bestScore = 0.0;
+        double bestScore = std::numeric_limits<double>::lowest();
         double bestParallelism = 0.0;
 
         typename std::deque<VertexType>::const_iterator currentlyReadyIter;
@@ -266,7 +267,7 @@ ReturnStatus GrowLocalSSP<GraphT>::ComputeSchedule(MaxBspSchedule<GraphT> &sched
 
             double score
                 = static_cast<double>(totalWeightAssigned) / static_cast<double>(weightLimit + instance.SynchronisationCosts());
-            double parallelism = 0;
+            double parallelism = 0.0;
             if (weightLimit > 0) {
                 parallelism = static_cast<double>(totalWeightAssigned) / static_cast<double>(weightLimit);
             }
@@ -292,6 +293,10 @@ ReturnStatus GrowLocalSSP<GraphT>::ComputeSchedule(MaxBspSchedule<GraphT> &sched
                     acceptStep = true;
                     continueSuperstepAttemps = false;
                 }
+            }
+
+            if (currentlyReadyIter == currentlyReady.cend()) {
+                continueSuperstepAttemps = false;
             }
 
             if (totalAssigned + newTotalAssigned == numVertices) {
