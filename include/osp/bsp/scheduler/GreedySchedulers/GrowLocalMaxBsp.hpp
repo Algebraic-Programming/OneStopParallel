@@ -34,7 +34,7 @@ namespace osp {
 
 template <typename VertT, typename WeightT>
 struct GrowLocalSSPParams {
-    VertT minSuperstepSize_ = 20;
+    VertT minSuperstepSize_ = 10;
     WeightT syncCostMultiplierMinSuperstepWeight_ = 1;
     WeightT syncCostMultiplierParallelCheck_ = 4;
 };
@@ -50,12 +50,32 @@ class GrowLocalSSP : public MaxBspScheduler<GraphT> {
     static constexpr unsigned staleness{2U};
     GrowLocalSSPParams<VertexIdxT<GraphT>, VWorkwT<GraphT>> params_;
 
+    typename std::deque<VertexType>::difference_type maxAllReadyUsage(const std::deque<VertexType> &currentlyReady,
+                                                                      const std::deque<VertexType> &nextSuperstepReady) const;
+
   public:
     ReturnStatus ComputeSchedule(BspSchedule<GraphT> &schedule) override;
     ReturnStatus ComputeSchedule(MaxBspSchedule<GraphT> &schedule) override;
 
     std::string GetScheduleName() const override { return "GrowLocalSSP"; }
 };
+
+template <typename GraphT>
+typename std::deque<VertexIdxT<GraphT>>::difference_type GrowLocalSSP<GraphT>::maxAllReadyUsage(
+    const std::deque<VertexIdxT<GraphT>> &currentlyReady, const std::deque<VertexIdxT<GraphT>> &nextSuperstepReady) const {
+    if constexpr (staleness == 1U) {
+        return std::distance(currentlyReady.cbegin(), currentlyReady.cend());
+    } else {
+        typename std::deque<VertexType>::difference_type lengthCurrently
+            = std::distance(currentlyReady.cbegin(), currentlyReady.cend());
+        typename std::deque<VertexType>::difference_type lengthNext
+            = std::distance(nextSuperstepReady.cbegin(), nextSuperstepReady.cend());
+
+        typename std::deque<VertexType>::difference_type ans = ((lengthCurrently + lengthNext + 2) / 3) * 2;
+
+        return ans;
+    }
+}
 
 template <typename GraphT>
 ReturnStatus GrowLocalSSP<GraphT>::ComputeSchedule(BspSchedule<GraphT> &schedule) {
@@ -131,13 +151,9 @@ ReturnStatus GrowLocalSSP<GraphT>::ComputeSchedule(MaxBspSchedule<GraphT> &sched
         std::inplace_merge(currentlyReady.begin(), std::next(currentlyReady.begin(), lengthCurrentlyReady), currentlyReady.end());
 
         const typename std::deque<VertexType>::difference_type maxCurrentlyReadyUsage
-            = (staleness == 1U) ? std::distance(currentlyReady.begin(), currentlyReady.end())
-                                : ((std::distance(currentlyReady.begin(), currentlyReady.end())
-                                    + std::distance(futureReady[(superStep + 1U) % staleness].begin(),
-                                                    futureReady[(superStep + 1U) % staleness].end())
-                                    + 2)
-                                   / 3)
-                                      * 2;
+            = std::max(static_cast<typename std::deque<VertexType>::difference_type>(
+                           static_cast<double>(params_.minSuperstepSize_) * desiredParallelism),
+                       maxAllReadyUsage(currentlyReady, futureReady[(superStep + 1U) % staleness]));
 
         std::vector<std::vector<std::pair<VertexType, unsigned>>> &stepProcReady = procReady[reducedSuperStep];
         for (auto &procHeap : stepProcReady) {
