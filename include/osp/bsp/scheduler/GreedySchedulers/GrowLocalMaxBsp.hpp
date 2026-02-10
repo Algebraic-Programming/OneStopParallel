@@ -130,6 +130,15 @@ ReturnStatus GrowLocalSSP<GraphT>::ComputeSchedule(MaxBspSchedule<GraphT> &sched
         currentlyReady.insert(currentlyReady.end(), stepFutureReady.begin(), stepFutureReady.end());
         std::inplace_merge(currentlyReady.begin(), std::next(currentlyReady.begin(), lengthCurrentlyReady), currentlyReady.end());
 
+        const typename std::deque<VertexType>::difference_type maxCurrentlyReadyUsage
+            = (staleness == 1U) ? std::distance(currentlyReady.begin(), currentlyReady.end())
+                                : ((std::distance(currentlyReady.begin(), currentlyReady.end())
+                                    + std::distance(futureReady[(superStep + 1U) % staleness].begin(),
+                                                    futureReady[(superStep + 1U) % staleness].end())
+                                    + 2)
+                                   / 3)
+                                      * 2;
+
         std::vector<std::vector<std::pair<VertexType, unsigned>>> &stepProcReady = procReady[reducedSuperStep];
         for (auto &procHeap : stepProcReady) {
             std::make_heap(procHeap.begin(), procHeap.end(), std::greater<>{});    // min heap
@@ -292,6 +301,10 @@ ReturnStatus GrowLocalSSP<GraphT>::ComputeSchedule(MaxBspSchedule<GraphT> &sched
             }
 
             if (currentlyReadyIter == currentlyReady.cend()) {
+                continueSuperstepAttemps = false;
+            }
+
+            if (std::distance(currentlyReady.cbegin(), currentlyReadyIter) > maxCurrentlyReadyUsage) {
                 continueSuperstepAttemps = false;
             }
 
