@@ -350,7 +350,6 @@ ReturnStatus GrowLocalSSP<GraphT>::ComputeSchedule(MaxBspSchedule<GraphT> &sched
             totalAssigned += bestNewAssignments[proc].size();
             for (const VertexType &node : bestNewAssignments[proc]) {
                 schedule.SetAssignedProcessor(node, proc);
-                // schedule.SetAssignedSuperstepNoUpdateNumSuperstep(node, superStep);
 
                 for (const VertexType &succ : graph.Children(node)) {
                     --predec[succ];
