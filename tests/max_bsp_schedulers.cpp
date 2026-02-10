@@ -47,12 +47,13 @@ void checkPrecedenceContraints(const BspSchedule<GraphT> &schedule, const unsign
         BOOST_CHECK_LT(schedule.AssignedSuperstep(v), schedule.NumberOfSupersteps());
 
         for (const auto &chld : schedule.GetInstance().GetComputationalDag().Children(v)) {
-            const unsigned differentProcessors
-                = (schedule.AssignedProcessor(v) == schedule.AssignedProcessor(chld)) ? 0U : staleness;
+            const unsigned sameProcessors = (schedule.AssignedProcessor(v) == schedule.AssignedProcessor(chld)) ? 0U : staleness;
 
-            BOOST_CHECK_LE(schedule.AssignedSuperstep(v) + differentProcessors, schedule.AssignedSuperstep(chld));
-            if (schedule.AssignedSuperstep(v) + differentProcessors > schedule.AssignedSuperstep(chld)) {
-                std::cout << "Vertex: " << v << " Child: " << chld << '\n';
+            BOOST_CHECK_LE(schedule.AssignedSuperstep(v) + sameProcessors, schedule.AssignedSuperstep(chld));
+            if (schedule.AssignedSuperstep(v) + sameProcessors > schedule.AssignedSuperstep(chld)) {
+                std::cout << "Vertex: " << v << " (S:" << schedule.AssignedSuperstep(v) << " P:" << schedule.AssignedProcessor(v)
+                          << ")" << " Child: " << chld << " (S:" << schedule.AssignedSuperstep(chld)
+                          << " P:" << schedule.AssignedProcessor(chld) << ")" << '\n';
             }
         }
     }

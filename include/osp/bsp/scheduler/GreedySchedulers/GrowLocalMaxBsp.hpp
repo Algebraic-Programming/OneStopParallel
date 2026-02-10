@@ -323,6 +323,10 @@ ReturnStatus GrowLocalSSP<GraphT>::ComputeSchedule(MaxBspSchedule<GraphT> &sched
         currentlyReady.erase(currentlyReady.begin(), bestcurrentlyReadyIter);
         std::swap(futureReady[reducedSuperStep], bestFutureReady);
 
+        for (auto &localProcReady : procReady[reducedSuperStep]) {
+            localProcReady.clear();
+        }
+
         const unsigned nextSuperStep = superStep + 1U;
         for (unsigned proc = 0U; proc < numProcs; ++proc) {
             for (const auto &vertStepPair : bestCurrentProcReadyHeaps[proc]) {
