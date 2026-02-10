@@ -239,7 +239,7 @@ struct MaxCommDatastructure {
                 if (proc != fromProc) {
                     const CommWeightT cost = commWNode * instance_->SendCosts(fromProc, proc);
                     if (cost > 0) {
-                        CommPolicy::UnattributeCommunication(*this, cost, fromStep, fromProc, proc, 0, val);
+                        CommPolicy::RemoveOutgoingComm(*this, cost, fromStep, fromProc, proc, val, MarkStep);
                     }
                 }
 
@@ -247,12 +247,10 @@ struct MaxCommDatastructure {
                 if (proc != toProc) {
                     const CommWeightT cost = commWNode * instance_->SendCosts(toProc, proc);
                     if (cost > 0) {
-                        CommPolicy::AttributeCommunication(*this, cost, toStep, toProc, proc, 0, val);
+                        CommPolicy::AddOutgoingComm(*this, cost, toStep, toProc, proc, val, MarkStep);
                     }
                 }
             }
-            MarkStep(fromStep);
-            MarkStep(toStep);
 
         } else if (fromProc != toProc) {
             // Case 2: Node stays in same Step, but changes Processor
@@ -262,7 +260,7 @@ struct MaxCommDatastructure {
                 if (proc != fromProc) {
                     const CommWeightT cost = commWNode * instance_->SendCosts(fromProc, proc);
                     if (cost > 0) {
-                        CommPolicy::UnattributeCommunication(*this, cost, fromStep, fromProc, proc, 0, val);
+                        CommPolicy::RemoveOutgoingComm(*this, cost, fromStep, fromProc, proc, val, MarkStep);
                     }
                 }
 
@@ -270,11 +268,10 @@ struct MaxCommDatastructure {
                 if (proc != toProc) {
                     const CommWeightT cost = commWNode * instance_->SendCosts(toProc, proc);
                     if (cost > 0) {
-                        CommPolicy::AttributeCommunication(*this, cost, fromStep, toProc, proc, 0, val);
+                        CommPolicy::AddOutgoingComm(*this, cost, fromStep, toProc, proc, val, MarkStep);
                     }
                 }
             }
-            MarkStep(fromStep);
         }
 
         // Update Parents' Outgoing Communication (Parents → Node)
