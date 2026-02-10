@@ -20,7 +20,9 @@ limitations under the License.
 
 #include <omp.h>
 
+#include <algorithm>
 #include <climits>
+#include <deque>
 #include <list>
 #include <map>
 #include <set>
@@ -98,13 +100,13 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
         const VertexType n = endNode - startNode;
         const unsigned p = instance.NumberOfProcessors();
 
-        std::set<VertexType> ready;
+        std::deque<VertexType> ready;
 
         std::vector<VertexType> futureReady;
         std::vector<VertexType> bestFutureReady;
 
-        std::vector<std::set<VertexType>> procReady(p);
-        std::vector<std::set<VertexType>> bestProcReady(p);
+        std::vector<std::vector<VertexType>> procReady(p);
+        std::vector<std::vector<VertexType>> bestProcReady(p);
 
         std::vector<VertexType> predec(n, 0);
 
@@ -143,11 +145,14 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
             VertexType index = nodePos - startNode;
             if (predec[index] == 0) {
                 if constexpr (hasVerticesInTopOrderV<GraphT>) {
-                    ready.insert(nodePos);
+                    ready.emplace_back(nodePos);
                 } else {
-                    ready.insert(topOrder[nodePos]);
+                    ready.emplace_back(topOrder[nodePos]);
                 }
             }
+        }
+        if constexpr (not hasVerticesInTopOrderV<GraphT>) {
+            std::sort(ready.begin(), ready.end(), std::less<>{});
         }
 
         std::vector<std::vector<VertexType>> newAssignments(p);
@@ -166,8 +171,8 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
             double bestScore = 0;
             double bestParallelism = 0;
 
-            typename std::set<VertexType>::iterator readyIter;
-            typename std::set<VertexType>::iterator bestReadyIter;
+            typename std::deque<VertexType>::const_iterator readyIter;
+            typename std::deque<VertexType>::const_iterator bestReadyIter;
 
             bool continueSuperstepAttempts = true;
 
@@ -181,7 +186,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                     procReady[proc].clear();
                 }
 
-                readyIter = ready.begin();
+                readyIter = ready.cbegin();
 
                 VertexType newTotalAssigned = 0;
                 VWorkwT<GraphT> weightLimit = 0;
@@ -191,9 +196,10 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                 while (newAssignments[0].size() < limit) {
                     VertexType chosenNode = std::numeric_limits<VertexType>::max();
                     if (!procReady[0].empty()) {
-                        chosenNode = *procReady[0].begin();
-                        procReady[0].erase(procReady[0].begin());
-                    } else if (readyIter != ready.end()) {
+                        std::pop_heap(procReady[0].begin(), procReady[0].end(), std::greater<>{});
+                        chosenNode = procReady[0].back();
+                        procReady[0].pop_back();
+                    } else if (readyIter != ready.cend()) {
                         chosenNode = *readyIter;
                         readyIter++;
                     } else {
@@ -238,7 +244,8 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                         --predec[succIndex];
                         if (predec[succIndex] == 0) {
                             if (schedule.AssignedProcessor(succ) == 0) {
-                                procReady[0].insert(succ);
+                                procReady[0].emplace_back(succ);
+                                std::push_heap(procReady[0].begin(), procReady[0].end(), std::greater<>{});
                             } else {
                                 futureReady.push_back(succ);
                             }
@@ -254,9 +261,10 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                     while (currentWeightAssigned < weightLimit) {
                         VertexType chosenNode = std::numeric_limits<VertexType>::max();
                         if (!procReady[proc].empty()) {
-                            chosenNode = *procReady[proc].begin();
-                            procReady[proc].erase(procReady[proc].begin());
-                        } else if (readyIter != ready.end()) {
+                            std::pop_heap(procReady[proc].begin(), procReady[proc].end(), std::greater<>{});
+                            chosenNode = procReady[proc].back();
+                            procReady[proc].pop_back();
+                        } else if (readyIter != ready.cend()) {
                             chosenNode = *readyIter;
                             readyIter++;
                         } else {
@@ -301,7 +309,8 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                             --predec[succIndex];
                             if (predec[succIndex] == 0) {
                                 if (schedule.AssignedProcessor(succ) == proc) {
-                                    procReady[proc].insert(succ);
+                                    procReady[proc].emplace_back(succ);
+                                    std::push_heap(procReady[proc].begin(), procReady[proc].end(), std::greater<>{});
                                 } else {
                                     futureReady.push_back(succ);
                                 }
@@ -343,6 +352,10 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                         acceptStep = true;
                         continueSuperstepAttempts = false;
                     }
+                }
+
+                if (readyIter == ready.cend()) {
+                    continueSuperstepAttempts = false;
                 }
 
                 if (totalAssigned + newTotalAssigned == n) {
@@ -424,10 +437,14 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
 
             // apply best iteration
             ready.erase(ready.begin(), bestReadyIter);
-            ready.insert(bestFutureReady.begin(), bestFutureReady.end());
+            const auto lengthLeftoverReady = std::distance(ready.begin(), ready.end());
+            ready.insert(ready.end(), bestFutureReady.begin(), bestFutureReady.end());
             for (unsigned proc = 0; proc < p; proc++) {
-                ready.merge(bestProcReady[proc]);
+                ready.insert(ready.end(), bestProcReady[proc].begin(), bestProcReady[proc].end());
             }
+            const auto middleIt = std::next(ready.begin(), lengthLeftoverReady);
+            std::sort(middleIt, ready.end(), std::less<>{});
+            std::inplace_merge(ready.begin(), middleIt, ready.end());
 
             for (unsigned proc = 0; proc < p; ++proc) {
                 for (const VertexType &node : bestNewAssignments[proc]) {
