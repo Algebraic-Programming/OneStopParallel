@@ -43,8 +43,6 @@ template <typename GraphT>
 class GrowLocalSSP : public MaxBspScheduler<GraphT> {
     static_assert(isDirectedGraphV<GraphT>);
     static_assert(hasVertexWeightsV<GraphT>);
-    static_assert(hasVerticesInTopOrderV<GraphT>);
-    static_assert(hasChildrenInVertexOrderV<GraphT>);
 
   private:
     using VertexType = VertexIdxT<GraphT>;
@@ -106,6 +104,9 @@ ReturnStatus GrowLocalSSP<GraphT>::ComputeSchedule(MaxBspSchedule<GraphT> &sched
         if (predec[vert] == 0U) {
             currentlyReady.emplace_back(vert);
         }
+    }
+    if constexpr (not hasVerticesInTopOrderV<GraphT>) {
+        std::sort(currentlyReady.begin(), currentlyReady.end(), std::less<>{});
     }
 
     std::vector<std::vector<VertexType>> newAssignments(numProcs);
