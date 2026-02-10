@@ -491,7 +491,7 @@ void TestLinearChainConsolidate() {
     }
     BOOST_CHECK_EQUAL(ds.StepMaxComm(0), 0);
 }
-INSTANTIATE_EAGER_LAZY(TestLinearChainConsolidate)
+INSTANTIATE_ALL(TestLinearChainConsolidate)
 
 // ---------- 3b: Fan-out 0->{1,2,3}, progressively make local ---------------
 
@@ -522,7 +522,7 @@ void TestFanOutConsolidate() {
     }
     BOOST_CHECK_EQUAL(ds.StepMaxComm(0), 0);
 }
-INSTANTIATE_EAGER_LAZY(TestFanOutConsolidate)
+INSTANTIATE_ALL(TestFanOutConsolidate)
 
 // ---------- 3c: Cross-step chain 0->1->2, consolidate ---------------------
 
@@ -555,7 +555,7 @@ void TestCrossStepMoves() {
     ds.UpdateDatastructureAfterMove(m2, 0, 2);
     BOOST_CHECK(ValidateCommDs<P>(ds, *t.klSched, *t.instance, std::string(PolicyName<P>()) + "_xstep_2"));
 }
-INSTANTIATE_EAGER_LAZY(TestCrossStepMoves)
+INSTANTIATE_ALL(TestCrossStepMoves)
 
 // ---------- 3d: Complex 8-node graph from original test --------------------
 
@@ -616,7 +616,7 @@ void TestComplexGraph() {
     ds.UpdateDatastructureAfterMove(m5, 0, 3);
     BOOST_CHECK(ValidateCommDs<P>(ds, *t.klSched, *t.instance, tag + "_complex5"));
 }
-INSTANTIATE_EAGER_LAZY(TestComplexGraph)
+INSTANTIATE_ALL(TestComplexGraph)
 
 // ---------- 3e: 5x5 Grid graph -------------------------------------------
 
@@ -683,7 +683,7 @@ void TestGridGraph() {
     ds.UpdateDatastructureAfterMove(m4, 0, 5);
     BOOST_CHECK(ValidateCommDs<P>(ds, kl, inst, tag + "_grid4"));
 }
-INSTANTIATE_EAGER_LAZY(TestGridGraph)
+INSTANTIATE_ALL(TestGridGraph)
 
 // ---------- 3f: Butterfly graph (FFT pattern) ------------------------------
 
@@ -736,7 +736,7 @@ void TestButterflyGraph() {
     ds.UpdateDatastructureAfterMove(m4, 0, 2);
     BOOST_CHECK(ValidateCommDs<P>(ds, kl, inst, tag + "_bfly4"));
 }
-INSTANTIATE_EAGER_LAZY(TestButterflyGraph)
+INSTANTIATE_ALL(TestButterflyGraph)
 
 // ---------- 3g: Ladder graph -----------------------------------------------
 
@@ -791,7 +791,7 @@ void TestLadderGraph() {
     ds.UpdateDatastructureAfterMove(m4, 0, 5);
     BOOST_CHECK(ValidateCommDs<P>(ds, kl, inst, tag + "_ladd4"));
 }
-INSTANTIATE_EAGER_LAZY(TestLadderGraph)
+INSTANTIATE_ALL(TestLadderGraph)
 
 // ============================================================================
 // SUITE 4: Edge-case scenarios under all three policies
@@ -821,7 +821,7 @@ void TestChildAtStepZero() {
     BOOST_CHECK(ValidateCommDs<P>(ds, *t.klSched, *t.instance, std::string(PolicyName<P>()) + "_s0_m1"));
     BOOST_CHECK_EQUAL(ds.StepMaxComm(0), 0);
 }
-INSTANTIATE_EAGER_LAZY(TestChildAtStepZero)
+INSTANTIATE_ALL(TestChildAtStepZero)
 
 // ---------- 4b: Diamond graph (fan-out + fan-in) ----------------------------
 
@@ -859,7 +859,7 @@ void TestDiamondGraph() {
     BOOST_CHECK_EQUAL(ds.StepMaxComm(0), 0);
     BOOST_CHECK_EQUAL(ds.StepMaxComm(1), 0);
 }
-INSTANTIATE_EAGER_LAZY(TestDiamondGraph)
+INSTANTIATE_ALL(TestDiamondGraph)
 
 // ---------- 4c: Isolated node (no edges) ------------------------------------
 
@@ -885,7 +885,7 @@ void TestIsolatedNode() {
     BOOST_CHECK(ValidateCommDs<P>(ds, *t.klSched, *t.instance, std::string(PolicyName<P>()) + "_iso"));
     BOOST_CHECK_EQUAL(ds.StepMaxComm(0), 0);
 }
-INSTANTIATE_EAGER_LAZY(TestIsolatedNode)
+INSTANTIATE_ALL(TestIsolatedNode)
 
 // ---------- 4d: Move back and forth (exact round-trip revert) ---------------
 
@@ -934,7 +934,7 @@ void TestMoveRevert() {
         }
     }
 }
-INSTANTIATE_EAGER_LAZY(TestMoveRevert)
+INSTANTIATE_ALL(TestMoveRevert)
 
 // ---------- 4e: Fan-in (3 parents -> 1 child) ------------------------------
 
@@ -974,7 +974,7 @@ void TestFanIn() {
     BOOST_CHECK(ValidateCommDs<P>(ds, *t.klSched, *t.instance, std::string(PolicyName<P>()) + "_fi_m3"));
     BOOST_CHECK_EQUAL(ds.StepMaxComm(0), 0);
 }
-INSTANTIATE_EAGER_LAZY(TestFanIn)
+INSTANTIATE_ALL(TestFanIn)
 
 // ---------- 4f: Move parent (outgoing edges change proc/step) ---------------
 
@@ -1014,7 +1014,7 @@ void TestMoveParent() {
     ds.UpdateDatastructureAfterMove(m3, 0, 1);
     BOOST_CHECK(ValidateCommDs<P>(ds, *t.klSched, *t.instance, std::string(PolicyName<P>()) + "_mp_m3"));
 }
-INSTANTIATE_EAGER_LAZY(TestMoveParent)
+INSTANTIATE_ALL(TestMoveParent)
 
 // ---------- 4g: Min-step shift (critical for Lazy/Buffered recv tracking) ---
 // Parent@S0, children@(P1,S1) and (P1,S3). Move S1 child to S4.
@@ -1043,7 +1043,7 @@ void TestMinStepShift() {
     ds.UpdateDatastructureAfterMove(m, 0, 5);
     BOOST_CHECK(ValidateCommDs<P>(ds, *t.klSched, *t.instance, std::string(PolicyName<P>()) + "_ms_m1"));
 }
-INSTANTIATE_EAGER_LAZY(TestMinStepShift)
+INSTANTIATE_ALL(TestMinStepShift)
 
 // ---------- 4h: Same-proc children at different steps -----------------------
 
@@ -1085,7 +1085,7 @@ void TestSameProcDiffSteps() {
     ds.UpdateDatastructureAfterMove(m3, 0, 5);
     BOOST_CHECK(ValidateCommDs<P>(ds, *t.klSched, *t.instance, std::string(PolicyName<P>()) + "_spds_m3"));
 }
-INSTANTIATE_EAGER_LAZY(TestSameProcDiffSteps)
+INSTANTIATE_ALL(TestSameProcDiffSteps)
 
 // ---------- 4i: Same-step edge (parent & child at same superstep) -----------
 
@@ -1118,7 +1118,7 @@ void TestSameStepEdge() {
     ds.UpdateDatastructureAfterMove(m2, 0, 0);
     BOOST_CHECK(ValidateCommDs<P>(ds, *t.klSched, *t.instance, std::string(PolicyName<P>()) + "_sse_m2"));
 }
-INSTANTIATE_EAGER_LAZY(TestSameStepEdge)
+INSTANTIATE_ALL(TestSameStepEdge)
 
 // ---------- 4j: Wide fan-out across many steps (6 children at S1..S6) -------
 
@@ -1150,7 +1150,7 @@ void TestWideFanOut() {
         BOOST_CHECK_EQUAL(ds.StepMaxComm(s), 0);
     }
 }
-INSTANTIATE_EAGER_LAZY(TestWideFanOut)
+INSTANTIATE_ALL(TestWideFanOut)
 
 // ---------- 4k: Multi-parent shared target proc -----------------------------
 
@@ -1185,7 +1185,7 @@ void TestMultiParentSharedTarget() {
     ds.UpdateDatastructureAfterMove(m2, 0, 1);
     BOOST_CHECK(ValidateCommDs<P>(ds, *t.klSched, *t.instance, std::string(PolicyName<P>()) + "_mpst_m2"));
 }
-INSTANTIATE_EAGER_LAZY(TestMultiParentSharedTarget)
+INSTANTIATE_ALL(TestMultiParentSharedTarget)
 
 // ---------- 4l: Zigzag moves (stress incremental state tracking) ------------
 
@@ -1225,7 +1225,7 @@ void TestZigzagMoves() {
     ds.UpdateDatastructureAfterMove(m3, 0, 0);
     BOOST_CHECK(ValidateCommDs<P>(ds, *t.klSched, *t.instance, std::string(PolicyName<P>()) + "_zz_m3"));
 }
-INSTANTIATE_EAGER_LAZY(TestZigzagMoves)
+INSTANTIATE_ALL(TestZigzagMoves)
 
 // ============================================================================
 // SUITE 5: Lazy / Buffered specific checks

@@ -571,12 +571,23 @@ struct BufferedCommCostPolicy {
                                             unsigned childProc,
                                             CommWeightT cost,
                                             DeltaTracker &dt) {
-        // Lazy: Send and Recv are both at min(child_steps) - 1.
+        // Buffered: Send at parentStep, Recv at min(child_steps) - 1.
 
         if (val.empty()) {
             return;
         }
 
+        // If this is the LAST child on this proc (val.size() == 1),
+        // removing it kills the send at parentStep entirely.
+        if (val.size() == 1 && val[0] == childStep) {
+            dt.Add(false, parentStep, parentProc, -cost);    // Remove Send
+            if (childStep > 0) {
+                dt.Add(true, childStep - 1, childProc, -cost);    // Remove Recv
+            }
+            return;
+        }
+
+        // Otherwise, send at parentStep stays. Only recv side may change.
         unsigned minS = val[0];
         for (unsigned s : val) {
             minS = std::min(minS, s);
@@ -591,24 +602,20 @@ struct BufferedCommCostPolicy {
             }
 
             if (count == 1) {
-                // Unique min being removed.
+                // Unique min being removed — recv shifts.
                 if (minS > 0) {
-                    dt.Add(true, minS - 1, childProc, -cost);      // Remove Recv
-                    dt.Add(false, minS - 1, parentProc, -cost);    // Remove Send
+                    dt.Add(true, minS - 1, childProc, -cost);    // Remove old Recv
                 }
 
-                if (val.size() > 1) {
-                    unsigned nextMin = std::numeric_limits<unsigned>::max();
-                    for (unsigned s : val) {
-                        if (s != minS) {
-                            nextMin = std::min(nextMin, s);
-                        }
+                unsigned nextMin = std::numeric_limits<unsigned>::max();
+                for (unsigned s : val) {
+                    if (s != minS) {
+                        nextMin = std::min(nextMin, s);
                     }
+                }
 
-                    if (nextMin != std::numeric_limits<unsigned>::max() && nextMin > 0) {
-                        dt.Add(true, nextMin - 1, childProc, cost);      // Add Recv at new min
-                        dt.Add(false, nextMin - 1, parentProc, cost);    // Add Send at new min
-                    }
+                if (nextMin != std::numeric_limits<unsigned>::max() && nextMin > 0) {
+                    dt.Add(true, nextMin - 1, childProc, cost);    // Add Recv at new min
                 }
             }
         }
@@ -622,29 +629,29 @@ struct BufferedCommCostPolicy {
                                          unsigned childProc,
                                          CommWeightT cost,
                                          DeltaTracker &dt) {
-        // Lazy: Send and Recv are both at min(child_steps) - 1.
+        // Buffered: Send at parentStep, Recv at min(child_steps) - 1.
 
         if (val.empty()) {
-            // First child.
+            // First child — add send at parentStep, recv at childStep-1.
+            dt.Add(false, parentStep, parentProc, cost);
             if (childStep > 0) {
                 dt.Add(true, childStep - 1, childProc, cost);
-                dt.Add(false, childStep - 1, parentProc, cost);
             }
         } else {
+            // Send at parentStep doesn't change (already paying).
+            // Only recv side may shift if childStep is new minimum.
             unsigned minS = val[0];
             for (unsigned s : val) {
                 minS = std::min(minS, s);
             }
 
             if (childStep < minS) {
-                // New global minimum.
+                // New global minimum — recv shifts.
                 if (minS > 0) {
-                    dt.Add(true, minS - 1, childProc, -cost);      // Remove old Recv
-                    dt.Add(false, minS - 1, parentProc, -cost);    // Remove old Send
+                    dt.Add(true, minS - 1, childProc, -cost);    // Remove old Recv
                 }
                 if (childStep > 0) {
-                    dt.Add(true, childStep - 1, childProc, cost);      // Add new Recv
-                    dt.Add(false, childStep - 1, parentProc, cost);    // Add new Send
+                    dt.Add(true, childStep - 1, childProc, cost);    // Add new Recv
                 }
             }
         }
