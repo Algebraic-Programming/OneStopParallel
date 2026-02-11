@@ -34,16 +34,16 @@ limitations under the License.
  * which can be stale when multiple (proc, send/recv) values at second_max
  * are also dirty and reduced at the same step.
  *
- * Because the current ComputeCommAffinity implementation places outgoing AND
- * incoming deltas using Eager semantics (at the sender's step), the
- * correctness verification is INSTANTIATE_EAGER_ONLY. Lazy and Buffered
- * receive compilation/smoke tests to confirm they don't crash and produce
- * reasonable self-consistency.
+ * All suites are instantiated under all three comm policies (Eager, Lazy,
+ * Buffered) via INSTANTIATE_ALL. The brute-force oracle uses policy-aware
+ * MaxCommDatastructure, so it computes correct expected values for each
+ * policy. If ComputeCommAffinity's delta placement does not match the
+ * policy's send/recv step attribution, the tests will fail.
  *
  * Structure:
- *   Suite 1 – ComputeCommAffinity brute-force verification (Eager only)
- *   Suite 2 – Staleness penalty/reward tests (Eager only)
- *   Suite 3 – Smoke & compilation under all three policies
+ *   Suite 1 – ComputeCommAffinity brute-force verification (all policies)
+ *   Suite 2 – Staleness penalty/reward tests (all policies)
+ *   Suite 3 – Smoke tests (all policies, redundant but kept)
  */
 
 #define BOOST_TEST_MODULE kl_max_bsp_comm_affinity
@@ -86,12 +86,6 @@ using KlTestT = KlImproverTest<Graph, MaxBspCostFnT<Policy>>;
     BOOST_AUTO_TEST_CASE(FuncName##_Eager) { FuncName<EagerCommCostPolicy>(); }       \
     BOOST_AUTO_TEST_CASE(FuncName##_Lazy) { FuncName<LazyCommCostPolicy>(); }         \
     BOOST_AUTO_TEST_CASE(FuncName##_Buffered) { FuncName<BufferedCommCostPolicy>(); }
-
-// The current ComputeCommAffinity places all deltas using Eager semantics
-// (send & recv at sender's step). Until policy-specific delta placement is
-// implemented, correctness verification only runs under Eager.
-#define INSTANTIATE_EAGER_ONLY(FuncName)                                        \
-    BOOST_AUTO_TEST_CASE(FuncName##_Eager) { FuncName<EagerCommCostPolicy>(); }
 
 // ============================================================================
 // Policy name helper (for diagnostic messages)
@@ -246,7 +240,7 @@ static bool VerifyAffinityBruteForce(KlTestT<Policy> &kl, unsigned node, const s
 }
 
 // ============================================================================
-// Suite 1: ComputeCommAffinity brute-force verification (Eager only)
+// Suite 1: ComputeCommAffinity brute-force verification (all policies)
 //
 // Exact brute-force comparison against fresh MaxComm recomputation for every
 // affinity table entry. Requires the CalculateStepCostChange bug fix.
@@ -279,7 +273,7 @@ void TestAffinityChild() {
 
     BOOST_CHECK(VerifyAffinityBruteForce<Policy>(kl, 1, "AffinityChild"));
 }
-INSTANTIATE_EAGER_ONLY(TestAffinityChild)
+INSTANTIATE_ALL(TestAffinityChild)
 
 // Simple edge v0→v1. Test affinity of the parent (v0).
 template <typename Policy>
@@ -305,7 +299,7 @@ void TestAffinityParent() {
 
     BOOST_CHECK(VerifyAffinityBruteForce<Policy>(kl, 0, "AffinityParent"));
 }
-INSTANTIATE_EAGER_ONLY(TestAffinityParent)
+INSTANTIATE_ALL(TestAffinityParent)
 
 // Chain: v0→v1→v2. Test affinity of the middle node (has both parents & children).
 template <typename Policy>
@@ -334,7 +328,7 @@ void TestAffinityMiddle() {
 
     BOOST_CHECK(VerifyAffinityBruteForce<Policy>(kl, 1, "AffinityMiddle"));
 }
-INSTANTIATE_EAGER_ONLY(TestAffinityMiddle)
+INSTANTIATE_ALL(TestAffinityMiddle)
 
 // Fan-out: v0→{v1, v2} on 3 procs. Test affinity of the parent.
 template <typename Policy>
@@ -363,7 +357,7 @@ void TestAffinityFanOutParent() {
 
     BOOST_CHECK(VerifyAffinityBruteForce<Policy>(kl, 0, "AffinityFanOutParent"));
 }
-INSTANTIATE_EAGER_ONLY(TestAffinityFanOutParent)
+INSTANTIATE_ALL(TestAffinityFanOutParent)
 
 // Fan-out: v0→{v1, v2} both on P1. Test affinity of one child (v2).
 // Moving v2 to P0 should NOT remove comm from v0 (v1 still on P1, lambda=1).
@@ -393,7 +387,7 @@ void TestAffinityFanOutChild() {
 
     BOOST_CHECK(VerifyAffinityBruteForce<Policy>(kl, 2, "AffinityFanOutChild"));
 }
-INSTANTIATE_EAGER_ONLY(TestAffinityFanOutChild)
+INSTANTIATE_ALL(TestAffinityFanOutChild)
 
 // Fan-in: {v0, v1}→v2 on 3 procs. Test affinity of the child.
 template <typename Policy>
@@ -422,7 +416,7 @@ void TestAffinityFanInChild() {
 
     BOOST_CHECK(VerifyAffinityBruteForce<Policy>(kl, 2, "AffinityFanInChild"));
 }
-INSTANTIATE_EAGER_ONLY(TestAffinityFanInChild)
+INSTANTIATE_ALL(TestAffinityFanInChild)
 
 // Diamond: v0→{v1, v2}→v3 on 3 procs. Test affinity for interior nodes.
 template <typename Policy>
@@ -455,7 +449,7 @@ void TestAffinityDiamond() {
     BOOST_CHECK(VerifyAffinityBruteForce<Policy>(kl, 1, "AffinityDiamond v1"));
     BOOST_CHECK(VerifyAffinityBruteForce<Policy>(kl, 2, "AffinityDiamond v2"));
 }
-INSTANTIATE_EAGER_ONLY(TestAffinityDiamond)
+INSTANTIATE_ALL(TestAffinityDiamond)
 
 // Butterfly: v0,v1→v2,v3 with all cross-edges. Test v2.
 template <typename Policy>
@@ -488,7 +482,7 @@ void TestAffinityButterfly() {
     BOOST_CHECK(VerifyAffinityBruteForce<Policy>(kl, 2, "AffinityButterfly v2"));
     BOOST_CHECK(VerifyAffinityBruteForce<Policy>(kl, 3, "AffinityButterfly v3"));
 }
-INSTANTIATE_EAGER_ONLY(TestAffinityButterfly)
+INSTANTIATE_ALL(TestAffinityButterfly)
 
 // Same proc, no comm: affinity should be zero for all same-step candidates.
 template <typename Policy>
@@ -516,7 +510,7 @@ void TestAffinitySameProcNoComm() {
     BOOST_CHECK(VerifyAffinityBruteForce<Policy>(kl, 0, "SameProcNoComm v0"));
     BOOST_CHECK(VerifyAffinityBruteForce<Policy>(kl, 1, "SameProcNoComm v1"));
 }
-INSTANTIATE_EAGER_ONLY(TestAffinitySameProcNoComm)
+INSTANTIATE_ALL(TestAffinitySameProcNoComm)
 
 // Wider graph: 6 nodes, 3 procs, 3 steps.
 template <typename Policy>
@@ -555,7 +549,7 @@ void TestAffinityWiderGraph() {
     BOOST_CHECK(VerifyAffinityBruteForce<Policy>(kl, 3, "WiderGraph v3"));
     BOOST_CHECK(VerifyAffinityBruteForce<Policy>(kl, 4, "WiderGraph v4"));
 }
-INSTANTIATE_EAGER_ONLY(TestAffinityWiderGraph)
+INSTANTIATE_ALL(TestAffinityWiderGraph)
 
 // g multiplier > 1: affinity should scale with CommunicationCosts.
 template <typename Policy>
@@ -581,7 +575,7 @@ void TestAffinityWithGMultiplier() {
 
     BOOST_CHECK(VerifyAffinityBruteForce<Policy>(kl, 1, "WithGMultiplier"));
 }
-INSTANTIATE_EAGER_ONLY(TestAffinityWithGMultiplier)
+INSTANTIATE_ALL(TestAffinityWithGMultiplier)
 
 // No edges: affinity should be zero everywhere.
 template <typename Policy>
@@ -607,7 +601,7 @@ void TestAffinityNoEdges() {
     BOOST_CHECK(VerifyAffinityBruteForce<Policy>(kl, 0, "NoEdges v0"));
     BOOST_CHECK(VerifyAffinityBruteForce<Policy>(kl, 1, "NoEdges v1"));
 }
-INSTANTIATE_EAGER_ONLY(TestAffinityNoEdges)
+INSTANTIATE_ALL(TestAffinityNoEdges)
 
 // 4-step chain with node at step 2 (full window coverage).
 template <typename Policy>
@@ -642,7 +636,7 @@ void TestAffinityFullWindow() {
     // Test v1 at step 1: window covers steps 0, 1, 2 (all 3 entries valid)
     BOOST_CHECK(VerifyAffinityBruteForce<Policy>(kl, 1, "FullWindow v1"));
 }
-INSTANTIATE_EAGER_ONLY(TestAffinityFullWindow)
+INSTANTIATE_ALL(TestAffinityFullWindow)
 
 BOOST_AUTO_TEST_SUITE_END()    // AffinityBruteForce
 
@@ -698,7 +692,7 @@ void TestStalenessZeroForSameProc() {
         BOOST_CHECK_SMALL(staleContrib, 1e-6);
     }
 }
-INSTANTIATE_EAGER_ONLY(TestStalenessZeroForSameProc)
+INSTANTIATE_ALL(TestStalenessZeroForSameProc)
 
 // Non-zero penalty/reward should produce non-zero staleness contribution
 // on cross-proc candidates.
@@ -740,7 +734,7 @@ void TestStalenessNonZeroCrossProc() {
     double staleContribP1_S0 = withStale[1][0] - noStale[1][0];
     BOOST_CHECK_NE(staleContribP1_S0, 0.0);
 }
-INSTANTIATE_EAGER_ONLY(TestStalenessNonZeroCrossProc)
+INSTANTIATE_ALL(TestStalenessNonZeroCrossProc)
 
 // Staleness contribution should scale linearly with penalty/reward magnitude.
 template <typename Policy>
@@ -784,7 +778,7 @@ void TestStalenessScalesWithMagnitude() {
         BOOST_CHECK_CLOSE(stale2 / stale1, 2.0, 1e-5);
     }
 }
-INSTANTIATE_EAGER_ONLY(TestStalenessScalesWithMagnitude)
+INSTANTIATE_ALL(TestStalenessScalesWithMagnitude)
 
 // Self-move (node stays at current position) should have zero TOTAL affinity
 // (both staleness and comm delta contribute zero).
@@ -819,17 +813,15 @@ void TestStalenessZeroAtSelfMove() {
     // Self-move: v1 at (P1, S1), window index = WS = 1.
     BOOST_CHECK_SMALL(aff[1][WS], 1e-6);
 }
-INSTANTIATE_EAGER_ONLY(TestStalenessZeroAtSelfMove)
+INSTANTIATE_ALL(TestStalenessZeroAtSelfMove)
 
 BOOST_AUTO_TEST_SUITE_END()    // StalenessTests
 
 // ============================================================================
-// Suite 3: Smoke & compilation under all three policies
+// Suite 3: Smoke tests (all three policies)
 //
-// These verify that ComputeCommAffinity compiles and executes without errors
-// under Lazy and Buffered policies. They check basic invariants (e.g. self-move
-// affinity is 0, same-proc moves have identical results) but do NOT verify
-// exact numerical correctness since the delta placement is Eager-specific.
+// Basic sanity checks. Now that Suite 1 runs brute-force under all policies,
+// these are redundant but kept as lightweight regression guards.
 // ============================================================================
 
 BOOST_AUTO_TEST_SUITE(PolicySmoke)
