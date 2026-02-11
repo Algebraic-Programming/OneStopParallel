@@ -396,7 +396,6 @@ struct KlMaxBspCommCostFunction {
                                         const FastDeltaTracker<CommWeightT> &delta_send,
                                         const FastDeltaTracker<CommWeightT> &delta_recv) {
         CommWeightT old_max = commDs_.StepMaxComm(step);
-        CommWeightT second_max = commDs_.StepSecondMaxComm(step);
         unsigned old_max_count = commDs_.StepMaxCommCount(step);
 
         CommWeightT new_global_max = 0;
@@ -440,7 +439,23 @@ struct KlMaxBspCommCostFunction {
         if (reduced_max_instances < old_max_count) {
             return 0;
         }
-        return std::max(new_global_max, second_max) - old_max;
+
+        // All old max-holders were reduced. The second_max from the unmodified
+        // state may be stale if dirty procs at second_max were also reduced
+        // (happens when a node has outgoing edges to multiple procs, producing
+        // 3+ dirty (proc,send/recv) pairs at the same step).
+        // Scan non-dirty values for the exact new max.
+        CommWeightT max_non_dirty = 0;
+        const unsigned num_procs = instance->NumberOfProcessors();
+        for (unsigned p = 0; p < num_procs; ++p) {
+            if (!delta_send.IsDirty(p)) {
+                max_non_dirty = std::max(max_non_dirty, commDs_.StepProcSend(step, p));
+            }
+            if (!delta_recv.IsDirty(p)) {
+                max_non_dirty = std::max(max_non_dirty, commDs_.StepProcReceive(step, p));
+            }
+        }
+        return std::max(new_global_max, max_non_dirty) - old_max;
     }
 
     template <typename thread_data_t>

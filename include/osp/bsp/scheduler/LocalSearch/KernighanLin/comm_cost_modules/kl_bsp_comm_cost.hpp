@@ -401,7 +401,6 @@ struct KlBspCommCostFunction {
                                         const FastDeltaTracker<CommWeightT> &deltaSend,
                                         const FastDeltaTracker<CommWeightT> &deltaRecv) {
         CommWeightT oldMax = commDs_.StepMaxComm(step);
-        CommWeightT secondMax = commDs_.StepSecondMaxComm(step);
         unsigned oldMaxCount = commDs_.StepMaxCommCount(step);
 
         CommWeightT newGlobalMax = 0;
@@ -445,7 +444,18 @@ struct KlBspCommCostFunction {
         if (reducedMaxInstances < oldMaxCount) {
             return 0;
         }
-        return std::max(newGlobalMax, secondMax) - oldMax;
+
+        CommWeightT maxNonDirty = 0;
+        const unsigned numProcs = instance_->NumberOfProcessors();
+        for (unsigned p = 0; p < numProcs; ++p) {
+            if (!deltaSend.IsDirty(p)) {
+                maxNonDirty = std::max(maxNonDirty, commDs_.StepProcSend(step, p));
+            }
+            if (!deltaRecv.IsDirty(p)) {
+                maxNonDirty = std::max(maxNonDirty, commDs_.StepProcReceive(step, p));
+            }
+        }
+        return std::max(newGlobalMax, maxNonDirty) - oldMax;
     }
 
     template <typename ThreadDataT>

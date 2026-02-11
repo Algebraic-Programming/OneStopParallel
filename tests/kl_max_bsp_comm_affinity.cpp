@@ -28,6 +28,12 @@ limitations under the License.
  * The brute-force helper computes MaxComm from scratch for each hypothetical
  * candidate placement and compares the delta with what the affinity predicted.
  *
+ * NOTE: These tests require the CalculateStepCostChange bug fix (stale
+ * second_max fallback). Without the fix, tests with ≥3 processors will fail
+ * because CalculateStepCostChange uses second_max from the unmodified state,
+ * which can be stale when multiple (proc, send/recv) values at second_max
+ * are also dirty and reduced at the same step.
+ *
  * Because the current ComputeCommAffinity implementation places outgoing AND
  * incoming deltas using Eager semantics (at the sender's step), the
  * correctness verification is INSTANTIATE_EAGER_ONLY. Lazy and Buffered
@@ -242,8 +248,8 @@ static bool VerifyAffinityBruteForce(KlTestT<Policy> &kl, unsigned node, const s
 // ============================================================================
 // Suite 1: ComputeCommAffinity brute-force verification (Eager only)
 //
-// These test precise numerical correctness of the affinity table by comparing
-// every entry against an independent brute-force computation.
+// Exact brute-force comparison against fresh MaxComm recomputation for every
+// affinity table entry. Requires the CalculateStepCostChange bug fix.
 // ============================================================================
 
 BOOST_AUTO_TEST_SUITE(AffinityBruteForce)
@@ -330,7 +336,7 @@ void TestAffinityMiddle() {
 }
 INSTANTIATE_EAGER_ONLY(TestAffinityMiddle)
 
-// Fan-out: v0→{v1, v2}. Test affinity of the parent.
+// Fan-out: v0→{v1, v2} on 3 procs. Test affinity of the parent.
 template <typename Policy>
 void TestAffinityFanOutParent() {
     Graph dag;
@@ -389,7 +395,7 @@ void TestAffinityFanOutChild() {
 }
 INSTANTIATE_EAGER_ONLY(TestAffinityFanOutChild)
 
-// Fan-in: {v0, v1}→v2. Test affinity of the child.
+// Fan-in: {v0, v1}→v2 on 3 procs. Test affinity of the child.
 template <typename Policy>
 void TestAffinityFanInChild() {
     Graph dag;
@@ -418,7 +424,7 @@ void TestAffinityFanInChild() {
 }
 INSTANTIATE_EAGER_ONLY(TestAffinityFanInChild)
 
-// Diamond: v0→{v1, v2}→v3. Test affinity for each interior node.
+// Diamond: v0→{v1, v2}→v3 on 3 procs. Test affinity for interior nodes.
 template <typename Policy>
 void TestAffinityDiamond() {
     Graph dag;
@@ -446,10 +452,7 @@ void TestAffinityDiamond() {
     KlTestT<Policy> kl;
     kl.SetupSchedule(schedule);
 
-    // Test v1 (has parent v0, child v3)
     BOOST_CHECK(VerifyAffinityBruteForce<Policy>(kl, 1, "AffinityDiamond v1"));
-
-    // Test v2 (has parent v0, child v3)
     BOOST_CHECK(VerifyAffinityBruteForce<Policy>(kl, 2, "AffinityDiamond v2"));
 }
 INSTANTIATE_EAGER_ONLY(TestAffinityDiamond)

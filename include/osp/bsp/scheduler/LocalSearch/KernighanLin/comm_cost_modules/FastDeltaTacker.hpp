@@ -71,6 +71,9 @@ struct FastDeltaTracker {
         return 0;
     }
 
+    /// Returns true if proc has a non-zero accumulated delta.
+    inline bool IsDirty(unsigned proc) const { return procDirtyIndex_[proc] != numProcs_; }
+
     inline void Clear() {
         for (unsigned p : dirtyProcs_) {
             denseVals_[p] = 0;
