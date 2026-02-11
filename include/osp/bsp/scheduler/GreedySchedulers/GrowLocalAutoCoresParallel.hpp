@@ -231,10 +231,13 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                         }
 
                         bool canScheduleSameProc = false;
-                        if ((schedule.AssignedProcessor(succ) / (p + 1U) == totalAttempts) & ((schedule.AssignedProcessor(succ) % (p + 1U)) != 0U)) {
-                            schedule.SetAssignedProcessor(succ, totalAttempts * (p + 1U) + p);
+                        const unsigned pp1 = p + 1U;
+                        const unsigned base = pp1 * totalAttempts;
+                        const unsigned remainder = schedule.AssignedProcessor(succ) - base;
+                        if ((remainder < pp1) & (remainder != 0U)) {
+                            schedule.SetAssignedProcessor(succ, base + p);
                         } else {
-                            schedule.SetAssignedProcessor(succ, totalAttempts * (p + 1U) + 0U);
+                            schedule.SetAssignedProcessor(succ, base + 0U);
                             canScheduleSameProc = true;
                         }
 
@@ -298,10 +301,13 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                             }
 
                             bool canScheduleSameProc = false;
-                            if ((schedule.AssignedProcessor(succ) / (p + 1U) == totalAttempts) & ((schedule.AssignedProcessor(succ) % (p + 1U)) != proc)) {
-                                schedule.SetAssignedProcessor(succ, totalAttempts * (p + 1U) + p);
+                            const unsigned pp1 = p + 1U;
+                            const unsigned base = pp1 * totalAttempts;
+                            const unsigned remainder = schedule.AssignedProcessor(succ) - base;
+                            if ((remainder < pp1) & (remainder != proc)) {
+                                schedule.SetAssignedProcessor(succ, base + p);
                             } else {
-                                schedule.SetAssignedProcessor(succ, totalAttempts * (p + 1U) + proc);
+                                schedule.SetAssignedProcessor(succ, base + proc);
                                 canScheduleSameProc = true;
                             }
 
