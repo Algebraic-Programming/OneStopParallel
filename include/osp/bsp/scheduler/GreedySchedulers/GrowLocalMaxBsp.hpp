@@ -148,7 +148,7 @@ ReturnStatus GrowLocalSSP<GraphT>::ComputeSchedule(MaxBspSchedule<GraphT> &sched
         const typename std::deque<VertexType>::difference_type lengthCurrentlyReady
             = std::distance(currentlyReady.begin(), currentlyReady.end());
         currentlyReady.insert(currentlyReady.end(), stepFutureReady.begin(), stepFutureReady.end());
-        std::inplace_merge(currentlyReady.begin(), std::next(currentlyReady.begin(), lengthCurrentlyReady), currentlyReady.end());
+        std::inplace_merge(currentlyReady.begin(), std::next(currentlyReady.begin(), lengthCurrentlyReady), currentlyReady.end(), std::less<>{});
 
         const typename std::deque<VertexType>::difference_type maxCurrentlyReadyUsage
             = std::max(static_cast<typename std::deque<VertexType>::difference_type>(
