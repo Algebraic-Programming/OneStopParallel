@@ -66,6 +66,8 @@ _add_test( kl_bsp_improver_test )
 
 _add_test( kl_bsp_affinity_test )
 
+_add_test( kl_max_bsp_affinity_test )
+
 _add_test( heaps )
 
 _add_test( kl_mem_constr )

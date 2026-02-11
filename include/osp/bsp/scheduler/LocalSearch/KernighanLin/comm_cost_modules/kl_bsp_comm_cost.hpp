@@ -22,71 +22,10 @@ limitations under the License.
 
 #include "../kl_active_schedule.hpp"
 #include "../kl_improver.hpp"
+#include "FastDeltaTacker.hpp"
 #include "max_comm_datastructure.hpp"
 
 namespace osp {
-
-// A lightweight helper to track deltas without hash maps or repeated allocations.
-// Uses a dense vector for O(1) lookups and a sparse list for fast iteration/clearing.
-template <typename CommWeightT>
-struct FastDeltaTracker {
-    std::vector<CommWeightT> denseVals_;      // Size: num_procs
-    std::vector<unsigned> dirtyProcs_;        // List of modified indices
-    std::vector<unsigned> procDirtyIndex_;    // Map proc -> index in dirtyProcs_ (num_procs if not dirty)
-    unsigned numProcs_ = 0;
-
-    void Initialize(unsigned nProcs) {
-        if (nProcs > numProcs_) {
-            numProcs_ = nProcs;
-            denseVals_.resize(numProcs_, 0);
-            dirtyProcs_.reserve(numProcs_);
-            procDirtyIndex_.resize(numProcs_, numProcs_);
-        }
-    }
-
-    inline void Add(unsigned proc, CommWeightT val) {
-        if (val == 0) {
-            return;
-        }
-
-        // If currently 0, it is becoming dirty
-        if (denseVals_[proc] == 0) {
-            procDirtyIndex_[proc] = static_cast<unsigned>(dirtyProcs_.size());
-            dirtyProcs_.push_back(proc);
-        }
-
-        denseVals_[proc] += val;
-
-        // If it returns to 0, remove it from dirty list (Swap and Pop for O(1))
-        if (denseVals_[proc] == 0) {
-            unsigned idx = procDirtyIndex_[proc];
-            unsigned lastProc = dirtyProcs_.back();
-
-            // Move last element to the hole
-            dirtyProcs_[idx] = lastProc;
-            procDirtyIndex_[lastProc] = idx;
-
-            // Remove last
-            dirtyProcs_.pop_back();
-            procDirtyIndex_[proc] = numProcs_;
-        }
-    }
-
-    inline CommWeightT Get(unsigned proc) const {
-        if (proc < denseVals_.size()) {
-            return denseVals_[proc];
-        }
-        return 0;
-    }
-
-    inline void Clear() {
-        for (unsigned p : dirtyProcs_) {
-            denseVals_[p] = 0;
-            procDirtyIndex_[p] = numProcs_;
-        }
-        dirtyProcs_.clear();
-    }
-};
 
 template <typename GraphT, typename CostT, typename MemoryConstraintT, unsigned windowSize = 1>
 struct KlBspCommCostFunction {

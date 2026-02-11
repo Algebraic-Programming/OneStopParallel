@@ -22,159 +22,96 @@ limitations under the License.
 
 #include "../kl_active_schedule.hpp"
 #include "../kl_improver.hpp"
+#include "FastDeltaTacker.hpp"
 #include "max_comm_datastructure.hpp"
 
 namespace osp {
 
-// A lightweight helper to track deltas without hash maps or repeated allocations.
-// Uses a dense vector for O(1) lookups and a sparse list for fast iteration/clearing.
-template <typename comm_weight_t>
-struct FastDeltaTracker {
-    std::vector<comm_weight_t> dense_vals;     // Size: num_procs
-    std::vector<unsigned> dirty_procs;         // List of modified indices
-    std::vector<unsigned> proc_dirty_index;    // Map proc -> index in dirty_procs (num_procs if not dirty)
-    unsigned num_procs = 0;
+template <typename GraphT, typename CostT, typename MemoryConstraintT, typename CommPolicy = EagerCommCostPolicy, unsigned WindowSize = 1>
+struct KlMaxBspCommCostFunction {
+    using VertexType = VertexIdxT<GraphT>;
+    using KlMove = KlMoveStruct<CostT, VertexType>;
+    using KlGainUpdateInfo = KlUpdateInfo<VertexType>;
+    using CommWeightT = VCommwT<GraphT>;
 
-    void initialize(unsigned n_procs) {
-        if (n_procs > num_procs) {
-            num_procs = n_procs;
-            dense_vals.resize(num_procs, 0);
-            dirty_procs.reserve(num_procs);
-            proc_dirty_index.resize(num_procs, num_procs);
-        }
+    constexpr static unsigned WindowRange = 2 * WindowSize + 1;
+    constexpr static bool isMaxCommCostFunction_ = true;
+
+    KlActiveSchedule<GraphT, CostT, MemoryConstraintT> *active_schedule;
+    CompatibleProcessorRange<GraphT> *proc_range;
+    const GraphT *graph;
+    const BspInstance<GraphT> *instance;
+
+    MaxCommDatastructure<GraphT, CostT, KlActiveSchedule<GraphT, CostT, MemoryConstraintT>, CommPolicy> commDs_;
+
+    inline CostT GetCommMultiplier() { return 1; }
+
+    inline CostT GetMaxCommWeight() { return commDs_.maxCommWeight_; }
+
+    inline CostT GetMaxCommWeightMultiplied() { return commDs_.maxCommWeight_; }
+
+    inline const std::string Name() const { return "max_bsp_comm"; }
+
+    inline bool IsCompatible(VertexType node, unsigned proc) { return active_schedule->GetInstance().IsCompatible(node, proc); }
+
+    inline unsigned StartIdx(const unsigned node_step, const unsigned start_step) {
+        return (node_step < WindowSize + start_step) ? WindowSize - (node_step - start_step) : 0U;
     }
 
-    inline void add(unsigned proc, comm_weight_t val) {
-        if (val == 0) {
-            return;
-        }
-
-        // If currently 0, it is becoming dirty
-        if (dense_vals[proc] == 0) {
-            proc_dirty_index[proc] = static_cast<unsigned>(dirty_procs.size());
-            dirty_procs.push_back(proc);
-        }
-
-        dense_vals[proc] += val;
-
-        // If it returns to 0, remove it from dirty list (Swap and Pop for O(1))
-        if (dense_vals[proc] == 0) {
-            unsigned idx = proc_dirty_index[proc];
-            unsigned last_proc = dirty_procs.back();
-
-            // Move last element to the hole
-            dirty_procs[idx] = last_proc;
-            proc_dirty_index[last_proc] = idx;
-
-            // Remove last
-            dirty_procs.pop_back();
-            proc_dirty_index[proc] = num_procs;
-        }
+    inline unsigned EndIdx(const unsigned node_step, const unsigned end_step) {
+        return (node_step + WindowSize <= end_step) ? WindowRange : WindowRange - (node_step + WindowSize - end_step);
     }
 
-    inline comm_weight_t get(unsigned proc) const {
-        if (proc < dense_vals.size()) {
-            return dense_vals[proc];
-        }
-        return 0;
-    }
-
-    inline void clear() {
-        for (unsigned p : dirty_procs) {
-            dense_vals[p] = 0;
-            proc_dirty_index[p] = num_procs;
-        }
-        dirty_procs.clear();
-    }
-};
-
-template <typename Graph_t, typename cost_t, typename MemoryConstraint_t, unsigned window_size = 1>
-struct kl_max_bsp_comm_cost_function {
-    using VertexType = vertex_idx_t<Graph_t>;
-    using kl_move = kl_move_struct<cost_t, VertexType>;
-    using kl_gain_update_info = kl_update_info<VertexType>;
-    using comm_weight_t = v_commw_t<Graph_t>;
-
-    constexpr static unsigned window_range = 2 * window_size + 1;
-    constexpr static bool is_max_comm_cost_function = true;
-
-    kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t> *active_schedule;
-    compatible_processor_range<Graph_t> *proc_range;
-    const Graph_t *graph;
-    const BspInstance<Graph_t> *instance;
-
-    max_comm_datastructure<Graph_t, cost_t, kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t>> comm_ds;
-
-    inline cost_t get_comm_multiplier() { return 1; }
-
-    inline cost_t get_max_comm_weight() { return comm_ds.max_comm_weight; }
-
-    inline cost_t get_max_comm_weight_multiplied() { return comm_ds.max_comm_weight; }
-
-    inline const std::string name() const { return "max_bsp_comm"; }
-
-    inline bool is_compatible(VertexType node, unsigned proc) { return active_schedule->getInstance().isCompatible(node, proc); }
-
-    inline unsigned start_idx(const unsigned node_step, const unsigned start_step) {
-        return (node_step < window_size + start_step) ? window_size - (node_step - start_step) : 0U;
-    }
-
-    inline unsigned end_idx(const unsigned node_step, const unsigned end_step) {
-        return (node_step + window_size <= end_step) ? window_range : window_range - (node_step + window_size - end_step);
-    }
-
-    void initialize(kl_active_schedule<Graph_t, cost_t, MemoryConstraint_t> &sched, compatible_processor_range<Graph_t> &p_range) {
+    void Initialize(KlActiveSchedule<GraphT, CostT, MemoryConstraintT> &sched, CompatibleProcessorRange<GraphT> &p_range) {
         active_schedule = &sched;
         proc_range = &p_range;
-        instance = &sched.getInstance();
-        graph = &instance->getComputationalDag();
+        instance = &sched.GetInstance();
+        graph = &instance->GetComputationalDag();
 
-        const unsigned num_steps = active_schedule->num_steps();
-        comm_ds.initialize(*active_schedule);
+        const unsigned num_steps = active_schedule->NumSteps();
+        commDs_.Initialize(*active_schedule);
     }
 
-    using pre_move_comm_data_t = pre_move_comm_data<comm_weight_t>;
+    using PreMoveCommDataT = PreMoveCommData<CommWeightT>;
 
-    inline pre_move_comm_data<comm_weight_t> get_pre_move_comm_data(const kl_move &move) {
-        return comm_ds.get_pre_move_comm_data(move);
-    }
+    inline PreMoveCommDataT GetPreMoveCommData(const KlMove &move) { return commDs_.GetPreMoveCommData(move); }
 
-    void compute_send_receive_datastructures() { comm_ds.compute_comm_datastructures(0U, active_schedule->num_steps() - 1U); }
+    void ComputeSendReceiveDatastructures() { commDs_.ComputeCommDatastructures(0U, active_schedule->NumSteps() - 1U); }
 
     template <bool compute_datastructures = true>
-    cost_t compute_schedule_cost() {
+    CostT ComputeScheduleCost() {
         if constexpr (compute_datastructures) {
-            compute_send_receive_datastructures();
+            ComputeSendReceiveDatastructures();
         }
 
-        cost_t total_cost = active_schedule->get_step_max_work(0);
-        for (unsigned step = 1U; step < active_schedule->num_steps(); step++) {
-            total_cost += std::max(active_schedule->get_step_max_work(step), comm_ds.step_max_comm(step - 1U))
-                          * instance->communicationCosts();
+        CostT total_cost = active_schedule->GetStepMaxWork(0);
+        for (unsigned step = 1U; step < active_schedule->NumSteps(); step++) {
+            total_cost += std::max(active_schedule->GetStepMaxWork(step), commDs_.StepMaxComm(step - 1U))
+                          * instance->CommunicationCosts();
         }
 
-        if (active_schedule->num_steps() > 1U) {
-            total_cost += static_cast<cost_t>(active_schedule->num_steps() - 1U) * instance->synchronisationCosts();
+        if (active_schedule->NumSteps() > 1U) {
+            total_cost += static_cast<CostT>(active_schedule->NumSteps() - 1U) * instance->SynchronisationCosts();
         }
 
         return total_cost;
     }
 
-    cost_t compute_schedule_cost_test() { return compute_schedule_cost<false>(); }
+    CostT ComputeScheduleCostTest() { return ComputeScheduleCost<false>(); }
 
-    void update_datastructure_after_move(const kl_move &move, const unsigned start_step, const unsigned end_step) {
-        comm_ds.update_datastructure_after_move(move, start_step, end_step);
+    void UpdateDatastructureAfterMove(const KlMove &move, const unsigned start_step, const unsigned end_step) {
+        commDs_.UpdateDatastructureAfterMove(move, start_step, end_step);
     }
 
     // Structure to hold thread-local scratchpads to avoid re-allocation.
     struct ScratchData {
-        std::vector<FastDeltaTracker<comm_weight_t>> send_deltas;    // Size: num_steps
-        std::vector<FastDeltaTracker<comm_weight_t>> recv_deltas;    // Size: num_steps
+        std::vector<FastDeltaTracker<CommWeightT>> send_deltas;    // Size: num_steps
+        std::vector<FastDeltaTracker<CommWeightT>> recv_deltas;    // Size: num_steps
 
         std::vector<unsigned> active_steps;    // List of steps touched in current operation
         std::vector<bool> step_is_active;      // Fast lookup for active steps
 
-        std::vector<std::pair<unsigned, comm_weight_t>> child_cost_buffer;
+        std::vector<std::pair<unsigned, CommWeightT>> child_cost_buffer;
 
         void init(unsigned n_steps, unsigned n_procs) {
             if (send_deltas.size() < n_steps) {
@@ -185,10 +122,10 @@ struct kl_max_bsp_comm_cost_function {
             }
 
             for (auto &tracker : send_deltas) {
-                tracker.initialize(n_procs);
+                tracker.Initialize(n_procs);
             }
             for (auto &tracker : recv_deltas) {
-                tracker.initialize(n_procs);
+                tracker.Initialize(n_procs);
             }
 
             child_cost_buffer.reserve(n_procs);
@@ -196,8 +133,8 @@ struct kl_max_bsp_comm_cost_function {
 
         void clear_all() {
             for (unsigned step : active_steps) {
-                send_deltas[step].clear();
-                recv_deltas[step].clear();
+                send_deltas[step].Clear();
+                recv_deltas[step].Clear();
                 step_is_active[step] = false;
             }
             active_steps.clear();
@@ -213,97 +150,97 @@ struct kl_max_bsp_comm_cost_function {
     };
 
     template <typename affinity_table_t>
-    void compute_comm_affinity(VertexType node,
-                               affinity_table_t &affinity_table_node,
-                               const cost_t &penalty,
-                               const cost_t &reward,
-                               const unsigned start_step,
-                               const unsigned end_step) {
+    void ComputeCommAffinity(VertexType node,
+                             affinity_table_t &affinity_table_node,
+                             const CostT &penalty,
+                             const CostT &reward,
+                             const unsigned start_step,
+                             const unsigned end_step) {
         // Use static thread_local scratchpad to avoid allocation in hot loop
         static thread_local ScratchData scratch;
-        scratch.init(active_schedule->num_steps(), instance->numberOfProcessors());
+        scratch.init(active_schedule->NumSteps(), instance->NumberOfProcessors());
         scratch.clear_all();
 
-        const unsigned node_step = active_schedule->assigned_superstep(node);
-        const unsigned node_proc = active_schedule->assigned_processor(node);
-        const unsigned window_bound = end_idx(node_step, end_step);
-        const unsigned node_start_idx = start_idx(node_step, start_step);
+        const unsigned node_step = active_schedule->AssignedSuperstep(node);
+        const unsigned node_proc = active_schedule->AssignedProcessor(node);
+        const unsigned window_bound = EndIdx(node_step, end_step);
+        const unsigned node_start_idx = StartIdx(node_step, start_step);
         const unsigned staleness = active_schedule->GetStaleness();
 
-        for (const auto &target : instance->getComputationalDag().children(node)) {
-            const unsigned target_step = active_schedule->assigned_superstep(target);
-            const unsigned target_proc = active_schedule->assigned_processor(target);
+        for (const auto &target : instance->GetComputationalDag().Children(node)) {
+            const unsigned target_step = active_schedule->AssignedSuperstep(target);
+            const unsigned target_proc = active_schedule->AssignedProcessor(target);
 
             if (target_step < node_step + (target_proc != node_proc ? staleness : 0)) {
                 const unsigned diff = node_step - target_step;
-                const unsigned bound = window_size > diff ? window_size - diff : 0;
+                const unsigned bound = WindowSize > diff ? WindowSize - diff : 0;
                 unsigned idx = node_start_idx;
                 for (; idx < bound; idx++) {
-                    for (const unsigned p : proc_range->compatible_processors_vertex(node)) {
+                    for (const unsigned p : proc_range->CompatibleProcessorsVertex(node)) {
                         affinity_table_node[p][idx] -= reward;
                     }
                 }
-                if (window_size >= diff && is_compatible(node, target_proc)) {
+                if (WindowSize >= diff && IsCompatible(node, target_proc)) {
                     affinity_table_node[target_proc][idx] -= reward;
                 }
             } else {
                 const unsigned diff = target_step - node_step;
-                unsigned idx = window_size + diff;
-                if (idx < window_bound && is_compatible(node, target_proc)) {
+                unsigned idx = WindowSize + diff;
+                if (idx < window_bound && IsCompatible(node, target_proc)) {
                     affinity_table_node[target_proc][idx] -= penalty;
                 }
                 for (; idx < window_bound; idx++) {
-                    for (const unsigned p : proc_range->compatible_processors_vertex(node)) {
+                    for (const unsigned p : proc_range->CompatibleProcessorsVertex(node)) {
                         affinity_table_node[p][idx] += penalty;
                     }
                 }
             }
         }
 
-        for (const auto &source : instance->getComputationalDag().parents(node)) {
-            const unsigned source_step = active_schedule->assigned_superstep(source);
-            const unsigned source_proc = active_schedule->assigned_processor(source);
+        for (const auto &source : instance->GetComputationalDag().Parents(node)) {
+            const unsigned source_step = active_schedule->AssignedSuperstep(source);
+            const unsigned source_proc = active_schedule->AssignedProcessor(source);
 
-            if (source_step < node_step + (source_proc == node_proc)) {
+            if (source_step + (source_proc != node_proc ? staleness : 0) <= node_step) {
                 const unsigned diff = node_step - source_step;
-                const unsigned bound = window_size >= diff ? window_size - diff + 1 : 0;
+                const unsigned bound = WindowSize >= diff ? WindowSize - diff + 1 : 0;
                 unsigned idx = node_start_idx;
                 for (; idx < bound; idx++) {
-                    for (const unsigned p : proc_range->compatible_processors_vertex(node)) {
+                    for (const unsigned p : proc_range->CompatibleProcessorsVertex(node)) {
                         affinity_table_node[p][idx] += penalty;
                     }
                 }
-                if (idx - 1 < bound && is_compatible(node, source_proc)) {
+                if (idx - 1 < bound && IsCompatible(node, source_proc)) {
                     affinity_table_node[source_proc][idx - 1] -= penalty;
                 }
             } else {
                 const unsigned diff = source_step - node_step;
-                unsigned idx = std::min(window_size + diff, window_bound);
-                if (idx < window_bound && is_compatible(node, source_proc)) {
+                unsigned idx = std::min(WindowSize + diff, window_bound);
+                if (idx < window_bound && IsCompatible(node, source_proc)) {
                     affinity_table_node[source_proc][idx] -= reward;
                 }
                 idx++;
                 for (; idx < window_bound; idx++) {
-                    for (const unsigned p : proc_range->compatible_processors_vertex(node)) {
+                    for (const unsigned p : proc_range->CompatibleProcessorsVertex(node)) {
                         affinity_table_node[p][idx] -= reward;
                     }
                 }
             }
         }
 
-        const comm_weight_t comm_w_node = graph->vertex_comm_weight(node);
-        const auto &current_vec_schedule = active_schedule->getVectorSchedule();
+        const CommWeightT comm_w_node = graph->VertexCommWeight(node);
+        const auto &current_vec_schedule = active_schedule->GetVectorSchedule();
 
-        auto add_delta = [&](bool is_recv, unsigned step, unsigned proc, comm_weight_t val) {
+        auto AddDelta = [&](bool is_recv, unsigned step, unsigned proc, CommWeightT val) {
             if (val == 0) {
                 return;
             }
-            if (step < active_schedule->num_steps()) {
+            if (step < active_schedule->NumSteps()) {
                 scratch.mark_active(step);
                 if (is_recv) {
-                    scratch.recv_deltas[step].add(proc, val);
+                    scratch.recv_deltas[step].Add(proc, val);
                 } else {
-                    scratch.send_deltas[step].add(proc, val);
+                    scratch.send_deltas[step].Add(proc, val);
                 }
             }
         };
@@ -312,34 +249,35 @@ struct kl_max_bsp_comm_cost_function {
 
         // Outgoing (Children)
         // Child stops receiving from node_proc at node_step
-        auto node_lambda_entries = comm_ds.node_lambda_map.iterate_proc_entries(node);
-        comm_weight_t total_send_cost_removed = 0;
+        auto node_lambda_entries = commDs_.nodeLambdaMap_.IterateProcEntries(node);
+        CommWeightT total_send_cost_removed = 0;
 
-        for (const auto [proc, count] : node_lambda_entries) {
+        for (const auto [proc, val] : node_lambda_entries) {
             if (proc != node_proc) {
-                const comm_weight_t cost = comm_w_node * instance->sendCosts(node_proc, proc);
+                const CommWeightT cost = comm_w_node * instance->SendCosts(node_proc, proc);
                 if (cost > 0) {
-                    add_delta(true, node_step, proc, -cost);
+                    AddDelta(true, node_step, proc, -cost);
                     total_send_cost_removed += cost;
                 }
             }
         }
         if (total_send_cost_removed > 0) {
-            add_delta(false, node_step, node_proc, -total_send_cost_removed);
+            AddDelta(false, node_step, node_proc, -total_send_cost_removed);
         }
 
         // Incoming (Parents)
-        for (const auto &u : graph->parents(node)) {
-            const unsigned u_proc = active_schedule->assigned_processor(u);
-            const unsigned u_step = current_vec_schedule.assignedSuperstep(u);
-            const comm_weight_t comm_w_u = graph->vertex_comm_weight(u);
+        for (const auto &u : graph->Parents(node)) {
+            const unsigned u_proc = active_schedule->AssignedProcessor(u);
+            const unsigned u_step = current_vec_schedule.AssignedSuperstep(u);
+            const CommWeightT comm_w_u = graph->VertexCommWeight(u);
 
             if (u_proc != node_proc) {
-                if (comm_ds.node_lambda_map.get_proc_entry(u, node_proc) == 1) {
-                    const comm_weight_t cost = comm_w_u * instance->sendCosts(u_proc, node_proc);
+                const auto &lambda_val = commDs_.nodeLambdaMap_.GetProcEntry(u, node_proc);
+                if (CommPolicy::IsSingleEntry(lambda_val)) {
+                    const CommWeightT cost = comm_w_u * instance->SendCosts(u_proc, node_proc);
                     if (cost > 0) {
-                        add_delta(true, u_step, node_proc, -cost);
-                        add_delta(false, u_step, u_proc, -cost);
+                        AddDelta(true, u_step, node_proc, -cost);
+                        AddDelta(false, u_step, u_proc, -cost);
                     }
                 }
             }
@@ -347,35 +285,31 @@ struct kl_max_bsp_comm_cost_function {
 
         // 2. Add Node to Target (Iterate candidates)
 
-        for (const unsigned p_to : proc_range->compatible_processors_vertex(node)) {
+        for (const unsigned p_to : proc_range->CompatibleProcessorsVertex(node)) {
             // --- Part A: Incoming Edges (Parents -> p_to) ---
             // These updates are specific to p_to but independent of s_to.
             // We apply them, run the s_to loop, then revert them.
 
-            for (const auto &u : graph->parents(node)) {
-                const unsigned u_proc = active_schedule->assigned_processor(u);
-                const unsigned u_step = current_vec_schedule.assignedSuperstep(u);
-                const comm_weight_t comm_w_u = graph->vertex_comm_weight(u);
+            for (const auto &u : graph->Parents(node)) {
+                const unsigned u_proc = active_schedule->AssignedProcessor(u);
+                const unsigned u_step = current_vec_schedule.AssignedSuperstep(u);
+                const CommWeightT comm_w_u = graph->VertexCommWeight(u);
 
                 if (u_proc != p_to) {
-                    bool already_sending_to_p_to = false;
-                    unsigned count_on_p_to = comm_ds.node_lambda_map.get_proc_entry(u, p_to);
-
+                    const auto &val_on_p_to = commDs_.nodeLambdaMap_.GetProcEntry(u, p_to);
+                    // After removing node from node_proc, does u still send to p_to?
+                    bool already_sending_to_p_to;
                     if (p_to == node_proc) {
-                        if (count_on_p_to > 0) {
-                            count_on_p_to--;
-                        }
-                    }
-
-                    if (count_on_p_to > 0) {
-                        already_sending_to_p_to = true;
+                        already_sending_to_p_to = CommPolicy::HasEntry(val_on_p_to) && !CommPolicy::IsSingleEntry(val_on_p_to);
+                    } else {
+                        already_sending_to_p_to = CommPolicy::HasEntry(val_on_p_to);
                     }
 
                     if (!already_sending_to_p_to) {
-                        const comm_weight_t cost = comm_w_u * instance->sendCosts(u_proc, p_to);
+                        const CommWeightT cost = comm_w_u * instance->SendCosts(u_proc, p_to);
                         if (cost > 0) {
-                            add_delta(true, u_step, p_to, cost);
-                            add_delta(false, u_step, u_proc, cost);
+                            AddDelta(true, u_step, p_to, cost);
+                            AddDelta(false, u_step, u_proc, cost);
                         }
                     }
                 }
@@ -384,11 +318,11 @@ struct kl_max_bsp_comm_cost_function {
             // --- Part B: Outgoing Edges (Node -> Children) ---
             // These depend on which processors children are on.
             scratch.child_cost_buffer.clear();
-            comm_weight_t total_send_cost_added = 0;
+            CommWeightT total_send_cost_added = 0;
 
-            for (const auto [v_proc, count] : comm_ds.node_lambda_map.iterate_proc_entries(node)) {
+            for (const auto [v_proc, val] : commDs_.nodeLambdaMap_.IterateProcEntries(node)) {
                 if (v_proc != p_to) {
-                    const comm_weight_t cost = comm_w_node * instance->sendCosts(p_to, v_proc);
+                    const CommWeightT cost = comm_w_node * instance->SendCosts(p_to, v_proc);
                     if (cost > 0) {
                         scratch.child_cost_buffer.push_back({v_proc, cost});
                         total_send_cost_added += cost;
@@ -398,62 +332,59 @@ struct kl_max_bsp_comm_cost_function {
 
             // Iterate Window (s_to)
             for (unsigned s_to_idx = node_start_idx; s_to_idx < window_bound; ++s_to_idx) {
-                unsigned s_to = node_step + s_to_idx - window_size;
+                unsigned s_to = node_step + s_to_idx - WindowSize;
 
                 // Apply Outgoing Deltas for this specific step s_to
                 for (const auto &[v_proc, cost] : scratch.child_cost_buffer) {
-                    add_delta(true, s_to, v_proc, cost);
+                    AddDelta(true, s_to, v_proc, cost);
                 }
 
                 if (total_send_cost_added > 0) {
-                    add_delta(false, s_to, p_to, total_send_cost_added);
+                    AddDelta(false, s_to, p_to, total_send_cost_added);
                 }
 
-                cost_t total_change = 0;
+                CostT total_change = 0;
 
                 // Only check steps that are active (modified in Phase 1, Part A, or Part B)
                 for (unsigned step : scratch.active_steps) {
                     // Check if dirty_procs is empty implies no change for this step
                     // FastDeltaTracker ensures dirty_procs is empty if all deltas summed to 0
-                    if (!scratch.send_deltas[step].dirty_procs.empty() || !scratch.recv_deltas[step].dirty_procs.empty()) {
-                        total_change += calculate_step_cost_change(step, scratch.send_deltas[step], scratch.recv_deltas[step]);
+                    if (!scratch.send_deltas[step].dirtyProcs_.empty() || !scratch.recv_deltas[step].dirtyProcs_.empty()) {
+                        total_change += CalculateStepCostChange(step, scratch.send_deltas[step], scratch.recv_deltas[step]);
                     }
                 }
 
-                affinity_table_node[p_to][s_to_idx] += total_change * instance->communicationCosts();
+                affinity_table_node[p_to][s_to_idx] += total_change * instance->CommunicationCosts();
 
                 // Revert Outgoing Deltas for s_to (Inverse of Apply)
                 for (const auto &[v_proc, cost] : scratch.child_cost_buffer) {
-                    add_delta(true, s_to, v_proc, -cost);
+                    AddDelta(true, s_to, v_proc, -cost);
                 }
                 if (total_send_cost_added > 0) {
-                    add_delta(false, s_to, p_to, -total_send_cost_added);
+                    AddDelta(false, s_to, p_to, -total_send_cost_added);
                 }
             }
 
             // Revert Incoming Deltas (Inverse of Part A)
-            for (const auto &u : graph->parents(node)) {
-                const unsigned u_proc = active_schedule->assigned_processor(u);
-                const unsigned u_step = current_vec_schedule.assignedSuperstep(u);
-                const comm_weight_t comm_w_u = graph->vertex_comm_weight(u);
+            for (const auto &u : graph->Parents(node)) {
+                const unsigned u_proc = active_schedule->AssignedProcessor(u);
+                const unsigned u_step = current_vec_schedule.AssignedSuperstep(u);
+                const CommWeightT comm_w_u = graph->VertexCommWeight(u);
 
                 if (u_proc != p_to) {
-                    bool already_sending_to_p_to = false;
-                    unsigned count_on_p_to = comm_ds.node_lambda_map.get_proc_entry(u, p_to);
+                    const auto &val_on_p_to = commDs_.nodeLambdaMap_.GetProcEntry(u, p_to);
+                    bool already_sending_to_p_to;
                     if (p_to == node_proc) {
-                        if (count_on_p_to > 0) {
-                            count_on_p_to--;
-                        }
-                    }
-                    if (count_on_p_to > 0) {
-                        already_sending_to_p_to = true;
+                        already_sending_to_p_to = CommPolicy::HasEntry(val_on_p_to) && !CommPolicy::IsSingleEntry(val_on_p_to);
+                    } else {
+                        already_sending_to_p_to = CommPolicy::HasEntry(val_on_p_to);
                     }
 
                     if (!already_sending_to_p_to) {
-                        const comm_weight_t cost = comm_w_u * instance->sendCosts(u_proc, p_to);
+                        const CommWeightT cost = comm_w_u * instance->SendCosts(u_proc, p_to);
                         if (cost > 0) {
-                            add_delta(true, u_step, p_to, -cost);
-                            add_delta(false, u_step, u_proc, -cost);
+                            AddDelta(true, u_step, p_to, -cost);
+                            AddDelta(false, u_step, u_proc, -cost);
                         }
                     }
                 }
@@ -461,23 +392,23 @@ struct kl_max_bsp_comm_cost_function {
         }
     }
 
-    comm_weight_t calculate_step_cost_change(unsigned step,
-                                             const FastDeltaTracker<comm_weight_t> &delta_send,
-                                             const FastDeltaTracker<comm_weight_t> &delta_recv) {
-        comm_weight_t old_max = comm_ds.step_max_comm(step);
-        comm_weight_t second_max = comm_ds.step_second_max_comm(step);
-        unsigned old_max_count = comm_ds.step_max_comm_count(step);
+    CommWeightT CalculateStepCostChange(unsigned step,
+                                        const FastDeltaTracker<CommWeightT> &delta_send,
+                                        const FastDeltaTracker<CommWeightT> &delta_recv) {
+        CommWeightT old_max = commDs_.StepMaxComm(step);
+        CommWeightT second_max = commDs_.StepSecondMaxComm(step);
+        unsigned old_max_count = commDs_.StepMaxCommCount(step);
 
-        comm_weight_t new_global_max = 0;
+        CommWeightT new_global_max = 0;
         unsigned reduced_max_instances = 0;
 
         // 1. Check modified sends (Iterate sparse dirty list)
-        for (unsigned proc : delta_send.dirty_procs) {
-            comm_weight_t delta = delta_send.get(proc);
+        for (unsigned proc : delta_send.dirtyProcs_) {
+            CommWeightT delta = delta_send.Get(proc);
             // delta cannot be 0 here due to FastDeltaTracker invariant
 
-            comm_weight_t current_val = comm_ds.step_proc_send(step, proc);
-            comm_weight_t new_val = current_val + delta;
+            CommWeightT current_val = commDs_.StepProcSend(step, proc);
+            CommWeightT new_val = current_val + delta;
 
             if (new_val > new_global_max) {
                 new_global_max = new_val;
@@ -488,11 +419,11 @@ struct kl_max_bsp_comm_cost_function {
         }
 
         // 2. Check modified receives (Iterate sparse dirty list)
-        for (unsigned proc : delta_recv.dirty_procs) {
-            comm_weight_t delta = delta_recv.get(proc);
+        for (unsigned proc : delta_recv.dirtyProcs_) {
+            CommWeightT delta = delta_recv.Get(proc);
 
-            comm_weight_t current_val = comm_ds.step_proc_receive(step, proc);
-            comm_weight_t new_val = current_val + delta;
+            CommWeightT current_val = commDs_.StepProcReceive(step, proc);
+            CommWeightT new_val = current_val + delta;
 
             if (new_val > new_global_max) {
                 new_global_max = new_val;
@@ -513,176 +444,176 @@ struct kl_max_bsp_comm_cost_function {
     }
 
     template <typename thread_data_t>
-    void update_node_comm_affinity(const kl_move &move,
-                                   thread_data_t &thread_data,
-                                   const cost_t &penalty,
-                                   const cost_t &reward,
-                                   std::map<VertexType, kl_gain_update_info> &,
-                                   std::vector<VertexType> &new_nodes) {
-        const unsigned start_step = thread_data.start_step;
-        const unsigned end_step = thread_data.end_step;
+    void UpdateNodeCommAffinity(const KlMove &move,
+                                thread_data_t &thread_data,
+                                const CostT &penalty,
+                                const CostT &reward,
+                                std::map<VertexType, KlGainUpdateInfo> &,
+                                std::vector<VertexType> &new_nodes) {
+        // const unsigned start_step = thread_data.start_step;
+        // const unsigned end_step = thread_data.end_step;
 
-        for (const auto &target : instance->getComputationalDag().children(move.node)) {
-            const unsigned target_step = active_schedule->assigned_superstep(target);
-            if (target_step < start_step || target_step > end_step) {
-                continue;
-            }
+        // for (const auto &target : instance->getComputationalDag().children(move.node)) {
+        //     const unsigned target_step = active_schedule->assigned_superstep(target);
+        //     if (target_step < start_step || target_step > end_step) {
+        //         continue;
+        //     }
 
-            if (thread_data.lock_manager.is_locked(target)) {
-                continue;
-            }
+        //     if (thread_data.lock_manager.is_locked(target)) {
+        //         continue;
+        //     }
 
-            if (not thread_data.affinity_table.is_selected(target)) {
-                new_nodes.push_back(target);
-                continue;
-            }
+        //     if (not thread_data.affinity_table.is_selected(target)) {
+        //         new_nodes.push_back(target);
+        //         continue;
+        //     }
 
-            const unsigned target_proc = active_schedule->assigned_processor(target);
-            const unsigned target_start_idx = start_idx(target_step, start_step);
-            auto &affinity_table = thread_data.affinity_table.at(target);
+        //     const unsigned target_proc = active_schedule->assigned_processor(target);
+        //     const unsigned target_start_idx = start_idx(target_step, start_step);
+        //     auto &affinity_table = thread_data.affinity_table.at(target);
 
-            if (move.from_step < target_step + (move.from_proc == target_proc)) {
-                const unsigned diff = target_step - move.from_step;
-                const unsigned bound = window_size >= diff ? window_size - diff + 1 : 0;
-                unsigned idx = target_start_idx;
-                for (; idx < bound; idx++) {
-                    for (const unsigned p : proc_range->compatible_processors_vertex(target)) {
-                        affinity_table[p][idx] -= penalty;
-                    }
-                }
+        //     if (move.from_step < target_step + (move.from_proc == target_proc)) {
+        //         const unsigned diff = target_step - move.from_step;
+        //         const unsigned bound = WindowSize >= diff ? WindowSize - diff + 1 : 0;
+        //         unsigned idx = target_start_idx;
+        //         for (; idx < bound; idx++) {
+        //             for (const unsigned p : proc_range->compatible_processors_vertex(target)) {
+        //                 affinity_table[p][idx] -= penalty;
+        //             }
+        //         }
 
-                if (idx - 1 < bound && is_compatible(target, move.from_proc)) {
-                    affinity_table[move.from_proc][idx - 1] += penalty;
-                }
+        //         if (idx - 1 < bound && is_compatible(target, move.from_proc)) {
+        //             affinity_table[move.from_proc][idx - 1] += penalty;
+        //         }
 
-            } else {
-                const unsigned diff = move.from_step - target_step;
-                const unsigned window_bound = end_idx(target_step, end_step);
-                unsigned idx = std::min(window_size + diff, window_bound);
+        //     } else {
+        //         const unsigned diff = move.from_step - target_step;
+        //         const unsigned window_bound = end_idx(target_step, end_step);
+        //         unsigned idx = std::min(WindowSize + diff, window_bound);
 
-                if (idx < window_bound && is_compatible(target, move.from_proc)) {
-                    affinity_table[move.from_proc][idx] += reward;
-                }
+        //         if (idx < window_bound && is_compatible(target, move.from_proc)) {
+        //             affinity_table[move.from_proc][idx] += reward;
+        //         }
 
-                idx++;
+        //         idx++;
 
-                for (; idx < window_bound; idx++) {
-                    for (const unsigned p : proc_range->compatible_processors_vertex(target)) {
-                        affinity_table[p][idx] += reward;
-                    }
-                }
-            }
+        //         for (; idx < window_bound; idx++) {
+        //             for (const unsigned p : proc_range->compatible_processors_vertex(target)) {
+        //                 affinity_table[p][idx] += reward;
+        //             }
+        //         }
+        //     }
 
-            if (move.to_step < target_step + (move.to_proc == target_proc)) {
-                unsigned idx = target_start_idx;
-                const unsigned diff = target_step - move.to_step;
-                const unsigned bound = window_size >= diff ? window_size - diff + 1 : 0;
-                for (; idx < bound; idx++) {
-                    for (const unsigned p : proc_range->compatible_processors_vertex(target)) {
-                        affinity_table[p][idx] += penalty;
-                    }
-                }
+        //     if (move.to_step < target_step + (move.to_proc == target_proc)) {
+        //         unsigned idx = target_start_idx;
+        //         const unsigned diff = target_step - move.to_step;
+        //         const unsigned bound = WindowSize >= diff ? WindowSize - diff + 1 : 0;
+        //         for (; idx < bound; idx++) {
+        //             for (const unsigned p : proc_range->compatible_processors_vertex(target)) {
+        //                 affinity_table[p][idx] += penalty;
+        //             }
+        //         }
 
-                if (idx - 1 < bound && is_compatible(target, move.to_proc)) {
-                    affinity_table[move.to_proc][idx - 1] -= penalty;
-                }
+        //         if (idx - 1 < bound && is_compatible(target, move.to_proc)) {
+        //             affinity_table[move.to_proc][idx - 1] -= penalty;
+        //         }
 
-            } else {
-                const unsigned diff = move.to_step - target_step;
-                const unsigned window_bound = end_idx(target_step, end_step);
-                unsigned idx = std::min(window_size + diff, window_bound);
+        //     } else {
+        //         const unsigned diff = move.to_step - target_step;
+        //         const unsigned window_bound = end_idx(target_step, end_step);
+        //         unsigned idx = std::min(WindowSize + diff, window_bound);
 
-                if (idx < window_bound && is_compatible(target, move.to_proc)) {
-                    affinity_table[move.to_proc][idx] -= reward;
-                }
+        //         if (idx < window_bound && is_compatible(target, move.to_proc)) {
+        //             affinity_table[move.to_proc][idx] -= reward;
+        //         }
 
-                idx++;
+        //         idx++;
 
-                for (; idx < window_bound; idx++) {
-                    for (const unsigned p : proc_range->compatible_processors_vertex(target)) {
-                        affinity_table[p][idx] -= reward;
-                    }
-                }
-            }
-        }
+        //         for (; idx < window_bound; idx++) {
+        //             for (const unsigned p : proc_range->compatible_processors_vertex(target)) {
+        //                 affinity_table[p][idx] -= reward;
+        //             }
+        //         }
+        //     }
+        // }
 
-        for (const auto &source : instance->getComputationalDag().parents(move.node)) {
-            const unsigned source_step = active_schedule->assigned_superstep(source);
-            if (source_step < start_step || source_step > end_step) {
-                continue;
-            }
+        // for (const auto &source : instance->getComputationalDag().parents(move.node)) {
+        //     const unsigned source_step = active_schedule->assigned_superstep(source);
+        //     if (source_step < start_step || source_step > end_step) {
+        //         continue;
+        //     }
 
-            if (thread_data.lock_manager.is_locked(source)) {
-                continue;
-            }
+        //     if (thread_data.lock_manager.is_locked(source)) {
+        //         continue;
+        //     }
 
-            if (not thread_data.affinity_table.is_selected(source)) {
-                new_nodes.push_back(source);
-                continue;
-            }
+        //     if (not thread_data.affinity_table.is_selected(source)) {
+        //         new_nodes.push_back(source);
+        //         continue;
+        //     }
 
-            const unsigned source_proc = active_schedule->assigned_processor(source);
-            const unsigned source_start_idx = start_idx(source_step, start_step);
-            const unsigned window_bound = end_idx(source_step, end_step);
-            auto &affinity_table_source = thread_data.affinity_table.at(source);
+        //     const unsigned source_proc = active_schedule->assigned_processor(source);
+        //     const unsigned source_start_idx = start_idx(source_step, start_step);
+        //     const unsigned window_bound = end_idx(source_step, end_step);
+        //     auto &affinity_table_source = thread_data.affinity_table.at(source);
 
-            if (move.from_step < source_step + (move.from_proc != source_proc)) {
-                const unsigned diff = source_step - move.from_step;
-                const unsigned bound = window_size > diff ? window_size - diff : 0;
-                unsigned idx = source_start_idx;
-                for (; idx < bound; idx++) {
-                    for (const unsigned p : proc_range->compatible_processors_vertex(source)) {
-                        affinity_table_source[p][idx] += reward;
-                    }
-                }
+        //     if (move.from_step < source_step + (move.from_proc != source_proc)) {
+        //         const unsigned diff = source_step - move.from_step;
+        //         const unsigned bound = WindowSize > diff ? WindowSize - diff : 0;
+        //         unsigned idx = source_start_idx;
+        //         for (; idx < bound; idx++) {
+        //             for (const unsigned p : proc_range->compatible_processors_vertex(source)) {
+        //                 affinity_table_source[p][idx] += reward;
+        //             }
+        //         }
 
-                if (window_size >= diff && is_compatible(source, move.from_proc)) {
-                    affinity_table_source[move.from_proc][idx] += reward;
-                }
+        //         if (WindowSize >= diff && is_compatible(source, move.from_proc)) {
+        //             affinity_table_source[move.from_proc][idx] += reward;
+        //         }
 
-            } else {
-                const unsigned diff = move.from_step - source_step;
-                unsigned idx = window_size + diff;
+        //     } else {
+        //         const unsigned diff = move.from_step - source_step;
+        //         unsigned idx = WindowSize + diff;
 
-                if (idx < window_bound && is_compatible(source, move.from_proc)) {
-                    affinity_table_source[move.from_proc][idx] += penalty;
-                }
+        //         if (idx < window_bound && is_compatible(source, move.from_proc)) {
+        //             affinity_table_source[move.from_proc][idx] += penalty;
+        //         }
 
-                for (; idx < window_bound; idx++) {
-                    for (const unsigned p : proc_range->compatible_processors_vertex(source)) {
-                        affinity_table_source[p][idx] -= penalty;
-                    }
-                }
-            }
+        //         for (; idx < window_bound; idx++) {
+        //             for (const unsigned p : proc_range->compatible_processors_vertex(source)) {
+        //                 affinity_table_source[p][idx] -= penalty;
+        //             }
+        //         }
+        //     }
 
-            if (move.to_step < source_step + (move.to_proc != source_proc)) {
-                const unsigned diff = source_step - move.to_step;
-                const unsigned bound = window_size > diff ? window_size - diff : 0;
-                unsigned idx = source_start_idx;
-                for (; idx < bound; idx++) {
-                    for (const unsigned p : proc_range->compatible_processors_vertex(source)) {
-                        affinity_table_source[p][idx] -= reward;
-                    }
-                }
+        //     if (move.to_step < source_step + (move.to_proc != source_proc)) {
+        //         const unsigned diff = source_step - move.to_step;
+        //         const unsigned bound = WindowSize > diff ? WindowSize - diff : 0;
+        //         unsigned idx = source_start_idx;
+        //         for (; idx < bound; idx++) {
+        //             for (const unsigned p : proc_range->compatible_processors_vertex(source)) {
+        //                 affinity_table_source[p][idx] -= reward;
+        //             }
+        //         }
 
-                if (window_size >= diff && is_compatible(source, move.to_proc)) {
-                    affinity_table_source[move.to_proc][idx] -= reward;
-                }
+        //         if (WindowSize >= diff && is_compatible(source, move.to_proc)) {
+        //             affinity_table_source[move.to_proc][idx] -= reward;
+        //         }
 
-            } else {
-                const unsigned diff = move.to_step - source_step;
-                unsigned idx = window_size + diff;
+        //     } else {
+        //         const unsigned diff = move.to_step - source_step;
+        //         unsigned idx = WindowSize + diff;
 
-                if (idx < window_bound && is_compatible(source, move.to_proc)) {
-                    affinity_table_source[move.to_proc][idx] -= penalty;
-                }
-                for (; idx < window_bound; idx++) {
-                    for (const unsigned p : proc_range->compatible_processors_vertex(source)) {
-                        affinity_table_source[p][idx] += penalty;
-                    }
-                }
-            }
-        }
+        //         if (idx < window_bound && is_compatible(source, move.to_proc)) {
+        //             affinity_table_source[move.to_proc][idx] -= penalty;
+        //         }
+        //         for (; idx < window_bound; idx++) {
+        //             for (const unsigned p : proc_range->compatible_processors_vertex(source)) {
+        //                 affinity_table_source[p][idx] += penalty;
+        //             }
+        //         }
+        //     }
+        // }
     }
 };
 
