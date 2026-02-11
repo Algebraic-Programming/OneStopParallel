@@ -388,14 +388,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                                 }
                             }
 
-                            VertexType succIndex;
-                            if constexpr (hasVerticesInTopOrderV<GraphT>) {
-                                succIndex = succ - startNode;
-                            } else {
-                                succIndex = posInTopOrder[succ] - startNode;
-                            }
-
-                            ++predec[succIndex];
+                            schedule.SetAssignedProcessor(succ, UINT_MAX);
                         }
                     }
                 }
@@ -419,7 +412,14 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                                 }
                             }
 
-                            schedule.SetAssignedProcessor(succ, UINT_MAX);
+                            VertexType succIndex;
+                            if constexpr (hasVerticesInTopOrderV<GraphT>) {
+                                succIndex = succ - startNode;
+                            } else {
+                                succIndex = posInTopOrder[succ] - startNode;
+                            }
+
+                            ++predec[succIndex];
                         }
                     }
                 }
