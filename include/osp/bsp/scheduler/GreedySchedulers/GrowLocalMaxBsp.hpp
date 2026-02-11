@@ -79,10 +79,7 @@ typename std::deque<VertexIdxT<GraphT>>::difference_type GrowLocalSSP<GraphT>::m
 
 template <typename GraphT>
 ReturnStatus GrowLocalSSP<GraphT>::ComputeSchedule(BspSchedule<GraphT> &schedule) {
-    MaxBspSchedule<GraphT> tmpSched(schedule.GetInstance());
-    ReturnStatus status = ComputeSchedule(tmpSched);
-    schedule = tmpSched;
-    return status;
+    return MaxBspScheduler<GraphT>::ComputeSchedule(schedule);
 }
 
 template <typename GraphT>
