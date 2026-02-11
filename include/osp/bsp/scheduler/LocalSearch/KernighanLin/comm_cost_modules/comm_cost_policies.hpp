@@ -27,32 +27,28 @@ namespace osp {
 struct EagerCommCostPolicy {
     using ValueType = unsigned;
 
-    template <typename DS, typename CommWeightT, typename MarkStepFn>
+    template <typename DS, typename CommWeightT>
     static inline void AttributeCommunication(DS &ds,
                                               const CommWeightT &cost,
                                               const unsigned uStep,
                                               const unsigned uProc,
                                               const unsigned vProc,
                                               const unsigned vStep,
-                                              const ValueType &val,
-                                              MarkStepFn &&markStep) {
+                                              const ValueType &val) {
         ds.StepProcReceive(uStep, vProc) += cost;
         ds.StepProcSend(uStep, uProc) += cost;
-        markStep(uStep);
     }
 
-    template <typename DS, typename CommWeightT, typename MarkStepFn>
+    template <typename DS, typename CommWeightT>
     static inline void UnattributeCommunication(DS &ds,
                                                 const CommWeightT &cost,
                                                 const unsigned uStep,
                                                 const unsigned uProc,
                                                 const unsigned vProc,
                                                 const unsigned vStep,
-                                                const ValueType &val,
-                                                MarkStepFn &&markStep) {
+                                                const ValueType &val) {
         ds.StepProcReceive(uStep, vProc) -= cost;
         ds.StepProcSend(uStep, uProc) -= cost;
-        markStep(uStep);
     }
 
     /// Remove outgoing communication when a parent node moves (val unchanged).
@@ -142,15 +138,14 @@ struct EagerCommCostPolicy {
 struct LazyCommCostPolicy {
     using ValueType = std::vector<unsigned>;
 
-    template <typename DS, typename CommWeightT, typename MarkStepFn>
+    template <typename DS, typename CommWeightT>
     static inline void AttributeCommunication(DS &ds,
                                               const CommWeightT &cost,
                                               const unsigned uStep,
                                               const unsigned uProc,
                                               const unsigned vProc,
                                               const unsigned vStep,
-                                              const ValueType &val,
-                                              MarkStepFn &&markStep) {
+                                              const ValueType &val) {
         // val contains v_step (already added).
         // Check if v_step is the new minimum.
         unsigned minStep = std::numeric_limits<unsigned>::max();
@@ -169,26 +164,23 @@ struct LazyCommCostPolicy {
                 if (prevMin != std::numeric_limits<unsigned>::max() && prevMin > 0) {
                     ds.StepProcReceive(prevMin - 1, vProc) -= cost;
                     ds.StepProcSend(prevMin - 1, uProc) -= cost;
-                    markStep(prevMin - 1);
                 }
                 if (vStep > 0) {
                     ds.StepProcReceive(vStep - 1, vProc) += cost;
                     ds.StepProcSend(vStep - 1, uProc) += cost;
-                    markStep(vStep - 1);
                 }
             }
         }
     }
 
-    template <typename DS, typename CommWeightT, typename MarkStepFn>
+    template <typename DS, typename CommWeightT>
     static inline void UnattributeCommunication(DS &ds,
                                                 const CommWeightT &cost,
                                                 const unsigned uStep,
                                                 const unsigned uProc,
                                                 const unsigned vProc,
                                                 const unsigned vStep,
-                                                const ValueType &val,
-                                                MarkStepFn &&markStep) {
+                                                const ValueType &val) {
         // val is state AFTER removal.
 
         if (val.empty()) {
@@ -196,7 +188,6 @@ struct LazyCommCostPolicy {
             if (vStep > 0) {
                 ds.StepProcReceive(vStep - 1, vProc) -= cost;
                 ds.StepProcSend(vStep - 1, uProc) -= cost;
-                markStep(vStep - 1);
             }
         } else {
             // Check if v_step was the unique minimum.
@@ -210,12 +201,10 @@ struct LazyCommCostPolicy {
                 if (vStep > 0) {
                     ds.StepProcReceive(vStep - 1, vProc) -= cost;
                     ds.StepProcSend(vStep - 1, uProc) -= cost;
-                    markStep(vStep - 1);
                 }
                 if (newMin > 0) {
                     ds.StepProcReceive(newMin - 1, vProc) += cost;
                     ds.StepProcSend(newMin - 1, uProc) += cost;
-                    markStep(newMin - 1);
                 }
             }
         }
@@ -399,15 +388,14 @@ struct LazyCommCostPolicy {
 struct BufferedCommCostPolicy {
     using ValueType = std::vector<unsigned>;
 
-    template <typename DS, typename CommWeightT, typename MarkStepFn>
+    template <typename DS, typename CommWeightT>
     static inline void AttributeCommunication(DS &ds,
                                               const CommWeightT &cost,
                                               const unsigned uStep,
                                               const unsigned uProc,
                                               const unsigned vProc,
                                               const unsigned vStep,
-                                              const ValueType &val,
-                                              MarkStepFn &&markStep) {
+                                              const ValueType &val) {
         // Buffered: Send at u_step, Receive at v_step - 1.
 
         unsigned minStep = std::numeric_limits<unsigned>::max();
@@ -424,11 +412,9 @@ struct BufferedCommCostPolicy {
             if (vStep < prevMin) {
                 if (prevMin != std::numeric_limits<unsigned>::max() && prevMin > 0) {
                     ds.StepProcReceive(prevMin - 1, vProc) -= cost;
-                    markStep(prevMin - 1);
                 }
                 if (vStep > 0) {
                     ds.StepProcReceive(vStep - 1, vProc) += cost;
-                    markStep(vStep - 1);
                 }
             }
         }
@@ -437,28 +423,24 @@ struct BufferedCommCostPolicy {
         // If this is the FIRST child on this proc, add send cost.
         if (val.size() == 1) {
             ds.StepProcSend(uStep, uProc) += cost;
-            markStep(uStep);
         }
     }
 
-    template <typename DS, typename CommWeightT, typename MarkStepFn>
+    template <typename DS, typename CommWeightT>
     static inline void UnattributeCommunication(DS &ds,
                                                 const CommWeightT &cost,
                                                 const unsigned uStep,
                                                 const unsigned uProc,
                                                 const unsigned vProc,
                                                 const unsigned vStep,
-                                                const ValueType &val,
-                                                MarkStepFn &&markStep) {
+                                                const ValueType &val) {
         // val is state AFTER removal.
 
         if (val.empty()) {
             // Removed last child.
             ds.StepProcSend(uStep, uProc) -= cost;    // Send side
-            markStep(uStep);
             if (vStep > 0) {
                 ds.StepProcReceive(vStep - 1, vProc) -= cost;    // Recv side
-                markStep(vStep - 1);
             }
         } else {
             // Check if v_step was unique minimum for Recv side.
@@ -470,11 +452,9 @@ struct BufferedCommCostPolicy {
             if (vStep < newMin) {
                 if (vStep > 0) {
                     ds.StepProcReceive(vStep - 1, vProc) -= cost;
-                    markStep(vStep - 1);
                 }
                 if (newMin > 0) {
                     ds.StepProcReceive(newMin - 1, vProc) += cost;
-                    markStep(newMin - 1);
                 }
             }
             // Send side remains (val not empty).
@@ -572,22 +552,13 @@ struct BufferedCommCostPolicy {
                                             CommWeightT cost,
                                             DeltaTracker &dt) {
         // Buffered: Send at parentStep, Recv at min(child_steps) - 1.
+        // Removing a child only affects recv step (shifts min) and possibly
+        // removes send entirely (if last child on this proc).
 
         if (val.empty()) {
             return;
         }
 
-        // If this is the LAST child on this proc (val.size() == 1),
-        // removing it kills the send at parentStep entirely.
-        if (val.size() == 1 && val[0] == childStep) {
-            dt.Add(false, parentStep, parentProc, -cost);    // Remove Send
-            if (childStep > 0) {
-                dt.Add(true, childStep - 1, childProc, -cost);    // Remove Recv
-            }
-            return;
-        }
-
-        // Otherwise, send at parentStep stays. Only recv side may change.
         unsigned minS = val[0];
         for (unsigned s : val) {
             minS = std::min(minS, s);
@@ -602,20 +573,27 @@ struct BufferedCommCostPolicy {
             }
 
             if (count == 1) {
-                // Unique min being removed — recv shifts.
+                // Unique min being removed.
+                // Recv: remove from old min step.
                 if (minS > 0) {
-                    dt.Add(true, minS - 1, childProc, -cost);    // Remove old Recv
+                    dt.Add(true, minS - 1, childProc, -cost);
                 }
 
-                unsigned nextMin = std::numeric_limits<unsigned>::max();
-                for (unsigned s : val) {
-                    if (s != minS) {
-                        nextMin = std::min(nextMin, s);
+                if (val.size() == 1) {
+                    // Last child on this proc: also remove send.
+                    dt.Add(false, parentStep, parentProc, -cost);
+                } else {
+                    // Not last: recv shifts to nextMin. Send stays at parentStep (no delta).
+                    unsigned nextMin = std::numeric_limits<unsigned>::max();
+                    for (unsigned s : val) {
+                        if (s != minS) {
+                            nextMin = std::min(nextMin, s);
+                        }
                     }
-                }
 
-                if (nextMin != std::numeric_limits<unsigned>::max() && nextMin > 0) {
-                    dt.Add(true, nextMin - 1, childProc, cost);    // Add Recv at new min
+                    if (nextMin != std::numeric_limits<unsigned>::max() && nextMin > 0) {
+                        dt.Add(true, nextMin - 1, childProc, cost);
+                    }
                 }
             }
         }
@@ -632,26 +610,24 @@ struct BufferedCommCostPolicy {
         // Buffered: Send at parentStep, Recv at min(child_steps) - 1.
 
         if (val.empty()) {
-            // First child — add send at parentStep, recv at childStep-1.
+            // First child on this proc: add send at parentStep, recv at childStep - 1.
             dt.Add(false, parentStep, parentProc, cost);
             if (childStep > 0) {
                 dt.Add(true, childStep - 1, childProc, cost);
             }
         } else {
-            // Send at parentStep doesn't change (already paying).
-            // Only recv side may shift if childStep is new minimum.
             unsigned minS = val[0];
             for (unsigned s : val) {
                 minS = std::min(minS, s);
             }
 
             if (childStep < minS) {
-                // New global minimum — recv shifts.
+                // New global minimum: recv shifts. Send stays at parentStep (no delta).
                 if (minS > 0) {
-                    dt.Add(true, minS - 1, childProc, -cost);    // Remove old Recv
+                    dt.Add(true, minS - 1, childProc, -cost);
                 }
                 if (childStep > 0) {
-                    dt.Add(true, childStep - 1, childProc, cost);    // Add new Recv
+                    dt.Add(true, childStep - 1, childProc, cost);
                 }
             }
         }
