@@ -365,12 +365,6 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                 // undo proc assingments and predec increases in any case
                 for (unsigned proc = 0; proc < p; ++proc) {
                     for (const VertexType &node : newAssignments[proc]) {
-                        schedule.SetAssignedProcessor(node, UINT_MAX);
-                    }
-                }
-
-                for (unsigned proc = 0; proc < p; ++proc) {
-                    for (const VertexType &node : newAssignments[proc]) {
                         for (const VertexType &succ : graph.Children(node)) {
                             if constexpr (hasVerticesInTopOrderV<GraphT>) {
                                 if constexpr (hasChildrenInVertexOrderV<GraphT>) {
