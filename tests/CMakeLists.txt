@@ -66,6 +66,8 @@ _add_test( kl_bsp_comm_affinities )
 
 _add_test( kl_bsp_improver_test )
 
+_add_test( kl_bsp_max_improver_test )
+
 _add_test( kl_bsp_affinity_test )
 
 _add_test( kl_max_bsp_affinity_test )
