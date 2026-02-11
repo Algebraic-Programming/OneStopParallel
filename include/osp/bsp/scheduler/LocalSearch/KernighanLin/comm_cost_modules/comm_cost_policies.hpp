@@ -100,6 +100,19 @@ struct EagerCommCostPolicy {
 
     static inline bool IsSingleEntry(const ValueType &val) { return val == 1; }
 
+    // For outgoing comm (parent→children on proc), where is send/recv attributed?
+    // Eager: both at parent step.
+    static constexpr bool outgoing_send_at_parent_step = true;
+    static constexpr bool outgoing_recv_at_parent_step = true;
+
+    static inline int OutgoingSendStep(unsigned parentStep, const ValueType &val) {
+        return val > 0 ? static_cast<int>(parentStep) : -1;
+    }
+
+    static inline int OutgoingRecvStep(unsigned parentStep, const ValueType &val) {
+        return val > 0 ? static_cast<int>(parentStep) : -1;
+    }
+
     template <typename DeltaTracker, typename CommWeightT>
     static inline void CalculateDeltaRemove(const ValueType &val,
                                             unsigned childStep,
@@ -301,6 +314,24 @@ struct LazyCommCostPolicy {
     static inline bool HasEntry(const ValueType &val) { return !val.empty(); }
 
     static inline bool IsSingleEntry(const ValueType &val) { return val.size() == 1; }
+
+    // For outgoing comm (parent→children on proc), where is send/recv attributed?
+    // Lazy: both at min(child_steps) - 1.
+    static constexpr bool outgoing_send_at_parent_step = false;
+    static constexpr bool outgoing_recv_at_parent_step = false;
+
+    static inline int OutgoingSendStep(unsigned /*parentStep*/, const ValueType &val) {
+        if (val.empty()) {
+            return -1;
+        }
+        unsigned minS = std::numeric_limits<unsigned>::max();
+        for (unsigned s : val) {
+            minS = std::min(minS, s);
+        }
+        return minS > 0 ? static_cast<int>(minS - 1) : -1;
+    }
+
+    static inline int OutgoingRecvStep(unsigned parentStep, const ValueType &val) { return OutgoingSendStep(parentStep, val); }
 
     template <typename DeltaTracker, typename CommWeightT>
     static inline void CalculateDeltaRemove(const ValueType &val,
@@ -562,6 +593,26 @@ struct BufferedCommCostPolicy {
     static inline bool HasEntry(const ValueType &val) { return !val.empty(); }
 
     static inline bool IsSingleEntry(const ValueType &val) { return val.size() == 1; }
+
+    // For outgoing comm (parent→children on proc), where is send/recv attributed?
+    // Buffered: send at parent step, recv at min(child_steps) - 1.
+    static constexpr bool outgoing_send_at_parent_step = true;
+    static constexpr bool outgoing_recv_at_parent_step = false;
+
+    static inline int OutgoingSendStep(unsigned parentStep, const ValueType &val) {
+        return !val.empty() ? static_cast<int>(parentStep) : -1;
+    }
+
+    static inline int OutgoingRecvStep(unsigned /*parentStep*/, const ValueType &val) {
+        if (val.empty()) {
+            return -1;
+        }
+        unsigned minS = std::numeric_limits<unsigned>::max();
+        for (unsigned s : val) {
+            minS = std::min(minS, s);
+        }
+        return minS > 0 ? static_cast<int>(minS - 1) : -1;
+    }
 
     template <typename DeltaTracker, typename CommWeightT>
     static inline void CalculateDeltaRemove(const ValueType &val,

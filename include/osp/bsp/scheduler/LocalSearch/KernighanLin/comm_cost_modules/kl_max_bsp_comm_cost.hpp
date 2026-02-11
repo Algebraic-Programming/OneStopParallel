@@ -18,7 +18,9 @@ limitations under the License.
 
 #pragma once
 
+#include <algorithm>
 #include <array>
+#include <vector>
 
 #include "../kl_active_schedule.hpp"
 #include "../kl_improver.hpp"
@@ -245,27 +247,50 @@ struct KlMaxBspCommCostFunction {
             }
         };
 
-        // 1. Remove Node from Current State (Phase 1 - Invariant for all candidates)
+        // DeltaTracker adapter for CalculateDeltaRemove/CalculateDeltaAdd
+        struct DeltaAdapterT {
+            decltype(AddDelta) &fn;
 
-        // Outgoing (Children)
-        // Child stops receiving from node_proc at node_step
+            void Add(bool is_recv, unsigned step, unsigned proc, CommWeightT v) { fn(is_recv, step, proc, v); }
+        };
+
+        DeltaAdapterT deltaAdapter{AddDelta};
+
+        // Negating adapter for reverting CalculateDeltaAdd
+        struct NegDeltaAdapterT {
+            decltype(AddDelta) &fn;
+
+            void Add(bool is_recv, unsigned step, unsigned proc, CommWeightT v) { fn(is_recv, step, proc, -v); }
+        };
+
+        NegDeltaAdapterT negDeltaAdapter{AddDelta};
+
+        // ========== Phase 1: Remove Node from Current State ==========
+        // (Invariant for all candidates)
+
+        // Phase 1 Outgoing: node stops sending to children
+        // Use policy-aware step attribution.
         auto node_lambda_entries = commDs_.nodeLambdaMap_.IterateProcEntries(node);
-        CommWeightT total_send_cost_removed = 0;
 
         for (const auto [proc, val] : node_lambda_entries) {
-            if (proc != node_proc) {
+            if (proc != node_proc && CommPolicy::HasEntry(val)) {
                 const CommWeightT cost = comm_w_node * instance->SendCosts(node_proc, proc);
                 if (cost > 0) {
-                    AddDelta(true, node_step, proc, -cost);
-                    total_send_cost_removed += cost;
+                    int recvStep = CommPolicy::OutgoingRecvStep(node_step, val);
+                    int sendStep = CommPolicy::OutgoingSendStep(node_step, val);
+                    if (recvStep >= 0) {
+                        AddDelta(true, static_cast<unsigned>(recvStep), proc, -cost);
+                    }
+                    if (sendStep >= 0) {
+                        AddDelta(false, static_cast<unsigned>(sendStep), node_proc, -cost);
+                    }
                 }
             }
         }
-        if (total_send_cost_removed > 0) {
-            AddDelta(false, node_step, node_proc, -total_send_cost_removed);
-        }
 
-        // Incoming (Parents)
+        // Phase 1 Incoming: parents stop sending to node on node_proc
+        // Use CalculateDeltaRemove which handles both last-child-removal
+        // and min-shift (relevant for Lazy/Buffered).
         for (const auto &u : graph->Parents(node)) {
             const unsigned u_proc = active_schedule->AssignedProcessor(u);
             const unsigned u_step = current_vec_schedule.AssignedSuperstep(u);
@@ -273,82 +298,133 @@ struct KlMaxBspCommCostFunction {
 
             if (u_proc != node_proc) {
                 const auto &lambda_val = commDs_.nodeLambdaMap_.GetProcEntry(u, node_proc);
-                if (CommPolicy::IsSingleEntry(lambda_val)) {
+                if (CommPolicy::HasEntry(lambda_val)) {
                     const CommWeightT cost = comm_w_u * instance->SendCosts(u_proc, node_proc);
                     if (cost > 0) {
-                        AddDelta(true, u_step, node_proc, -cost);
-                        AddDelta(false, u_step, u_proc, -cost);
+                        CommPolicy::CalculateDeltaRemove(lambda_val, node_step, u_step, u_proc, node_proc, cost, deltaAdapter);
                     }
                 }
             }
         }
 
-        // 2. Add Node to Target (Iterate candidates)
+        // ========== Phase 2: Add Node to Each Candidate ==========
+
+        // Helper: compute effective val after conceptually removing one instance of node_step.
+        // Used for Phase 2A when p_to == node_proc.
+        auto ComputeEffectiveVal = [&](const typename CommPolicy::ValueType &val) -> typename CommPolicy::ValueType {
+            if constexpr (std::is_same_v<typename CommPolicy::ValueType, unsigned>) {
+                // Eager: val is count; decrement
+                return val > 0 ? val - 1 : 0;
+            } else {
+                // Lazy/Buffered: val is vector; remove one instance of node_step
+                auto result = val;
+                auto it = std::find(result.begin(), result.end(), node_step);
+                if (it != result.end()) {
+                    result.erase(it);
+                }
+                return result;
+            }
+        };
+
+        // Per-parent precomputed data for Phase 2A incoming additions
+        struct ParentAddInfo {
+            unsigned u_proc;
+            unsigned u_step;
+            CommWeightT cost;
+            typename CommPolicy::ValueType effective_val;
+        };
+
+        static thread_local std::vector<ParentAddInfo> parent_add_infos;
+
+        // Per-dest-proc precomputed data for Phase 2B outgoing
+        struct OutgoingInfo {
+            unsigned v_proc;
+            CommWeightT cost;
+            int recv_step;    // precomputed, used when !outgoing_recv_at_parent_step
+            int send_step;    // precomputed, used when !outgoing_send_at_parent_step
+        };
+
+        static thread_local std::vector<OutgoingInfo> outgoing_infos;
 
         for (const unsigned p_to : proc_range->CompatibleProcessorsVertex(node)) {
-            // --- Part A: Incoming Edges (Parents -> p_to) ---
-            // These updates are specific to p_to but independent of s_to.
-            // We apply them, run the s_to loop, then revert them.
-
+            // --- Precompute Phase 2A: parent effective vals ---
+            parent_add_infos.clear();
             for (const auto &u : graph->Parents(node)) {
                 const unsigned u_proc = active_schedule->AssignedProcessor(u);
+                if (u_proc == p_to) {
+                    continue;    // same proc → no comm
+                }
+
                 const unsigned u_step = current_vec_schedule.AssignedSuperstep(u);
                 const CommWeightT comm_w_u = graph->VertexCommWeight(u);
-
-                if (u_proc != p_to) {
-                    const auto &val_on_p_to = commDs_.nodeLambdaMap_.GetProcEntry(u, p_to);
-                    // After removing node from node_proc, does u still send to p_to?
-                    bool already_sending_to_p_to;
-                    if (p_to == node_proc) {
-                        already_sending_to_p_to = CommPolicy::HasEntry(val_on_p_to) && !CommPolicy::IsSingleEntry(val_on_p_to);
-                    } else {
-                        already_sending_to_p_to = CommPolicy::HasEntry(val_on_p_to);
-                    }
-
-                    if (!already_sending_to_p_to) {
-                        const CommWeightT cost = comm_w_u * instance->SendCosts(u_proc, p_to);
-                        if (cost > 0) {
-                            AddDelta(true, u_step, p_to, cost);
-                            AddDelta(false, u_step, u_proc, cost);
-                        }
-                    }
+                const CommWeightT cost = comm_w_u * instance->SendCosts(u_proc, p_to);
+                if (cost <= 0) {
+                    continue;
                 }
+
+                const auto &val_on_p_to = commDs_.nodeLambdaMap_.GetProcEntry(u, p_to);
+                typename CommPolicy::ValueType effective_val;
+                if (p_to == node_proc) {
+                    // After Phase 1 removal of node from node_proc
+                    effective_val = ComputeEffectiveVal(val_on_p_to);
+                } else {
+                    effective_val = val_on_p_to;
+                }
+                parent_add_infos.push_back({u_proc, u_step, cost, std::move(effective_val)});
             }
 
-            // --- Part B: Outgoing Edges (Node -> Children) ---
-            // These depend on which processors children are on.
-            scratch.child_cost_buffer.clear();
-            CommWeightT total_send_cost_added = 0;
-
+            // --- Precompute Phase 2B: outgoing (node→children) ---
+            outgoing_infos.clear();
             for (const auto [v_proc, val] : commDs_.nodeLambdaMap_.IterateProcEntries(node)) {
-                if (v_proc != p_to) {
+                if (v_proc != p_to && CommPolicy::HasEntry(val)) {
                     const CommWeightT cost = comm_w_node * instance->SendCosts(p_to, v_proc);
                     if (cost > 0) {
-                        scratch.child_cost_buffer.push_back({v_proc, cost});
-                        total_send_cost_added += cost;
+                        int recvStep = -1;
+                        int sendStep = -1;
+                        if constexpr (!CommPolicy::outgoing_recv_at_parent_step) {
+                            recvStep = CommPolicy::OutgoingRecvStep(0, val);
+                        }
+                        if constexpr (!CommPolicy::outgoing_send_at_parent_step) {
+                            sendStep = CommPolicy::OutgoingSendStep(0, val);
+                        }
+                        outgoing_infos.push_back({v_proc, cost, recvStep, sendStep});
                     }
                 }
             }
 
-            // Iterate Window (s_to)
+            // --- Iterate Window (s_to) ---
             for (unsigned s_to_idx = node_start_idx; s_to_idx < window_bound; ++s_to_idx) {
                 unsigned s_to = node_step + s_to_idx - WindowSize;
 
-                // Apply Outgoing Deltas for this specific step s_to
-                for (const auto &[v_proc, cost] : scratch.child_cost_buffer) {
-                    AddDelta(true, s_to, v_proc, cost);
+                // Apply Phase 2A: incoming deltas (policy-aware, s_to-dependent)
+                for (const auto &info : parent_add_infos) {
+                    CommPolicy::CalculateDeltaAdd(
+                        info.effective_val, s_to, info.u_step, info.u_proc, p_to, info.cost, deltaAdapter);
                 }
 
-                if (total_send_cost_added > 0) {
-                    AddDelta(false, s_to, p_to, total_send_cost_added);
+                // Apply Phase 2B: outgoing deltas (policy-aware)
+                for (const auto &info : outgoing_infos) {
+                    // Recv side
+                    if constexpr (CommPolicy::outgoing_recv_at_parent_step) {
+                        AddDelta(true, s_to, info.v_proc, info.cost);
+                    } else {
+                        if (info.recv_step >= 0) {
+                            AddDelta(true, static_cast<unsigned>(info.recv_step), info.v_proc, info.cost);
+                        }
+                    }
+                    // Send side
+                    if constexpr (CommPolicy::outgoing_send_at_parent_step) {
+                        AddDelta(false, s_to, p_to, info.cost);
+                    } else {
+                        if (info.send_step >= 0) {
+                            AddDelta(false, static_cast<unsigned>(info.send_step), p_to, info.cost);
+                        }
+                    }
                 }
 
+                // Evaluate cost change
                 CostT total_change = 0;
-
-                // Only check steps that are active (modified in Phase 1, Part A, or Part B)
                 for (unsigned step : scratch.active_steps) {
-                    // Check if dirty_procs is empty implies no change for this step
-                    // FastDeltaTracker ensures dirty_procs is empty if all deltas summed to 0
                     if (!scratch.send_deltas[step].dirtyProcs_.empty() || !scratch.recv_deltas[step].dirtyProcs_.empty()) {
                         total_change += CalculateStepCostChange(step, scratch.send_deltas[step], scratch.recv_deltas[step]);
                     }
@@ -356,37 +432,28 @@ struct KlMaxBspCommCostFunction {
 
                 affinity_table_node[p_to][s_to_idx] += total_change * instance->CommunicationCosts();
 
-                // Revert Outgoing Deltas for s_to (Inverse of Apply)
-                for (const auto &[v_proc, cost] : scratch.child_cost_buffer) {
-                    AddDelta(true, s_to, v_proc, -cost);
-                }
-                if (total_send_cost_added > 0) {
-                    AddDelta(false, s_to, p_to, -total_send_cost_added);
-                }
-            }
-
-            // Revert Incoming Deltas (Inverse of Part A)
-            for (const auto &u : graph->Parents(node)) {
-                const unsigned u_proc = active_schedule->AssignedProcessor(u);
-                const unsigned u_step = current_vec_schedule.AssignedSuperstep(u);
-                const CommWeightT comm_w_u = graph->VertexCommWeight(u);
-
-                if (u_proc != p_to) {
-                    const auto &val_on_p_to = commDs_.nodeLambdaMap_.GetProcEntry(u, p_to);
-                    bool already_sending_to_p_to;
-                    if (p_to == node_proc) {
-                        already_sending_to_p_to = CommPolicy::HasEntry(val_on_p_to) && !CommPolicy::IsSingleEntry(val_on_p_to);
+                // Revert Phase 2B: outgoing deltas
+                for (const auto &info : outgoing_infos) {
+                    if constexpr (CommPolicy::outgoing_recv_at_parent_step) {
+                        AddDelta(true, s_to, info.v_proc, -info.cost);
                     } else {
-                        already_sending_to_p_to = CommPolicy::HasEntry(val_on_p_to);
-                    }
-
-                    if (!already_sending_to_p_to) {
-                        const CommWeightT cost = comm_w_u * instance->SendCosts(u_proc, p_to);
-                        if (cost > 0) {
-                            AddDelta(true, u_step, p_to, -cost);
-                            AddDelta(false, u_step, u_proc, -cost);
+                        if (info.recv_step >= 0) {
+                            AddDelta(true, static_cast<unsigned>(info.recv_step), info.v_proc, -info.cost);
                         }
                     }
+                    if constexpr (CommPolicy::outgoing_send_at_parent_step) {
+                        AddDelta(false, s_to, p_to, -info.cost);
+                    } else {
+                        if (info.send_step >= 0) {
+                            AddDelta(false, static_cast<unsigned>(info.send_step), p_to, -info.cost);
+                        }
+                    }
+                }
+
+                // Revert Phase 2A: incoming deltas
+                for (const auto &info : parent_add_infos) {
+                    CommPolicy::CalculateDeltaAdd(
+                        info.effective_val, s_to, info.u_step, info.u_proc, p_to, info.cost, negDeltaAdapter);
                 }
             }
         }
@@ -396,6 +463,7 @@ struct KlMaxBspCommCostFunction {
                                         const FastDeltaTracker<CommWeightT> &delta_send,
                                         const FastDeltaTracker<CommWeightT> &delta_recv) {
         CommWeightT old_max = commDs_.StepMaxComm(step);
+        CommWeightT second_max = commDs_.StepSecondMaxComm(step);
         unsigned old_max_count = commDs_.StepMaxCommCount(step);
 
         CommWeightT new_global_max = 0;
@@ -439,12 +507,7 @@ struct KlMaxBspCommCostFunction {
         if (reduced_max_instances < old_max_count) {
             return 0;
         }
-
-        // All old max-holders were reduced. The second_max from the unmodified
-        // state may be stale if dirty procs at second_max were also reduced
-        // (happens when a node has outgoing edges to multiple procs, producing
-        // 3+ dirty (proc,send/recv) pairs at the same step).
-        // Scan non-dirty values for the exact new max.
+        // All max-holders reduced: scan non-dirty values for true fallback
         CommWeightT max_non_dirty = 0;
         const unsigned num_procs = instance->NumberOfProcessors();
         for (unsigned p = 0; p < num_procs; ++p) {
