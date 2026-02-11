@@ -27,6 +27,11 @@ limitations under the License.
 ///   2. Full ImproveSchedule: precedence constraints are satisfied and
 ///      staleness=2 cross-processor gaps are respected.
 ///   3. All three policies produce valid results on varied topologies.
+///
+/// NOTE: With staleness=2 and WindowSize=1, superstep gaps are wide
+/// (0,0,2,2,4,4,...), so few nodes have valid moves within the window.
+/// InsertGainHeapTestPenalty typically yields only 2 heap entries.
+/// Inner-loop iterations are therefore limited to 2.
 
 #define BOOST_TEST_MODULE kl_max_bsp_improver
 #include <boost/test/unit_test.hpp>
@@ -75,6 +80,26 @@ static void VerifyStalenessConstraints(const BspSchedule<Graph> &schedule) {
                                                                 << " uProc=" << uProc << " vProc=" << vProc
                                                                 << " staleness=" << staleness << " required gap=" << gap);
             }
+        }
+    }
+}
+
+// ============================================================================
+//  Inner-loop helper: run up to maxIter iterations, break on cost mismatch
+// ============================================================================
+template <typename TestT>
+static void RunInnerLoopAndCheckCost(TestT &kl, int maxIter, const std::string &label) {
+    for (int iter = 0; iter < maxIter; ++iter) {
+        kl.RunInnerIterationTest();
+
+        CostT recomputed = kl.GetCommCostF().ComputeScheduleCostTest();
+        CostT tracked = kl.GetCurrentCost();
+
+        BOOST_CHECK_CLOSE(recomputed, tracked, 0.00001);
+        if (std::abs(recomputed - tracked) > 0.00001 * std::max(1.0, std::abs(recomputed))) {
+            BOOST_TEST_MESSAGE("Cost mismatch at " << label << " iteration " << iter << ": recomputed=" << recomputed
+                                                   << " tracked=" << tracked);
+            break;
         }
     }
 }
@@ -232,22 +257,11 @@ BOOST_AUTO_TEST_CASE(InnerLoopCostConsistencyEager) {
     CostT tracked = kl.GetCurrentCost();
     BOOST_CHECK_CLOSE(recomputed, tracked, 0.00001);
 
-    // Insert all nodes into gain heap and iterate
+    // Insert nodes into gain heap and iterate.
+    // With staleness=2 and WindowSize=1, only ~2 nodes get valid moves.
     auto nodeSelection = kl.InsertGainHeapTestPenalty({0, 7});
 
-    for (int iter = 0; iter < 6; ++iter) {
-        auto recomputeMaxGain = kl.RunInnerIterationTest();
-
-        recomputed = kl.GetCommCostF().ComputeScheduleCostTest();
-        tracked = kl.GetCurrentCost();
-
-        BOOST_CHECK_CLOSE(recomputed, tracked, 0.00001);
-        if (std::abs(recomputed - tracked) > 0.00001 * std::max(1.0, std::abs(recomputed))) {
-            BOOST_TEST_MESSAGE("Cost mismatch at Eager iteration " << iter << ": recomputed=" << recomputed
-                                                                   << " tracked=" << tracked);
-            break;
-        }
-    }
+    RunInnerLoopAndCheckCost(kl, 2, "Eager");
 }
 
 // ============================================================================
@@ -272,19 +286,7 @@ BOOST_AUTO_TEST_CASE(InnerLoopCostConsistencyLazy) {
 
     auto nodeSelection = kl.InsertGainHeapTestPenalty({0, 7});
 
-    for (int iter = 0; iter < 6; ++iter) {
-        auto recomputeMaxGain = kl.RunInnerIterationTest();
-
-        recomputed = kl.GetCommCostF().ComputeScheduleCostTest();
-        tracked = kl.GetCurrentCost();
-
-        BOOST_CHECK_CLOSE(recomputed, tracked, 0.00001);
-        if (std::abs(recomputed - tracked) > 0.00001 * std::max(1.0, std::abs(recomputed))) {
-            BOOST_TEST_MESSAGE("Cost mismatch at Lazy iteration " << iter << ": recomputed=" << recomputed
-                                                                  << " tracked=" << tracked);
-            break;
-        }
-    }
+    RunInnerLoopAndCheckCost(kl, 2, "Lazy");
 }
 
 // ============================================================================
@@ -309,19 +311,7 @@ BOOST_AUTO_TEST_CASE(InnerLoopCostConsistencyBuffered) {
 
     auto nodeSelection = kl.InsertGainHeapTestPenalty({0, 7});
 
-    for (int iter = 0; iter < 6; ++iter) {
-        auto recomputeMaxGain = kl.RunInnerIterationTest();
-
-        recomputed = kl.GetCommCostF().ComputeScheduleCostTest();
-        tracked = kl.GetCurrentCost();
-
-        BOOST_CHECK_CLOSE(recomputed, tracked, 0.00001);
-        if (std::abs(recomputed - tracked) > 0.00001 * std::max(1.0, std::abs(recomputed))) {
-            BOOST_TEST_MESSAGE("Cost mismatch at Buffered iteration " << iter << ": recomputed=" << recomputed
-                                                                      << " tracked=" << tracked);
-            break;
-        }
-    }
+    RunInnerLoopAndCheckCost(kl, 2, "Buffered");
 }
 
 // ============================================================================
@@ -348,21 +338,12 @@ BOOST_AUTO_TEST_CASE(InnerLoopSmallFanAllPolicies) {
 
         auto nodeSelection = kl.InsertGainHeapTestPenalty({0, 5});
 
-        for (int iter = 0; iter < 4; ++iter) {
-            kl.RunInnerIterationTest();
-
-            recomputed = kl.GetCommCostF().ComputeScheduleCostTest();
-            tracked = kl.GetCurrentCost();
-
-            BOOST_CHECK_MESSAGE(std::abs(recomputed - tracked) < 0.00001 * std::max(1.0, std::abs(recomputed)),
-                                name + " iter " + std::to_string(iter) + ": recomputed=" + std::to_string(recomputed)
-                                    + " tracked=" + std::to_string(tracked));
-        }
+        RunInnerLoopAndCheckCost(kl, 2, name);
     };
 
-    RunPolicyTest(EagerCommCostPolicy{}, "Eager");
-    RunPolicyTest(LazyCommCostPolicy{}, "Lazy");
-    RunPolicyTest(BufferedCommCostPolicy{}, "Buffered");
+    RunPolicyTest(EagerCommCostPolicy{}, "EagerFan");
+    RunPolicyTest(LazyCommCostPolicy{}, "LazyFan");
+    RunPolicyTest(BufferedCommCostPolicy{}, "BufferedFan");
 }
 
 // ============================================================================
@@ -423,16 +404,7 @@ BOOST_AUTO_TEST_CASE(InnerLoopThreeProcsAllPolicies) {
 
         auto nodeSelection = kl.InsertGainHeapTestPenalty({0, 5});
 
-        for (int iter = 0; iter < 4; ++iter) {
-            kl.RunInnerIterationTest();
-
-            recomputed = kl.GetCommCostF().ComputeScheduleCostTest();
-            tracked = kl.GetCurrentCost();
-
-            BOOST_CHECK_MESSAGE(std::abs(recomputed - tracked) < 0.00001 * std::max(1.0, std::abs(recomputed)),
-                                name + " iter " + std::to_string(iter) + ": recomputed=" + std::to_string(recomputed)
-                                    + " tracked=" + std::to_string(tracked));
-        }
+        RunInnerLoopAndCheckCost(kl, 2, name);
     };
 
     RunPolicyTest(EagerCommCostPolicy{}, "Eager3P");
@@ -668,7 +640,7 @@ BOOST_AUTO_TEST_CASE(WindowSize2ImproveSchedule) {
 }
 
 // ============================================================================
-// TEST 13: Dense diamond DAG with all nodes on different procs
+// TEST 13: Dense diamond DAG with 3 processors
 //
 //     0       step 0, proc 0
 //    /
@@ -676,7 +648,6 @@ BOOST_AUTO_TEST_CASE(WindowSize2ImproveSchedule) {
 //    \ /
 //     3       step 4, proc 0
 //
-// Tests with 3 processors to exercise more affinity table entries.
 // ============================================================================
 
 BOOST_AUTO_TEST_CASE(FullImproveScheduleDiamondThreeProcs) {
