@@ -164,6 +164,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
         double desiredParallelism = static_cast<double>(p);
 
         VertexType totalAssigned = 0;
+        unsigned totalAttempts = 1U;
         supstep = 0;
 
         while (totalAssigned < n) {
@@ -177,6 +178,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
             bool continueSuperstepAttempts = true;
 
             while (continueSuperstepAttempts) {
+                assert(totalAttempts < (UINT_MAX / (p + 1U)));
                 for (unsigned proc = 0; proc < p; proc++) {
                     newAssignments[proc].clear();
                 }
@@ -228,10 +230,12 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                             }
                         }
 
-                        if (schedule.AssignedProcessor(succ) == UINT_MAX) {
-                            schedule.SetAssignedProcessor(succ, 0);
-                        } else if (schedule.AssignedProcessor(succ) != 0) {
-                            schedule.SetAssignedProcessor(succ, p);
+                        bool canScheduleSameProc = false;
+                        if ((schedule.AssignedProcessor(succ) / (p + 1U) == totalAttempts) & ((schedule.AssignedProcessor(succ) % (p + 1U)) != 0U)) {
+                            schedule.SetAssignedProcessor(succ, totalAttempts * (p + 1U) + p);
+                        } else {
+                            schedule.SetAssignedProcessor(succ, totalAttempts * (p + 1U) + 0U);
+                            canScheduleSameProc = true;
                         }
 
                         VertexType succIndex;
@@ -243,7 +247,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
 
                         --predec[succIndex];
                         if (predec[succIndex] == 0) {
-                            if (schedule.AssignedProcessor(succ) == 0) {
+                            if (canScheduleSameProc) {
                                 procReady[0].emplace_back(succ);
                                 std::push_heap(procReady[0].begin(), procReady[0].end(), std::greater<>{});
                             } else {
@@ -293,10 +297,12 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                                 }
                             }
 
-                            if (schedule.AssignedProcessor(succ) == UINT_MAX) {
-                                schedule.SetAssignedProcessor(succ, proc);
-                            } else if (schedule.AssignedProcessor(succ) != proc) {
-                                schedule.SetAssignedProcessor(succ, p);
+                            bool canScheduleSameProc = false;
+                            if ((schedule.AssignedProcessor(succ) / (p + 1U) == totalAttempts) & ((schedule.AssignedProcessor(succ) % (p + 1U)) != proc)) {
+                                schedule.SetAssignedProcessor(succ, totalAttempts * (p + 1U) + p);
+                            } else {
+                                schedule.SetAssignedProcessor(succ, totalAttempts * (p + 1U) + proc);
+                                canScheduleSameProc = true;
                             }
 
                             VertexType succIndex;
@@ -308,7 +314,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
 
                             --predec[succIndex];
                             if (predec[succIndex] == 0) {
-                                if (schedule.AssignedProcessor(succ) == proc) {
+                                if (canScheduleSameProc) {
                                     procReady[proc].emplace_back(succ);
                                     std::push_heap(procReady[proc].begin(), procReady[proc].end(), std::greater<>{});
                                 } else {
@@ -362,31 +368,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                     continueSuperstepAttempts = false;
                 }
 
-                // undo proc assingments and predec increases in any case
-                for (unsigned proc = 0; proc < p; ++proc) {
-                    for (const VertexType &node : newAssignments[proc]) {
-                        for (const VertexType &succ : graph.Children(node)) {
-                            if constexpr (hasVerticesInTopOrderV<GraphT>) {
-                                if constexpr (hasChildrenInVertexOrderV<GraphT>) {
-                                    if (succ >= endNode) {
-                                        break;
-                                    }
-                                } else {
-                                    if (succ >= endNode) {
-                                        continue;
-                                    }
-                                }
-                            } else {
-                                if (posInTopOrder[succ] >= endNode) {
-                                    continue;
-                                }
-                            }
-
-                            schedule.SetAssignedProcessor(succ, UINT_MAX);
-                        }
-                    }
-                }
-
+                // undo predec increases in any case
                 for (unsigned proc = 0; proc < p; ++proc) {
                     for (const VertexType &node : newAssignments[proc]) {
                         for (const VertexType &succ : graph.Children(node)) {
@@ -427,6 +409,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
 
                 limit++;
                 limit += (limit / 2);
+                ++totalAttempts;
             }
 
             // apply best iteration
@@ -519,9 +502,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
 
         const VertexType n = instance.NumberOfVertices();
 
-        for (VertexType vert = 0; vert < n; ++vert) {
-            schedule.SetAssignedProcessor(vert, UINT_MAX);
-        }
+        schedule.SetAssignedProcessors(std::vector<unsigned>(n, 0U));
 
         VertexType numNodesPerThread = n / numThreads;
         std::vector<VertexType> startNodes;
