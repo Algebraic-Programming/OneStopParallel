@@ -234,7 +234,14 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                         const unsigned pp1 = p + 1U;
                         const unsigned base = pp1 * totalAttempts;
                         const unsigned remainder = schedule.AssignedProcessor(succ) - base;
-                        if ((remainder < pp1) & (remainder != 0U)) {
+                        // Encoding into processor of children where they can be sheduled locally through
+                        // iteration * (p + 1) + proc
+                        // where proc is either the processor where is can be enqueued in the processor local queue
+                        // or equal to p when it can't be enqueued in any local queue.
+                        // The extra encoding of iteration ensures that previous superstep attempts do not affect the current superstep
+                        if ((remainder < pp1) & (remainder != 0U)) {    // The first condition implies that the iteration is
+                                                                        // the same as the current and the second checks if
+                                                                        // it has already been to a different processor
                             schedule.SetAssignedProcessor(succ, base + p);
                         } else {
                             schedule.SetAssignedProcessor(succ, base + 0U);
@@ -304,7 +311,14 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
                             const unsigned pp1 = p + 1U;
                             const unsigned base = pp1 * totalAttempts;
                             const unsigned remainder = schedule.AssignedProcessor(succ) - base;
-                            if ((remainder < pp1) & (remainder != proc)) {
+                            // Encoding into processor of children where they can be sheduled locally through
+                            // iteration * (p + 1) + proc
+                            // where proc is either the processor where is can be enqueued in the processor local queue
+                            // or equal to p when it can't be enqueued in any local queue.
+                            // The extra encoding of iteration ensures that previous superstep attempts do not affect the current superstep
+                            if ((remainder < pp1) & (remainder != proc)) {    // The first condition implies that the iteration is
+                                                                              // the same as the current and the second checks if
+                                                                              // it has already been to a different processor
                                 schedule.SetAssignedProcessor(succ, base + p);
                             } else {
                                 schedule.SetAssignedProcessor(succ, base + proc);
