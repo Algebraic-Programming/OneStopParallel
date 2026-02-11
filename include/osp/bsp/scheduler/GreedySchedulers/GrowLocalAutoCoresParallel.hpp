@@ -427,7 +427,7 @@ class GrowLocalAutoCoresParallel : public Scheduler<GraphT> {
             }
             const auto middleIt = std::next(ready.begin(), lengthLeftoverReady);
             std::sort(middleIt, ready.end(), std::less<>{});
-            std::inplace_merge(ready.begin(), middleIt, ready.end());
+            std::inplace_merge(ready.begin(), middleIt, ready.end(), std::less<>{});
 
             for (unsigned proc = 0; proc < p; ++proc) {
                 for (const VertexType &node : bestNewAssignments[proc]) {
