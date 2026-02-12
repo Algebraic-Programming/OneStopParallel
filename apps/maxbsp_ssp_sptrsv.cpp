@@ -3,22 +3,57 @@
  * Demonstrates maxbsp scheduling with staleness=2, then runs SpTRSV with SSP kernel.
  */
 
-#include <iostream>
-#include <vector>
 #include <Eigen/Sparse>
+#include <chrono>
+#include <iostream>
 #include <unsupported/Eigen/SparseExtra>
+#include <vector>
+
 #include "osp/auxiliary/sptrsv_simulator/sptrsv.hpp"
 #include "osp/bsp/model/BspInstance.hpp"
 #include "osp/bsp/model/BspSchedule.hpp"
 #include "osp/bsp/model/MaxBspSchedule.hpp"
-#include "osp/bsp/scheduler/GreedySchedulers/GrowLocalAutoCores.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/GreedyVarianceSspScheduler.hpp"
+#include "osp/bsp/scheduler/GreedySchedulers/GrowLocalAutoCores.hpp"
+#include "osp/bsp/scheduler/GreedySchedulers/GrowLocalMaxBsp.hpp"
 #include "osp/graph_implementations/eigen_matrix_adapter/sparse_matrix.hpp"
-#include <chrono>
 
 using namespace osp;
 
-int main(int argc, char* argv[]) {
+#define EPSILON 1e-20
+
+double L2NormalisedDiff(const std::vector<double> &v, const std::vector<double> &w) {
+    assert(v.size() == w.size());
+    double l2diff = 0.0;
+    double frobNorm = 0.0;
+    for (std::size_t i = 0U; i < v.size(); ++i) {
+        const double absdiff = std::abs(v[i] - w[i]);
+        l2diff += absdiff * absdiff;
+
+        const double vAbs = std::abs(v[i]);
+        const double wAbs = std::abs(w[i]);
+
+        frobNorm += ((vAbs * vAbs) + (wAbs * wAbs)) / 2.0;
+    }
+    l2diff = std::sqrt(l2diff);
+    frobNorm = std::sqrt(frobNorm);
+    const double ratio = l2diff / (frobNorm + EPSILON);
+    return ratio;
+}
+
+double LInftyNormalisedDiff(const std::vector<double> &v, const std::vector<double> &w) {
+    double diff = 0.0;
+    for (std::size_t i = 0U; i < v.size(); ++i) {
+        const double absdiff = std::abs(v[i] - w[i]);
+        const double vAbs = std::abs(v[i]);
+        const double wAbs = std::abs(w[i]);
+
+        diff = std::max(diff, 2 * absdiff / (vAbs + wAbs + EPSILON));
+    }
+    return diff;
+}
+
+int main(int argc, char *argv[]) {
     // Accept matrix filename and iteration count as arguments (threads via OMP_NUM_THREADS or optional arg)
     std::string filename = "../data/mtx_tests/ErdosRenyi_2k_14k_A.mtx";
     int num_iterations = 1;
@@ -49,13 +84,18 @@ int main(int argc, char* argv[]) {
     graph.SetCsr(&lCsr);
     Eigen::SparseMatrix<double, Eigen::ColMajor, int32_t> lCsc = lCsr;
     graph.SetCsc(&lCsc);
-    BspArchitecture<SparseMatrixImp<int32_t>> architecture(num_threads, 1, 500); // configurable processors
+    BspArchitecture<SparseMatrixImp<int32_t>> architecture(num_threads, 1, 500);    // configurable processors
     BspInstance<SparseMatrixImp<int32_t>> instance(graph, architecture);
 
     // Create SSP-aware schedule using GreedyVarianceSspScheduler (staleness=2)
-    GreedyVarianceSspScheduler<SparseMatrixImp<int32_t>> ssp_scheduler;
-    MaxBspSchedule<SparseMatrixImp<int32_t>> ssp_schedule(instance);
-    ssp_scheduler.ComputeSchedule(ssp_schedule);
+    GreedyVarianceSspScheduler<SparseMatrixImp<int32_t>> ssp_var_scheduler;
+    MaxBspSchedule<SparseMatrixImp<int32_t>> ssp_var_schedule(instance);
+    ssp_var_scheduler.ComputeSchedule(ssp_var_schedule);
+
+    // Create SSP-aware schedule using GrowLocalMaxBsp (staleness=2)
+    GrowLocalSSP<SparseMatrixImp<int32_t>> ssp_gl_scheduler;
+    MaxBspSchedule<SparseMatrixImp<int32_t>> ssp_gl_schedule(instance);
+    ssp_gl_scheduler.ComputeSchedule(ssp_gl_schedule);
 
     // Create a non-SSP schedule using GrowLocalAutoCores
     GrowLocalAutoCores<SparseMatrixImp<int32_t>> growlocal_scheduler;
@@ -67,13 +107,13 @@ int main(int argc, char* argv[]) {
 
     size_t n = static_cast<size_t>(lCsc.cols());
 
-    // Benchmark SSP L-solve
-    double ssp_flat_total_time = 0.0;
-    std::vector<double> ssp_flat_result(n, 0.0);
+    // Benchmark SSP Variance L-solve
+    double ssp_var_flat_total_time = 0.0;
+    std::vector<double> ssp_var_flat_result(n, 0.0);
     for (int iter = 0; iter < num_iterations; ++iter) {
         std::vector<double> x(n, 0.0);
         std::vector<double> b(n, 1.0);
-        sptrsv_kernel.SetupCsrNoPermutation(ssp_schedule);
+        sptrsv_kernel.SetupCsrNoPermutation(ssp_var_schedule);
         sptrsv_kernel.x_ = x.data();
         sptrsv_kernel.b_ = b.data();
         FlatCheckpointCounterBarrier barrier(num_threads);
@@ -81,10 +121,33 @@ int main(int argc, char* argv[]) {
         auto start = std::chrono::high_resolution_clock::now();
         sptrsv_kernel.SspLsolveStaleness2(ops);
         auto end = std::chrono::high_resolution_clock::now();
-        ssp_flat_total_time += std::chrono::duration<double>(end - start).count();
-        if (iter == 0) ssp_flat_result = std::vector<double>(x.begin(), x.end());
+        ssp_var_flat_total_time += std::chrono::duration<double>(end - start).count();
+        if (iter == 0) {
+            ssp_var_flat_result = std::vector<double>(x.begin(), x.end());
+        }
     }
-    double ssp_flat_avg_time = ssp_flat_total_time / num_iterations;
+    double ssp_var_flat_avg_time = ssp_var_flat_total_time / num_iterations;
+
+    // Benchmark SSP GrowLocal L-solve
+    double ssp_gl_flat_total_time = 0.0;
+    std::vector<double> ssp_gl_flat_result(n, 0.0);
+    for (int iter = 0; iter < num_iterations; ++iter) {
+        std::vector<double> x(n, 0.0);
+        std::vector<double> b(n, 1.0);
+        sptrsv_kernel.SetupCsrNoPermutation(ssp_gl_schedule);
+        sptrsv_kernel.x_ = x.data();
+        sptrsv_kernel.b_ = b.data();
+        FlatCheckpointCounterBarrier barrier(num_threads);
+        auto ops = Sptrsv<int32_t>::MakeBarrierOps(barrier);
+        auto start = std::chrono::high_resolution_clock::now();
+        sptrsv_kernel.SspLsolveStaleness2(ops);
+        auto end = std::chrono::high_resolution_clock::now();
+        ssp_gl_flat_total_time += std::chrono::duration<double>(end - start).count();
+        if (iter == 0) {
+            ssp_gl_flat_result = std::vector<double>(x.begin(), x.end());
+        }
+    }
+    double ssp_gl_flat_avg_time = ssp_gl_flat_total_time / num_iterations;
 
     // Benchmark GrowLocalAutoCores schedule with non-SSP L-solve (no permutation)
     double growlocal_total_time = 0.0;
@@ -99,7 +162,9 @@ int main(int argc, char* argv[]) {
         sptrsv_kernel.LsolveNoPermutation();
         auto end = std::chrono::high_resolution_clock::now();
         growlocal_total_time += std::chrono::duration<double>(end - start).count();
-        if (iter == 0) growlocal_result = std::vector<double>(x.begin(), x.end());
+        if (iter == 0) {
+            growlocal_result = std::vector<double>(x.begin(), x.end());
+        }
     }
     double growlocal_avg_time = growlocal_total_time / num_iterations;
 
@@ -115,74 +180,63 @@ int main(int argc, char* argv[]) {
         sptrsv_kernel.LsolveSerial();
         auto end = std::chrono::high_resolution_clock::now();
         serial_total_time += std::chrono::duration<double>(end - start).count();
-        if (iter == 0) serial_result = std::vector<double>(x_serial.begin(), x_serial.end());
+        if (iter == 0) {
+            serial_result = std::vector<double>(x_serial.begin(), x_serial.end());
+        }
     }
     double serial_avg_time = serial_total_time / num_iterations;
 
     // Compare results
-    double max_diff_flat = 0.0;
-    double frobNorm = 0.0;
-    for (size_t i = 0; i < n; ++i) {
-        double diff = std::abs(ssp_flat_result[i] - serial_result[i]);
-        if (diff > max_diff_flat) max_diff_flat = diff;
-        frobNorm += diff * diff;
-    }
-    frobNorm = std::sqrt(frobNorm);
-    std::cout << "Frobenius norm of difference: " << frobNorm << std::endl;
-    std::cout << "Max difference between SSP and serial L-solve: " << max_diff_flat << std::endl;
-    if (frobNorm <= 1e-30 || max_diff_flat < 1e-10 * frobNorm) {
-        std::cout << "SSP L-solve matches serial L-solve!" << std::endl;
+    const double varDiff = LInftyNormalisedDiff(ssp_var_flat_result, serial_result);
+
+    std::cout << "Max relative difference between SSP Variance and serial L-solve: " << varDiff << std::endl;
+    if (varDiff < EPSILON) {
+        std::cout << "SSP Variance L-solve matches serial L-solve!" << std::endl;
     } else {
-        std::cout << "SSP L-solve does NOT match serial L-solve!" << std::endl;
-        std::cout << "Relative error: " << (max_diff_flat / frobNorm) << std::endl;
-    }
-    double max_diff_growlocal = 0.0;
-    double frobNormGrowlocal = 0.0;
-    for (size_t i = 0; i < n; ++i) {
-        double diff = std::abs(growlocal_result[i] - serial_result[i]);
-        if (diff > max_diff_growlocal) max_diff_growlocal = diff;
-        frobNormGrowlocal += diff * diff;
-    }
-    frobNormGrowlocal = std::sqrt(frobNormGrowlocal);
-    std::cout << "Max difference between GrowLocalAutoCores and serial L-solve: " << max_diff_growlocal << std::endl;
-    if (frobNormGrowlocal <= 1e-30 || max_diff_growlocal < 1e-10 * frobNormGrowlocal) {
-        std::cout << "GrowLocalAutoCores L-solve matches serial L-solve!" << std::endl;
-    } else {
-        std::cout << "GrowLocalAutoCores L-solve does NOT match serial L-solve!" << std::endl;
-        std::cout << "Relative error: " << (max_diff_growlocal / frobNormGrowlocal) << std::endl;
+        std::cout << "SSP Variance L-solve does NOT match serial L-solve!" << std::endl;
     }
 
-    double max_diff_ssp_growlocal = 0.0;
-    double frobNormSspGrowlocal = 0.0;
-    for (size_t i = 0; i < n; ++i) {
-        double diff = std::abs(ssp_flat_result[i] - growlocal_result[i]);
-        if (diff > max_diff_ssp_growlocal) max_diff_ssp_growlocal = diff;
-        frobNormSspGrowlocal += diff * diff;
+    const double GLSSPDiff = LInftyNormalisedDiff(ssp_gl_flat_result, serial_result);
+
+    std::cout << "Max relative difference between SSP GrowLocal and serial L-solve: " << GLSSPDiff << std::endl;
+    if (GLSSPDiff < EPSILON) {
+        std::cout << "SSP GrowLocal L-solve matches serial L-solve!" << std::endl;
+    } else {
+        std::cout << "SSP GrowLocal L-solve does NOT match serial L-solve!" << std::endl;
     }
-    frobNormSspGrowlocal = std::sqrt(frobNormSspGrowlocal);
-    std::cout << "Max difference between SSP and GrowLocalAutoCores L-solve: " << max_diff_ssp_growlocal
+
+    const double GLPDiff = LInftyNormalisedDiff(growlocal_result, serial_result);
+
+    std::cout << "Max relative difference between GrowLocal and serial L-solve: " << GLPDiff << std::endl;
+    if (GLPDiff < EPSILON) {
+        std::cout << "GrowLocal L-solve matches serial L-solve!" << std::endl;
+    } else {
+        std::cout << "GrowLocal L-solve does NOT match serial L-solve!" << std::endl;
+    }
+
+    std::cout << "Average SSP Variance L-solve time (" << num_iterations << " runs): " << ssp_var_flat_avg_time << " seconds"
               << std::endl;
-    if (frobNormSspGrowlocal <= 1e-30 || max_diff_ssp_growlocal < 1e-10 * frobNormSspGrowlocal) {
-        std::cout << "SSP L-solve matches GrowLocalAutoCores L-solve!" << std::endl;
-    } else {
-        std::cout << "SSP L-solve does NOT match GrowLocalAutoCores L-solve!" << std::endl;
-        std::cout << "Relative error: " << (max_diff_ssp_growlocal / frobNormSspGrowlocal) << std::endl;
-    }
+    std::cout << "Average SSP GrowLocal L-solve time (" << num_iterations << " runs): " << ssp_gl_flat_avg_time << " seconds"
+              << std::endl;
+    std::cout << "Average GrowLocalAutoCores L-solve time (" << num_iterations << " runs): " << growlocal_avg_time << " seconds"
+              << std::endl;
+    std::cout << "Average serial L-solve time (" << num_iterations << " runs): " << serial_avg_time << " seconds" << std::endl << std::endl;
 
-    std::cout << "Average SSP L-solve time (" << num_iterations << " runs): " << ssp_flat_avg_time
-              << " seconds" << std::endl;
-    std::cout << "Average GrowLocalAutoCores L-solve time (" << num_iterations << " runs): " << growlocal_avg_time
-              << " seconds" << std::endl;
-    std::cout << "Average serial L-solve time (" << num_iterations << " runs): " << serial_avg_time << " seconds" << std::endl;
-    if (ssp_flat_avg_time > 0.0) {
-        std::cout << "Speedup (serial/SSP): " << (serial_avg_time / ssp_flat_avg_time) << "x" << std::endl;
+    if (ssp_var_flat_avg_time > 0.0) {
+        std::cout << "Speedup (serial/SSP Var): " << (serial_avg_time / ssp_var_flat_avg_time) << "x" << std::endl;
+    }
+    if (ssp_gl_flat_avg_time > 0.0) {
+        std::cout << "Speedup (serial/SSP GL): " << (serial_avg_time / ssp_gl_flat_avg_time) << "x" << std::endl;
     }
     if (growlocal_avg_time > 0.0) {
         std::cout << "Speedup (serial/GrowLocalAutoCores): " << (serial_avg_time / growlocal_avg_time) << "x" << std::endl;
     }
-    if (ssp_flat_avg_time > 0.0) {
-        std::cout << "Speedup (GrowLocalAutoCores/SSP): " << (growlocal_avg_time / ssp_flat_avg_time) << "x" << std::endl;
+    if (ssp_var_flat_avg_time > 0.0) {
+        std::cout << "Speedup (GrowLocalAutoCores/SSP Var): " << (growlocal_avg_time / ssp_var_flat_avg_time) << "x" << std::endl;
     }
-    std::cout << "MaxBSP staleness=2 SSP and GrowLocalAutoCores SpTRSV executed." << std::endl;
+    if (ssp_gl_flat_avg_time > 0.0) {
+        std::cout << "Speedup (GrowLocalAutoCores/SSP GL): " << (growlocal_avg_time / ssp_gl_flat_avg_time) << "x" << std::endl;
+    }
+
     return 0;
 }
