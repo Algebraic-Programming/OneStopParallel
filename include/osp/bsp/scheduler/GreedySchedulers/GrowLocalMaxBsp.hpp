@@ -71,7 +71,7 @@ inline typename std::deque<VertexIdxT<GraphT>>::difference_type GrowLocalSSP<Gra
         typename std::deque<VertexType>::difference_type lengthNext
             = std::distance(nextSuperstepReady.cbegin(), nextSuperstepReady.cend());
 
-        typename std::deque<VertexType>::difference_type ans = ((lengthCurrently + lengthNext + 2) / 3) * 2;
+        typename std::deque<VertexType>::difference_type ans = ((lengthCurrently + lengthNext + 1) / 2);
 
         return ans;
     }
