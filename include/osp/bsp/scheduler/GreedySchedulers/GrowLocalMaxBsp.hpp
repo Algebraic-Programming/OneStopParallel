@@ -50,8 +50,8 @@ class GrowLocalSSP : public MaxBspScheduler<GraphT> {
     static constexpr unsigned staleness{2U};
     GrowLocalSSPParams<VertexIdxT<GraphT>, VWorkwT<GraphT>> params_;
 
-    typename std::deque<VertexType>::difference_type maxAllReadyUsage(const std::deque<VertexType> &currentlyReady,
-                                                                      const std::deque<VertexType> &nextSuperstepReady) const;
+    inline typename std::deque<VertexType>::difference_type maxAllReadyUsage(const std::deque<VertexType> &currentlyReady,
+                                                                             const std::deque<VertexType> &nextSuperstepReady) const;
 
   public:
     ReturnStatus ComputeSchedule(BspSchedule<GraphT> &schedule) override;
@@ -61,7 +61,7 @@ class GrowLocalSSP : public MaxBspScheduler<GraphT> {
 };
 
 template <typename GraphT>
-typename std::deque<VertexIdxT<GraphT>>::difference_type GrowLocalSSP<GraphT>::maxAllReadyUsage(
+inline typename std::deque<VertexIdxT<GraphT>>::difference_type GrowLocalSSP<GraphT>::maxAllReadyUsage(
     const std::deque<VertexIdxT<GraphT>> &currentlyReady, const std::deque<VertexIdxT<GraphT>> &nextSuperstepReady) const {
     if constexpr (staleness == 1U) {
         return std::distance(currentlyReady.cbegin(), currentlyReady.cend());
@@ -145,7 +145,8 @@ ReturnStatus GrowLocalSSP<GraphT>::ComputeSchedule(MaxBspSchedule<GraphT> &sched
         const typename std::deque<VertexType>::difference_type lengthCurrentlyReady
             = std::distance(currentlyReady.begin(), currentlyReady.end());
         currentlyReady.insert(currentlyReady.end(), stepFutureReady.begin(), stepFutureReady.end());
-        std::inplace_merge(currentlyReady.begin(), std::next(currentlyReady.begin(), lengthCurrentlyReady), currentlyReady.end(), std::less<>{});
+        std::inplace_merge(
+            currentlyReady.begin(), std::next(currentlyReady.begin(), lengthCurrentlyReady), currentlyReady.end(), std::less<>{});
 
         const typename std::deque<VertexType>::difference_type maxCurrentlyReadyUsage
             = std::max(static_cast<typename std::deque<VertexType>::difference_type>(
