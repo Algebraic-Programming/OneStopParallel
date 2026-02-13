@@ -23,6 +23,7 @@ limitations under the License.
 #include <cstddef>
 #include <cstdint>
 
+#include "osp/auxiliary/sptrsv_simulator/WeakBarriers/aligned_allocator.hpp"
 #include "osp/auxiliary/sptrsv_simulator/WeakBarriers/cpu_relax.hpp"
 #include "osp/config/config.hpp"
 
@@ -46,13 +47,14 @@ struct alignas(CACHE_LINE_SIZE) AlignedAtomicCounter {
 class FlatCheckpointCounterBarrier {
   private:
     std::vector<AlignedAtomicCounter> cntrs_;
-    mutable std::vector<std::vector<std::size_t>> cachedCntrs_;
+    mutable std::vector<std::vector<std::size_t, AlignedAllocator<std::size_t, CACHE_LINE_SIZE>>> cachedCntrs_;
 
   public:
     FlatCheckpointCounterBarrier(std::size_t numThreads)
         : cntrs_(std::vector<AlignedAtomicCounter>(numThreads)),
-          cachedCntrs_(
-              std::vector<std::vector<std::size_t>>(numThreads, std::vector<std::size_t>(RoundUpToCacheLine(numThreads), 0U))) {};
+          cachedCntrs_(std::vector<std::vector<std::size_t, AlignedAllocator<std::size_t, CACHE_LINE_SIZE>>>(
+              numThreads,
+              std::vector<std::size_t, AlignedAllocator<std::size_t, CACHE_LINE_SIZE>>(RoundUpToCacheLine(numThreads), 0U))) {};
 
     inline void Arrive(const std::size_t threadId);
     inline void Wait(const std::size_t threadId, const std::size_t diff) const;
@@ -66,12 +68,12 @@ class FlatCheckpointCounterBarrier {
 };
 
 inline void FlatCheckpointCounterBarrier::Arrive(const std::size_t threadId) {
-    const std::size_t curr = cntrs_[threadId].cntr_.fetch_add(1U, std::memory_order_release) + 1U;
-    cachedCntrs_[threadId][threadId] = curr;
+    cntrs_[threadId].cntr_.fetch_add(1U, std::memory_order_release);
+    ++cachedCntrs_[threadId][threadId];
 }
 
 inline void FlatCheckpointCounterBarrier::Wait(const std::size_t threadId, const std::size_t diff) const {
-    std::vector<std::size_t> &localCachedCntrs = cachedCntrs_[threadId];
+    std::vector<std::size_t, AlignedAllocator<std::size_t, CACHE_LINE_SIZE>> &localCachedCntrs = cachedCntrs_[threadId];
 
     const std::size_t minVal = std::max(localCachedCntrs[threadId], diff) - diff;
 
