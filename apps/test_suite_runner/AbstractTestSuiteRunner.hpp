@@ -312,6 +312,8 @@ class AbstractTestSuiteRunner {
                     continue;
                 }
 
+                bspInstance.SetAllOnesCompatibilityMatrix();
+
                 for (auto &algorithmConfigPair : parser_.scheduler_) {
                     const pt::ptree &algoConfig = algorithmConfigPair.second;
 
