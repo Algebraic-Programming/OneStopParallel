@@ -225,9 +225,6 @@ ReturnStatus GrowLocalSSP<GraphT>::ComputeSchedule(MaxBspSchedule<GraphT> &sched
             currentlyReady_.emplace_back(vert);
         }
     }
-    if constexpr (not hasVerticesInTopOrderV<GraphT>) {
-        std::sort(currentlyReady_.begin(), currentlyReady_.end(), std::less<>{});
-    }
 
     std::vector<std::vector<VertexType>> newAssignments(numProcs);
     std::vector<std::vector<VertexType>> bestNewAssignments(numProcs);
@@ -244,14 +241,6 @@ ReturnStatus GrowLocalSSP<GraphT>::ComputeSchedule(MaxBspSchedule<GraphT> &sched
         const unsigned reducedSuperStep = superStep % staleness;
 
         std::deque<VertexType> &stepFutureReady = futureReady_[reducedSuperStep];
-        std::sort(stepFutureReady.begin(), stepFutureReady.end(), std::less<>{});
-        const typename std::deque<VertexType>::difference_type lengthCurrentlyReady
-            = std::distance(currentlyReady_.begin(), currentlyReady_.end());
-        currentlyReady_.insert(currentlyReady_.end(), stepFutureReady.begin(), stepFutureReady.end());
-        std::inplace_merge(currentlyReady_.begin(),
-                           std::next(currentlyReady_.begin(), lengthCurrentlyReady),
-                           currentlyReady_.end(),
-                           std::less<>{});
 
         const typename std::deque<VertexType>::difference_type maxCurrentlyReadyUsage
             = std::max(static_cast<typename std::deque<VertexType>::difference_type>(
@@ -489,6 +478,17 @@ ReturnStatus GrowLocalSSP<GraphT>::ComputeSchedule(MaxBspSchedule<GraphT> &sched
                 }
             }
         }
+
+        std::deque<VertexType> &nextStepFutureReady = futureReady_[nextSuperStep % staleness];
+        std::sort(nextStepFutureReady.begin(), nextStepFutureReady.end(), std::less<>{});
+        const typename std::deque<VertexType>::difference_type lengthCurrentlyReady
+            = std::distance(currentlyReady_.begin(), currentlyReady_.end());
+        currentlyReady_.insert(currentlyReady_.end(), nextStepFutureReady.begin(), nextStepFutureReady.end());
+        std::inplace_merge(currentlyReady_.begin(),
+                           std::next(currentlyReady_.begin(), lengthCurrentlyReady),
+                           currentlyReady_.end(),
+                           std::less<>{});
+        nextStepFutureReady.clear();
 
         ++superStep;
         desiredParallelism = (0.3 * desiredParallelism) + (0.6 * bestParallelism)
