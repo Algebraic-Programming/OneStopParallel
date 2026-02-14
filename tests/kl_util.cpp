@@ -446,7 +446,7 @@ BOOST_AUTO_TEST_CASE(ActiveScheduleRevertToBestScheduleTest) {
 
     unsigned endStep = activeSchedule_.NumSteps() - 1;
     // Revert to best. start_move=0 means no step removal logic is triggered.
-    activeSchedule_.RevertToBestSchedule(0, 0, commDs, threadData, 0, endStep);
+    activeSchedule_.RevertToBestSchedule(0, 0, false, commDs, threadData, 0, endStep);
 
     BOOST_CHECK_EQUAL(threadData.cost_, 80.0);    // Check cost is reverted to best
     BOOST_CHECK_EQUAL(threadData.appliedMoves_.size(), 0);

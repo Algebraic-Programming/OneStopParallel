@@ -132,6 +132,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
         unsigned stepSelectionCounter_ = 0;
         unsigned stepToRemove_ = 0;
         unsigned localSearchStartStep_ = 0;
+        bool stepWasRemoved_ = false;
         unsigned unlockEdgeBacktrackCounter_ = 0;
         unsigned unlockEdgeBacktrackCounterReset_ = 0;
         unsigned maxNoVioaltionsRemovedBacktrack_ = 0;
@@ -936,6 +937,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
 #endif
             activeSchedule_.RevertToBestSchedule(threadData.localSearchStartStep_,
                                                  threadData.stepToRemove_,
+                                                 threadData.stepWasRemoved_,
                                                  commCostF_,
                                                  threadData.activeScheduleData_,
                                                  threadData.startStep_,
@@ -1217,7 +1219,15 @@ class KlImprover : public ImprovementScheduler<GraphT> {
             activeSchedule_.SwapEmptyStepFwd(threadData.stepToRemove_, threadData.endStep_);
             threadData.endStep_--;
             threadData.localSearchStartStep_ = static_cast<unsigned>(threadData.activeScheduleData_.appliedMoves_.size());
+            threadData.stepWasRemoved_ = true;
+
+            // SwapEmptyStepFwd shifts nodes after the removed step down by 1,
+            // which can reduce cross-processor gaps below staleness.  Update the
+            // violation set for the affected boundary BEFORE UpdateCost, so that
+            // feasible_ is correct when UpdateCost decides whether to save the
+            // current state as the new best.
             activeSchedule_.UpdateViolationsAfterStepRemoval(threadData.stepToRemove_, threadData.activeScheduleData_);
+
             threadData.activeScheduleData_.UpdateCost(static_cast<CostT>(-1.0 * instance_->SynchronisationCosts()));
 
             if constexpr (enablePreresolvingViolations_) {
@@ -1227,6 +1237,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
             if (threadData.activeScheduleData_.currentViolations_.size() > parameters_.initialViolationThreshold_) {
                 activeSchedule_.RevertToBestSchedule(threadData.localSearchStartStep_,
                                                      threadData.stepToRemove_,
+                                                     threadData.stepWasRemoved_,
                                                      commCostF_,
                                                      threadData.activeScheduleData_,
                                                      threadData.startStep_,
@@ -1246,6 +1257,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
         }
         // threadData.stepToRemove_ = threadData.startStep_;
         threadData.localSearchStartStep_ = 0;
+        threadData.stepWasRemoved_ = false;
         threadData.selectionStrategy_.SelectActiveNodes(threadData.affinityTable_, threadData.startStep_, threadData.endStep_);
     }
 
@@ -1315,7 +1327,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
 
         if (abort) {
             activeSchedule_.RevertToBestSchedule(
-                0, 0, commCostF_, threadData.activeScheduleData_, threadData.startStep_, threadData.endStep_);
+                0, 0, false, commCostF_, threadData.activeScheduleData_, threadData.startStep_, threadData.endStep_);
             threadData.affinityTable_.ResetNodeSelection();
             return false;
         }

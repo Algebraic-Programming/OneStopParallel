@@ -369,6 +369,7 @@ class KlActiveSchedule {
     template <typename CommDatastructuresT>
     void RevertToBestSchedule(unsigned startMove,
                               unsigned insertStep,
+                              bool stepWasRemoved,
                               CommDatastructuresT &commDatastructures,
                               ThreadDataT &threadData,
                               unsigned startStep,
@@ -376,7 +377,17 @@ class KlActiveSchedule {
         const unsigned bound = std::max(startMove, threadData.bestScheduleIdx_);
         RevertMoves(bound, commDatastructures, threadData, startStep, endStep);
 
-        if (startMove > threadData.bestScheduleIdx_) {
+        // Re-insert the removed step when the best schedule predates the
+        // removal.  bestScheduleIdx_ <= startMove (== localSearchStartStep_)
+        // means the best was saved during scatter or is the initial state,
+        // both of which are pre-removal.  bestScheduleIdx_ > startMove means
+        // the inner loop (or resolve) found a better state post-removal, so
+        // the step stays removed.
+        //
+        // stepWasRemoved guards against the case where startMove == 0 because
+        // the removed step was already empty (zero scatter moves).  Without
+        // the flag, startMove == 0 would look identical to "no step removed."
+        if (stepWasRemoved && startMove >= threadData.bestScheduleIdx_) {
             SwapEmptyStepBwd(++endStep, insertStep);
         }
 
