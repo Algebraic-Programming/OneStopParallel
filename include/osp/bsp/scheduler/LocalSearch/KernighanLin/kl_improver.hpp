@@ -51,10 +51,10 @@ struct KlParameter {
     constexpr static unsigned abortScatterNodesViolationThreshold_ = 500;
     constexpr static unsigned initialViolationThreshold_ = 250;
 
-    unsigned maxNoVioaltionsRemovedBacktrackReset_;
+    unsigned maxNoViolationsRemovedBacktrackReset_;
     unsigned removeStepEpocs_;
     unsigned nodeMaxStepSelectionEpochs_;
-    unsigned maxNoVioaltionsRemovedBacktrackForRemoveStepReset_;
+    unsigned maxNoViolationsRemovedBacktrackForRemoveStepReset_;
     unsigned maxOuterIterations_;
     unsigned tryRemoveStepAfterNumOuterIterations_;
     unsigned minInnerIterReset_;
@@ -135,7 +135,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
         bool stepWasRemoved_ = false;
         unsigned unlockEdgeBacktrackCounter_ = 0;
         unsigned unlockEdgeBacktrackCounterReset_ = 0;
-        unsigned maxNoVioaltionsRemovedBacktrack_ = 0;
+        unsigned maxNoViolationsRemovedBacktrack_ = 0;
 
         inline unsigned NumSteps() const { return endStep_ - startStep_ + 1; }
 
@@ -185,7 +185,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
         threadData.noImprovementIterationsIncreaseInnerIter_ = 10;
         threadData.unlockEdgeBacktrackCounterReset_ = 0;
         threadData.unlockEdgeBacktrackCounter_ = threadData.unlockEdgeBacktrackCounterReset_;
-        threadData.maxNoVioaltionsRemovedBacktrack_ = parameters_.maxNoVioaltionsRemovedBacktrackReset_;
+        threadData.maxNoViolationsRemovedBacktrack_ = parameters_.maxNoViolationsRemovedBacktrackReset_;
     }
 
     KlMove GetBestMove(NodeSelectionContainerT &affinityTable,
@@ -842,7 +842,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
                         violationRemovedCount++;
 
                         if (violationRemovedCount > 3) {
-                            if (resetCounter < threadData.maxNoVioaltionsRemovedBacktrack_
+                            if (resetCounter < threadData.maxNoViolationsRemovedBacktrack_
                                 && ((not iterInitalFeasible)
                                     || (threadData.activeScheduleData_.cost_ < threadData.activeScheduleData_.bestCost_))) {
                                 threadData.affinityTable_.ResetNodeSelection();
@@ -1247,7 +1247,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
                     = static_cast<unsigned>(threadData.activeScheduleData_.currentViolations_.size());
                 threadData.maxInnerIterations_
                     = std::max(threadData.unlockEdgeBacktrackCounter_ * 5u, parameters_.maxInnerIterationsReset_);
-                threadData.maxNoVioaltionsRemovedBacktrack_ = parameters_.maxNoVioaltionsRemovedBacktrackForRemoveStepReset_;
+                threadData.maxNoViolationsRemovedBacktrack_ = parameters_.maxNoViolationsRemovedBacktrackForRemoveStepReset_;
 #ifdef KL_DEBUG_1
                 std::cout << "thread " << threadData.threadId_ << ", Trying to remove step " << threadData.stepToRemove_
                           << std::endl;
@@ -1426,12 +1426,12 @@ void KlImprover<GraphT, CommCostFunctionT, MemoryConstraintT, windowSize, CostT>
         = static_cast<unsigned>(std::sqrt(numNodes) * (parameters_.timeQuality_ * 10.0) / parameters_.numParallelLoops_);
 
     // Number of times to reset the search for violations before giving up.
-    parameters_.maxNoVioaltionsRemovedBacktrackReset_ = parameters_.timeQuality_ < 0.75  ? 1
+    parameters_.maxNoViolationsRemovedBacktrackReset_ = parameters_.timeQuality_ < 0.75  ? 1
                                                         : parameters_.timeQuality_ < 1.0 ? 2
                                                                                          : 3;
 
     // Parameters for the superstep removal heuristic.
-    parameters_.maxNoVioaltionsRemovedBacktrackForRemoveStepReset_
+    parameters_.maxNoViolationsRemovedBacktrackForRemoveStepReset_
         = 3 + static_cast<unsigned>(parameters_.superstepRemoveStrength_ * 7);
     parameters_.nodeMaxStepSelectionEpochs_ = parameters_.superstepRemoveStrength_ < 0.75  ? 1
                                               : parameters_.superstepRemoveStrength_ < 1.0 ? 2
@@ -1718,7 +1718,7 @@ void KlImprover<GraphT, CommCostFunctionT, MemoryConstraintT, windowSize, CostT>
     ThreadSearchContext &threadData) const {
     threadData.unlockEdgeBacktrackCounter_ = threadData.unlockEdgeBacktrackCounterReset_;
     threadData.maxInnerIterations_ = parameters_.maxInnerIterationsReset_;
-    threadData.maxNoVioaltionsRemovedBacktrack_ = parameters_.maxNoVioaltionsRemovedBacktrackReset_;
+    threadData.maxNoViolationsRemovedBacktrack_ = parameters_.maxNoViolationsRemovedBacktrackReset_;
     threadData.averageGain_ = 0.0;
     threadData.affinityTable_.ResetNodeSelection();
     threadData.maxGainHeap_.Clear();

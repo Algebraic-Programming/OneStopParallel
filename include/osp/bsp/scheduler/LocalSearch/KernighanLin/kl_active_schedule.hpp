@@ -48,9 +48,7 @@ struct KlMoveStruct {
         return (gain_ < rhs.gain_) or (gain_ == rhs.gain_ and node_ > rhs.node_);
     }
 
-    bool operator>(KlMoveStruct<CostT, VertexIdxT> const &rhs) const {
-        return (gain_ > rhs.gain_) or (gain_ >= rhs.gain_ and node_ < rhs.node_);
-    }
+    bool operator>(KlMoveStruct<CostT, VertexIdxT> const &rhs) const { return rhs < *this; }
 
     KlMoveStruct<CostT, VertexIdxT> ReverseMove() const {
         return KlMoveStruct(node_, -gain_, toProc_, toStep_, fromProc_, fromStep_);

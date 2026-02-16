@@ -50,7 +50,7 @@ struct KlTotalCommCostFunction {
 
     inline CostT GetMaxCommWeightMultiplied() { return maxCommWeight_ * commMultiplier_; }
 
-    const std::string Name() const { return "toal_comm_cost"; }
+    const std::string Name() const { return "total_comm_cost"; }
 
     inline bool IsCompatible(VertexType node, unsigned proc) { return activeSchedule_->GetInstance().IsCompatible(node, proc); }
 
@@ -395,7 +395,7 @@ struct KlTotalCommCostFunction {
                 }
             }
 
-        }    // traget
+        }    // target
 
         for (const auto &source : instance_->GetComputationalDag().Parents(node)) {
             const unsigned sourceStep = activeSchedule_->AssignedSuperstep(source);
