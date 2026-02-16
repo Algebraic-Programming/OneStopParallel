@@ -248,6 +248,8 @@ BOOST_AUTO_TEST_CASE(TestSparseMatrixAdapter2) {
             auto chldren = graph.Children(vert);
             auto chldren2 = graph2.Children(vert);
             auto it = chldren.begin();
+            auto it_other = chldren.begin();
+            const auto begin = chldren.begin();
             auto it2 = chldren2.begin();
             auto end = chldren.end();
             auto end2 = chldren2.end();
@@ -255,9 +257,13 @@ BOOST_AUTO_TEST_CASE(TestSparseMatrixAdapter2) {
             std::size_t cntr = 0;
             while ((it != end) && (it2 != end2)) {
                 BOOST_CHECK_EQUAL(*it, *it2);
+                BOOST_CHECK(it == it_other);
+                BOOST_CHECK(cntr == 0U || it != begin);
+                BOOST_CHECK(cntr == 0U || (not (it == begin)));
 
                 ++cntr;
                 ++it;
+                ++it_other;
                 ++it2;
             }
             BOOST_CHECK_EQUAL(cntr, graph.OutDegree(vert));
@@ -271,6 +277,8 @@ BOOST_AUTO_TEST_CASE(TestSparseMatrixAdapter2) {
             auto parents = graph.Parents(vert);
             auto parents2 = graph2.Parents(vert);
             auto it = parents.begin();
+            auto it_other = parents.begin();
+            const auto begin = parents.begin();
             auto it2 = parents2.begin();
             auto end = parents.end();
             auto end2 = parents2.end();
@@ -278,6 +286,8 @@ BOOST_AUTO_TEST_CASE(TestSparseMatrixAdapter2) {
             std::size_t cntr = 0;
             while ((it != end) && (it2 != end2)) {
                 BOOST_CHECK_EQUAL(*it, *it2);
+                BOOST_CHECK(cntr == 0U || it != begin);
+                BOOST_CHECK(cntr == 0U || (not (it == begin)));
 
                 ++cntr;
                 ++it;
