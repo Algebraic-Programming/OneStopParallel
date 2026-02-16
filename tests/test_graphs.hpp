@@ -82,7 +82,7 @@ inline GraphT ConstructMultiPipelineDag(unsigned numPipelines, unsigned pipeline
     for (unsigned i = 0; i < numPipelines; ++i) {
         for (unsigned j = 0; j < pipelineLen; ++j) {
             // Nodes at the same stage 'j' have the same work weight
-            dag.AddVertex(10 * (j + 1), 1, 1);
+            dag.AddVertex(static_cast<VWorkwT<GraphT>>(10 * (j + 1)), 1, 1);
         }
     }
 
@@ -145,7 +145,7 @@ inline GraphT ConstructAsymmetricDag(unsigned numNodes) {
     static_assert(isConstructableCdagV<GraphT>, "GraphT must be a constructable computational DAG");
     GraphT dag;
     for (unsigned i = 0; i < numNodes; ++i) {
-        dag.AddVertex(10 * (i + 1), 1, 1);
+        dag.AddVertex(static_cast<VWorkwT<GraphT>>(10 * (i + 1)), 1, 1);
         if (i > 0) {
             dag.AddEdge(i - 1, i);
         }

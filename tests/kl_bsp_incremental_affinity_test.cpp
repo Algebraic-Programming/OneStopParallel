@@ -1,0 +1,1424 @@
+/*
+Copyright 2024 Huawei Technologies Co., Ltd.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+@author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
+*/
+
+/**
+ * @file kl_bsp_incremental_affinity_test.cpp
+ * @brief Comprehensive tests for incremental affinity table updates under
+ *        KlBspCommCostFunction.
+ *
+ * After each KL inner iteration (RunInnerIterationTest), we validate:
+ *   1. Communication datastructures (send/receive per step/proc) match fresh computation
+ *   2. Tracked cost matches recomputed cost
+ *   3. Affinity tables for remaining active nodes match freshly computed ones
+ *
+ * Structure:
+ *   Suite 1 – SmallGraphSingleMove: small graphs, 1 node inserted, 1 iteration
+ *   Suite 2 – SequentialMoves: multiple sequential iterations on same instance
+ *   Suite 3 – StructuredGraphs: grid, butterfly, ladder, tree, pipeline topologies
+ *   Suite 4 – EdgeCases: boundary conditions and special configurations
+ *   Suite 5 – AffinityTableConsistency: focused affinity table validation
+ */
+
+#define BOOST_TEST_MODULE kl_bsp_incremental_affinity
+#include <boost/test/unit_test.hpp>
+#include <cmath>
+
+#include "osp/bsp/scheduler/LocalSearch/KernighanLin/comm_cost_modules/kl_bsp_comm_cost.hpp"
+#include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_improver_test.hpp"
+#include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
+#include "test_graphs.hpp"
+
+using namespace osp;
+using Graph = ComputationalDagEdgeIdxVectorImplDefIntT;
+using VertexType = Graph::VertexIdx;
+using KlActiveScheduleT = KlActiveSchedule<Graph, double, NoLocalSearchMemoryConstraint>;
+using CommCostT = KlBspCommCostFunction<Graph, double, NoLocalSearchMemoryConstraint>;
+using KlTestT = KlImproverTest<Graph, CommCostT>;
+
+// ============================================================================
+// Helpers (adapted from kl_bsp_affinity_test.cpp)
+// ============================================================================
+
+/// Validate comm datastructures: compare incrementally maintained values
+/// against freshly computed ones.
+bool ValidateCommDatastructures(const MaxCommDatastructure<Graph, double, KlActiveScheduleT> &commDsIncremental,
+                                KlActiveScheduleT &activeSched,
+                                const BspInstance<Graph> &instance,
+                                const std::string &context) {
+    BspSchedule<Graph> currentSchedule(instance);
+    activeSched.WriteSchedule(currentSchedule);
+
+    KlActiveScheduleT klSchedFresh;
+    klSchedFresh.Initialize(currentSchedule);
+
+    MaxCommDatastructure<Graph, double, KlActiveScheduleT> commDsFresh;
+    commDsFresh.Initialize(klSchedFresh);
+
+    unsigned maxStep = currentSchedule.NumberOfSupersteps();
+    commDsFresh.ComputeCommDatastructures(0, maxStep > 0 ? maxStep - 1 : 0);
+
+    bool allMatch = true;
+    for (unsigned step = 0; step < maxStep; ++step) {
+        for (unsigned p = 0; p < instance.NumberOfProcessors(); ++p) {
+            auto sendInc = commDsIncremental.StepProcSend(step, p);
+            auto sendFresh = commDsFresh.StepProcSend(step, p);
+            auto recvInc = commDsIncremental.StepProcReceive(step, p);
+            auto recvFresh = commDsFresh.StepProcReceive(step, p);
+
+            if (std::abs(sendInc - sendFresh) > 1e-6 || std::abs(recvInc - recvFresh) > 1e-6) {
+                allMatch = false;
+                std::cout << "  COMM MISMATCH [" << context << "] step " << step << " proc " << p << ":"
+                          << " send(inc=" << sendInc << ", fresh=" << sendFresh << ")"
+                          << " recv(inc=" << recvInc << ", fresh=" << recvFresh << ")" << std::endl;
+            }
+        }
+    }
+
+    // Validate lambda maps
+    for (const auto v : instance.Vertices()) {
+        for (unsigned p = 0; p < instance.NumberOfProcessors(); ++p) {
+            unsigned countInc = 0;
+            if (commDsIncremental.nodeLambdaMap_.HasProcEntry(v, p)) {
+                countInc = commDsIncremental.nodeLambdaMap_.GetProcEntry(v, p);
+            }
+            unsigned countFresh = 0;
+            if (commDsFresh.nodeLambdaMap_.HasProcEntry(v, p)) {
+                countFresh = commDsFresh.nodeLambdaMap_.GetProcEntry(v, p);
+            }
+            if (countInc != countFresh) {
+                allMatch = false;
+                std::cout << "  LAMBDA MISMATCH [" << context << "] node " << v << " proc " << p << ":"
+                          << " inc=" << countInc << " fresh=" << countFresh << std::endl;
+            }
+        }
+    }
+
+    return allMatch;
+}
+
+/// Validate affinity tables: compare incrementally maintained affinity values
+/// against freshly computed ones, skipping out-of-range step indices.
+bool ValidateAffinityTables(KlTestT &klIncremental, const BspInstance<Graph> &instance, const std::string &context) {
+    constexpr unsigned windowSize = 1;
+
+    BspSchedule<Graph> currentSchedule(instance);
+    klIncremental.GetActiveScheduleTest(currentSchedule);
+
+    KlTestT klFresh;
+    klFresh.SetupSchedule(currentSchedule);
+
+    std::vector<VertexType> selectedNodes;
+    const size_t activeCount = klIncremental.GetAffinityTable().size();
+    for (size_t i = 0; i < activeCount; ++i) {
+        selectedNodes.push_back(klIncremental.GetAffinityTable().GetSelectedNodes()[i]);
+    }
+
+    klFresh.InsertGainHeapTest(selectedNodes);
+
+    bool allMatch = true;
+    const unsigned numProcs = instance.NumberOfProcessors();
+    // Use the minimum of both step counts: the incremental may keep phantom
+    // empty steps that the fresh schedule compacts away.
+    const unsigned numStepsInc = klIncremental.GetActiveSchedule().NumSteps();
+    const unsigned numStepsFresh = klFresh.GetActiveSchedule().NumSteps();
+    const unsigned numSteps = std::min(numStepsInc, numStepsFresh);
+
+    for (const auto &node : selectedNodes) {
+        const auto &affinityInc = klIncremental.GetAffinityTable().GetAffinityTable(node);
+        const auto &affinityFresh = klFresh.GetAffinityTable().GetAffinityTable(node);
+
+        unsigned nodeStep = klIncremental.GetActiveSchedule().AssignedSuperstep(node);
+
+        for (unsigned p = 0; p < numProcs; ++p) {
+            if (p >= affinityInc.size() || p >= affinityFresh.size()) {
+                continue;
+            }
+            for (unsigned idx = 0; idx < affinityInc[p].size() && idx < affinityFresh[p].size(); ++idx) {
+                int stepOffset = static_cast<int>(idx) - static_cast<int>(windowSize);
+                int targetStepSigned = static_cast<int>(nodeStep) + stepOffset;
+
+                // Skip affinities for supersteps that don't exist in either schedule
+                if (targetStepSigned < 0 || targetStepSigned >= static_cast<int>(numSteps)) {
+                    continue;
+                }
+
+                double valInc = affinityInc[p][idx];
+                double valFresh = affinityFresh[p][idx];
+
+                if (std::abs(valInc - valFresh) > 1e-4) {
+                    allMatch = false;
+                    std::cout << "  AFFINITY MISMATCH [" << context << "]: node=" << node << " P" << p << " S" << targetStepSigned
+                              << " (offset=" << stepOffset << ")"
+                              << " inc=" << valInc << " fresh=" << valFresh << " diff=" << (valInc - valFresh) << std::endl;
+                }
+            }
+        }
+    }
+    return allMatch;
+}
+
+/// Run one inner iteration and validate all consistency checks.
+void RunAndValidate(KlTestT &kl, const BspInstance<Graph> &instance, const std::string &context) {
+    kl.RunInnerIterationTest();
+
+    BOOST_CHECK(ValidateCommDatastructures(kl.GetCommCostF().commDs_, kl.GetActiveSchedule(), instance, context));
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
+    BOOST_CHECK(ValidateAffinityTables(kl, instance, context));
+}
+
+/// Run one inner iteration and validate comm datastructures and cost only.
+/// Use this when many active nodes span distant steps, since the incremental
+/// update intentionally only recomputes affinities for nodes whose window
+/// overlaps the changed steps.
+void RunAndValidateCommAndCost(KlTestT &kl, const BspInstance<Graph> &instance, const std::string &context) {
+    kl.RunInnerIterationTest();
+
+    BOOST_CHECK(ValidateCommDatastructures(kl.GetCommCostF().commDs_, kl.GetActiveSchedule(), instance, context));
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
+}
+
+// ============================================================================
+// Suite 1: SmallGraphSingleMove — small graphs, few nodes inserted
+// ============================================================================
+
+BOOST_AUTO_TEST_SUITE(SmallGraphSingleMove)
+
+// Simple edge: parent on P0, child on P1, 2 supersteps.
+BOOST_AUTO_TEST_CASE(SimpleParentChild) {
+    Graph dag;
+    dag.AddVertex(10, 5, 2);
+    dag.AddVertex(8, 4, 1);
+    dag.AddEdge(0, 1, 3);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(2);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(5);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1});
+    schedule.SetAssignedSupersteps({0, 1});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({0, 1});
+
+    RunAndValidate(kl, instance, "SimpleParentChild");
+}
+
+// Fan-out: 1 parent, 2 children on different procs.
+BOOST_AUTO_TEST_CASE(FanOutTwoChildren) {
+    Graph dag;
+    dag.AddVertex(10, 5, 2);
+    dag.AddVertex(8, 1, 1);
+    dag.AddVertex(12, 1, 1);
+    dag.AddEdge(0, 1, 1);
+    dag.AddEdge(0, 2, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(3);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(5);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1, 2});
+    schedule.SetAssignedSupersteps({0, 1, 1});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({1, 2});
+
+    RunAndValidate(kl, instance, "FanOutTwoChildren iter1");
+    RunAndValidate(kl, instance, "FanOutTwoChildren iter2");
+}
+
+// Fan-in: 2 parents, 1 child.
+BOOST_AUTO_TEST_CASE(FanInTwoParents) {
+    Graph dag;
+    dag.AddVertex(10, 5, 2);
+    dag.AddVertex(10, 3, 2);
+    dag.AddVertex(20, 1, 1);
+    dag.AddEdge(0, 2, 1);
+    dag.AddEdge(1, 2, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(3);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(5);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1, 2});
+    schedule.SetAssignedSupersteps({0, 0, 1});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({2});
+
+    RunAndValidate(kl, instance, "FanInTwoParents");
+}
+
+// Diamond: 4 nodes, source->(mid1,mid2)->sink.
+BOOST_AUTO_TEST_CASE(DiamondGraph) {
+    Graph dag;
+    dag.AddVertex(10, 5, 2);
+    dag.AddVertex(8, 3, 1);
+    dag.AddVertex(12, 4, 1);
+    dag.AddVertex(15, 1, 1);
+    dag.AddEdge(0, 1, 1);
+    dag.AddEdge(0, 2, 1);
+    dag.AddEdge(1, 3, 1);
+    dag.AddEdge(2, 3, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(3);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(5);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1, 2, 0});
+    schedule.SetAssignedSupersteps({0, 1, 1, 2});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({1, 2});
+
+    RunAndValidate(kl, instance, "Diamond iter1");
+    RunAndValidate(kl, instance, "Diamond iter2");
+}
+
+// Chain: 3 nodes all on different procs, same step.
+BOOST_AUTO_TEST_CASE(ChainSameStep) {
+    Graph dag;
+    dag.AddVertex(10, 5, 2);
+    dag.AddVertex(20, 10, 3);
+    dag.AddVertex(15, 3, 1);
+    dag.AddEdge(0, 1, 1);
+    dag.AddEdge(1, 2, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(3);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(1);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1, 2});
+    schedule.SetAssignedSupersteps({0, 0, 0});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({1});
+
+    RunAndValidate(kl, instance, "ChainSameStep");
+}
+
+// Chain: 3 nodes on different procs AND different steps.
+BOOST_AUTO_TEST_CASE(ChainCrossStep) {
+    Graph dag;
+    dag.AddVertex(10, 5, 2);
+    dag.AddVertex(20, 10, 3);
+    dag.AddVertex(15, 3, 1);
+    dag.AddEdge(0, 1, 1);
+    dag.AddEdge(1, 2, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(2);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(5);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1, 0});
+    schedule.SetAssignedSupersteps({0, 1, 2});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({1});
+
+    RunAndValidate(kl, instance, "ChainCrossStep");
+}
+
+// 3 processors: parent P0, child P2, move candidate.
+BOOST_AUTO_TEST_CASE(ThreeProcsSimple) {
+    Graph dag;
+    dag.AddVertex(10, 5, 2);
+    dag.AddVertex(8, 4, 1);
+    dag.AddEdge(0, 1, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(3);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(5);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 2});
+    schedule.SetAssignedSupersteps({0, 1});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({1});
+
+    RunAndValidate(kl, instance, "ThreeProcsSimple");
+}
+
+// Fan-out: parent with 3 children on 3 different procs.
+BOOST_AUTO_TEST_CASE(FanOutThreeChildren) {
+    Graph dag;
+    dag.AddVertex(10, 8, 3);
+    dag.AddVertex(5, 1, 1);
+    dag.AddVertex(5, 1, 1);
+    dag.AddVertex(5, 1, 1);
+    dag.AddEdge(0, 1, 1);
+    dag.AddEdge(0, 2, 1);
+    dag.AddEdge(0, 3, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(4);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(5);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1, 2, 3});
+    schedule.SetAssignedSupersteps({0, 1, 1, 1});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({1, 2, 3});
+
+    RunAndValidate(kl, instance, "FanOutThreeChildren iter1");
+    RunAndValidate(kl, instance, "FanOutThreeChildren iter2");
+    RunAndValidate(kl, instance, "FanOutThreeChildren iter3");
+}
+
+// No edges: isolated nodes.
+BOOST_AUTO_TEST_CASE(NoEdges) {
+    Graph dag;
+    dag.AddVertex(10, 5, 1);
+    dag.AddVertex(20, 3, 1);
+    dag.AddVertex(15, 4, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(2);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(5);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1, 0});
+    schedule.SetAssignedSupersteps({0, 0, 1});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({1});
+
+    RunAndValidate(kl, instance, "NoEdges");
+}
+
+// All nodes on same processor: no initial communication.
+BOOST_AUTO_TEST_CASE(AllSameProc) {
+    Graph dag;
+    dag.AddVertex(10, 5, 2);
+    dag.AddVertex(8, 4, 1);
+    dag.AddVertex(6, 3, 3);
+    dag.AddEdge(0, 1, 1);
+    dag.AddEdge(1, 2, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(2);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(5);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 0, 0});
+    schedule.SetAssignedSupersteps({0, 1, 2});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({1});
+
+    RunAndValidate(kl, instance, "AllSameProc");
+}
+
+// All nodes on same step: only proc changes possible.
+BOOST_AUTO_TEST_CASE(AllSameStep) {
+    Graph dag;
+    dag.AddVertex(10, 5, 2);
+    dag.AddVertex(8, 4, 1);
+    dag.AddVertex(6, 3, 3);
+    dag.AddVertex(12, 2, 2);
+    dag.AddEdge(0, 1, 1);
+    dag.AddEdge(0, 2, 1);
+    dag.AddEdge(1, 3, 1);
+    dag.AddEdge(2, 3, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(4);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(1);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1, 2, 3});
+    schedule.SetAssignedSupersteps({0, 0, 0, 0});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({1});
+
+    RunAndValidate(kl, instance, "AllSameStep");
+}
+
+BOOST_AUTO_TEST_SUITE_END()    // SmallGraphSingleMove
+
+// ============================================================================
+// Suite 2: SequentialMoves — multiple iterations on same instance
+// ============================================================================
+
+BOOST_AUTO_TEST_SUITE(SequentialMoves)
+
+// Linear chain with 4 nodes, all on different procs.
+BOOST_AUTO_TEST_CASE(ChainFourNodeAllProcs) {
+    Graph dag;
+    dag.AddVertex(1, 10, 1);
+    dag.AddVertex(1, 8, 1);
+    dag.AddVertex(1, 6, 1);
+    dag.AddVertex(1, 4, 1);
+    dag.AddEdge(0, 1, 1);
+    dag.AddEdge(1, 2, 1);
+    dag.AddEdge(2, 3, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(4);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(1);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1, 2, 3});
+    schedule.SetAssignedSupersteps({0, 0, 0, 0});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({1});
+
+    RunAndValidate(kl, instance, "Chain4 iter1");
+
+    kl.RunInnerIterationTest();
+    BOOST_CHECK(ValidateCommDatastructures(kl.GetCommCostF().commDs_, kl.GetActiveSchedule(), instance, "Chain4 iter2"));
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
+}
+
+// Tree with 4 nodes, multiple iterations.
+BOOST_AUTO_TEST_CASE(TreeMultipleIterations) {
+    Graph dag;
+    dag.AddVertex(1, 1, 1);
+    dag.AddVertex(1, 1, 1);
+    dag.AddVertex(1, 1, 1);
+    dag.AddVertex(1, 1, 1);
+    dag.AddEdge(0, 1, 1);
+    dag.AddEdge(0, 2, 1);
+    dag.AddEdge(0, 3, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(4);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(1);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1, 2, 3});
+    schedule.SetAssignedSupersteps({0, 0, 0, 0});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({1});
+
+    RunAndValidate(kl, instance, "Tree4 iter1");
+
+    kl.RunInnerIterationTest();
+    BOOST_CHECK(ValidateCommDatastructures(kl.GetCommCostF().commDs_, kl.GetActiveSchedule(), instance, "Tree4 iter2"));
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
+
+    kl.RunInnerIterationTest();
+    BOOST_CHECK(ValidateCommDatastructures(kl.GetCommCostF().commDs_, kl.GetActiveSchedule(), instance, "Tree4 iter3"));
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
+}
+
+// 8-node complex graph: insert 2 nodes, 5 iterations.
+BOOST_AUTO_TEST_CASE(EightNodeComplexSequential) {
+    Graph dag;
+    dag.AddVertex(2, 9, 2);
+    dag.AddVertex(3, 8, 4);
+    dag.AddVertex(4, 7, 3);
+    dag.AddVertex(5, 6, 2);
+    dag.AddVertex(6, 5, 6);
+    dag.AddVertex(7, 4, 2);
+    dag.AddVertex(8, 3, 4);
+    dag.AddVertex(9, 2, 1);
+
+    dag.AddEdge(0, 1, 2);
+    dag.AddEdge(0, 2, 2);
+    dag.AddEdge(0, 3, 2);
+    dag.AddEdge(1, 4, 12);
+    dag.AddEdge(2, 4, 6);
+    dag.AddEdge(2, 5, 7);
+    dag.AddEdge(4, 7, 9);
+    dag.AddEdge(3, 7, 9);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(2);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(1);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
+    schedule.SetAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({2, 0});
+
+    for (int i = 0; i < 5; ++i) {
+        RunAndValidate(kl, instance, "8node iter" + std::to_string(i));
+    }
+}
+
+// 8-node with denser edges: insert 2 nodes, more iterations.
+// Nodes span 4 steps; after initial moves new nodes are added across distant
+// steps, so the incremental update only recomputes affinities within the
+// changed-steps window. We validate comm datastructures and cost (always exact).
+BOOST_AUTO_TEST_CASE(EightNodeDenseSequential) {
+    Graph dag;
+    dag.AddVertex(2, 9, 2);
+    dag.AddVertex(3, 8, 4);
+    dag.AddVertex(4, 7, 3);
+    dag.AddVertex(5, 6, 2);
+    dag.AddVertex(6, 5, 6);
+    dag.AddVertex(7, 4, 2);
+    dag.AddVertex(8, 3, 4);
+    dag.AddVertex(9, 2, 1);
+
+    dag.AddEdge(0, 1, 2);
+    dag.AddEdge(0, 4, 2);
+    dag.AddEdge(0, 5, 2);
+    dag.AddEdge(0, 2, 2);
+    dag.AddEdge(0, 3, 2);
+    dag.AddEdge(1, 4, 12);
+    dag.AddEdge(1, 5, 2);
+    dag.AddEdge(1, 6, 2);
+    dag.AddEdge(1, 7, 2);
+    dag.AddEdge(2, 4, 6);
+    dag.AddEdge(2, 5, 7);
+    dag.AddEdge(2, 6, 2);
+    dag.AddEdge(2, 7, 2);
+    dag.AddEdge(4, 7, 9);
+    dag.AddEdge(3, 7, 9);
+    dag.AddEdge(4, 6, 2);
+    dag.AddEdge(5, 6, 2);
+    dag.AddEdge(6, 7, 2);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(2);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(1);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
+    schedule.SetAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({1, 3});
+
+    RunAndValidate(kl, instance, "8nodeDense iter0");
+    for (int i = 1; i < 5; ++i) {
+        RunAndValidateCommAndCost(kl, instance, "8nodeDense iter" + std::to_string(i));
+    }
+}
+
+// Cross-step moves: 6 nodes across 3 steps, 3 procs.
+BOOST_AUTO_TEST_CASE(CrossStepSequential) {
+    Graph dag;
+    dag.AddVertex(10, 5, 2);
+    dag.AddVertex(8, 3, 3);
+    dag.AddVertex(6, 4, 4);
+    dag.AddVertex(12, 6, 2);
+    dag.AddVertex(5, 2, 5);
+    dag.AddVertex(7, 3, 3);
+
+    dag.AddEdge(0, 2, 2);
+    dag.AddEdge(0, 3, 3);
+    dag.AddEdge(1, 4, 2);
+    dag.AddEdge(1, 5, 4);
+    dag.AddEdge(2, 4, 5);
+    dag.AddEdge(3, 5, 3);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(3);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(5);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1, 0, 1, 2, 0});
+    schedule.SetAssignedSupersteps({0, 0, 1, 1, 2, 2});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({3, 1});
+
+    for (int i = 0; i < 4; ++i) {
+        RunAndValidate(kl, instance, "CrossStep iter" + std::to_string(i));
+    }
+}
+
+// Two independent components: moves in one shouldn't affect the other.
+BOOST_AUTO_TEST_CASE(IndependentComponents) {
+    Graph dag;
+    dag.AddVertex(10, 5, 2);
+    dag.AddVertex(8, 4, 1);
+    dag.AddVertex(15, 6, 3);
+    dag.AddVertex(12, 3, 2);
+    dag.AddEdge(0, 1, 1);
+    dag.AddEdge(2, 3, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(3);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(5);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1, 2, 0});
+    schedule.SetAssignedSupersteps({0, 1, 0, 1});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({0, 1, 2, 3});
+
+    RunAndValidate(kl, instance, "IndepComp iter1");
+    RunAndValidate(kl, instance, "IndepComp iter2");
+}
+
+// Each node individually: test each node as the single move candidate.
+BOOST_AUTO_TEST_CASE(EachNodeIndividually) {
+    Graph dag;
+    dag.AddVertex(2, 9, 2);
+    dag.AddVertex(3, 8, 4);
+    dag.AddVertex(4, 7, 3);
+    dag.AddVertex(5, 6, 2);
+    dag.AddVertex(6, 5, 6);
+    dag.AddVertex(7, 4, 2);
+    dag.AddVertex(8, 3, 4);
+    dag.AddVertex(9, 2, 1);
+
+    dag.AddEdge(0, 1, 2);
+    dag.AddEdge(0, 2, 2);
+    dag.AddEdge(0, 3, 2);
+    dag.AddEdge(1, 4, 12);
+    dag.AddEdge(2, 4, 6);
+    dag.AddEdge(2, 5, 7);
+    dag.AddEdge(4, 7, 9);
+    dag.AddEdge(3, 7, 9);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(2);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(1);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
+    schedule.SetAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
+    schedule.UpdateNumberOfSupersteps();
+
+    for (VertexType v = 0; v < 8; ++v) {
+        KlTestT kl;
+        kl.SetupSchedule(schedule);
+        kl.InsertGainHeapTest({v});
+        RunAndValidate(kl, instance, "EachNode v" + std::to_string(v));
+    }
+}
+
+BOOST_AUTO_TEST_SUITE_END()    // SequentialMoves
+
+// ============================================================================
+// Suite 3: StructuredGraphs — standard topologies
+// ============================================================================
+
+BOOST_AUTO_TEST_SUITE(StructuredGraphs)
+
+// 5x5 Grid Graph.
+BOOST_AUTO_TEST_CASE(GridGraph5x5) {
+    Graph dag = osp::ConstructGridDag<Graph>(5, 5);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(4);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(1);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+
+    std::vector<unsigned> procs(25), steps(25);
+    for (unsigned r = 0; r < 5; ++r) {
+        for (unsigned c = 0; c < 5; ++c) {
+            unsigned idx = r * 5 + c;
+            if (r < 2) {
+                procs[idx] = 0;
+                steps[idx] = (c < 3) ? 0 : 1;
+            } else if (r < 4) {
+                procs[idx] = 1;
+                steps[idx] = (c < 3) ? 2 : 3;
+            } else {
+                procs[idx] = 2;
+                steps[idx] = (c < 3) ? 4 : 5;
+            }
+        }
+    }
+    procs[7] = 3;
+    steps[7] = 1;
+
+    schedule.SetAssignedProcessors(procs);
+    schedule.SetAssignedSupersteps(steps);
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({12, 8, 7});
+
+    for (int i = 0; i < 3; ++i) {
+        RunAndValidate(kl, instance, "Grid5x5 iter" + std::to_string(i));
+    }
+}
+
+// Butterfly graph: 2 stages (12 nodes).
+BOOST_AUTO_TEST_CASE(ButterflyGraph2Stage) {
+    Graph dag = osp::ConstructButterflyDag<Graph>(2);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(2);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(1);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+
+    std::vector<unsigned> procs(12), steps(12);
+    for (unsigned i = 0; i < 12; ++i) {
+        if (i < 4) {
+            procs[i] = 0;
+            steps[i] = 0;
+        } else if (i < 8) {
+            procs[i] = 1;
+            steps[i] = 1;
+        } else {
+            procs[i] = 0;
+            steps[i] = 2;
+        }
+    }
+    schedule.SetAssignedProcessors(procs);
+    schedule.SetAssignedSupersteps(steps);
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({4, 6, 0});
+
+    for (int i = 0; i < 3; ++i) {
+        RunAndValidate(kl, instance, "Butterfly iter" + std::to_string(i));
+    }
+}
+
+// Ladder graph: 5 rungs (12 nodes).
+BOOST_AUTO_TEST_CASE(LadderGraph5Rungs) {
+    Graph dag = osp::ConstructLadderDag<Graph>(5);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(2);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(1);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+
+    std::vector<unsigned> procs(12), steps(12);
+    for (unsigned i = 0; i < 6; ++i) {
+        procs[2 * i] = 0;
+        steps[2 * i] = i;
+        procs[2 * i + 1] = 1;
+        steps[2 * i + 1] = i;
+    }
+    schedule.SetAssignedProcessors(procs);
+    schedule.SetAssignedSupersteps(steps);
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({1, 3, 0, 2});
+
+    for (int i = 0; i < 4; ++i) {
+        RunAndValidate(kl, instance, "Ladder iter" + std::to_string(i));
+    }
+}
+
+// Binary out-tree: height 3 (15 nodes).
+BOOST_AUTO_TEST_CASE(BinaryOutTreeH3) {
+    Graph dag = osp::ConstructBinaryOutTree<Graph>(3);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(4);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(1);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+
+    size_t numNodes = dag.NumVertices();
+    std::vector<unsigned> procs(numNodes), steps(numNodes);
+    for (size_t i = 0; i < numNodes; ++i) {
+        procs[i] = static_cast<unsigned>(i % 4);
+        unsigned level = 0;
+        size_t idx = i + 1;
+        while (idx > 1) {
+            idx /= 2;
+            level++;
+        }
+        steps[i] = level;
+    }
+    schedule.SetAssignedProcessors(procs);
+    schedule.SetAssignedSupersteps(steps);
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({1, 3, 5, 7});
+
+    for (int i = 0; i < 4; ++i) {
+        RunAndValidate(kl, instance, "BinTree iter" + std::to_string(i));
+    }
+}
+
+// Multi-pipeline: 3 pipelines of length 3 (9 nodes).
+BOOST_AUTO_TEST_CASE(MultiPipeline3x3) {
+    Graph dag = osp::ConstructMultiPipelineDag<Graph>(3, 3);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(3);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(1);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+
+    size_t numNodes = dag.NumVertices();
+    std::vector<unsigned> procs(numNodes), steps(numNodes);
+    for (size_t i = 0; i < numNodes; ++i) {
+        unsigned pipeline = static_cast<unsigned>(i / 3);
+        unsigned stage = static_cast<unsigned>(i % 3);
+        procs[i] = pipeline;
+        steps[i] = stage;
+    }
+    schedule.SetAssignedProcessors(procs);
+    schedule.SetAssignedSupersteps(steps);
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({1, 4, 7});
+
+    for (int i = 0; i < 3; ++i) {
+        RunAndValidate(kl, instance, "MultiPipe iter" + std::to_string(i));
+    }
+}
+
+// Binary in-tree: height 2 (7 nodes), leaves spread across procs.
+BOOST_AUTO_TEST_CASE(BinaryInTreeH2) {
+    Graph dag = osp::ConstructBinaryInTree<Graph>(2);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(3);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(1);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+
+    // Root=0 at bottom (step 2), internal nodes at step 1, leaves at step 0
+    // In-tree: leaves 3,4,5,6 -> internals 1,2 -> root 0
+    schedule.SetAssignedProcessors({0, 1, 2, 0, 1, 2, 0});
+    schedule.SetAssignedSupersteps({2, 1, 1, 0, 0, 0, 0});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({3, 4, 5, 6});
+
+    for (int i = 0; i < 4; ++i) {
+        RunAndValidate(kl, instance, "InTree iter" + std::to_string(i));
+    }
+}
+
+BOOST_AUTO_TEST_SUITE_END()    // StructuredGraphs
+
+// ============================================================================
+// Suite 4: EdgeCases — special configurations and boundary conditions
+// ============================================================================
+
+BOOST_AUTO_TEST_SUITE(EdgeCases)
+
+// Large comm weights and costs: precision test.
+BOOST_AUTO_TEST_CASE(LargeCommWeights) {
+    Graph dag;
+    dag.AddVertex(10, 500, 100);
+    dag.AddVertex(8, 1000, 200);
+    dag.AddVertex(6, 300, 50);
+    dag.AddEdge(0, 1, 1);
+    dag.AddEdge(0, 2, 1);
+    dag.AddEdge(1, 2, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(3);
+    arch.SetCommunicationCosts(10);
+    arch.SetSynchronisationCosts(100);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1, 2});
+    schedule.SetAssignedSupersteps({0, 1, 2});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({1});
+
+    RunAndValidate(kl, instance, "LargeComm");
+}
+
+// 5 processors, 2 nodes.
+BOOST_AUTO_TEST_CASE(ManyProcessors) {
+    Graph dag;
+    dag.AddVertex(10, 5, 2);
+    dag.AddVertex(8, 4, 1);
+    dag.AddEdge(0, 1, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(5);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(5);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 4});
+    schedule.SetAssignedSupersteps({0, 1});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({1});
+
+    RunAndValidate(kl, instance, "ManyProcs");
+}
+
+// Mixed local and cross-proc edges.
+BOOST_AUTO_TEST_CASE(MixedLocalCrossEdges) {
+    Graph dag;
+    dag.AddVertex(10, 5, 2);
+    dag.AddVertex(8, 4, 1);
+    dag.AddVertex(6, 3, 3);
+    dag.AddVertex(12, 2, 2);
+    dag.AddVertex(5, 6, 4);
+    dag.AddEdge(0, 1, 1);
+    dag.AddEdge(0, 2, 1);
+    dag.AddEdge(1, 3, 1);
+    dag.AddEdge(2, 4, 1);
+    dag.AddEdge(3, 4, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(3);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(5);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 0, 1, 2, 1});
+    schedule.SetAssignedSupersteps({0, 0, 1, 1, 2});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({1, 3});
+
+    RunAndValidate(kl, instance, "MixedEdges iter1");
+    RunAndValidate(kl, instance, "MixedEdges iter2");
+}
+
+// Long chain: 6 nodes, alternating procs, sequential steps.
+BOOST_AUTO_TEST_CASE(LongChainAllDifferent) {
+    Graph dag;
+    dag.AddVertex(10, 5, 2);
+    dag.AddVertex(8, 4, 3);
+    dag.AddVertex(6, 3, 1);
+    dag.AddVertex(12, 6, 4);
+    dag.AddVertex(5, 2, 2);
+    dag.AddVertex(7, 1, 3);
+    dag.AddEdge(0, 1, 1);
+    dag.AddEdge(1, 2, 1);
+    dag.AddEdge(2, 3, 1);
+    dag.AddEdge(3, 4, 1);
+    dag.AddEdge(4, 5, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(3);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(5);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1, 2, 0, 1, 2});
+    schedule.SetAssignedSupersteps({0, 1, 2, 3, 4, 5});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({2, 3});
+
+    RunAndValidate(kl, instance, "LongChain iter1");
+    RunAndValidate(kl, instance, "LongChain iter2");
+}
+
+// Dense graph: every earlier node connects to every later node.
+// Nodes start on the same step but moves may scatter them across steps,
+// causing later iterations to have stale affinities for distant nodes.
+BOOST_AUTO_TEST_CASE(DenseGraph) {
+    Graph dag;
+    dag.AddVertex(10, 5, 2);
+    dag.AddVertex(8, 4, 3);
+    dag.AddVertex(6, 3, 1);
+    dag.AddVertex(12, 6, 4);
+    dag.AddEdge(0, 1, 1);
+    dag.AddEdge(0, 2, 1);
+    dag.AddEdge(0, 3, 1);
+    dag.AddEdge(1, 2, 1);
+    dag.AddEdge(1, 3, 1);
+    dag.AddEdge(2, 3, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(4);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(1);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1, 2, 3});
+    schedule.SetAssignedSupersteps({0, 0, 0, 0});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({2, 1});
+
+    RunAndValidate(kl, instance, "DenseGraph iter1");
+    RunAndValidateCommAndCost(kl, instance, "DenseGraph iter2");
+}
+
+// Source and sink with isolated node.
+BOOST_AUTO_TEST_CASE(IsolatedSourceSink) {
+    Graph dag;
+    dag.AddVertex(10, 5, 2);
+    dag.AddVertex(8, 4, 1);
+    dag.AddVertex(6, 3, 3);
+    dag.AddVertex(15, 2, 1);    // isolated
+    dag.AddEdge(0, 1, 1);
+    dag.AddEdge(1, 2, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(3);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(5);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1, 2, 0});
+    schedule.SetAssignedSupersteps({0, 1, 2, 1});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({3, 1});
+
+    RunAndValidate(kl, instance, "IsolatedSrcSink iter1");
+    RunAndValidate(kl, instance, "IsolatedSrcSink iter2");
+}
+
+// Symmetric schedule: two identical edges with same weights.
+BOOST_AUTO_TEST_CASE(SymmetricEdges) {
+    Graph dag;
+    dag.AddVertex(10, 5, 2);
+    dag.AddVertex(10, 5, 2);
+    dag.AddVertex(10, 5, 2);
+    dag.AddVertex(10, 5, 2);
+    dag.AddEdge(0, 2, 3);
+    dag.AddEdge(1, 3, 3);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(2);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(1);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1, 1, 0});
+    schedule.SetAssignedSupersteps({0, 0, 1, 1});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({2, 3});
+
+    RunAndValidate(kl, instance, "SymEdges iter1");
+    RunAndValidate(kl, instance, "SymEdges iter2");
+}
+
+BOOST_AUTO_TEST_SUITE_END()    // EdgeCases
+
+// ============================================================================
+// Suite 5: AffinityTableConsistency — focused on affinity table matching
+// ============================================================================
+
+BOOST_AUTO_TEST_SUITE(AffinityTableConsistency)
+
+// Run full sweep: insert all 8 nodes, exhaust the heap.
+// With all nodes active across 4 steps and windowSize=1, the incremental
+// update only recomputes affinities for nodes near the changed steps.
+// We validate comm datastructures and cost for all iterations.
+BOOST_AUTO_TEST_CASE(FullSweepEightNodes) {
+    Graph dag;
+    dag.AddVertex(2, 9, 2);
+    dag.AddVertex(3, 8, 4);
+    dag.AddVertex(4, 7, 3);
+    dag.AddVertex(5, 6, 2);
+    dag.AddVertex(6, 5, 6);
+    dag.AddVertex(7, 4, 2);
+    dag.AddVertex(8, 3, 4);
+    dag.AddVertex(9, 2, 1);
+
+    dag.AddEdge(0, 1, 2);
+    dag.AddEdge(0, 2, 2);
+    dag.AddEdge(0, 3, 2);
+    dag.AddEdge(1, 4, 12);
+    dag.AddEdge(2, 4, 6);
+    dag.AddEdge(2, 5, 7);
+    dag.AddEdge(4, 7, 9);
+    dag.AddEdge(3, 7, 9);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(2);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(1);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
+    schedule.SetAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({0, 1, 2, 3, 4, 5, 6, 7});
+
+    for (int i = 0; i < 7; ++i) {
+        RunAndValidateCommAndCost(kl, instance, "FullSweep iter" + std::to_string(i));
+    }
+}
+
+// 3-proc graph: 6 nodes across 3 steps, comm and cost validation.
+BOOST_AUTO_TEST_CASE(ThreeProcAffinityCheck) {
+    Graph dag;
+    dag.AddVertex(10, 5, 2);
+    dag.AddVertex(8, 3, 1);
+    dag.AddVertex(12, 4, 3);
+    dag.AddVertex(15, 1, 2);
+    dag.AddVertex(6, 6, 4);
+    dag.AddVertex(9, 2, 1);
+    dag.AddEdge(0, 2, 1);
+    dag.AddEdge(0, 3, 1);
+    dag.AddEdge(1, 3, 1);
+    dag.AddEdge(1, 4, 1);
+    dag.AddEdge(2, 5, 1);
+    dag.AddEdge(3, 5, 1);
+    dag.AddEdge(4, 5, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(3);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(1);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1, 2, 0, 1, 2});
+    schedule.SetAssignedSupersteps({0, 0, 1, 1, 1, 2});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({0, 1, 2, 3, 4, 5});
+
+    for (int i = 0; i < 4; ++i) {
+        RunAndValidateCommAndCost(kl, instance, "3proc iter" + std::to_string(i));
+    }
+}
+
+// Grid with all nodes inserted: extensive sweep.
+// 16 nodes across 4 steps: only comm datastructures and cost validated.
+BOOST_AUTO_TEST_CASE(GridFullSweep) {
+    Graph dag = osp::ConstructGridDag<Graph>(4, 4);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(3);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(1);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+
+    std::vector<unsigned> procs(16), steps(16);
+    for (unsigned i = 0; i < 16; ++i) {
+        procs[i] = i % 3;
+        steps[i] = i / 4;
+    }
+    schedule.SetAssignedProcessors(procs);
+    schedule.SetAssignedSupersteps(steps);
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+
+    std::vector<VertexType> allNodes;
+    for (unsigned i = 0; i < 16; ++i) {
+        allNodes.push_back(i);
+    }
+    kl.InsertGainHeapTest(allNodes);
+
+    for (int i = 0; i < 10; ++i) {
+        RunAndValidateCommAndCost(kl, instance, "GridSweep iter" + std::to_string(i));
+    }
+}
+
+// Butterfly with mixed proc/step assignments.
+// 12 nodes across 3 steps: comm and cost validation only.
+BOOST_AUTO_TEST_CASE(ButterflyMixedAssignment) {
+    Graph dag = osp::ConstructButterflyDag<Graph>(2);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(3);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(1);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+
+    // Spread nodes across 3 procs and 3 steps
+    std::vector<unsigned> procs(12), steps(12);
+    for (unsigned i = 0; i < 12; ++i) {
+        procs[i] = i % 3;
+        steps[i] = i / 4;
+    }
+    schedule.SetAssignedProcessors(procs);
+    schedule.SetAssignedSupersteps(steps);
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+
+    std::vector<VertexType> allNodes;
+    for (unsigned i = 0; i < 12; ++i) {
+        allNodes.push_back(i);
+    }
+    kl.InsertGainHeapTest(allNodes);
+
+    for (int i = 0; i < 8; ++i) {
+        RunAndValidateCommAndCost(kl, instance, "ButterflyMixed iter" + std::to_string(i));
+    }
+}
+
+// Ladder with all nodes: full consistency check.
+// 10 nodes across 5 steps: comm and cost validation only.
+BOOST_AUTO_TEST_CASE(LadderFullSweep) {
+    Graph dag = osp::ConstructLadderDag<Graph>(4);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(2);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(1);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+
+    std::vector<unsigned> procs(10), steps(10);
+    for (unsigned i = 0; i < 5; ++i) {
+        procs[2 * i] = 0;
+        steps[2 * i] = i;
+        procs[2 * i + 1] = 1;
+        steps[2 * i + 1] = i;
+    }
+    schedule.SetAssignedProcessors(procs);
+    schedule.SetAssignedSupersteps(steps);
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+
+    std::vector<VertexType> allNodes;
+    for (unsigned i = 0; i < 10; ++i) {
+        allNodes.push_back(i);
+    }
+    kl.InsertGainHeapTest(allNodes);
+
+    for (int i = 0; i < 8; ++i) {
+        RunAndValidateCommAndCost(kl, instance, "LadderSweep iter" + std::to_string(i));
+    }
+}
+
+BOOST_AUTO_TEST_SUITE_END()    // AffinityTableConsistency
