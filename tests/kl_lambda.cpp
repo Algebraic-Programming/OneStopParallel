@@ -424,7 +424,7 @@ BOOST_AUTO_TEST_CASE(kl_lambda_improver_inner_loop_test) {
     kl.GetActiveScheduleTest(test_sched_2);
     KlImproverTest kl_2;
     kl_2.SetupSchedule(test_sched_2);
-    kl_2.InsertGainHeapTestPenalty({0, 1, 2, 3, 4, 5, 6, 7});
+    kl_2.InsertGainHeapTest({0, 1, 2, 3, 4, 5, 6, 7});
 
     nodes_to_check.erase(v4);
 
@@ -438,7 +438,7 @@ BOOST_AUTO_TEST_CASE(kl_lambda_improver_inner_loop_test) {
     kl.GetActiveScheduleTest(test_sched_3);
     KlImproverTest kl_3;
     kl_3.SetupSchedule(test_sched_3);
-    kl_3.InsertGainHeapTestPenalty({0, 1, 2, 3, 4, 5, 6, 7});
+    kl_3.InsertGainHeapTest({0, 1, 2, 3, 4, 5, 6, 7});
 
     nodes_to_check.erase(v2);
 
@@ -452,7 +452,7 @@ BOOST_AUTO_TEST_CASE(kl_lambda_improver_inner_loop_test) {
     kl.GetActiveScheduleTest(test_sched_4);
     KlImproverTest kl_4;
     kl_4.SetupSchedule(test_sched_4);
-    kl_4.InsertGainHeapTestPenalty({0, 1, 2, 3, 4, 5, 6, 7});
+    kl_4.InsertGainHeapTest({0, 1, 2, 3, 4, 5, 6, 7});
 
     nodes_to_check.erase(v6);
 
@@ -466,7 +466,7 @@ BOOST_AUTO_TEST_CASE(kl_lambda_improver_inner_loop_test) {
     kl.GetActiveScheduleTest(test_sched_5);
     KlImproverTest kl_5;
     kl_5.SetupSchedule(test_sched_5);
-    kl_5.InsertGainHeapTestPenalty({0, 1, 2, 3, 4, 5, 6, 7});
+    kl_5.InsertGainHeapTest({0, 1, 2, 3, 4, 5, 6, 7});
 
     nodes_to_check.erase(v8);
 
@@ -480,7 +480,7 @@ BOOST_AUTO_TEST_CASE(kl_lambda_improver_inner_loop_test) {
     kl.GetActiveScheduleTest(test_sched_6);
     KlImproverTest kl_6;
     kl_6.SetupSchedule(test_sched_6);
-    kl_6.InsertGainHeapTestPenalty({0, 1, 2, 3, 4, 5, 6, 7});
+    kl_6.InsertGainHeapTest({0, 1, 2, 3, 4, 5, 6, 7});
 
     nodes_to_check.erase(v3);
 
