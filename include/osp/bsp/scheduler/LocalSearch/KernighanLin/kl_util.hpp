@@ -358,7 +358,7 @@ struct VertexSelectionStrategy {
     }
 
     inline void SelectActiveNodes(ContainerT &nodeSelection, const unsigned startStep, const unsigned endStep) {
-        if (strategyCounter_ < 3) {
+        if (strategyCounter_ <= 3) {
             SelectNodesPermutationThreshold(selectionThreshold_, nodeSelection);
         } else if (strategyCounter_ == 4) {
             SelectNodesMaxWorkProc(selectionThreshold_, nodeSelection, startStep, endStep);
