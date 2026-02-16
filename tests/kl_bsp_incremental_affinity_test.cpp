@@ -50,6 +50,10 @@ using KlActiveScheduleT = KlActiveSchedule<Graph, double, NoLocalSearchMemoryCon
 using CommCostT = KlBspCommCostFunction<Graph, double, NoLocalSearchMemoryConstraint>;
 using KlTestT = KlImproverTest<Graph, CommCostT>;
 
+// windowSize=2 variants
+using CommCostW2T = KlBspCommCostFunction<Graph, double, NoLocalSearchMemoryConstraint, 2>;
+using KlTestW2T = KlImproverTest<Graph, CommCostW2T, NoLocalSearchMemoryConstraint, 2>;
+
 // ============================================================================
 // Helpers (adapted from kl_bsp_affinity_test.cpp)
 // ============================================================================
@@ -185,7 +189,9 @@ void RunAndValidate(KlTestT &kl, const BspInstance<Graph> &instance, const std::
 /// Use this when many active nodes span distant steps, since the incremental
 /// update intentionally only recomputes affinities for nodes whose window
 /// overlaps the changed steps.
-void RunAndValidateCommAndCost(KlTestT &kl, const BspInstance<Graph> &instance, const std::string &context) {
+/// Templated to support different KlTestType instantiations (e.g. windowSize=2).
+template <typename KlTestType>
+void RunAndValidateCommAndCost(KlTestType &kl, const BspInstance<Graph> &instance, const std::string &context) {
     kl.RunInnerIterationTest();
 
     BOOST_CHECK(ValidateCommDatastructures(kl.GetCommCostF().commDs_, kl.GetActiveSchedule(), instance, context));
@@ -1422,3 +1428,693 @@ BOOST_AUTO_TEST_CASE(LadderFullSweep) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()    // AffinityTableConsistency
+
+// ============================================================================
+// Suite 6: WindowSize2 — tests with windowSize=2 (windowRange=5)
+// ============================================================================
+
+BOOST_AUTO_TEST_SUITE(WindowSize2)
+
+// Simple parent-child with windowSize=2: broader affinity window.
+BOOST_AUTO_TEST_CASE(SimpleParentChildW2) {
+    Graph dag;
+    dag.AddVertex(10, 5, 2);
+    dag.AddVertex(8, 4, 1);
+    dag.AddEdge(0, 1, 3);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(2);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(5);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1});
+    schedule.SetAssignedSupersteps({0, 1});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestW2T kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({0, 1});
+
+    RunAndValidateCommAndCost(kl, instance, "W2_ParentChild");
+}
+
+// Diamond graph with windowSize=2.
+BOOST_AUTO_TEST_CASE(DiamondW2) {
+    Graph dag;
+    dag.AddVertex(10, 5, 2);
+    dag.AddVertex(8, 3, 1);
+    dag.AddVertex(12, 4, 1);
+    dag.AddVertex(15, 1, 1);
+    dag.AddEdge(0, 1, 1);
+    dag.AddEdge(0, 2, 1);
+    dag.AddEdge(1, 3, 1);
+    dag.AddEdge(2, 3, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(3);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(5);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1, 2, 0});
+    schedule.SetAssignedSupersteps({0, 1, 1, 2});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestW2T kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({1, 2});
+
+    RunAndValidateCommAndCost(kl, instance, "W2_Diamond iter1");
+    RunAndValidateCommAndCost(kl, instance, "W2_Diamond iter2");
+}
+
+// Chain across 5 steps with windowSize=2: window covers more steps.
+BOOST_AUTO_TEST_CASE(LongChainW2) {
+    Graph dag;
+    dag.AddVertex(10, 5, 2);
+    dag.AddVertex(8, 4, 3);
+    dag.AddVertex(6, 3, 1);
+    dag.AddVertex(12, 6, 4);
+    dag.AddVertex(5, 2, 2);
+    dag.AddEdge(0, 1, 1);
+    dag.AddEdge(1, 2, 1);
+    dag.AddEdge(2, 3, 1);
+    dag.AddEdge(3, 4, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(3);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(5);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1, 2, 0, 1});
+    schedule.SetAssignedSupersteps({0, 1, 2, 3, 4});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestW2T kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({2});
+
+    RunAndValidateCommAndCost(kl, instance, "W2_LongChain");
+}
+
+// 8-node graph with 4 steps, windowSize=2 covers nearly everything.
+BOOST_AUTO_TEST_CASE(EightNodeW2) {
+    Graph dag;
+    dag.AddVertex(2, 9, 2);
+    dag.AddVertex(3, 8, 4);
+    dag.AddVertex(4, 7, 3);
+    dag.AddVertex(5, 6, 2);
+    dag.AddVertex(6, 5, 6);
+    dag.AddVertex(7, 4, 2);
+    dag.AddVertex(8, 3, 4);
+    dag.AddVertex(9, 2, 1);
+
+    dag.AddEdge(0, 1, 2);
+    dag.AddEdge(0, 2, 2);
+    dag.AddEdge(0, 3, 2);
+    dag.AddEdge(1, 4, 12);
+    dag.AddEdge(2, 4, 6);
+    dag.AddEdge(2, 5, 7);
+    dag.AddEdge(4, 7, 9);
+    dag.AddEdge(3, 7, 9);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(2);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(1);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
+    schedule.SetAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestW2T kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({2, 5});
+
+    for (int i = 0; i < 3; ++i) {
+        RunAndValidateCommAndCost(kl, instance, "W2_8node iter" + std::to_string(i));
+    }
+}
+
+// Grid 4x4 with windowSize=2 and 4 procs.
+BOOST_AUTO_TEST_CASE(GridW2) {
+    Graph dag = osp::ConstructGridDag<Graph>(4, 4);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(4);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(1);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+
+    std::vector<unsigned> procs(16), steps(16);
+    for (unsigned i = 0; i < 16; ++i) {
+        procs[i] = i % 4;
+        steps[i] = i / 4;
+    }
+    schedule.SetAssignedProcessors(procs);
+    schedule.SetAssignedSupersteps(steps);
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestW2T kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({5, 6, 9, 10});
+
+    for (int i = 0; i < 4; ++i) {
+        RunAndValidateCommAndCost(kl, instance, "W2_Grid iter" + std::to_string(i));
+    }
+}
+
+BOOST_AUTO_TEST_SUITE_END()    // WindowSize2
+
+// ============================================================================
+// Suite 7: NUMACosts — non-uniform communication costs
+// ============================================================================
+
+BOOST_AUTO_TEST_SUITE(NUMACosts)
+
+// 2 processors with asymmetric NUMA send costs.
+BOOST_AUTO_TEST_CASE(TwoProcAsymmetricNuma) {
+    Graph dag;
+    dag.AddVertex(10, 5, 2);
+    dag.AddVertex(8, 4, 1);
+    dag.AddVertex(6, 3, 3);
+    dag.AddEdge(0, 1, 2);
+    dag.AddEdge(1, 2, 3);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(2);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(5);
+    // Asymmetric: P0->P1 costs 2, P1->P0 costs 5
+    arch.SetSendCosts(0, 1, 2);
+    arch.SetSendCosts(1, 0, 5);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1, 0});
+    schedule.SetAssignedSupersteps({0, 1, 2});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({1});
+
+    RunAndValidate(kl, instance, "AsymNuma");
+}
+
+// 4 processors with exponential NUMA costs.
+BOOST_AUTO_TEST_CASE(FourProcExpNuma) {
+    Graph dag;
+    dag.AddVertex(10, 5, 2);
+    dag.AddVertex(8, 3, 1);
+    dag.AddVertex(12, 4, 3);
+    dag.AddVertex(15, 1, 2);
+    dag.AddVertex(6, 6, 4);
+    dag.AddEdge(0, 2, 1);
+    dag.AddEdge(0, 3, 1);
+    dag.AddEdge(1, 3, 1);
+    dag.AddEdge(1, 4, 1);
+    dag.AddEdge(2, 4, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(4);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(5);
+    // NUMA: nearby procs cheap, distant procs expensive
+    arch.SetSendCosts({
+        {0, 1, 2, 3},
+        {1, 0, 1, 2},
+        {2, 1, 0, 1},
+        {3, 2, 1, 0}
+    });
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1, 2, 3, 0});
+    schedule.SetAssignedSupersteps({0, 0, 1, 1, 2});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({2, 3});
+
+    RunAndValidate(kl, instance, "ExpNuma iter1");
+    RunAndValidate(kl, instance, "ExpNuma iter2");
+}
+
+// 4 processors with custom send cost matrix.
+BOOST_AUTO_TEST_CASE(FourProcCustomSendMatrix) {
+    Graph dag;
+    dag.AddVertex(10, 5, 2);
+    dag.AddVertex(8, 4, 1);
+    dag.AddVertex(6, 3, 3);
+    dag.AddVertex(12, 2, 2);
+    dag.AddEdge(0, 1, 2);
+    dag.AddEdge(0, 2, 3);
+    dag.AddEdge(1, 3, 4);
+    dag.AddEdge(2, 3, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(4);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(5);
+    // Custom matrix: P0-P1 close, P2-P3 close, cross-group expensive
+    arch.SetSendCosts({
+        {0, 1, 5, 5},
+        {1, 0, 5, 5},
+        {5, 5, 0, 1},
+        {5, 5, 1, 0}
+    });
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 2, 1, 3});
+    schedule.SetAssignedSupersteps({0, 0, 1, 1});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({1, 2});
+
+    RunAndValidate(kl, instance, "CustomNuma iter1");
+    RunAndValidate(kl, instance, "CustomNuma iter2");
+}
+
+// NUMA with diamond and more iterations.
+BOOST_AUTO_TEST_CASE(NumaDiamondMultiIter) {
+    Graph dag;
+    dag.AddVertex(10, 5, 2);
+    dag.AddVertex(8, 3, 1);
+    dag.AddVertex(12, 4, 1);
+    dag.AddVertex(15, 1, 1);
+    dag.AddEdge(0, 1, 3);
+    dag.AddEdge(0, 2, 2);
+    dag.AddEdge(1, 3, 4);
+    dag.AddEdge(2, 3, 5);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(3);
+    arch.SetCommunicationCosts(2);
+    arch.SetSynchronisationCosts(5);
+    // Asymmetric 3-proc NUMA
+    arch.SetSendCosts({
+        {0, 1, 3},
+        {1, 0, 2},
+        {3, 2, 0}
+    });
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1, 2, 0});
+    schedule.SetAssignedSupersteps({0, 1, 1, 2});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({1, 2, 3});
+
+    for (int i = 0; i < 3; ++i) {
+        RunAndValidateCommAndCost(kl, instance, "NumaDiamond iter" + std::to_string(i));
+    }
+}
+
+// NUMA combined with windowSize=2.
+BOOST_AUTO_TEST_CASE(NumaWindowSize2) {
+    Graph dag;
+    dag.AddVertex(10, 5, 2);
+    dag.AddVertex(8, 4, 1);
+    dag.AddVertex(6, 3, 3);
+    dag.AddVertex(12, 6, 4);
+    dag.AddEdge(0, 1, 2);
+    dag.AddEdge(0, 2, 3);
+    dag.AddEdge(1, 3, 1);
+    dag.AddEdge(2, 3, 2);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(3);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(5);
+    arch.SetSendCosts({
+        {0, 1, 4},
+        {1, 0, 3},
+        {4, 3, 0}
+    });
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1, 2, 0});
+    schedule.SetAssignedSupersteps({0, 1, 1, 2});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestW2T kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({1, 2});
+
+    RunAndValidateCommAndCost(kl, instance, "NumaW2 iter1");
+    RunAndValidateCommAndCost(kl, instance, "NumaW2 iter2");
+}
+
+BOOST_AUTO_TEST_SUITE_END()    // NUMACosts
+
+// ============================================================================
+// Suite 8: LargerProcessorCounts — 8+ processors
+// ============================================================================
+
+BOOST_AUTO_TEST_SUITE(LargerProcessorCounts)
+
+// 8 processors, fan-out graph.
+BOOST_AUTO_TEST_CASE(EightProcFanOut) {
+    Graph dag;
+    dag.AddVertex(10, 20, 5);
+    for (unsigned i = 0; i < 8; ++i) {
+        dag.AddVertex(5, 3, 1);
+        dag.AddEdge(0, i + 1, 2);
+    }
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(8);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(1);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    std::vector<unsigned> procs = {0, 0, 1, 2, 3, 4, 5, 6, 7};
+    std::vector<unsigned> steps = {0, 1, 1, 1, 1, 1, 1, 1, 1};
+    schedule.SetAssignedProcessors(procs);
+    schedule.SetAssignedSupersteps(steps);
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({1, 2, 3});
+
+    RunAndValidate(kl, instance, "8proc_fan iter0");
+    for (int i = 1; i < 3; ++i) {
+        RunAndValidateCommAndCost(kl, instance, "8proc_fan iter" + std::to_string(i));
+    }
+}
+
+// 8 processors, pipeline spread across all procs.
+BOOST_AUTO_TEST_CASE(EightProcPipeline) {
+    Graph dag = osp::ConstructMultiPipelineDag<Graph>(2, 4);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(8);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(1);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    // Pipeline 0: procs 0,1,2,3; Pipeline 1: procs 4,5,6,7
+    std::vector<unsigned> procs = {0, 1, 2, 3, 4, 5, 6, 7};
+    std::vector<unsigned> steps = {0, 1, 2, 3, 0, 1, 2, 3};
+    schedule.SetAssignedProcessors(procs);
+    schedule.SetAssignedSupersteps(steps);
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({1, 5});
+
+    RunAndValidate(kl, instance, "8proc_pipe iter1");
+    RunAndValidateCommAndCost(kl, instance, "8proc_pipe iter2");
+}
+
+// 8 processors with NUMA exponential costs.
+BOOST_AUTO_TEST_CASE(EightProcExpNuma) {
+    Graph dag;
+    dag.AddVertex(10, 5, 2);
+    dag.AddVertex(8, 4, 1);
+    dag.AddVertex(6, 3, 3);
+    dag.AddVertex(12, 2, 2);
+    dag.AddVertex(5, 6, 4);
+    dag.AddEdge(0, 1, 2);
+    dag.AddEdge(0, 2, 3);
+    dag.AddEdge(1, 3, 1);
+    dag.AddEdge(2, 4, 2);
+    dag.AddEdge(3, 4, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(8);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(5);
+    // 8-proc hierarchical NUMA: nearby cheap, distant expensive
+    arch.SetSendCosts({
+        {0, 1, 2, 2, 4, 4, 4, 4},
+        {1, 0, 2, 2, 4, 4, 4, 4},
+        {2, 2, 0, 1, 4, 4, 4, 4},
+        {2, 2, 1, 0, 4, 4, 4, 4},
+        {4, 4, 4, 4, 0, 1, 2, 2},
+        {4, 4, 4, 4, 1, 0, 2, 2},
+        {4, 4, 4, 4, 2, 2, 0, 1},
+        {4, 4, 4, 4, 2, 2, 1, 0}
+    });
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 3, 5, 7, 1});
+    schedule.SetAssignedSupersteps({0, 1, 1, 2, 2});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({1, 2});
+
+    RunAndValidate(kl, instance, "8procNuma iter1");
+    RunAndValidate(kl, instance, "8procNuma iter2");
+}
+
+// 8 procs, all nodes on same step: pure processor rebalancing.
+BOOST_AUTO_TEST_CASE(EightProcSameStep) {
+    Graph dag;
+    for (unsigned i = 0; i < 8; ++i) {
+        dag.AddVertex(static_cast<int>(10 + i), 5, 1);
+    }
+    dag.AddEdge(0, 1, 1);
+    dag.AddEdge(0, 4, 1);
+    dag.AddEdge(1, 2, 1);
+    dag.AddEdge(2, 3, 1);
+    dag.AddEdge(4, 5, 1);
+    dag.AddEdge(5, 6, 1);
+    dag.AddEdge(6, 7, 1);
+    dag.AddEdge(3, 7, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(8);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(1);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    std::vector<unsigned> procs = {0, 1, 2, 3, 4, 5, 6, 7};
+    std::vector<unsigned> steps(8, 0);
+    schedule.SetAssignedProcessors(procs);
+    schedule.SetAssignedSupersteps(steps);
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({3, 7});
+
+    RunAndValidate(kl, instance, "8procSame iter1");
+    RunAndValidateCommAndCost(kl, instance, "8procSame iter2");
+}
+
+BOOST_AUTO_TEST_SUITE_END()    // LargerProcessorCounts
+
+// ============================================================================
+// Suite 9: StepEmptying — moves that empty a superstep
+// ============================================================================
+
+BOOST_AUTO_TEST_SUITE(StepEmptying)
+
+// Single node in middle step: move it away, step becomes empty.
+BOOST_AUTO_TEST_CASE(EmptyMiddleStep) {
+    Graph dag;
+    dag.AddVertex(10, 5, 2);
+    dag.AddVertex(8, 4, 1);    // sole occupant of step 1
+    dag.AddVertex(6, 3, 3);
+    dag.AddEdge(0, 1, 2);
+    dag.AddEdge(1, 2, 3);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(2);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(5);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1, 0});
+    schedule.SetAssignedSupersteps({0, 1, 2});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({1});
+
+    // After this move, node 1 may leave step 1 empty.
+    RunAndValidateCommAndCost(kl, instance, "EmptyMiddle");
+}
+
+// Two steps, one with a single node: move empties that step.
+BOOST_AUTO_TEST_CASE(EmptyLastStep) {
+    Graph dag;
+    dag.AddVertex(10, 5, 2);
+    dag.AddVertex(8, 4, 1);
+    dag.AddVertex(12, 6, 3);
+    dag.AddVertex(5, 2, 1);    // sole occupant of step 2
+    dag.AddEdge(0, 1, 1);
+    dag.AddEdge(0, 2, 1);
+    dag.AddEdge(1, 3, 1);
+    dag.AddEdge(2, 3, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(3);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(5);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1, 2, 0});
+    schedule.SetAssignedSupersteps({0, 1, 1, 2});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({3, 1});
+
+    RunAndValidateCommAndCost(kl, instance, "EmptyLast iter1");
+    RunAndValidateCommAndCost(kl, instance, "EmptyLast iter2");
+}
+
+// High sync cost: step removal would be beneficial (maxWork < syncCost).
+BOOST_AUTO_TEST_CASE(HighSyncCostSingleNodeStep) {
+    Graph dag;
+    dag.AddVertex(1, 50, 10);
+    dag.AddVertex(1, 2, 1);    // tiny work, alone at step 1
+    dag.AddVertex(1, 50, 10);
+    dag.AddEdge(0, 1, 1);
+    dag.AddEdge(1, 2, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(2);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(100);    // very high sync cost
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1, 0});
+    schedule.SetAssignedSupersteps({0, 1, 2});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({1});
+
+    RunAndValidateCommAndCost(kl, instance, "HighSync");
+}
+
+// Multiple sparse steps: several steps with 1 node each.
+BOOST_AUTO_TEST_CASE(MultipleSparseSteps) {
+    Graph dag;
+    dag.AddVertex(10, 20, 5);
+    dag.AddVertex(8, 15, 3);
+    dag.AddVertex(6, 10, 2);
+    dag.AddVertex(5, 5, 1);
+    dag.AddVertex(12, 25, 4);
+    dag.AddEdge(0, 1, 1);
+    dag.AddEdge(1, 2, 1);
+    dag.AddEdge(2, 3, 1);
+    dag.AddEdge(3, 4, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(3);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(5);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    // Each node alone on its step and different procs
+    schedule.SetAssignedProcessors({0, 1, 2, 0, 1});
+    schedule.SetAssignedSupersteps({0, 1, 2, 3, 4});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({1, 3});
+
+    for (int i = 0; i < 3; ++i) {
+        RunAndValidateCommAndCost(kl, instance, "Sparse iter" + std::to_string(i));
+    }
+}
+
+// Single superstep: all nodes on step 0, move can only change proc.
+BOOST_AUTO_TEST_CASE(SingleSuperstep) {
+    Graph dag;
+    dag.AddVertex(10, 5, 2);
+    dag.AddVertex(8, 4, 1);
+    dag.AddVertex(6, 3, 3);
+    dag.AddVertex(12, 6, 4);
+    dag.AddEdge(0, 1, 2);
+    dag.AddEdge(0, 2, 3);
+    dag.AddEdge(1, 3, 1);
+    dag.AddEdge(2, 3, 2);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(4);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(1);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1, 2, 3});
+    schedule.SetAssignedSupersteps({0, 0, 0, 0});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({1, 2});
+
+    RunAndValidate(kl, instance, "SingleStep iter1");
+    RunAndValidateCommAndCost(kl, instance, "SingleStep iter2");
+}
+
+// Deeply sequential: each node on its own step, many steps.
+BOOST_AUTO_TEST_CASE(DeeplySequential) {
+    Graph dag;
+    for (unsigned i = 0; i < 6; ++i) {
+        dag.AddVertex(static_cast<int>(10 + 2 * i), 5, 2);
+        if (i > 0) {
+            dag.AddEdge(i - 1, i, 1);
+        }
+    }
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(3);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(5);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1, 2, 0, 1, 2});
+    schedule.SetAssignedSupersteps({0, 1, 2, 3, 4, 5});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({2, 3});
+
+    RunAndValidateCommAndCost(kl, instance, "DeepSeq iter1");
+    RunAndValidateCommAndCost(kl, instance, "DeepSeq iter2");
+}
+
+BOOST_AUTO_TEST_SUITE_END()    // StepEmptying
