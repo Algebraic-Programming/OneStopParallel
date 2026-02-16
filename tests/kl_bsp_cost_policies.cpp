@@ -37,16 +37,21 @@ limitations under the License.
 #define BOOST_TEST_MODULE kl_bsp_cost_all_policies
 #include <algorithm>
 #include <boost/test/unit_test.hpp>
+#include <chrono>
 #include <cmath>
+#include <filesystem>
 #include <string>
 #include <type_traits>
 #include <vector>
 
+#include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 #include "osp/bsp/model/BspSchedule.hpp"
+#include "osp/bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin/comm_cost_modules/comm_cost_policies.hpp"
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin/comm_cost_modules/kl_bsp_comm_cost.hpp"
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin/comm_cost_modules/max_comm_datastructure.hpp"
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_active_schedule.hpp"
+#include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_include.hpp"
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_util.hpp"
 #include "osp/concepts/graph_traits.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
@@ -360,6 +365,122 @@ BOOST_AUTO_TEST_CASE(TestArrangeSuperstepCommData) {
     BOOST_CHECK_EQUAL(ds.StepMaxComm(s), 10);
     BOOST_CHECK_EQUAL(ds.StepMaxCommCount(s), 2);    // P0 send + P0 recv
     BOOST_CHECK_EQUAL(ds.StepSecondMaxComm(s), 5);
+}
+
+// ============================================================================
+// SUITE 1b: Initial ComputeCommDatastructures and single-move update
+//           (default Eager policy, hand-verified exact values)
+// ============================================================================
+
+BOOST_AUTO_TEST_CASE(TestComputeCommDatastructures) {
+    Graph dag;
+
+    // Create 6 vertices with specific comm weights
+    dag.AddVertex(1, 10, 1);    // 0: sends to 1
+    dag.AddVertex(1, 1, 1);     // 1
+    dag.AddVertex(1, 5, 1);     // 2: sends to 3
+    dag.AddVertex(1, 1, 1);     // 3
+    dag.AddVertex(1, 2, 1);     // 4: local to 5
+    dag.AddVertex(1, 1, 1);     // 5
+
+    dag.AddEdge(0, 1, 1);
+    dag.AddEdge(2, 3, 1);
+    dag.AddEdge(4, 5, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(3);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(1);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+
+    // Proc 0: Node 0, 4, 5   Proc 1: Node 1, 2   Proc 2: Node 3
+    schedule.SetAssignedProcessors({0, 1, 1, 2, 0, 0});
+    schedule.SetAssignedSupersteps({0, 1, 0, 1, 0, 0});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlActiveScheduleT klSched;
+    klSched.Initialize(schedule);
+
+    MaxCommDatastructure<Graph, double, KlActiveScheduleT> commDs;
+    commDs.Initialize(klSched);
+    commDs.ComputeCommDatastructures(0, 1);
+
+    // Step 0: P0 sends 10 (node 0→1), P1 sends 5 (node 2→3), P2 sends 0
+    //         P0 recv 0, P1 recv 10 (from P0), P2 recv 5 (from P1)
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(0, 0), 10);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(0, 1), 5);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(0, 2), 0);
+    BOOST_CHECK_EQUAL(commDs.StepProcReceive(0, 0), 0);
+    BOOST_CHECK_EQUAL(commDs.StepProcReceive(0, 1), 10);
+    BOOST_CHECK_EQUAL(commDs.StepProcReceive(0, 2), 5);
+
+    BOOST_CHECK_EQUAL(commDs.StepMaxComm(0), 10);
+    BOOST_CHECK_EQUAL(commDs.StepMaxCommCount(0), 2);    // P0 send + P1 recv
+    BOOST_CHECK_EQUAL(commDs.StepSecondMaxComm(0), 5);
+
+    // Step 1: leaves only — zero comm
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(1, 0), 0);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(1, 1), 0);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(1, 2), 0);
+    BOOST_CHECK_EQUAL(commDs.StepProcReceive(1, 0), 0);
+    BOOST_CHECK_EQUAL(commDs.StepProcReceive(1, 1), 0);
+    BOOST_CHECK_EQUAL(commDs.StepProcReceive(1, 2), 0);
+    BOOST_CHECK_EQUAL(commDs.StepMaxComm(1), 0);
+}
+
+BOOST_AUTO_TEST_CASE(TestUpdateDatastructureAfterMove) {
+    Graph dag;
+    dag.AddVertex(1, 10, 1);    // 0
+    dag.AddVertex(1, 1, 1);     // 1
+    dag.AddVertex(1, 5, 1);     // 2
+    dag.AddVertex(1, 1, 1);     // 3
+    dag.AddVertex(1, 2, 1);     // 4
+    dag.AddVertex(1, 1, 1);     // 5
+
+    dag.AddEdge(0, 1, 1);
+    dag.AddEdge(2, 3, 1);
+    dag.AddEdge(4, 5, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(3);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(1);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1, 1, 2, 0, 0});
+    schedule.SetAssignedSupersteps({0, 1, 0, 1, 0, 0});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlActiveScheduleT klSched;
+    klSched.Initialize(schedule);
+
+    MaxCommDatastructure<Graph, double, KlActiveScheduleT> commDs;
+    commDs.Initialize(klSched);
+    commDs.ComputeCommDatastructures(0, 1);
+
+    // Move Node 0 from P0 S0 → P2 S0
+    KlMove move(0, 0.0, 0, 0, 2, 0);
+    ThreadLocalActiveScheduleData<Graph, double> activeScheduleData;
+    activeScheduleData.InitializeCost(0.0);
+    klSched.ApplyMove(move, activeScheduleData);
+    commDs.UpdateDatastructureAfterMove(move, 0, 1);
+
+    BOOST_CHECK(ValidateCommDs<EagerCommCostPolicy>(commDs, klSched, instance, "update_after_move"));
+
+    // P0 send drops from 10→0, P2 send rises from 0→10; P1 recv unchanged
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(0, 0), 0);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(0, 1), 5);
+    BOOST_CHECK_EQUAL(commDs.StepProcSend(0, 2), 10);
+    BOOST_CHECK_EQUAL(commDs.StepProcReceive(0, 0), 0);
+    BOOST_CHECK_EQUAL(commDs.StepProcReceive(0, 1), 10);
+    BOOST_CHECK_EQUAL(commDs.StepProcReceive(0, 2), 5);
+
+    BOOST_CHECK_EQUAL(commDs.StepMaxComm(0), 10);
+    BOOST_CHECK_EQUAL(commDs.StepMaxCommCount(0), 2);
+    BOOST_CHECK_EQUAL(commDs.StepSecondMaxComm(0), 5);
 }
 
 // ============================================================================
@@ -1550,5 +1671,81 @@ BOOST_AUTO_TEST_CASE(TestLazyAndBufferedMoveWithStepChange) {
         BOOST_CHECK_EQUAL(ds.StepProcSend(0, 0), 10);
         BOOST_CHECK_EQUAL(ds.StepProcReceive(1, 1), 0);
         BOOST_CHECK_EQUAL(ds.StepProcReceive(2, 1), 10);
+    }
+}
+
+// ============================================================================
+// SUITE 6: Integration test — KlBspCommImprover on large graphs
+// ============================================================================
+
+template <typename GraphT>
+void AddMemWeights(GraphT &dag) {
+    int memWeight = 1;
+    int commWeight = 7;
+    for (const auto &v : dag.Vertices()) {
+        dag.SetVertexWorkWeight(v, static_cast<VMemwT<GraphT>>(memWeight++ % 10 + 2));
+        dag.SetVertexMemWeight(v, static_cast<VMemwT<GraphT>>(memWeight++ % 10 + 2));
+        dag.SetVertexCommWeight(v, static_cast<VCommwT<GraphT>>(commWeight++ % 10 + 2));
+    }
+}
+
+BOOST_AUTO_TEST_CASE(kl_bsp_comm_large_test_graphs) {
+    std::vector<std::string> filenames_graph = LargeSpaaGraphs();
+    using graph = ComputationalDagEdgeIdxVectorImplDefIntT;
+
+    // Find project root directory
+    std::filesystem::path cwd = std::filesystem::current_path();
+    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
+        cwd = cwd.parent_path();
+    }
+
+    for (auto &filename_graph : filenames_graph) {
+        GreedyBspScheduler<graph> test_scheduler;
+        BspInstance<graph> instance;
+        bool status_graph
+            = file_reader::ReadComputationalDagHyperdagFormatDB((cwd / filename_graph).string(), instance.GetComputationalDag());
+
+        instance.GetArchitecture().SetSynchronisationCosts(500);
+        instance.GetArchitecture().SetCommunicationCosts(5);
+        instance.GetArchitecture().SetNumberOfProcessors(4);
+
+        std::vector<std::vector<int>> send_cost = {
+            {0, 1, 4, 4},
+            {1, 0, 4, 4},
+            {4, 4, 0, 1},
+            {4, 4, 1, 0}
+        };
+        instance.GetArchitecture().SetSendCosts(send_cost);
+
+        if (!status_graph) {
+            std::cout << "Reading files failed." << std::endl;
+            BOOST_CHECK(false);
+        }
+
+        AddMemWeights(instance.GetComputationalDag());
+
+        BspSchedule<graph> schedule(instance);
+        const auto result = test_scheduler.ComputeSchedule(schedule);
+        schedule.UpdateNumberOfSupersteps();
+
+        std::cout << "initial schedule with costs: " << schedule.ComputeCosts() << " and " << schedule.NumberOfSupersteps()
+                  << " number of supersteps" << std::endl;
+
+        BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
+        BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
+
+        KlBspCommImprover<graph> kl;
+
+        auto start_time = std::chrono::high_resolution_clock::now();
+        auto status = kl.ImproveSchedule(schedule);
+        auto finish_time = std::chrono::high_resolution_clock::now();
+
+        auto duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
+
+        std::cout << "kl bsp comm finished in " << duration << " seconds, costs: " << schedule.ComputeCosts() << " with "
+                  << schedule.NumberOfSupersteps() << " number of supersteps" << std::endl;
+
+        BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
+        BOOST_CHECK_EQUAL(schedule.SatisfiesPrecedenceConstraints(), true);
     }
 }
