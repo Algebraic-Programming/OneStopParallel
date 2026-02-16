@@ -77,20 +77,24 @@ void CheckEqualAffinityTable(TableT &table1, TableT &table2, const std::set<size
     }
 }
 
-void CheckEqualLambdaMap(const std::vector<std::map<unsigned, unsigned>> &map1,
-                         const std::vector<std::map<unsigned, unsigned>> &map2) {
-    BOOST_CHECK_EQUAL(map1.size(), map2.size());
-    if (map1.size() != map2.size()) {
+template <typename LambdaContainerT>
+void CheckEqualLambdaMap(const LambdaContainerT &map1, const LambdaContainerT &map2) {
+    BOOST_CHECK_EQUAL(map1.nodeLambdaVec_.size(), map2.nodeLambdaVec_.size());
+    if (map1.nodeLambdaVec_.size() != map2.nodeLambdaVec_.size()) {
         return;
     }
 
-    for (size_t i = 0; i < map1.size(); ++i) {
-        for (const auto &[key, value] : map1[i]) {
-            BOOST_CHECK_EQUAL(value, map2[i].at(key));
+    for (size_t i = 0; i < map1.nodeLambdaVec_.size(); ++i) {
+        BOOST_CHECK_EQUAL(map1.nodeLambdaVec_[i].size(), map2.nodeLambdaVec_[i].size());
+        if (map1.nodeLambdaVec_[i].size() != map2.nodeLambdaVec_[i].size()) {
+            continue;
+        }
+        for (size_t j = 0; j < map1.nodeLambdaVec_[i].size(); ++j) {
+            BOOST_CHECK_EQUAL(map1.nodeLambdaVec_[i][j], map2.nodeLambdaVec_[i][j]);
 
-            if (value != map2[i].at(key)) {
-                std::cout << "Mismatch at [" << i << "][" << key << "]: map_1=" << value << ", map_2=" << map2[i].at(key)
-                          << std::endl;
+            if (map1.nodeLambdaVec_[i][j] != map2.nodeLambdaVec_[i][j]) {
+                std::cout << "Mismatch at [" << i << "][" << j << "]: map_1=" << map1.nodeLambdaVec_[i][j]
+                          << ", map_2=" << map2.nodeLambdaVec_[i][j] << std::endl;
             }
         }
     }
@@ -411,76 +415,76 @@ BOOST_AUTO_TEST_CASE(kl_lambda_improver_inner_loop_test) {
 
     std::set<VertexType> nodes_to_check = {0, 1, 2, 3, 4, 5, 6, 7};
     auto &affinity = kl.GetAffinityTable();
-    auto &lambda_map = kl.GetCommCostF().node_lambda_map;
+    auto &lambda_map = kl.GetCommCostF().nodeLambdaMap_;
 
     KlMove move_2(v4, 0.0, 0, 1, 1, 2);
     kl.UpdateAffinityTableTest(move_2, node_selection);
 
     BspSchedule<graph> test_sched_2(instance);
-    kl.GetActiveSchedule_test(test_sched_2);
+    kl.GetActiveScheduleTest(test_sched_2);
     KlImproverTest kl_2;
     kl_2.SetupSchedule(test_sched_2);
     kl_2.InsertGainHeapTestPenalty({0, 1, 2, 3, 4, 5, 6, 7});
 
     nodes_to_check.erase(v4);
 
-    CheckEqualLambdaMap(lambda_map, kl_2.GetCommCostF().node_lambda_map);
+    CheckEqualLambdaMap(lambda_map, kl_2.GetCommCostF().nodeLambdaMap_);
     CheckEqualAffinityTable(affinity, kl_2.GetAffinityTable(), nodes_to_check);
 
     KlMove move_3(v2, 0.0, 1, 0, 0, 1);
     kl.UpdateAffinityTableTest(move_3, node_selection);
 
     BspSchedule<graph> test_sched_3(instance);
-    kl.GetActiveSchedule_test(test_sched_3);
+    kl.GetActiveScheduleTest(test_sched_3);
     KlImproverTest kl_3;
     kl_3.SetupSchedule(test_sched_3);
     kl_3.InsertGainHeapTestPenalty({0, 1, 2, 3, 4, 5, 6, 7});
 
     nodes_to_check.erase(v2);
 
-    CheckEqualLambdaMap(lambda_map, kl_3.GetCommCostF().node_lambda_map);
+    CheckEqualLambdaMap(lambda_map, kl_3.GetCommCostF().nodeLambdaMap_);
     CheckEqualAffinityTable(affinity, kl_3.GetAffinityTable(), nodes_to_check);
 
     KlMove move_4(v6, 0.0, 0, 2, 1, 3);
     kl.UpdateAffinityTableTest(move_4, node_selection);
 
     BspSchedule<graph> test_sched_4(instance);
-    kl.GetActiveSchedule_test(test_sched_4);
+    kl.GetActiveScheduleTest(test_sched_4);
     KlImproverTest kl_4;
     kl_4.SetupSchedule(test_sched_4);
     kl_4.InsertGainHeapTestPenalty({0, 1, 2, 3, 4, 5, 6, 7});
 
     nodes_to_check.erase(v6);
 
-    CheckEqualLambdaMap(lambda_map, kl_4.GetCommCostF().node_lambda_map);
+    CheckEqualLambdaMap(lambda_map, kl_4.GetCommCostF().nodeLambdaMap_);
     CheckEqualAffinityTable(affinity, kl_4.GetAffinityTable(), nodes_to_check);
 
     KlMove move_5(v8, 0.0, 1, 3, 0, 3);
     kl.UpdateAffinityTableTest(move_5, node_selection);
 
     BspSchedule<graph> test_sched_5(instance);
-    kl.GetActiveSchedule_test(test_sched_5);
+    kl.GetActiveScheduleTest(test_sched_5);
     KlImproverTest kl_5;
     kl_5.SetupSchedule(test_sched_5);
     kl_5.InsertGainHeapTestPenalty({0, 1, 2, 3, 4, 5, 6, 7});
 
     nodes_to_check.erase(v8);
 
-    CheckEqualLambdaMap(lambda_map, kl_5.GetCommCostF().node_lambda_map);
+    CheckEqualLambdaMap(lambda_map, kl_5.GetCommCostF().nodeLambdaMap_);
     CheckEqualAffinityTable(affinity, kl_5.GetAffinityTable(), nodes_to_check);
 
     KlMove move_6(v3, 0.0, 0, 1, 1, 1);
     kl.UpdateAffinityTableTest(move_6, node_selection);
 
     BspSchedule<graph> test_sched_6(instance);
-    kl.GetActiveSchedule_test(test_sched_6);
+    kl.GetActiveScheduleTest(test_sched_6);
     KlImproverTest kl_6;
     kl_6.SetupSchedule(test_sched_6);
     kl_6.InsertGainHeapTestPenalty({0, 1, 2, 3, 4, 5, 6, 7});
 
     nodes_to_check.erase(v3);
 
-    CheckEqualLambdaMap(lambda_map, kl_6.GetCommCostF().node_lambda_map);
+    CheckEqualLambdaMap(lambda_map, kl_6.GetCommCostF().nodeLambdaMap_);
     CheckEqualAffinityTable(affinity, kl_6.GetAffinityTable(), nodes_to_check);
 };
 

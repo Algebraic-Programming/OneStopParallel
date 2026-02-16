@@ -1175,7 +1175,6 @@ class KlImprover : public ImprovementScheduler<GraphT> {
         if (parameters_.tryRemoveStepAfterNumOuterIterations_ > 0
             && ((outerIter + 1) % parameters_.tryRemoveStepAfterNumOuterIterations_) == 0) {
             threadData.stepSelectionEpochCounter_ = 0;
-            ;
 #ifdef KL_DEBUG
             std::cout << "reset remove epoc counter after " << outerIter << " iterations." << std::endl;
 #endif
