@@ -239,7 +239,7 @@ struct MaxCommDatastructure {
                 if (proc != fromProc) {
                     const CommWeightT cost = commWNode * instance_->SendCosts(fromProc, proc);
                     if (cost > 0) {
-                        CommPolicy::UnattributeCommunication(*this, cost, fromStep, fromProc, proc, 0, val);
+                        CommPolicy::RemoveOutgoingComm(*this, cost, fromStep, fromProc, proc, val, MarkStep);
                     }
                 }
 
@@ -247,12 +247,10 @@ struct MaxCommDatastructure {
                 if (proc != toProc) {
                     const CommWeightT cost = commWNode * instance_->SendCosts(toProc, proc);
                     if (cost > 0) {
-                        CommPolicy::AttributeCommunication(*this, cost, toStep, toProc, proc, 0, val);
+                        CommPolicy::AddOutgoingComm(*this, cost, toStep, toProc, proc, val, MarkStep);
                     }
                 }
             }
-            MarkStep(fromStep);
-            MarkStep(toStep);
 
         } else if (fromProc != toProc) {
             // Case 2: Node stays in same Step, but changes Processor
@@ -262,7 +260,7 @@ struct MaxCommDatastructure {
                 if (proc != fromProc) {
                     const CommWeightT cost = commWNode * instance_->SendCosts(fromProc, proc);
                     if (cost > 0) {
-                        CommPolicy::UnattributeCommunication(*this, cost, fromStep, fromProc, proc, 0, val);
+                        CommPolicy::RemoveOutgoingComm(*this, cost, fromStep, fromProc, proc, val, MarkStep);
                     }
                 }
 
@@ -270,11 +268,10 @@ struct MaxCommDatastructure {
                 if (proc != toProc) {
                     const CommWeightT cost = commWNode * instance_->SendCosts(toProc, proc);
                     if (cost > 0) {
-                        CommPolicy::AttributeCommunication(*this, cost, fromStep, toProc, proc, 0, val);
+                        CommPolicy::AddOutgoingComm(*this, cost, fromStep, toProc, proc, val, MarkStep);
                     }
                 }
             }
-            MarkStep(fromStep);
         }
 
         // Update Parents' Outgoing Communication (Parents → Node)
@@ -297,7 +294,8 @@ struct MaxCommDatastructure {
                 if (fromProc != parentProc) {
                     const CommWeightT cost = commWParent * instance_->SendCosts(parentProc, fromProc);
                     if (cost > 0) {
-                        CommPolicy::UnattributeCommunication(*this, cost, parentStep, parentProc, fromProc, fromStep, val);
+                        CommPolicy::UnattributeCommunication(
+                            *this, cost, parentStep, parentProc, fromProc, fromStep, val, MarkStep);
                     }
                 }
             }
@@ -310,12 +308,10 @@ struct MaxCommDatastructure {
                 if (toProc != parentProc) {
                     const CommWeightT cost = commWParent * instance_->SendCosts(parentProc, toProc);
                     if (cost > 0) {
-                        CommPolicy::AttributeCommunication(*this, cost, parentStep, parentProc, toProc, toStep, valTo);
+                        CommPolicy::AttributeCommunication(*this, cost, parentStep, parentProc, toProc, toStep, valTo, MarkStep);
                     }
                 }
             }
-
-            MarkStep(parentStep);
         }
 
         // Re-arrange Affected Steps
@@ -363,7 +359,7 @@ struct MaxCommDatastructure {
                 auto &val = nodeLambdaMap_.GetProcEntry(u, vProc);
                 if (CommPolicy::AddChild(val, vStep)) {
                     if (uProc != vProc && commWSendCost > 0) {
-                        CommPolicy::AttributeCommunication(*this, commWSendCost, uStep, uProc, vProc, vStep, val);
+                        CommPolicy::AttributeCommunication(*this, commWSendCost, uStep, uProc, vProc, vStep, val, [](unsigned) {});
                     }
                 }
             }

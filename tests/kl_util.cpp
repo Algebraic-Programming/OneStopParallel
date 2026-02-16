@@ -446,7 +446,7 @@ BOOST_AUTO_TEST_CASE(ActiveScheduleRevertToBestScheduleTest) {
 
     unsigned endStep = activeSchedule_.NumSteps() - 1;
     // Revert to best. start_move=0 means no step removal logic is triggered.
-    activeSchedule_.RevertToBestSchedule(0, 0, commDs, threadData, 0, endStep);
+    activeSchedule_.RevertToBestSchedule(0, 0, false, commDs, threadData, 0, endStep);
 
     BOOST_CHECK_EQUAL(threadData.cost_, 80.0);    // Check cost is reverted to best
     BOOST_CHECK_EQUAL(threadData.appliedMoves_.size(), 0);
@@ -497,3 +497,66 @@ BOOST_AUTO_TEST_CASE(ActiveScheduleRemoveEmptyStepTest) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_CASE(StalenessTest) {
+    // Define a schedule with staleness 2
+    class StaleSchedule : public BspSchedule<Graph> {
+      public:
+        using BspSchedule<Graph>::BspSchedule;
+
+        unsigned GetStaleness() const override { return 2; }
+    };
+
+    // Create a simple 2-node graph locally
+    Graph dag;
+    dag.AddVertex(1, 1, 1);    // 0
+    dag.AddVertex(1, 1, 1);    // 1
+    dag.AddEdge(0, 1, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(2);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(1);
+
+    BspInstance<Graph> instance(dag, arch);
+    StaleSchedule staleSchedule(instance);
+
+    // Setup a simple scenario: 0 -> 1
+    // 0 on P0, 1 on P1
+
+    staleSchedule.SetAssignedProcessors({0, 1});
+
+    // Case 1: Infeasible (step difference < staleness)
+    // S[0]=0, S[1]=1. Diff=1. Staleness=2. 0+2 > 1.
+    staleSchedule.SetAssignedSupersteps({0, 1});
+    staleSchedule.UpdateNumberOfSupersteps();
+
+    KlActiveScheduleT activeSched;
+    activeSched.Initialize(staleSchedule);
+
+    using ThreadDataT = ThreadLocalActiveScheduleData<Graph, double>;
+    ThreadDataT threadData;
+    activeSched.ComputeViolations(threadData);
+
+    BOOST_CHECK(!threadData.feasible_);
+
+    // Case 2: Feasible (step difference == staleness)
+    // S[0]=0, S[1]=2. Diff=2. Staleness=2. 0+2 <= 2.
+    staleSchedule.SetAssignedSuperstep(1, 2);
+    staleSchedule.UpdateNumberOfSupersteps();    // Update num steps
+    activeSched.Initialize(staleSchedule);
+    activeSched.ComputeViolations(threadData);
+
+    BOOST_CHECK(threadData.feasible_);
+
+    // Case 3: Same processor, ignore staleness
+    // P[0]=0, P[1]=0. S[0]=0, S[1]=1.
+    // Same proc, so just S[0] <= S[1] is required.
+    staleSchedule.SetAssignedProcessor(1, 0);
+    staleSchedule.SetAssignedSuperstep(1, 1);
+    staleSchedule.UpdateNumberOfSupersteps();
+    activeSched.Initialize(staleSchedule);
+    activeSched.ComputeViolations(threadData);
+
+    BOOST_CHECK(threadData.feasible_);
+}

@@ -15,7 +15,7 @@ limitations under the License.
 
 @author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
-
+#define KL_DEBUG_COST_CHECK
 #pragma once
 
 #include <algorithm>
@@ -132,6 +132,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
         unsigned stepSelectionCounter_ = 0;
         unsigned stepToRemove_ = 0;
         unsigned localSearchStartStep_ = 0;
+        bool stepWasRemoved_ = false;
         unsigned unlockEdgeBacktrackCounter_ = 0;
         unsigned unlockEdgeBacktrackCounterReset_ = 0;
         unsigned maxNoVioaltionsRemovedBacktrack_ = 0;
@@ -757,7 +758,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
             }
 #endif
 #ifdef KL_DEBUG_COST_CHECK
-            activeSchedule_.GetVectorSchedule().numberOfSupersteps = threadDataVec_[0].NumSteps();
+            activeSchedule_.GetVectorSchedule().numberOfSupersteps_ = threadDataVec_[0].NumSteps();
             if (std::abs(commCostF_.ComputeScheduleCostTest() - threadData.activeScheduleData_.cost_) > 0.00001) {
                 std::cout << "computed cost: " << commCostF_.ComputeScheduleCostTest()
                           << ", current cost: " << threadData.activeScheduleData_.cost_ << std::endl;
@@ -801,7 +802,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
                 const typename CommCostFunctionT::PreMoveCommDataT prevCommData = commCostF_.GetPreMoveCommData(bestMove);
                 const CostT changeInCost = ApplyMove(bestMove, threadData);
 #ifdef KL_DEBUG_COST_CHECK
-                activeSchedule_.GetVectorSchedule().numberOfSupersteps = threadDataVec_[0].NumSteps();
+                activeSchedule_.GetVectorSchedule().numberOfSupersteps_ = threadDataVec_[0].NumSteps();
                 if (std::abs(commCostF_.ComputeScheduleCostTest() - threadData.activeScheduleData_.cost_) > 0.00001) {
                     std::cout << "computed cost: " << commCostF_.ComputeScheduleCostTest()
                               << ", current cost: " << threadData.activeScheduleData_.cost_ << std::endl;
@@ -817,7 +818,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
                     if (iterInitalFeasible && threadData.activeScheduleData_.newViolations_.size() > 0) {
                         RunQuickMoves(innerIter, threadData, changeInCost, bestMove.node_);
 #ifdef KL_DEBUG_COST_CHECK
-                        activeSchedule_.GetVectorSchedule().numberOfSupersteps = threadDataVec_[0].NumSteps();
+                        activeSchedule_.GetVectorSchedule().numberOfSupersteps_ = threadDataVec_[0].NumSteps();
                         if (std::abs(commCostF_.ComputeScheduleCostTest() - threadData.activeScheduleData_.cost_) > 0.00001) {
                             std::cout << "computed cost: " << commCostF_.ComputeScheduleCostTest()
                                       << ", current cost: " << threadData.activeScheduleData_.cost_ << std::endl;
@@ -903,7 +904,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
                 std::cout << "}" << std::endl;
 #endif
 #ifdef KL_DEBUG_COST_CHECK
-                activeSchedule_.GetVectorSchedule().numberOfSupersteps = threadDataVec_[0].NumSteps();
+                activeSchedule_.GetVectorSchedule().numberOfSupersteps_ = threadDataVec_[0].NumSteps();
                 if (std::abs(commCostF_.ComputeScheduleCostTest() - threadData.activeScheduleData_.cost_) > 0.00001) {
                     std::cout << "computed cost: " << commCostF_.ComputeScheduleCostTest()
                               << ", current cost: " << threadData.activeScheduleData_.cost_ << std::endl;
@@ -936,6 +937,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
 #endif
             activeSchedule_.RevertToBestSchedule(threadData.localSearchStartStep_,
                                                  threadData.stepToRemove_,
+                                                 threadData.stepWasRemoved_,
                                                  commCostF_,
                                                  threadData.activeScheduleData_,
                                                  threadData.startStep_,
@@ -953,7 +955,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
 #endif
 
 #ifdef KL_DEBUG_COST_CHECK
-            activeSchedule_.GetVectorSchedule().numberOfSupersteps = threadDataVec_[0].NumSteps();
+            activeSchedule_.GetVectorSchedule().numberOfSupersteps_ = threadDataVec_[0].NumSteps();
             if (std::abs(commCostF_.ComputeScheduleCostTest() - threadData.activeScheduleData_.cost_) > 0.00001) {
                 std::cout << "computed cost: " << commCostF_.ComputeScheduleCostTest()
                           << ", current cost: " << threadData.activeScheduleData_.cost_ << std::endl;
@@ -1217,6 +1219,15 @@ class KlImprover : public ImprovementScheduler<GraphT> {
             activeSchedule_.SwapEmptyStepFwd(threadData.stepToRemove_, threadData.endStep_);
             threadData.endStep_--;
             threadData.localSearchStartStep_ = static_cast<unsigned>(threadData.activeScheduleData_.appliedMoves_.size());
+            threadData.stepWasRemoved_ = true;
+
+            // SwapEmptyStepFwd shifts nodes after the removed step down by 1,
+            // which can reduce cross-processor gaps below staleness.  Update the
+            // violation set for the affected boundary BEFORE UpdateCost, so that
+            // feasible_ is correct when UpdateCost decides whether to save the
+            // current state as the new best.
+            activeSchedule_.UpdateViolationsAfterStepRemoval(threadData.stepToRemove_, threadData.activeScheduleData_);
+
             threadData.activeScheduleData_.UpdateCost(static_cast<CostT>(-1.0 * instance_->SynchronisationCosts()));
 
             if constexpr (enablePreresolvingViolations_) {
@@ -1226,6 +1237,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
             if (threadData.activeScheduleData_.currentViolations_.size() > parameters_.initialViolationThreshold_) {
                 activeSchedule_.RevertToBestSchedule(threadData.localSearchStartStep_,
                                                      threadData.stepToRemove_,
+                                                     threadData.stepWasRemoved_,
                                                      commCostF_,
                                                      threadData.activeScheduleData_,
                                                      threadData.startStep_,
@@ -1245,6 +1257,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
         }
         // threadData.stepToRemove_ = threadData.startStep_;
         threadData.localSearchStartStep_ = 0;
+        threadData.stepWasRemoved_ = false;
         threadData.selectionStrategy_.SelectActiveNodes(threadData.affinityTable_, threadData.startStep_, threadData.endStep_);
     }
 
@@ -1293,7 +1306,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
 #endif
 
 #ifdef KL_DEBUG_COST_CHECK
-                activeSchedule_.GetVectorSchedule().numberOfSupersteps = threadDataVec_[0].NumSteps();
+                activeSchedule_.GetVectorSchedule().numberOfSupersteps_ = threadDataVec_[0].NumSteps();
                 if (std::abs(commCostF_.ComputeScheduleCostTest() - threadData.activeScheduleData_.cost_) > 0.00001) {
                     std::cout << "computed cost: " << commCostF_.ComputeScheduleCostTest()
                               << ", current cost: " << threadData.activeScheduleData_.cost_ << std::endl;
@@ -1314,7 +1327,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
 
         if (abort) {
             activeSchedule_.RevertToBestSchedule(
-                0, 0, commCostF_, threadData.activeScheduleData_, threadData.startStep_, threadData.endStep_);
+                0, 0, false, commCostF_, threadData.activeScheduleData_, threadData.startStep_, threadData.endStep_);
             threadData.affinityTable_.ResetNodeSelection();
             return false;
         }

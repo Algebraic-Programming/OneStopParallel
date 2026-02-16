@@ -341,7 +341,7 @@ void BspScheduleRecomp<Graph_t>::CleanSchedule()
     for (auto const &[key, val] : commSchedule_) {
         arrivesAt[std::get<0>(key)][std::get<2>(key)].insert(val);
     }
-    
+
     // - computation steps
     for (const auto &node : instance_->GetComputationalDag().Vertices()) {
         for (unsigned index = 0; index < nodeToProcessorAndSupertepAssignment_[node].size(); ) {
@@ -386,7 +386,7 @@ void BspScheduleRecomp<Graph_t>::CleanSchedule()
         usedAt[std::get<0>(key)][std::get<1>(key)].insert(val);
     }
 
-    // - computation steps    
+    // - computation steps
     for (const auto &node : instance_->GetComputationalDag().Vertices()) {
         for (unsigned index = 0; index < nodeToProcessorAndSupertepAssignment_[node].size(); ) {
             const auto &procAndStep = nodeToProcessorAndSupertepAssignment_[node][index];
