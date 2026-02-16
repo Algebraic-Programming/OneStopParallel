@@ -118,6 +118,22 @@ target_compile_options(ProjectExecutableFlags INTERFACE
     >
 )
 
+# Flag for address sanitizer
+option(ENABLE_ASAN "Enable Address Sanitizer" OFF)
+if (ENABLE_ASAN)
+    message(STATUS "Address sanitizer enabled.")
+    target_compile_options(ProjectExecutableFlags INTERFACE -fsanitize=address)
+    target_link_options(ProjectExecutableFlags INTERFACE -fsanitize=address)
+endif ()
+
+# Flag for undefined behaviour sanitizer
+option(ENABLE_UBSAN "Enable Undefined Behaviour Sanitizer" OFF)
+if (ENABLE_UBSAN)
+    message(STATUS "Undefined behaviour sanitizer enabled.")
+    target_compile_options(ProjectExecutableFlags INTERFACE -fsanitize=undefined)
+    target_link_options(ProjectExecutableFlags INTERFACE -fsanitize=undefined)
+endif ()
+
 # --- Find External Libraries ---
 # Find COPT libraries
 find_package(COPT)

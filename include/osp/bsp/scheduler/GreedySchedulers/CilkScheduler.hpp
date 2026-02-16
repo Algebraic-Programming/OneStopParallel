@@ -171,7 +171,7 @@ class CilkScheduler : public Scheduler<GraphT> {
 
             // Find new ready jobs
             while (!finishTimes.empty() && finishTimes.begin()->first == time) {
-                const TvPair &currentPair = *finishTimes.begin();
+                const TvPair currentPair = *finishTimes.begin();
                 finishTimes.erase(finishTimes.begin());
                 const VertexIdxT<GraphT> &node = currentPair.second;
                 if (node != std::numeric_limits<VertexIdxT<GraphT>>::max()) {

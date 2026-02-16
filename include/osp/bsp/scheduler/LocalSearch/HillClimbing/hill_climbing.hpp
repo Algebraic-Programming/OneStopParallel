@@ -579,7 +579,7 @@ void HillClimbingScheduler<GraphT>::AddMoveOption(const VertexIdx node, const un
 template <typename GraphT>
 void HillClimbingScheduler<GraphT>::EraseMoveOption(VertexIdx node, unsigned proc, Direction dir) {
     canMove_[dir][node][proc] = false;
-    if (nextMove_.first == dir && nextMove_.second->first == node && nextMove_.second->second == proc) {
+    if (nextMove_.first == dir && nextMove_.second != moveOptions_[dir].end() && nextMove_.second->first == node && nextMove_.second->second == proc) {
         ++nextMove_.second;
     }
     moveOptions_[dir].erase(movePointer_[dir][node][proc]);
