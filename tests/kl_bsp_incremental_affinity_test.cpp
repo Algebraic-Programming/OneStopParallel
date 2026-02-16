@@ -49,6 +49,7 @@ using VertexType = Graph::VertexIdx;
 using KlActiveScheduleT = KlActiveSchedule<Graph, double, NoLocalSearchMemoryConstraint>;
 using CommCostT = KlBspCommCostFunction<Graph, double, NoLocalSearchMemoryConstraint>;
 using KlTestT = KlImproverTest<Graph, CommCostT>;
+using KlMoveT = KlMoveStruct<double, VertexType>;
 
 // windowSize=2 variants
 using CommCostW2T = KlBspCommCostFunction<Graph, double, NoLocalSearchMemoryConstraint, 2>;
@@ -2118,3 +2119,372 @@ BOOST_AUTO_TEST_CASE(DeeplySequential) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()    // StepEmptying
+
+// ============================================================================
+// Suite 10: StepRemovalRollback — step removal followed by rollback or success
+// ============================================================================
+
+BOOST_AUTO_TEST_SUITE(StepRemovalRollback)
+
+// Rollback: scatter a node to a bad cross-proc destination so that the
+// cost increase exceeds the sync-cost saving.  RevertToBestSchedule must
+// re-insert the removed step and restore the original schedule.
+BOOST_AUTO_TEST_CASE(RollbackBadScatter) {
+    // 3-node chain: 0 → 1, with node 1 alone on step 1 (work=1 < syncCost=2).
+    // All nodes on proc 0 — no cross-proc comm initially.
+    Graph dag;
+    dag.AddVertex(100, 50, 10);    // node 0
+    dag.AddVertex(1, 50, 10);      // node 1 (low work, alone on step 1)
+    dag.AddVertex(100, 50, 10);    // node 2
+    dag.AddEdge(0, 1, 1);          // heavy comm weight via commCost multiplier
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(2);
+    arch.SetCommunicationCosts(10);
+    arch.SetSynchronisationCosts(2);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 0, 0});
+    schedule.SetAssignedSupersteps({0, 1, 2});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+
+    // --- Verify initial state ---
+    BOOST_CHECK(kl.CheckRemoveSuperstepTest(1));    // maxWork(step1)=1 < syncCost=2
+    const auto initialCost = kl.GetCurrentCost();
+    const unsigned initialEndStep = kl.GetEndStep();    // 2
+
+    // --- Scatter node 1 to a deliberately bad destination (proc 1, step 2) ---
+    // Edge 0→1: proc 0 step 0 → proc 1 step 2, cross-proc.  Creates comm.
+    KlMoveT badScatter(1, 0.0, 0, 1, 1, 2);    // gain_ unused; ApplyMoveWithFreshCost computes it
+    kl.ApplyMoveWithFreshCost(badScatter);
+
+    // Cost should have increased significantly (new cross-proc comm)
+    BOOST_CHECK_GT(kl.GetCurrentCost(), initialCost);
+
+    // --- Step removal flow ---
+    kl.SetStepRemovalState(1);     // record: stepToRemove_=1, localSearchStartStep_=1
+    kl.SwapEmptyStepFwdTest(1);    // bubble empty step 1 to end, endStep_--
+    BOOST_CHECK_EQUAL(kl.GetEndStep(), initialEndStep - 1);
+
+    kl.UpdateCostAfterRemoval();    // cost_ -= syncCost=2
+
+    // Cost is still much worse than initial → best was NOT updated post-removal
+    BOOST_CHECK(!kl.GetBestIsPostRemoval());
+    BOOST_CHECK_GT(kl.GetCurrentCost(), kl.GetBestCost());
+
+    // --- Rollback ---
+    kl.RevertToBestScheduleTest();
+
+    // Step must be re-inserted
+    BOOST_CHECK_EQUAL(kl.GetEndStep(), initialEndStep);
+
+    // Cost must match the initial (best) cost
+    BOOST_CHECK_CLOSE(kl.GetCurrentCost(), initialCost, 0.00001);
+
+    // Comm datastructures must be consistent with the restored schedule
+    BOOST_CHECK(ValidateCommDatastructures(kl.GetCommCostF().commDs_, kl.GetActiveSchedule(), instance, "Rollback"));
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
+
+    // Verify node assignments restored
+    BspSchedule<Graph> restored(instance);
+    kl.GetActiveScheduleTest(restored);
+    BOOST_CHECK_EQUAL(restored.AssignedProcessor(1), 0u);
+    BOOST_CHECK_EQUAL(restored.AssignedSuperstep(1), 1u);
+}
+
+// Success: scatter a node cross-proc so cost worsens slightly, but the
+// sync-cost saving far exceeds the increase.  The step stays removed.
+BOOST_AUTO_TEST_CASE(SuccessfulRemoval) {
+    // 3-node chain: 0 → 1.  Cross-proc scatter worsens cost by ~4,
+    // but syncCost=100 saves far more → removal wins.
+    Graph dag;
+    dag.AddVertex(100, 5, 2);    // node 0
+    dag.AddVertex(1, 5, 2);      // node 1 (low work, alone on step 1)
+    dag.AddVertex(100, 5, 2);    // node 2
+    dag.AddEdge(0, 1, 5);        // weight=5 → cross-proc comm = 5
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(2);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(100);    // very high → removal wins
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 0, 0});
+    schedule.SetAssignedSupersteps({0, 1, 2});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+
+    BOOST_CHECK(kl.CheckRemoveSuperstepTest(1));
+    const auto initialCost = kl.GetCurrentCost();
+
+    // Scatter node 1 cross-proc to step 2: creates comm for edge 0→1.
+    // Cost worsens by ~4 (work at step 1 drops by 1, comm at step 2 += 5).
+    KlMoveT scatter(1, 0.0, 0, 1, 1, 2);
+    kl.ApplyMoveWithFreshCost(scatter);
+    BOOST_CHECK_GT(kl.GetCurrentCost(), initialCost);    // cost worsened
+
+    // Step removal flow
+    kl.SetStepRemovalState(1);
+    kl.SwapEmptyStepFwdTest(1);
+    BOOST_CHECK_EQUAL(kl.GetEndStep(), 1u);    // was 2, now 1
+
+    kl.UpdateCostAfterRemoval();
+
+    // Cost now much better than initial → best IS post-removal
+    BOOST_CHECK(kl.GetBestIsPostRemoval());
+    BOOST_CHECK_LT(kl.GetCurrentCost(), initialCost);
+
+    // Revert to best — step should NOT be re-inserted
+    kl.RevertToBestScheduleTest();
+
+    // Step stays removed
+    BOOST_CHECK_EQUAL(kl.GetEndStep(), 1u);
+    BOOST_CHECK_LT(kl.GetCurrentCost(), initialCost);
+
+    // Comm datastructures consistent
+    BOOST_CHECK(ValidateCommDatastructures(kl.GetCommCostF().commDs_, kl.GetActiveSchedule(), instance, "Success"));
+
+    // Verify via written schedule
+    BspSchedule<Graph> written(instance);
+    kl.GetActiveScheduleTest(written);
+    BOOST_CHECK_EQUAL(written.NumberOfSupersteps(), 2u);
+    // Node 1 should be on proc 1 (cross-proc scatter destination)
+    BOOST_CHECK_EQUAL(written.AssignedProcessor(1), 1u);
+}
+
+// Rollback with 4 nodes: scatter two nodes from a step, verify full restoration.
+BOOST_AUTO_TEST_CASE(RollbackTwoNodeStep) {
+    // Step 1 has two low-work nodes (both on proc 0); scatter both cross-proc.
+    // No edges from nodes 1,2 to node 3 — avoids same-step cross-proc violations.
+    Graph dag;
+    dag.AddVertex(100, 50, 10);    // node 0: proc 0, step 0
+    dag.AddVertex(1, 50, 10);      // node 1: proc 0, step 1
+    dag.AddVertex(1, 50, 10);      // node 2: proc 0, step 1
+    dag.AddVertex(100, 50, 10);    // node 3: proc 0, step 2
+    dag.AddEdge(0, 1, 5);          // weight=5
+    dag.AddEdge(0, 2, 5);          // weight=5
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(2);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(3);    // maxWork(step1)=2 < 3
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 0, 0, 0});
+    schedule.SetAssignedSupersteps({0, 1, 1, 2});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    BOOST_CHECK(kl.CheckRemoveSuperstepTest(1));
+
+    const auto initialCost = kl.GetCurrentCost();
+    const unsigned initialEndStep = kl.GetEndStep();
+
+    // Scatter both nodes to bad cross-proc destinations (proc 1, step 2).
+    // Each adds cross-proc comm=5 and removes work=1 from step 1. Net: +4 each.
+    KlMoveT scatter1(1, 0.0, 0, 1, 1, 2);    // node 1: proc 0→1, step 1→2
+    kl.ApplyMoveWithFreshCost(scatter1);
+    KlMoveT scatter2(2, 0.0, 0, 1, 1, 2);    // node 2: proc 0→1, step 1→2
+    kl.ApplyMoveWithFreshCost(scatter2);
+
+    // Cost should have increased (total +8 >> syncCost=3)
+    BOOST_CHECK_GT(kl.GetCurrentCost(), initialCost);
+
+    // Step 1 is now empty
+    kl.SetStepRemovalState(1);
+    kl.SwapEmptyStepFwdTest(1);
+    kl.UpdateCostAfterRemoval();
+
+    // Cost increase (8) > syncCost (3) → rollback
+    BOOST_CHECK(!kl.GetBestIsPostRemoval());
+    BOOST_CHECK_GT(kl.GetCurrentCost(), kl.GetBestCost());
+
+    kl.RevertToBestScheduleTest();
+
+    // Fully restored
+    BOOST_CHECK_EQUAL(kl.GetEndStep(), initialEndStep);
+    BOOST_CHECK_CLOSE(kl.GetCurrentCost(), initialCost, 0.00001);
+
+    BOOST_CHECK(ValidateCommDatastructures(kl.GetCommCostF().commDs_, kl.GetActiveSchedule(), instance, "Rollback2Nodes"));
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
+
+    // Verify node positions restored
+    BspSchedule<Graph> restored(instance);
+    kl.GetActiveScheduleTest(restored);
+    BOOST_CHECK_EQUAL(restored.AssignedProcessor(1), 0u);
+    BOOST_CHECK_EQUAL(restored.AssignedSuperstep(1), 1u);
+    BOOST_CHECK_EQUAL(restored.AssignedProcessor(2), 0u);
+    BOOST_CHECK_EQUAL(restored.AssignedSuperstep(2), 1u);
+}
+
+// Rollback with NUMA costs: cross-proc scatter is extra expensive due to NUMA.
+BOOST_AUTO_TEST_CASE(RollbackNuma) {
+    Graph dag;
+    dag.AddVertex(100, 50, 10);
+    dag.AddVertex(1, 50, 10);
+    dag.AddVertex(100, 50, 10);
+    dag.AddEdge(0, 1, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(3);
+    arch.SetCommunicationCosts(5);
+    arch.SetSynchronisationCosts(2);
+    // NUMA: P0-P1 moderate, P0-P2 very expensive
+    arch.SetSendCosts({
+        { 0,  2, 10},
+        { 2,  0, 10},
+        {10, 10,  0}
+    });
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 0, 0});
+    schedule.SetAssignedSupersteps({0, 1, 2});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    BOOST_CHECK(kl.CheckRemoveSuperstepTest(1));
+
+    const auto initialCost = kl.GetCurrentCost();
+    const unsigned initialEndStep = kl.GetEndStep();
+
+    // Scatter to the most expensive NUMA destination: proc 2
+    KlMoveT badScatter(1, 0.0, 0, 1, 2, 2);
+    kl.ApplyMoveWithFreshCost(badScatter);
+
+    kl.SetStepRemovalState(1);
+    kl.SwapEmptyStepFwdTest(1);
+    kl.UpdateCostAfterRemoval();
+
+    BOOST_CHECK(!kl.GetBestIsPostRemoval());
+    BOOST_CHECK_GT(kl.GetCurrentCost(), kl.GetBestCost());
+
+    kl.RevertToBestScheduleTest();
+
+    BOOST_CHECK_EQUAL(kl.GetEndStep(), initialEndStep);
+    BOOST_CHECK_CLOSE(kl.GetCurrentCost(), initialCost, 0.00001);
+
+    BOOST_CHECK(ValidateCommDatastructures(kl.GetCommCostF().commDs_, kl.GetActiveSchedule(), instance, "RollbackNuma"));
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
+}
+
+// Success with two nodes: scatter both cross-proc, cost worsens by less
+// than syncCost.  After removal the step stays removed.
+BOOST_AUTO_TEST_CASE(SuccessfulRemovalTwoNodes) {
+    Graph dag;
+    dag.AddVertex(100, 50, 10);    // node 0: proc 0, step 0
+    dag.AddVertex(1, 50, 10);      // node 1: proc 0, step 1
+    dag.AddVertex(1, 50, 10);      // node 2: proc 0, step 1
+    dag.AddVertex(100, 50, 10);    // node 3: proc 0, step 2
+    dag.AddEdge(0, 1, 5);          // weight=5
+    dag.AddEdge(0, 2, 5);          // weight=5
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(2);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(100);    // high → removal wins despite scatter cost
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 0, 0, 0});
+    schedule.SetAssignedSupersteps({0, 1, 1, 2});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    BOOST_CHECK(kl.CheckRemoveSuperstepTest(1));
+
+    const auto initialCost = kl.GetCurrentCost();
+
+    // Scatter both nodes cross-proc: cost worsens by ~8 total (4 each)
+    KlMoveT scatter1(1, 0.0, 0, 1, 1, 2);
+    kl.ApplyMoveWithFreshCost(scatter1);
+    KlMoveT scatter2(2, 0.0, 0, 1, 1, 2);
+    kl.ApplyMoveWithFreshCost(scatter2);
+    BOOST_CHECK_GT(kl.GetCurrentCost(), initialCost);
+
+    kl.SetStepRemovalState(1);
+    kl.SwapEmptyStepFwdTest(1);
+    kl.UpdateCostAfterRemoval();
+
+    // syncCost (100) >> scatter cost increase (8) → removal wins
+    BOOST_CHECK(kl.GetBestIsPostRemoval());
+    BOOST_CHECK_LT(kl.GetCurrentCost(), initialCost);
+
+    kl.RevertToBestScheduleTest();
+
+    // Step stays removed
+    BOOST_CHECK_EQUAL(kl.GetEndStep(), 1u);
+    BOOST_CHECK_LT(kl.GetCurrentCost(), initialCost);
+
+    // Comm datastructures consistent
+    BOOST_CHECK(ValidateCommDatastructures(kl.GetCommCostF().commDs_, kl.GetActiveSchedule(), instance, "Success2Nodes"));
+
+    // Verify via written schedule
+    BspSchedule<Graph> written(instance);
+    kl.GetActiveScheduleTest(written);
+    BOOST_CHECK_EQUAL(written.NumberOfSupersteps(), 2u);
+    BOOST_CHECK_EQUAL(written.AssignedProcessor(1), 1u);
+    BOOST_CHECK_EQUAL(written.AssignedProcessor(2), 1u);
+}
+
+// CheckRemoveSuperstep returns false when step has enough work.
+BOOST_AUTO_TEST_CASE(NotEligibleForRemoval) {
+    Graph dag;
+    dag.AddVertex(100, 5, 2);
+    dag.AddVertex(50, 5, 2);    // work=50, NOT < syncCost=10
+    dag.AddVertex(100, 5, 2);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(2);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(10);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 0, 0});
+    schedule.SetAssignedSupersteps({0, 1, 2});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+
+    // maxWork(step 1) = 50 ≥ syncCost = 10 → NOT eligible
+    BOOST_CHECK(!kl.CheckRemoveSuperstepTest(1));
+}
+
+// CheckRemoveSuperstep returns false with only 1 step.
+BOOST_AUTO_TEST_CASE(SingleStepNotRemovable) {
+    Graph dag;
+    dag.AddVertex(1, 5, 2);
+    dag.AddVertex(1, 5, 2);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(2);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(100);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1});
+    schedule.SetAssignedSupersteps({0, 0});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+
+    // Only 1 step → can't remove
+    BOOST_CHECK(!kl.CheckRemoveSuperstepTest(0));
+}
+
+BOOST_AUTO_TEST_SUITE_END()    // StepRemovalRollback

@@ -160,6 +160,70 @@ class KlImproverTest : public KlImprover<GraphT, CommCostFunctionT, MemoryConstr
     bool IsNodeLocked(VertexType node) const { return this->threadDataVec_[0].lockManager_.IsLocked(node); }
 
     void GetActiveScheduleTest(BspSchedule<GraphT> &schedule) { this->activeSchedule_.WriteSchedule(schedule); }
+
+    // Step removal/rollback testing
+
+    bool CheckRemoveSuperstepTest(unsigned step) { return this->CheckRemoveSuperstep(step); }
+
+    bool ScatterNodesSuperstepTest(unsigned step) { return this->ScatterNodesSuperstep(step, this->threadDataVec_[0]); }
+
+    /// Apply a move to the schedule and update cost using a fresh cost computation
+    /// instead of relying on the gain_ field.  This allows manually constructed
+    /// moves (e.g. deliberately bad scatters) with correct cost tracking.
+    void ApplyMoveWithFreshCost(KlMove move) {
+        this->activeSchedule_.ApplyMove(move, this->threadDataVec_[0].activeScheduleData_);
+        this->commCostF_.UpdateDatastructureAfterMove(move, this->threadDataVec_[0].startStep_, this->threadDataVec_[0].endStep_);
+        CostT freshCost = this->commCostF_.template ComputeScheduleCost<false>();
+        CostT changeInCost = freshCost - this->threadDataVec_[0].activeScheduleData_.cost_;
+        this->threadDataVec_[0].activeScheduleData_.UpdateCost(changeInCost);
+    }
+
+    /// Mark the thread context for step removal.  Must be called after
+    /// scattering nodes out of the step and before SwapEmptyStepFwdTest.
+    void SetStepRemovalState(unsigned stepToRemove) {
+        this->threadDataVec_[0].stepToRemove_ = stepToRemove;
+        this->threadDataVec_[0].localSearchStartStep_
+            = static_cast<unsigned>(this->threadDataVec_[0].activeScheduleData_.appliedMoves_.size());
+        this->threadDataVec_[0].stepWasRemoved_ = true;
+    }
+
+    /// Bubble the empty step at position @p step forward to endStep and
+    /// decrement endStep.
+    void SwapEmptyStepFwdTest(unsigned step) {
+        this->activeSchedule_.SwapEmptyStepFwd(step, this->threadDataVec_[0].endStep_);
+        this->threadDataVec_[0].endStep_--;
+    }
+
+    /// Record the sync-cost saving after step removal.  Sets
+    /// bestIsPostRemoval_ depending on whether UpdateCost saved a new best.
+    void UpdateCostAfterRemoval() {
+        auto &data = this->threadDataVec_[0].activeScheduleData_;
+        unsigned bestIdxBefore = data.bestScheduleIdx_;
+        data.UpdateCost(static_cast<CostT>(-1.0 * this->instance_->SynchronisationCosts()));
+        data.bestIsPostRemoval_ = (data.bestScheduleIdx_ != bestIdxBefore);
+    }
+
+    /// Revert to the best schedule found so far, potentially re-inserting
+    /// a removed step if the best predates the removal.
+    void RevertToBestScheduleTest() {
+        this->activeSchedule_.RevertToBestSchedule(this->threadDataVec_[0].localSearchStartStep_,
+                                                   this->threadDataVec_[0].stepToRemove_,
+                                                   this->threadDataVec_[0].stepWasRemoved_,
+                                                   this->commCostF_,
+                                                   this->threadDataVec_[0].activeScheduleData_,
+                                                   this->threadDataVec_[0].startStep_,
+                                                   this->threadDataVec_[0].endStep_);
+    }
+
+    unsigned GetEndStep() const { return this->threadDataVec_[0].endStep_; }
+
+    unsigned NumSteps() const { return this->threadDataVec_[0].NumSteps(); }
+
+    bool GetBestIsPostRemoval() const { return this->threadDataVec_[0].activeScheduleData_.bestIsPostRemoval_; }
+
+    unsigned GetBestScheduleIdx() const { return this->threadDataVec_[0].activeScheduleData_.bestScheduleIdx_; }
+
+    CostT GetBestCost() const { return this->threadDataVec_[0].activeScheduleData_.bestCost_; }
 };
 
 }    // namespace osp
