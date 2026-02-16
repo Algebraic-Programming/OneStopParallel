@@ -45,7 +45,7 @@ struct KlMoveStruct {
         : node_(node), gain_(gain), fromProc_(fromProc), fromStep_(fromStep), toProc_(toProc), toStep_(toStep) {}
 
     bool operator<(KlMoveStruct<CostT, VertexIdxT> const &rhs) const {
-        return (gain_ < rhs.gain_) or (gain_ == rhs.gain_ and node_ > rhs.node_);
+        return (gain_ < rhs.gain_) or (gain_ <= rhs.gain_ and node_ > rhs.node_);
     }
 
     bool operator>(KlMoveStruct<CostT, VertexIdxT> const &rhs) const { return rhs < *this; }
@@ -252,6 +252,7 @@ struct ThreadLocalActiveScheduleData {
 
     CostT bestCost_ = 0;
     unsigned bestScheduleIdx_ = 0;
+    bool bestIsPostRemoval_ = false;
 
     std::unordered_map<VertexType, EdgeType> newViolations_;
     std::unordered_set<EdgeType> resolvedViolations_;
@@ -261,6 +262,7 @@ struct ThreadLocalActiveScheduleData {
         cost_ = cost;
         bestCost_ = cost;
         feasible_ = true;
+        bestIsPostRemoval_ = false;
     }
 
     inline void UpdateCost(CostT changeInCost) {
@@ -376,16 +378,15 @@ class KlActiveSchedule {
         RevertMoves(bound, commDatastructures, threadData, startStep, endStep);
 
         // Re-insert the removed step when the best schedule predates the
-        // removal.  bestScheduleIdx_ <= startMove (== localSearchStartStep_)
-        // means the best was saved during scatter or is the initial state,
-        // both of which are pre-removal.  bestScheduleIdx_ > startMove means
-        // the inner loop (or resolve) found a better state post-removal, so
-        // the step stays removed.
-        //
-        // stepWasRemoved guards against the case where startMove == 0 because
-        // the removed step was already empty (zero scatter moves).  Without
-        // the flag, startMove == 0 would look identical to "no step removed."
-        if (stepWasRemoved && startMove >= threadData.bestScheduleIdx_) {
+        // removal.  When bestScheduleIdx_ == startMove, it is ambiguous:
+        // the best could have been set by the last scatter move (pre-removal)
+        // or by the removal's UpdateCost (post-removal).  With staleness > 1,
+        // SwapEmptyStepFwd can introduce violations making the schedule
+        // infeasible, so UpdateCost won't save a new best — the index stays
+        // at the pre-removal value and we must re-insert.  With staleness == 1,
+        // no violations arise, UpdateCost saves the post-removal state, and
+        // the step should stay removed.  bestIsPostRemoval_ disambiguates.
+        if (stepWasRemoved && startMove >= threadData.bestScheduleIdx_ && !threadData.bestIsPostRemoval_) {
             SwapEmptyStepBwd(++endStep, insertStep);
         }
 
@@ -400,6 +401,7 @@ class KlActiveSchedule {
 
         threadData.appliedMoves_.clear();
         threadData.bestScheduleIdx_ = 0;
+        threadData.bestIsPostRemoval_ = false;
         threadData.currentViolations_.clear();
         threadData.feasible_ = true;
         threadData.cost_ = threadData.bestCost_;

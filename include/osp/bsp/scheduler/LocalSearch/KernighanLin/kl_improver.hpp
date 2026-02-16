@@ -1226,9 +1226,14 @@ class KlImprover : public ImprovementScheduler<GraphT> {
             // violation set for the affected boundary BEFORE UpdateCost, so that
             // feasible_ is correct when UpdateCost decides whether to save the
             // current state as the new best.
-            activeSchedule_.UpdateViolationsAfterStepRemoval(threadData.stepToRemove_, threadData.activeScheduleData_);
+            if (activeSchedule_.GetStaleness() > 1) {
+                activeSchedule_.UpdateViolationsAfterStepRemoval(threadData.stepToRemove_, threadData.activeScheduleData_);
+            }
 
+            const unsigned bestIdxBeforeRemoval = threadData.activeScheduleData_.bestScheduleIdx_;
             threadData.activeScheduleData_.UpdateCost(static_cast<CostT>(-1.0 * instance_->SynchronisationCosts()));
+            threadData.activeScheduleData_.bestIsPostRemoval_
+                = (threadData.activeScheduleData_.bestScheduleIdx_ != bestIdxBeforeRemoval);
 
             if constexpr (enablePreresolvingViolations_) {
                 ResolveViolations(threadData);
