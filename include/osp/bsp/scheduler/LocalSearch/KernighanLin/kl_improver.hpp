@@ -1209,10 +1209,9 @@ class KlImprover : public ImprovementScheduler<GraphT> {
                 activeSchedule_.UpdateViolationsAfterStepRemoval(threadData.stepToRemove_, threadData.activeScheduleData_);
             }
 
-            const unsigned bestIdxBeforeRemoval = threadData.activeScheduleData_.bestScheduleIdx_;
+            const CostT bestCostBeforeRemoval = threadData.activeScheduleData_.bestCost_;
             threadData.activeScheduleData_.UpdateCost(static_cast<CostT>(-1.0 * instance_->SynchronisationCosts()));
-            threadData.activeScheduleData_.bestIsPostRemoval_
-                = (threadData.activeScheduleData_.bestScheduleIdx_ != bestIdxBeforeRemoval);
+            threadData.activeScheduleData_.bestIsPostRemoval_ = (threadData.activeScheduleData_.bestCost_ < bestCostBeforeRemoval);
 
             if constexpr (enablePreresolvingViolations_) {
                 ResolveViolations(threadData);
