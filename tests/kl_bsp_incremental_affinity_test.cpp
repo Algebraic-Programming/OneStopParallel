@@ -2166,14 +2166,13 @@ BOOST_AUTO_TEST_CASE(RollbackBadScatter) {
     BOOST_CHECK_GT(kl.GetCurrentCost(), initialCost);
 
     // --- Step removal flow ---
-    kl.SetStepRemovalState(1);     // record: stepToRemove_=1, localSearchStartStep_=1
-    kl.SwapEmptyStepFwdTest(1);    // bubble empty step 1 to end, endStep_--
+    kl.SwapEmptyStepFwdTest(1);      // bubble empty step 1 to end, endStep_--
+    kl.PushRemoveStepSentinel(1);    // record removal as sentinel in appliedMoves_
     BOOST_CHECK_EQUAL(kl.GetEndStep(), initialEndStep - 1);
 
     kl.UpdateCostAfterRemoval();    // cost_ -= syncCost=2
 
     // Cost is still much worse than initial → best was NOT updated post-removal
-    BOOST_CHECK(!kl.GetBestIsPostRemoval());
     BOOST_CHECK_GT(kl.GetCurrentCost(), kl.GetBestCost());
 
     // --- Rollback ---
@@ -2231,14 +2230,13 @@ BOOST_AUTO_TEST_CASE(SuccessfulRemoval) {
     BOOST_CHECK_GT(kl.GetCurrentCost(), initialCost);    // cost worsened
 
     // Step removal flow
-    kl.SetStepRemovalState(1);
     kl.SwapEmptyStepFwdTest(1);
+    kl.PushRemoveStepSentinel(1);
     BOOST_CHECK_EQUAL(kl.GetEndStep(), 1u);    // was 2, now 1
 
     kl.UpdateCostAfterRemoval();
 
     // Cost now much better than initial → best IS post-removal
-    BOOST_CHECK(kl.GetBestIsPostRemoval());
     BOOST_CHECK_LT(kl.GetCurrentCost(), initialCost);
 
     // Revert to best — step should NOT be re-inserted
@@ -2300,12 +2298,11 @@ BOOST_AUTO_TEST_CASE(RollbackTwoNodeStep) {
     BOOST_CHECK_GT(kl.GetCurrentCost(), initialCost);
 
     // Step 1 is now empty
-    kl.SetStepRemovalState(1);
     kl.SwapEmptyStepFwdTest(1);
+    kl.PushRemoveStepSentinel(1);
     kl.UpdateCostAfterRemoval();
 
     // Cost increase (8) > syncCost (3) → rollback
-    BOOST_CHECK(!kl.GetBestIsPostRemoval());
     BOOST_CHECK_GT(kl.GetCurrentCost(), kl.GetBestCost());
 
     kl.RevertToBestScheduleTest();
@@ -2362,11 +2359,10 @@ BOOST_AUTO_TEST_CASE(RollbackNuma) {
     KlMoveT badScatter(1, 0.0, 0, 1, 2, 2);
     kl.ApplyMoveWithFreshCost(badScatter);
 
-    kl.SetStepRemovalState(1);
     kl.SwapEmptyStepFwdTest(1);
+    kl.PushRemoveStepSentinel(1);
     kl.UpdateCostAfterRemoval();
 
-    BOOST_CHECK(!kl.GetBestIsPostRemoval());
     BOOST_CHECK_GT(kl.GetCurrentCost(), kl.GetBestCost());
 
     kl.RevertToBestScheduleTest();
@@ -2413,12 +2409,11 @@ BOOST_AUTO_TEST_CASE(SuccessfulRemovalTwoNodes) {
     kl.ApplyMoveWithFreshCost(scatter2);
     BOOST_CHECK_GT(kl.GetCurrentCost(), initialCost);
 
-    kl.SetStepRemovalState(1);
     kl.SwapEmptyStepFwdTest(1);
+    kl.PushRemoveStepSentinel(1);
     kl.UpdateCostAfterRemoval();
 
     // syncCost (100) >> scatter cost increase (8) → removal wins
-    BOOST_CHECK(kl.GetBestIsPostRemoval());
     BOOST_CHECK_LT(kl.GetCurrentCost(), initialCost);
 
     kl.RevertToBestScheduleTest();

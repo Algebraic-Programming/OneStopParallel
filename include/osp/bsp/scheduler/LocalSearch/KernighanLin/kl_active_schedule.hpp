@@ -18,6 +18,8 @@ limitations under the License.
 
 #pragma once
 
+#include <cstdint>
+
 #include "osp/bsp/model/BspSchedule.hpp"
 #include "osp/bsp/model/IBspSchedule.hpp"
 #include "osp/bsp/model/util/SetSchedule.hpp"
@@ -27,6 +29,8 @@ limitations under the License.
 #include "osp/graph_algorithms/directed_graph_util.hpp"
 
 namespace osp {
+
+enum class KlMoveType : uint8_t { BASIC, REMOVE_STEP };
 
 template <typename CostT, typename VertexIdxT>
 struct KlMoveStruct {
@@ -39,10 +43,26 @@ struct KlMoveStruct {
     unsigned toProc_;
     unsigned toStep_;
 
-    KlMoveStruct() : node_(0), gain_(0), fromProc_(0), fromStep_(0), toProc_(0), toStep_(0) {}
+    KlMoveType type_ = KlMoveType::BASIC;
+
+    KlMoveStruct() : node_(0), gain_(0), fromProc_(0), fromStep_(0), toProc_(0), toStep_(0), type_(KlMoveType::BASIC) {}
 
     KlMoveStruct(VertexIdxT node, CostT gain, unsigned fromProc, unsigned fromStep, unsigned toProc, unsigned toStep)
-        : node_(node), gain_(gain), fromProc_(fromProc), fromStep_(fromStep), toProc_(toProc), toStep_(toStep) {}
+        : node_(node),
+          gain_(gain),
+          fromProc_(fromProc),
+          fromStep_(fromStep),
+          toProc_(toProc),
+          toStep_(toStep),
+          type_(KlMoveType::BASIC) {}
+
+    static KlMoveStruct MakeRemoveStep(unsigned removedStep, CostT syncCostSaving) {
+        KlMoveStruct m;
+        m.type_ = KlMoveType::REMOVE_STEP;
+        m.fromStep_ = removedStep;
+        m.gain_ = syncCostSaving;
+        return m;
+    }
 
     bool operator<(KlMoveStruct<CostT, VertexIdxT> const &rhs) const {
         return (gain_ < rhs.gain_) or (gain_ <= rhs.gain_ and node_ > rhs.node_);
@@ -252,7 +272,6 @@ struct ThreadLocalActiveScheduleData {
 
     CostT bestCost_ = 0;
     unsigned bestScheduleIdx_ = 0;
-    bool bestIsPostRemoval_ = false;
 
     std::unordered_map<VertexType, EdgeType> newViolations_;
     std::unordered_set<EdgeType> resolvedViolations_;
@@ -262,7 +281,6 @@ struct ThreadLocalActiveScheduleData {
         cost_ = cost;
         bestCost_ = cost;
         feasible_ = true;
-        bestIsPostRemoval_ = false;
     }
 
     inline void UpdateCost(CostT changeInCost) {
@@ -367,29 +385,10 @@ class KlActiveSchedule {
     }
 
     template <typename CommDatastructuresT>
-    void RevertToBestSchedule(unsigned startMove,
-                              unsigned insertStep,
-                              bool stepWasRemoved,
-                              CommDatastructuresT &commDatastructures,
+    void RevertToBestSchedule(CommDatastructuresT &commDatastructures,
                               ThreadDataT &threadData,
                               unsigned startStep,
                               unsigned &endStep) {
-        const unsigned bound = std::max(startMove, threadData.bestScheduleIdx_);
-        RevertMoves(bound, commDatastructures, threadData, startStep, endStep);
-
-        // Re-insert the removed step when the best schedule predates the
-        // removal.  When bestScheduleIdx_ == startMove, it is ambiguous:
-        // the best could have been set by the last scatter move (pre-removal)
-        // or by the removal's UpdateCost (post-removal).  With staleness > 1,
-        // SwapEmptyStepFwd can introduce violations making the schedule
-        // infeasible, so UpdateCost won't save a new best — the index stays
-        // at the pre-removal value and we must re-insert.  With staleness == 1,
-        // no violations arise, UpdateCost saves the post-removal state, and
-        // the step should stay removed.  bestIsPostRemoval_ disambiguates.
-        if (stepWasRemoved && startMove >= threadData.bestScheduleIdx_ && !threadData.bestIsPostRemoval_) {
-            SwapEmptyStepBwd(++endStep, insertStep);
-        }
-
         RevertMoves(threadData.bestScheduleIdx_, commDatastructures, threadData, startStep, endStep);
 
 #ifdef KL_DEBUG
@@ -401,7 +400,6 @@ class KlActiveSchedule {
 
         threadData.appliedMoves_.clear();
         threadData.bestScheduleIdx_ = 0;
-        threadData.bestIsPostRemoval_ = false;
         threadData.currentViolations_.clear();
         threadData.feasible_ = true;
         threadData.cost_ = threadData.bestCost_;
@@ -414,7 +412,7 @@ class KlActiveSchedule {
                                CommDatastructuresT &commDatastructures,
                                ThreadDataT &threadData,
                                unsigned startStep,
-                               unsigned endStep) {
+                               unsigned &endStep) {
         RevertMoves(bound, commDatastructures, threadData, startStep, endStep);
 
         threadData.currentViolations_.clear();
@@ -440,20 +438,27 @@ class KlActiveSchedule {
                      CommDatastructuresT &commDatastructures,
                      ThreadDataT &threadData,
                      unsigned startStep,
-                     unsigned endStep) {
+                     unsigned &endStep) {
         while (threadData.appliedMoves_.size() > bound) {
-            const auto move = threadData.appliedMoves_.back().ReverseMove();
+            const auto move = threadData.appliedMoves_.back();
             threadData.appliedMoves_.pop_back();
 
-            vectorSchedule_.SetAssignedProcessor(move.node_, move.toProc_);
-            vectorSchedule_.SetAssignedSuperstep(move.node_, move.toStep_);
+            if (move.type_ == KlMoveType::REMOVE_STEP) {
+                SwapEmptyStepBwd(++endStep, move.fromStep_);
+                continue;
+            }
 
-            setSchedule_.GetProcessorStepVertices()[move.fromStep_][move.fromProc_].erase(move.node_);
-            setSchedule_.GetProcessorStepVertices()[move.toStep_][move.toProc_].insert(move.node_);
-            workDatastructures_.ApplyMove(move, instance_->GetComputationalDag().VertexWorkWeight(move.node_));
-            commDatastructures.UpdateDatastructureAfterMove(move, startStep, endStep);
+            const auto reversed = move.ReverseMove();
+            vectorSchedule_.SetAssignedProcessor(reversed.node_, reversed.toProc_);
+            vectorSchedule_.SetAssignedSuperstep(reversed.node_, reversed.toStep_);
+
+            setSchedule_.GetProcessorStepVertices()[reversed.fromStep_][reversed.fromProc_].erase(reversed.node_);
+            setSchedule_.GetProcessorStepVertices()[reversed.toStep_][reversed.toProc_].insert(reversed.node_);
+            workDatastructures_.ApplyMove(reversed, instance_->GetComputationalDag().VertexWorkWeight(reversed.node_));
+            commDatastructures.UpdateDatastructureAfterMove(reversed, startStep, endStep);
             if constexpr (useMemoryConstraint_) {
-                memoryConstraint_.ApplyMove(move.node_, move.fromProc_, move.fromStep_, move.toProc_, move.toStep_);
+                memoryConstraint_.ApplyMove(
+                    reversed.node_, reversed.fromProc_, reversed.fromStep_, reversed.toProc_, reversed.toStep_);
             }
         }
     }

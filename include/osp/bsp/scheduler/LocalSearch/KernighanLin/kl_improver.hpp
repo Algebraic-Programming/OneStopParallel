@@ -131,8 +131,6 @@ class KlImprover : public ImprovementScheduler<GraphT> {
         unsigned stepSelectionEpochCounter_ = 0;
         unsigned stepSelectionCounter_ = 0;
         unsigned stepToRemove_ = 0;
-        unsigned localSearchStartStep_ = 0;
-        bool stepWasRemoved_ = false;
         unsigned unlockEdgeBacktrackCounter_ = 0;
         unsigned unlockEdgeBacktrackCounterReset_ = 0;
         unsigned maxNoViolationsRemovedBacktrack_ = 0;
@@ -803,6 +801,9 @@ class KlImprover : public ImprovementScheduler<GraphT> {
             CostT initialInnerIterCost = threadData.activeScheduleData_.cost_;
 
             ResetInnerSearchStructures(threadData);
+#ifdef KL_DEBUG_1
+            const unsigned numStepsBeforeSelect = threadData.endStep_;
+#endif
             SelectActiveNodes(threadData);
             threadData.rewardPenaltyStrat_.InitRewardPenalty(
                 static_cast<double>(threadData.activeScheduleData_.currentViolations_.size()) + 1.0);
@@ -926,18 +927,13 @@ class KlImprover : public ImprovementScheduler<GraphT> {
                       << (threadData.activeScheduleData_.feasible_ ? "feasible" : "infeasible") << std::endl;
 #endif
 #ifdef KL_DEBUG_1
-            const unsigned numStepsTmp = threadData.endStep_;
+            const unsigned numStepsBeforeRevert = threadData.endStep_;
 #endif
-            activeSchedule_.RevertToBestSchedule(threadData.localSearchStartStep_,
-                                                 threadData.stepToRemove_,
-                                                 threadData.stepWasRemoved_,
-                                                 commCostF_,
-                                                 threadData.activeScheduleData_,
-                                                 threadData.startStep_,
-                                                 threadData.endStep_);
+            activeSchedule_.RevertToBestSchedule(
+                commCostF_, threadData.activeScheduleData_, threadData.startStep_, threadData.endStep_);
 #ifdef KL_DEBUG_1
-            if (threadData.localSearchStartStep_ > 0) {
-                if (numStepsTmp == threadData.endStep_) {
+            if (numStepsBeforeSelect != numStepsBeforeRevert) {
+                if (numStepsBeforeRevert == threadData.endStep_) {
                     std::cout << "thread " << threadData.threadId_ << ", removing step " << threadData.stepToRemove_
                               << " succeded " << std::endl;
                 } else {
@@ -1197,8 +1193,12 @@ class KlImprover : public ImprovementScheduler<GraphT> {
         if (SelectNodesCheckRemoveSuperstep(threadData.stepToRemove_, threadData)) {
             activeSchedule_.SwapEmptyStepFwd(threadData.stepToRemove_, threadData.endStep_);
             threadData.endStep_--;
-            threadData.localSearchStartStep_ = static_cast<unsigned>(threadData.activeScheduleData_.appliedMoves_.size());
-            threadData.stepWasRemoved_ = true;
+
+            // Push a sentinel move to record the step removal in the move history.
+            // This must happen BEFORE UpdateCost so that bestScheduleIdx_ can
+            // unambiguously point before or after the removal.
+            const CostT syncCost = static_cast<CostT>(instance_->SynchronisationCosts());
+            threadData.activeScheduleData_.appliedMoves_.push_back(KlMove::MakeRemoveStep(threadData.stepToRemove_, syncCost));
 
             // SwapEmptyStepFwd shifts nodes after the removed step down by 1,
             // which can reduce cross-processor gaps below staleness.  Update the
@@ -1209,22 +1209,15 @@ class KlImprover : public ImprovementScheduler<GraphT> {
                 activeSchedule_.UpdateViolationsAfterStepRemoval(threadData.stepToRemove_, threadData.activeScheduleData_);
             }
 
-            const CostT bestCostBeforeRemoval = threadData.activeScheduleData_.bestCost_;
-            threadData.activeScheduleData_.UpdateCost(static_cast<CostT>(-1.0 * instance_->SynchronisationCosts()));
-            threadData.activeScheduleData_.bestIsPostRemoval_ = (threadData.activeScheduleData_.bestCost_ < bestCostBeforeRemoval);
+            threadData.activeScheduleData_.UpdateCost(static_cast<CostT>(-1.0 * syncCost));
 
             if constexpr (enablePreresolvingViolations_) {
                 ResolveViolations(threadData);
             }
 
             if (threadData.activeScheduleData_.currentViolations_.size() > parameters_.initialViolationThreshold_) {
-                activeSchedule_.RevertToBestSchedule(threadData.localSearchStartStep_,
-                                                     threadData.stepToRemove_,
-                                                     threadData.stepWasRemoved_,
-                                                     commCostF_,
-                                                     threadData.activeScheduleData_,
-                                                     threadData.startStep_,
-                                                     threadData.endStep_);
+                activeSchedule_.RevertToBestSchedule(
+                    commCostF_, threadData.activeScheduleData_, threadData.startStep_, threadData.endStep_);
             } else {
                 threadData.unlockEdgeBacktrackCounter_
                     = static_cast<unsigned>(threadData.activeScheduleData_.currentViolations_.size());
@@ -1238,9 +1231,6 @@ class KlImprover : public ImprovementScheduler<GraphT> {
                 return;
             }
         }
-        // threadData.stepToRemove_ = threadData.startStep_;
-        threadData.localSearchStartStep_ = 0;
-        threadData.stepWasRemoved_ = false;
         threadData.selectionStrategy_.SelectActiveNodes(threadData.affinityTable_, threadData.startStep_, threadData.endStep_);
     }
 
@@ -1297,7 +1287,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
 
         if (abort) {
             activeSchedule_.RevertToBestSchedule(
-                0, 0, false, commCostF_, threadData.activeScheduleData_, threadData.startStep_, threadData.endStep_);
+                commCostF_, threadData.activeScheduleData_, threadData.startStep_, threadData.endStep_);
             threadData.affinityTable_.ResetNodeSelection();
             return false;
         }

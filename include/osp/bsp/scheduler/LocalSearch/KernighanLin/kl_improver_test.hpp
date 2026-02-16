@@ -178,15 +178,6 @@ class KlImproverTest : public KlImprover<GraphT, CommCostFunctionT, MemoryConstr
         this->threadDataVec_[0].activeScheduleData_.UpdateCost(changeInCost);
     }
 
-    /// Mark the thread context for step removal.  Must be called after
-    /// scattering nodes out of the step and before SwapEmptyStepFwdTest.
-    void SetStepRemovalState(unsigned stepToRemove) {
-        this->threadDataVec_[0].stepToRemove_ = stepToRemove;
-        this->threadDataVec_[0].localSearchStartStep_
-            = static_cast<unsigned>(this->threadDataVec_[0].activeScheduleData_.appliedMoves_.size());
-        this->threadDataVec_[0].stepWasRemoved_ = true;
-    }
-
     /// Bubble the empty step at position @p step forward to endStep and
     /// decrement endStep.
     void SwapEmptyStepFwdTest(unsigned step) {
@@ -194,22 +185,24 @@ class KlImproverTest : public KlImprover<GraphT, CommCostFunctionT, MemoryConstr
         this->threadDataVec_[0].endStep_--;
     }
 
-    /// Record the sync-cost saving after step removal.  Sets
-    /// bestIsPostRemoval_ depending on whether UpdateCost saved a new best.
-    void UpdateCostAfterRemoval() {
+    /// Push a REMOVE_STEP sentinel into appliedMoves_ after the step has
+    /// been physically removed via SwapEmptyStepFwdTest.
+    void PushRemoveStepSentinel(unsigned stepToRemove) {
         auto &data = this->threadDataVec_[0].activeScheduleData_;
-        unsigned bestIdxBefore = data.bestScheduleIdx_;
-        data.UpdateCost(static_cast<CostT>(-1.0 * this->instance_->SynchronisationCosts()));
-        data.bestIsPostRemoval_ = (data.bestScheduleIdx_ != bestIdxBefore);
+        CostT syncCost = static_cast<CostT>(this->instance_->SynchronisationCosts());
+        data.appliedMoves_.push_back(KlMove::MakeRemoveStep(stepToRemove, syncCost));
     }
 
-    /// Revert to the best schedule found so far, potentially re-inserting
-    /// a removed step if the best predates the removal.
+    /// Record the sync-cost saving after step removal.
+    void UpdateCostAfterRemoval() {
+        auto &data = this->threadDataVec_[0].activeScheduleData_;
+        data.UpdateCost(static_cast<CostT>(-1.0 * this->instance_->SynchronisationCosts()));
+    }
+
+    /// Revert to the best schedule found so far.  If a REMOVE_STEP sentinel
+    /// is encountered during reversal, the step is automatically re-inserted.
     void RevertToBestScheduleTest() {
-        this->activeSchedule_.RevertToBestSchedule(this->threadDataVec_[0].localSearchStartStep_,
-                                                   this->threadDataVec_[0].stepToRemove_,
-                                                   this->threadDataVec_[0].stepWasRemoved_,
-                                                   this->commCostF_,
+        this->activeSchedule_.RevertToBestSchedule(this->commCostF_,
                                                    this->threadDataVec_[0].activeScheduleData_,
                                                    this->threadDataVec_[0].startStep_,
                                                    this->threadDataVec_[0].endStep_);
@@ -218,8 +211,6 @@ class KlImproverTest : public KlImprover<GraphT, CommCostFunctionT, MemoryConstr
     unsigned GetEndStep() const { return this->threadDataVec_[0].endStep_; }
 
     unsigned NumSteps() const { return this->threadDataVec_[0].NumSteps(); }
-
-    bool GetBestIsPostRemoval() const { return this->threadDataVec_[0].activeScheduleData_.bestIsPostRemoval_; }
 
     unsigned GetBestScheduleIdx() const { return this->threadDataVec_[0].activeScheduleData_.bestScheduleIdx_; }
 

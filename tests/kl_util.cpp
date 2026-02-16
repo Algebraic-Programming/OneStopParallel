@@ -409,7 +409,8 @@ BOOST_AUTO_TEST_CASE(ActiveScheduleRevertMovesTest) {
     } commDs;
 
     // Revert both moves
-    activeSchedule_.RevertScheduleToBound(0, 0.0, true, commDs, threadData, 0, 4);
+    unsigned endStep = 4;
+    activeSchedule_.RevertScheduleToBound(0, 0.0, true, commDs, threadData, 0, endStep);
 
     BOOST_CHECK_EQUAL(activeSchedule_.AssignedProcessor(0), originalSchedule.AssignedProcessor(0));
     BOOST_CHECK_EQUAL(activeSchedule_.AssignedSuperstep(0), originalSchedule.AssignedSuperstep(0));
@@ -445,8 +446,8 @@ BOOST_AUTO_TEST_CASE(ActiveScheduleRevertToBestScheduleTest) {
     } commDs;
 
     unsigned endStep = activeSchedule_.NumSteps() - 1;
-    // Revert to best. start_move=0 means no step removal logic is triggered.
-    activeSchedule_.RevertToBestSchedule(0, 0, false, commDs, threadData, 0, endStep);
+    // Revert to best.
+    activeSchedule_.RevertToBestSchedule(commDs, threadData, 0, endStep);
 
     BOOST_CHECK_EQUAL(threadData.cost_, 80.0);    // Check cost is reverted to best
     BOOST_CHECK_EQUAL(threadData.appliedMoves_.size(), 0);
