@@ -132,29 +132,42 @@ BOOST_AUTO_TEST_CASE(TestSparseMatrixAdapter1) {
         BOOST_CHECK_EQUAL(v, vertices[idx++]);
 
         size_t i = 0;
+        size_t cntr = 0;
         const size_t vi = static_cast<size_t>(v);
 
         for (const auto &e : graph.Children(v)) {
+            ++cntr;
             BOOST_CHECK_EQUAL(e, outNeighbors[vi][i++]);
         }
+        BOOST_CHECK_EQUAL(cntr, outNeighbors[vi].size());
+        BOOST_CHECK_EQUAL(graph.OutDegree(v), outNeighbors[vi].size());
 
         i = 0;
+        cntr = 0;
         for (const auto &e : graph.Parents(v)) {
+            ++cntr;
             BOOST_CHECK_EQUAL(e, inNeighbors[vi][i++]);
         }
+        BOOST_CHECK_EQUAL(cntr, inNeighbors[vi].size());
+        BOOST_CHECK_EQUAL(graph.InDegree(v), inNeighbors[vi].size());
 
         i = 0;
+        cntr = 0;
         for (const auto &e : OutEdges(v, graph)) {
+            ++cntr;
             BOOST_CHECK_EQUAL(Target(e, graph), outNeighbors[vi][i++]);
         }
+        BOOST_CHECK_EQUAL(cntr, outNeighbors[vi].size());
+        BOOST_CHECK_EQUAL(graph.OutDegree(v), outNeighbors[vi].size());
 
         i = 0;
+        cntr = 0;
         for (const auto &e : InEdges(v, graph)) {
+            ++cntr;
             BOOST_CHECK_EQUAL(Source(e, graph), inNeighbors[vi][i++]);
         }
-
+        BOOST_CHECK_EQUAL(cntr, inNeighbors[vi].size());
         BOOST_CHECK_EQUAL(graph.InDegree(v), inNeighbors[vi].size());
-        BOOST_CHECK_EQUAL(graph.OutDegree(v), outNeighbors[vi].size());
     }
 
     unsigned count = 0;

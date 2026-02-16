@@ -123,7 +123,6 @@ class EigenCSCRange {
 
         Iterator &operator++() {
             ++it_;
-            SkipDiagonal();
             return *this;
         }
 
