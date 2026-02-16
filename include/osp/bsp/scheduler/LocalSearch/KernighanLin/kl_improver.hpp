@@ -758,7 +758,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
             }
 #endif
 #ifdef KL_DEBUG_COST_CHECK
-            activeSchedule_.GetVectorSchedule().numberOfSupersteps = threadDataVec_[0].NumSteps();
+            activeSchedule_.GetVectorSchedule().numberOfSupersteps_ = threadDataVec_[0].NumSteps();
             if (std::abs(commCostF_.ComputeScheduleCostTest() - threadData.activeScheduleData_.cost_) > 0.00001) {
                 std::cout << "computed cost: " << commCostF_.ComputeScheduleCostTest()
                           << ", current cost: " << threadData.activeScheduleData_.cost_ << std::endl;
@@ -802,7 +802,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
                 const typename CommCostFunctionT::PreMoveCommDataT prevCommData = commCostF_.GetPreMoveCommData(bestMove);
                 const CostT changeInCost = ApplyMove(bestMove, threadData);
 #ifdef KL_DEBUG_COST_CHECK
-                activeSchedule_.GetVectorSchedule().numberOfSupersteps = threadDataVec_[0].NumSteps();
+                activeSchedule_.GetVectorSchedule().numberOfSupersteps_ = threadDataVec_[0].NumSteps();
                 if (std::abs(commCostF_.ComputeScheduleCostTest() - threadData.activeScheduleData_.cost_) > 0.00001) {
                     std::cout << "computed cost: " << commCostF_.ComputeScheduleCostTest()
                               << ", current cost: " << threadData.activeScheduleData_.cost_ << std::endl;
@@ -818,7 +818,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
                     if (iterInitalFeasible && threadData.activeScheduleData_.newViolations_.size() > 0) {
                         RunQuickMoves(innerIter, threadData, changeInCost, bestMove.node_);
 #ifdef KL_DEBUG_COST_CHECK
-                        activeSchedule_.GetVectorSchedule().numberOfSupersteps = threadDataVec_[0].NumSteps();
+                        activeSchedule_.GetVectorSchedule().numberOfSupersteps_ = threadDataVec_[0].NumSteps();
                         if (std::abs(commCostF_.ComputeScheduleCostTest() - threadData.activeScheduleData_.cost_) > 0.00001) {
                             std::cout << "computed cost: " << commCostF_.ComputeScheduleCostTest()
                                       << ", current cost: " << threadData.activeScheduleData_.cost_ << std::endl;
@@ -904,7 +904,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
                 std::cout << "}" << std::endl;
 #endif
 #ifdef KL_DEBUG_COST_CHECK
-                activeSchedule_.GetVectorSchedule().numberOfSupersteps = threadDataVec_[0].NumSteps();
+                activeSchedule_.GetVectorSchedule().numberOfSupersteps_ = threadDataVec_[0].NumSteps();
                 if (std::abs(commCostF_.ComputeScheduleCostTest() - threadData.activeScheduleData_.cost_) > 0.00001) {
                     std::cout << "computed cost: " << commCostF_.ComputeScheduleCostTest()
                               << ", current cost: " << threadData.activeScheduleData_.cost_ << std::endl;
@@ -955,7 +955,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
 #endif
 
 #ifdef KL_DEBUG_COST_CHECK
-            activeSchedule_.GetVectorSchedule().numberOfSupersteps = threadDataVec_[0].NumSteps();
+            activeSchedule_.GetVectorSchedule().numberOfSupersteps_ = threadDataVec_[0].NumSteps();
             if (std::abs(commCostF_.ComputeScheduleCostTest() - threadData.activeScheduleData_.cost_) > 0.00001) {
                 std::cout << "computed cost: " << commCostF_.ComputeScheduleCostTest()
                           << ", current cost: " << threadData.activeScheduleData_.cost_ << std::endl;
@@ -1306,7 +1306,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
 #endif
 
 #ifdef KL_DEBUG_COST_CHECK
-                activeSchedule_.GetVectorSchedule().numberOfSupersteps = threadDataVec_[0].NumSteps();
+                activeSchedule_.GetVectorSchedule().numberOfSupersteps_ = threadDataVec_[0].NumSteps();
                 if (std::abs(commCostF_.ComputeScheduleCostTest() - threadData.activeScheduleData_.cost_) > 0.00001) {
                     std::cout << "computed cost: " << commCostF_.ComputeScheduleCostTest()
                               << ", current cost: " << threadData.activeScheduleData_.cost_ << std::endl;
