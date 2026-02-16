@@ -22,6 +22,7 @@ limitations under the License.
 
 #include "osp/auxiliary/io/arch_file_reader.hpp"
 #include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
+#include "osp/bsp/model/cost/TotalLambdaCommunicationCost.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_improver_test.hpp"
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_include.hpp"
@@ -723,8 +724,8 @@ BOOST_AUTO_TEST_CASE(kl_lambda_total_comm_large_test_graphs) {
 
         schedule.UpdateNumberOfSupersteps();
 
-        // std::cout << "initial scedule with costs: " << schedule.computeTotalLambdaCosts() << " and " <<
-        // schedule.NumberOfSupersteps() << " number of supersteps"<< std::endl;
+        std::cout << "initial scedule with costs: " << TotalLambdaCommunicationCost<graph>()(schedule) << " and "
+                  << schedule.NumberOfSupersteps() << " number of supersteps" << std::endl;
 
         BspSchedule<graph> schedule_2(schedule);
 
@@ -738,8 +739,8 @@ BOOST_AUTO_TEST_CASE(kl_lambda_total_comm_large_test_graphs) {
         auto finish_time = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
 
-        // std::cout << "kl new finished in " << duration << " seconds, costs: " << schedule.computeTotalLambdaCosts() << " with "
-        // << schedule.NumberOfSupersteps() << " number of supersteps"<< std::endl;
+        std::cout << "kl new finished in " << duration << " seconds, costs: " << TotalLambdaCommunicationCost<graph>()(schedule)
+                  << " with " << schedule.NumberOfSupersteps() << " number of supersteps" << std::endl;
 
         BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
         BOOST_CHECK_EQUAL(schedule.SatisfiesPrecedenceConstraints(), true);

@@ -22,6 +22,7 @@ limitations under the License.
 
 #include "osp/auxiliary/io/arch_file_reader.hpp"
 #include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
+#include "osp/bsp/model/cost/TotalCommunicationCost.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_improver_test.hpp"
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_include.hpp"
@@ -981,8 +982,8 @@ BOOST_AUTO_TEST_CASE(kl_total_comm_large_test_graphs) {
 
         schedule.UpdateNumberOfSupersteps();
 
-        // std::cout << "initial scedule with costs: " << schedule.computeTotalCosts() << " and " << schedule.NumberOfSupersteps()
-        // << " number of supersteps"<< std::endl;
+        std::cout << "initial scedule with costs: " << TotalCommunicationCost<graph>()(schedule) << " and "
+                  << schedule.NumberOfSupersteps() << " number of supersteps" << std::endl;
 
         BspSchedule<graph> schedule_2(schedule);
 
@@ -998,8 +999,8 @@ BOOST_AUTO_TEST_CASE(kl_total_comm_large_test_graphs) {
 
         auto duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
 
-        // std::cout << "kl new finished in " << duration << " seconds, costs: " << schedule.computeTotalCosts() << " with " <<
-        // schedule.NumberOfSupersteps() << " number of supersteps"<< std::endl;
+        std::cout << "kl new finished in " << duration << " seconds, costs: " << TotalCommunicationCost<graph>()(schedule)
+                  << " with " << schedule.NumberOfSupersteps() << " number of supersteps" << std::endl;
 
         BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
         BOOST_CHECK_EQUAL(schedule.SatisfiesPrecedenceConstraints(), true);
