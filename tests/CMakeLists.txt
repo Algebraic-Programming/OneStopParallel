@@ -62,7 +62,9 @@ _add_test( kl_bsp_cost_policies )
 
 _add_test( kl_bsp_comm_affinities )
 
-#_add_test( kl_bsp_max_improver_test )
+_add_test( kl_bsp_max_improver_test )
+
+_add_test( kl_bsp_improver_test )
 
 _add_test( kl_bsp_incremental_affinity_test )
 

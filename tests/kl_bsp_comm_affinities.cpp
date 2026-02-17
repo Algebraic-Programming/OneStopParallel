@@ -63,6 +63,12 @@ using KlMove = KlMoveStruct<double, Graph::VertexIdx>;
 using BspCostFnT = KlBspCommCostFunction<Graph, double, NoLocalSearchMemoryConstraint>;
 using KlTestT = KlImproverTest<Graph, BspCostFnT>;
 
+using BspCostFnLazyT = KlBspCommCostFunction<Graph, double, NoLocalSearchMemoryConstraint, LazyCommCostPolicy>;
+using KlTestLazyT = KlImproverTest<Graph, BspCostFnLazyT>;
+
+using BspCostFnBufferedT = KlBspCommCostFunction<Graph, double, NoLocalSearchMemoryConstraint, BufferedCommCostPolicy>;
+using KlTestBufferedT = KlImproverTest<Graph, BspCostFnBufferedT>;
+
 // ============================================================================
 // Brute-force MaxComm sum computation
 //
@@ -85,6 +91,35 @@ static double ComputeMaxCommSum(const BspInstance<Graph> &inst,
     klSched.Initialize(sched);
 
     MaxCommDatastructure<Graph, double, KlActiveScheduleT> ds;
+    ds.Initialize(klSched);
+    unsigned maxStep = sched.NumberOfSupersteps();
+    if (maxStep > 0) {
+        ds.ComputeCommDatastructures(0, maxStep - 1);
+    }
+
+    double sum = 0;
+    for (unsigned s = 0; s < std::min(maxStep, fixedNumSteps); ++s) {
+        sum += static_cast<double>(ds.StepMaxComm(s));
+    }
+    return sum;
+}
+
+// Policy-aware brute-force MaxComm sum computation.
+// Uses a fresh MaxCommDatastructure with CommPolicyT.
+template <typename CommPolicyT>
+static double ComputeMaxCommSumPolicy(const BspInstance<Graph> &inst,
+                                      const std::vector<unsigned> &procs,
+                                      const std::vector<unsigned> &steps,
+                                      unsigned fixedNumSteps) {
+    BspSchedule<Graph> sched(inst);
+    sched.SetAssignedProcessors(procs);
+    sched.SetAssignedSupersteps(steps);
+    sched.UpdateNumberOfSupersteps();
+
+    KlActiveScheduleT klSched;
+    klSched.Initialize(sched);
+
+    MaxCommDatastructure<Graph, double, KlActiveScheduleT, CommPolicyT> ds;
     ds.Initialize(klSched);
     unsigned maxStep = sched.NumberOfSupersteps();
     if (maxStep > 0) {
@@ -177,6 +212,80 @@ static bool VerifyAffinityBruteForce(KlTestT &kl, unsigned node, const std::stri
     // Also verify self-move has affinity 0
     unsigned nodeProc = activeSched->AssignedProcessor(node);
     unsigned selfIdx = WS;    // nodeStep maps to index WS in the window
+    if (selfIdx >= startIdx && selfIdx < endIdx) {
+        double selfAffinity = affinity[nodeProc][selfIdx];
+        if (std::abs(selfAffinity) > 1e-6) {
+            allMatch = false;
+            BOOST_TEST_MESSAGE(context << ": self-move affinity != 0: " << selfAffinity);
+        }
+    }
+
+    return allMatch;
+}
+
+// Policy-aware brute-force verification.
+// KlTestType must expose GetCommCostF() for the appropriate policy.
+// CommPolicyT drives the fresh MaxComm recomputation for ground truth.
+template <typename KlTestType, typename CommPolicyT>
+static bool VerifyAffinityBruteForcePolicy(KlTestType &kl, unsigned node, const std::string &context) {
+    auto &costF = kl.GetCommCostF();
+    auto *activeSched = costF.activeSchedule_;
+    const auto *inst = costF.instance_;
+    const auto &dag = *costF.graph_;
+    const unsigned numProcs = inst->NumberOfProcessors();
+    const unsigned numSteps = activeSched->NumSteps();
+    const unsigned nodeStep = activeSched->AssignedSuperstep(node);
+
+    constexpr unsigned WS = 1;
+    constexpr unsigned WR = 3;
+
+    unsigned startStep = nodeStep > WS ? nodeStep - WS : 0;
+    unsigned endStep = std::min(nodeStep + WS, numSteps - 1);
+    unsigned startIdx = costF.StartIdx(nodeStep, startStep);
+    unsigned endIdx = costF.EndIdx(nodeStep, endStep);
+
+    costF.ComputeSendReceiveDatastructures();
+
+    std::vector<std::vector<double>> affinity(numProcs, std::vector<double>(WR, 0.0));
+    costF.ComputeCommAffinity(node, affinity, 0.0, 0.0, startStep, endStep);
+
+    std::vector<unsigned> origProcs, origSteps;
+    for (auto v : dag.Vertices()) {
+        origProcs.push_back(activeSched->AssignedProcessor(v));
+        origSteps.push_back(activeSched->AssignedSuperstep(v));
+    }
+
+    double oldCommSum = ComputeMaxCommSumPolicy<CommPolicyT>(*inst, origProcs, origSteps, numSteps);
+    double g = inst->CommunicationCosts();
+
+    bool allMatch = true;
+    for (unsigned p = 0; p < numProcs; ++p) {
+        for (unsigned sIdx = startIdx; sIdx < endIdx; ++sIdx) {
+            unsigned sTo = nodeStep + sIdx - WS;
+
+            if (sTo >= numSteps) {
+                continue;
+            }
+
+            auto newProcs = origProcs;
+            auto newSteps = origSteps;
+            newProcs[node] = p;
+            newSteps[node] = sTo;
+
+            double newCommSum = ComputeMaxCommSumPolicy<CommPolicyT>(*inst, newProcs, newSteps, numSteps);
+            double expected = (newCommSum - oldCommSum) * g;
+            double actual = affinity[p][sIdx];
+
+            if (std::abs(expected - actual) > 1e-6) {
+                allMatch = false;
+                BOOST_TEST_MESSAGE(context << ": node=" << node << " -> (P" << p << ",S" << sTo << ")"
+                                           << " expected=" << expected << " actual=" << actual << " diff=" << (actual - expected));
+            }
+        }
+    }
+
+    unsigned nodeProc = activeSched->AssignedProcessor(node);
+    unsigned selfIdx = WS;
     if (selfIdx >= startIdx && selfIdx < endIdx) {
         double selfAffinity = affinity[nodeProc][selfIdx];
         if (std::abs(selfAffinity) > 1e-6) {
@@ -629,6 +738,432 @@ BOOST_AUTO_TEST_CASE(AffinityLargeFanIn) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()    // AffinityBruteForce
+
+// ============================================================================
+// Suite 1b: ComputeCommAffinity brute-force verification for Lazy/Buffered policies
+//
+// Same topologies as Suite 1 but instantiated with LazyCommCostPolicy and
+// BufferedCommCostPolicy. These tests validate that ComputeCommAffinity
+// correctly predicts the actual comm cost change for all comm policies.
+//
+// Additional "MultiChildren" cases stress the min-shift logic that is unique
+// to Lazy/Buffered (when a parent has multiple children on the same proc at
+// different steps, the comm is attributed at min(child_steps)-1 and moves when
+// that minimum changes).
+// ============================================================================
+
+BOOST_AUTO_TEST_SUITE(AffinityBruteForceLazyBuffered)
+
+// ---------------------------------------------------------------------------
+// Lazy policy tests
+// ---------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(Lazy_AffinityChild) {
+    Graph dag;
+    dag.AddVertex(10, 5, 1);
+    dag.AddVertex(10, 3, 1);
+    dag.AddEdge(0, 1, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(2);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(0);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1});
+    schedule.SetAssignedSupersteps({0, 1});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestLazyT kl;
+    kl.SetupSchedule(schedule);
+
+    BOOST_CHECK((VerifyAffinityBruteForcePolicy<KlTestLazyT, LazyCommCostPolicy>(kl, 1, "Lazy AffinityChild")));
+}
+
+BOOST_AUTO_TEST_CASE(Lazy_AffinityParent) {
+    Graph dag;
+    dag.AddVertex(10, 5, 1);
+    dag.AddVertex(10, 3, 1);
+    dag.AddEdge(0, 1, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(2);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(0);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1});
+    schedule.SetAssignedSupersteps({0, 1});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestLazyT kl;
+    kl.SetupSchedule(schedule);
+
+    BOOST_CHECK((VerifyAffinityBruteForcePolicy<KlTestLazyT, LazyCommCostPolicy>(kl, 0, "Lazy AffinityParent")));
+}
+
+// Two children on same proc at different steps: min-shift logic.
+// v0@P0,S0 -> {v1@P1,S1, v2@P1,S2}
+// Lazy comm for v0->P1 is at min(1,2)-1 = S0.
+// Moving v1 to S2 shifts min from 1 to 2, comm moves to S1.
+BOOST_AUTO_TEST_CASE(Lazy_MultiChildrenSameProc) {
+    Graph dag;
+    dag.AddVertex(10, 5, 1);    // v0
+    dag.AddVertex(10, 3, 1);    // v1
+    dag.AddVertex(10, 2, 1);    // v2
+    dag.AddEdge(0, 1, 1);
+    dag.AddEdge(0, 2, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(2);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(0);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    // v0@P0,S0  v1@P1,S1  v2@P1,S2
+    schedule.SetAssignedProcessors({0, 1, 1});
+    schedule.SetAssignedSupersteps({0, 1, 2});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestLazyT kl;
+    kl.SetupSchedule(schedule);
+
+    // Moving v1 (the current-min child) tests min-shift
+    BOOST_CHECK((VerifyAffinityBruteForcePolicy<KlTestLazyT, LazyCommCostPolicy>(kl, 1, "Lazy MultiChildrenSameProc v1")));
+    // Moving v2 (a non-min child) should not change the min
+    BOOST_CHECK((VerifyAffinityBruteForcePolicy<KlTestLazyT, LazyCommCostPolicy>(kl, 2, "Lazy MultiChildrenSameProc v2")));
+}
+
+// Fan-in: {v0@P0, v1@P1} -> v2@P2. Moving v2.
+BOOST_AUTO_TEST_CASE(Lazy_FanInChild) {
+    Graph dag;
+    dag.AddVertex(10, 5, 1);
+    dag.AddVertex(10, 3, 1);
+    dag.AddVertex(20, 1, 1);
+    dag.AddEdge(0, 2, 1);
+    dag.AddEdge(1, 2, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(3);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(0);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1, 2});
+    schedule.SetAssignedSupersteps({0, 0, 1});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestLazyT kl;
+    kl.SetupSchedule(schedule);
+
+    BOOST_CHECK((VerifyAffinityBruteForcePolicy<KlTestLazyT, LazyCommCostPolicy>(kl, 2, "Lazy FanInChild")));
+}
+
+// Diamond: v0->{v1,v2}->v3 on 3 procs.
+BOOST_AUTO_TEST_CASE(Lazy_Diamond) {
+    Graph dag;
+    dag.AddVertex(10, 5, 1);
+    dag.AddVertex(8, 3, 1);
+    dag.AddVertex(12, 4, 1);
+    dag.AddVertex(15, 1, 1);
+    dag.AddEdge(0, 1, 1);
+    dag.AddEdge(0, 2, 1);
+    dag.AddEdge(1, 3, 1);
+    dag.AddEdge(2, 3, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(3);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(0);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1, 2, 0});
+    schedule.SetAssignedSupersteps({0, 1, 1, 2});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestLazyT kl;
+    kl.SetupSchedule(schedule);
+
+    BOOST_CHECK((VerifyAffinityBruteForcePolicy<KlTestLazyT, LazyCommCostPolicy>(kl, 1, "Lazy Diamond v1")));
+    BOOST_CHECK((VerifyAffinityBruteForcePolicy<KlTestLazyT, LazyCommCostPolicy>(kl, 2, "Lazy Diamond v2")));
+}
+
+// Wider: 6 nodes, 3 procs, 3 steps.
+BOOST_AUTO_TEST_CASE(Lazy_WiderGraph) {
+    Graph dag;
+    dag.AddVertex(10, 5, 1);
+    dag.AddVertex(10, 3, 1);
+    dag.AddVertex(10, 4, 1);
+    dag.AddVertex(10, 2, 1);
+    dag.AddVertex(10, 6, 1);
+    dag.AddVertex(10, 1, 1);
+    dag.AddEdge(0, 2, 1);
+    dag.AddEdge(0, 3, 1);
+    dag.AddEdge(1, 3, 1);
+    dag.AddEdge(1, 4, 1);
+    dag.AddEdge(2, 5, 1);
+    dag.AddEdge(3, 5, 1);
+    dag.AddEdge(4, 5, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(3);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(0);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1, 2, 0, 1, 2});
+    schedule.SetAssignedSupersteps({0, 0, 1, 1, 1, 2});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestLazyT kl;
+    kl.SetupSchedule(schedule);
+
+    BOOST_CHECK((VerifyAffinityBruteForcePolicy<KlTestLazyT, LazyCommCostPolicy>(kl, 2, "Lazy WiderGraph v2")));
+    BOOST_CHECK((VerifyAffinityBruteForcePolicy<KlTestLazyT, LazyCommCostPolicy>(kl, 3, "Lazy WiderGraph v3")));
+    BOOST_CHECK((VerifyAffinityBruteForcePolicy<KlTestLazyT, LazyCommCostPolicy>(kl, 4, "Lazy WiderGraph v4")));
+}
+
+// Large fan-in: 4 parents -> v4. Tests multi-parent Lazy comm attribution.
+BOOST_AUTO_TEST_CASE(Lazy_LargeFanIn) {
+    Graph dag;
+    dag.AddVertex(10, 3, 1);
+    dag.AddVertex(10, 5, 1);
+    dag.AddVertex(10, 4, 1);
+    dag.AddVertex(10, 2, 1);
+    dag.AddVertex(10, 1, 1);
+    dag.AddEdge(0, 4, 1);
+    dag.AddEdge(1, 4, 1);
+    dag.AddEdge(2, 4, 1);
+    dag.AddEdge(3, 4, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(5);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(0);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1, 2, 3, 4});
+    schedule.SetAssignedSupersteps({0, 0, 0, 0, 1});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestLazyT kl;
+    kl.SetupSchedule(schedule);
+
+    BOOST_CHECK((VerifyAffinityBruteForcePolicy<KlTestLazyT, LazyCommCostPolicy>(kl, 4, "Lazy LargeFanIn v4")));
+}
+
+// ---------------------------------------------------------------------------
+// Buffered policy tests
+// ---------------------------------------------------------------------------
+
+BOOST_AUTO_TEST_CASE(Buffered_AffinityChild) {
+    Graph dag;
+    dag.AddVertex(10, 5, 1);
+    dag.AddVertex(10, 3, 1);
+    dag.AddEdge(0, 1, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(2);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(0);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1});
+    schedule.SetAssignedSupersteps({0, 1});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestBufferedT kl;
+    kl.SetupSchedule(schedule);
+
+    BOOST_CHECK((VerifyAffinityBruteForcePolicy<KlTestBufferedT, BufferedCommCostPolicy>(kl, 1, "Buffered AffinityChild")));
+}
+
+BOOST_AUTO_TEST_CASE(Buffered_AffinityParent) {
+    Graph dag;
+    dag.AddVertex(10, 5, 1);
+    dag.AddVertex(10, 3, 1);
+    dag.AddEdge(0, 1, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(2);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(0);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1});
+    schedule.SetAssignedSupersteps({0, 1});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestBufferedT kl;
+    kl.SetupSchedule(schedule);
+
+    BOOST_CHECK((VerifyAffinityBruteForcePolicy<KlTestBufferedT, BufferedCommCostPolicy>(kl, 0, "Buffered AffinityParent")));
+}
+
+// Two children on same proc at different steps.
+// v0@P0,S0 -> {v1@P1,S1, v2@P1,S2}
+// Buffered: send at S0 from P0. Recv at min(1,2)-1 = S0 on P1.
+// Moving v1 shifts recv from S0 to S1.
+BOOST_AUTO_TEST_CASE(Buffered_MultiChildrenSameProc) {
+    Graph dag;
+    dag.AddVertex(10, 5, 1);
+    dag.AddVertex(10, 3, 1);
+    dag.AddVertex(10, 2, 1);
+    dag.AddEdge(0, 1, 1);
+    dag.AddEdge(0, 2, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(2);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(0);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1, 1});
+    schedule.SetAssignedSupersteps({0, 1, 2});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestBufferedT kl;
+    kl.SetupSchedule(schedule);
+
+    BOOST_CHECK(
+        (VerifyAffinityBruteForcePolicy<KlTestBufferedT, BufferedCommCostPolicy>(kl, 1, "Buffered MultiChildrenSameProc v1")));
+    BOOST_CHECK(
+        (VerifyAffinityBruteForcePolicy<KlTestBufferedT, BufferedCommCostPolicy>(kl, 2, "Buffered MultiChildrenSameProc v2")));
+}
+
+// Fan-in: {v0@P0, v1@P1} -> v2@P2.
+BOOST_AUTO_TEST_CASE(Buffered_FanInChild) {
+    Graph dag;
+    dag.AddVertex(10, 5, 1);
+    dag.AddVertex(10, 3, 1);
+    dag.AddVertex(20, 1, 1);
+    dag.AddEdge(0, 2, 1);
+    dag.AddEdge(1, 2, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(3);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(0);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1, 2});
+    schedule.SetAssignedSupersteps({0, 0, 1});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestBufferedT kl;
+    kl.SetupSchedule(schedule);
+
+    BOOST_CHECK((VerifyAffinityBruteForcePolicy<KlTestBufferedT, BufferedCommCostPolicy>(kl, 2, "Buffered FanInChild")));
+}
+
+// Diamond: v0->{v1,v2}->v3 on 3 procs.
+BOOST_AUTO_TEST_CASE(Buffered_Diamond) {
+    Graph dag;
+    dag.AddVertex(10, 5, 1);
+    dag.AddVertex(8, 3, 1);
+    dag.AddVertex(12, 4, 1);
+    dag.AddVertex(15, 1, 1);
+    dag.AddEdge(0, 1, 1);
+    dag.AddEdge(0, 2, 1);
+    dag.AddEdge(1, 3, 1);
+    dag.AddEdge(2, 3, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(3);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(0);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1, 2, 0});
+    schedule.SetAssignedSupersteps({0, 1, 1, 2});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestBufferedT kl;
+    kl.SetupSchedule(schedule);
+
+    BOOST_CHECK((VerifyAffinityBruteForcePolicy<KlTestBufferedT, BufferedCommCostPolicy>(kl, 1, "Buffered Diamond v1")));
+    BOOST_CHECK((VerifyAffinityBruteForcePolicy<KlTestBufferedT, BufferedCommCostPolicy>(kl, 2, "Buffered Diamond v2")));
+}
+
+// Wider: 6 nodes, 3 procs, 3 steps.
+BOOST_AUTO_TEST_CASE(Buffered_WiderGraph) {
+    Graph dag;
+    dag.AddVertex(10, 5, 1);
+    dag.AddVertex(10, 3, 1);
+    dag.AddVertex(10, 4, 1);
+    dag.AddVertex(10, 2, 1);
+    dag.AddVertex(10, 6, 1);
+    dag.AddVertex(10, 1, 1);
+    dag.AddEdge(0, 2, 1);
+    dag.AddEdge(0, 3, 1);
+    dag.AddEdge(1, 3, 1);
+    dag.AddEdge(1, 4, 1);
+    dag.AddEdge(2, 5, 1);
+    dag.AddEdge(3, 5, 1);
+    dag.AddEdge(4, 5, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(3);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(0);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1, 2, 0, 1, 2});
+    schedule.SetAssignedSupersteps({0, 0, 1, 1, 1, 2});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestBufferedT kl;
+    kl.SetupSchedule(schedule);
+
+    BOOST_CHECK((VerifyAffinityBruteForcePolicy<KlTestBufferedT, BufferedCommCostPolicy>(kl, 2, "Buffered WiderGraph v2")));
+    BOOST_CHECK((VerifyAffinityBruteForcePolicy<KlTestBufferedT, BufferedCommCostPolicy>(kl, 3, "Buffered WiderGraph v3")));
+    BOOST_CHECK((VerifyAffinityBruteForcePolicy<KlTestBufferedT, BufferedCommCostPolicy>(kl, 4, "Buffered WiderGraph v4")));
+}
+
+// Large fan-in: 4 parents -> v4.
+BOOST_AUTO_TEST_CASE(Buffered_LargeFanIn) {
+    Graph dag;
+    dag.AddVertex(10, 3, 1);
+    dag.AddVertex(10, 5, 1);
+    dag.AddVertex(10, 4, 1);
+    dag.AddVertex(10, 2, 1);
+    dag.AddVertex(10, 1, 1);
+    dag.AddEdge(0, 4, 1);
+    dag.AddEdge(1, 4, 1);
+    dag.AddEdge(2, 4, 1);
+    dag.AddEdge(3, 4, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(5);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(0);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1, 2, 3, 4});
+    schedule.SetAssignedSupersteps({0, 0, 0, 0, 1});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestBufferedT kl;
+    kl.SetupSchedule(schedule);
+
+    BOOST_CHECK((VerifyAffinityBruteForcePolicy<KlTestBufferedT, BufferedCommCostPolicy>(kl, 4, "Buffered LargeFanIn v4")));
+}
+
+BOOST_AUTO_TEST_SUITE_END()    // AffinityBruteForceLazyBuffered
 
 // ============================================================================
 // Suite 2: Staleness penalty/reward
