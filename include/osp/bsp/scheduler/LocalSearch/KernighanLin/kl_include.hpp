@@ -70,12 +70,25 @@ using KlTotalLambdaCommImproverLocalMemConstr
                  windowSize,
                  DoubleCostT>;
 
-template <typename GraphT, typename MemoryConstraintT = NoLocalSearchMemoryConstraint, unsigned windowSize = 1>
-using KlBspCommImprover
-    = KlImprover<GraphT, KlBspCommCostFunction<GraphT, DoubleCostT, MemoryConstraintT, windowSize>, MemoryConstraintT, windowSize, DoubleCostT>;
+template <typename GraphT,
+          typename MemoryConstraintT = NoLocalSearchMemoryConstraint,
+          typename CommPolicy = EagerCommCostPolicy,
+          unsigned windowSize = 1>
+using KlBspCommImprover = KlImprover<GraphT,
+                                     KlBspCommCostFunction<GraphT, DoubleCostT, MemoryConstraintT, CommPolicy, windowSize>,
+                                     MemoryConstraintT,
+                                     windowSize,
+                                     DoubleCostT>;
 
-template <typename GraphT, typename MemoryConstraintT = LsLocalMemoryConstraint<GraphT>, unsigned windowSize = 1>
+template <typename GraphT,
+          typename MemoryConstraintT = LsLocalMemoryConstraint<GraphT>,
+          typename CommPolicy = EagerCommCostPolicy,
+          unsigned windowSize = 1>
 using KlBspCommImproverLocalMemConstr
-    = KlImprover<GraphT, KlBspCommCostFunction<GraphT, DoubleCostT, MemoryConstraintT, windowSize>, MemoryConstraintT, windowSize, DoubleCostT>;
+    = KlImprover<GraphT,
+                 KlBspCommCostFunction<GraphT, DoubleCostT, MemoryConstraintT, CommPolicy, windowSize>,
+                 MemoryConstraintT,
+                 windowSize,
+                 DoubleCostT>;
 
 }    // namespace osp

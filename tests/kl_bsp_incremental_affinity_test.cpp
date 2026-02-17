@@ -35,6 +35,7 @@ limitations under the License.
  */
 
 #define BOOST_TEST_MODULE kl_bsp_incremental_affinity
+#include <algorithm>
 #include <boost/test/unit_test.hpp>
 #include <cmath>
 
@@ -52,12 +53,32 @@ using KlTestT = KlImproverTest<Graph, CommCostT>;
 using KlMoveT = KlMoveStruct<double, VertexType>;
 
 // windowSize=2 variants
-using CommCostW2T = KlBspCommCostFunction<Graph, double, NoLocalSearchMemoryConstraint, 2>;
+using CommCostW2T = KlBspCommCostFunction<Graph, double, NoLocalSearchMemoryConstraint, EagerCommCostPolicy, 2>;
 using KlTestW2T = KlImproverTest<Graph, CommCostW2T, NoLocalSearchMemoryConstraint, 2>;
 
 // ============================================================================
 // Helpers (adapted from kl_bsp_affinity_test.cpp)
 // ============================================================================
+
+/// Order-insensitive comparison for lambda map values.
+/// For unsigned (Eager): direct comparison.
+/// For std::vector<unsigned> (Lazy/Buffered): sorted comparison.
+template <typename T>
+bool LambdaMapValuesEqual(const T &a, const T &b) {
+    return a == b;
+}
+
+template <>
+bool LambdaMapValuesEqual<std::vector<unsigned>>(const std::vector<unsigned> &a, const std::vector<unsigned> &b) {
+    if (a.size() != b.size()) {
+        return false;
+    }
+    auto sa = a;
+    auto sb = b;
+    std::sort(sa.begin(), sa.end());
+    std::sort(sb.begin(), sb.end());
+    return sa == sb;
+}
 
 /// Validate comm datastructures: compare incrementally maintained values
 /// against freshly computed ones.
@@ -108,7 +129,7 @@ bool ValidateCommDatastructures(const MaxCommDatastructure<Graph, double, KlActi
             } else if (hasInc) {
                 auto valInc = commDsIncremental.nodeLambdaMap_.GetProcEntry(v, p);
                 auto valFresh = commDsFresh.nodeLambdaMap_.GetProcEntry(v, p);
-                if (valInc != valFresh) {
+                if (!LambdaMapValuesEqual(valInc, valFresh)) {
                     allMatch = false;
                     std::cout << "  LAMBDA MISMATCH [" << context << "] node " << v << " proc " << p << ": values differ"
                               << std::endl;
@@ -2670,3 +2691,251 @@ BOOST_AUTO_TEST_CASE(EightNodeHighPenalty) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()    // PenaltyRewardCostTracking
+
+// ============================================================================
+// Suite 11: LazyBufferedPolicies — verify Lazy and Buffered comm policies
+//           produce consistent incremental vs fresh results
+// ============================================================================
+
+#include "osp/bsp/scheduler/LocalSearch/KernighanLin/comm_cost_modules/comm_cost_policies.hpp"
+
+using CommCostLazyT = KlBspCommCostFunction<Graph, double, NoLocalSearchMemoryConstraint, LazyCommCostPolicy>;
+using KlTestLazyT = KlImproverTest<Graph, CommCostLazyT, NoLocalSearchMemoryConstraint, 1>;
+
+using CommCostBufferedT = KlBspCommCostFunction<Graph, double, NoLocalSearchMemoryConstraint, BufferedCommCostPolicy>;
+using KlTestBufferedT = KlImproverTest<Graph, CommCostBufferedT, NoLocalSearchMemoryConstraint, 1>;
+
+// Helper: build SimpleParentChild graph and run iterations for a given KlTestType.
+template <typename KlTestType>
+void TestSimpleParentChild(const std::string &policyName) {
+    Graph dag;
+    dag.AddVertex(10, 5, 2);
+    dag.AddVertex(8, 4, 1);
+    dag.AddEdge(0, 1, 3);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(2);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(5);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1});
+    schedule.SetAssignedSupersteps({0, 1});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestType kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({0, 1});
+
+    RunAndValidate(kl, instance, policyName + "_SimpleParentChild");
+}
+
+template <typename KlTestType>
+void TestFanOut(const std::string &policyName) {
+    Graph dag;
+    dag.AddVertex(10, 5, 2);
+    dag.AddVertex(8, 1, 1);
+    dag.AddVertex(12, 1, 1);
+    dag.AddEdge(0, 1, 1);
+    dag.AddEdge(0, 2, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(3);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(5);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1, 2});
+    schedule.SetAssignedSupersteps({0, 1, 1});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestType kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({1, 2});
+
+    RunAndValidate(kl, instance, policyName + "_FanOut iter1");
+    RunAndValidate(kl, instance, policyName + "_FanOut iter2");
+}
+
+template <typename KlTestType>
+void TestDiamond(const std::string &policyName) {
+    Graph dag;
+    dag.AddVertex(10, 5, 2);
+    dag.AddVertex(8, 4, 1);
+    dag.AddVertex(6, 3, 1);
+    dag.AddVertex(12, 6, 2);
+    dag.AddEdge(0, 1, 3);
+    dag.AddEdge(0, 2, 2);
+    dag.AddEdge(1, 3, 1);
+    dag.AddEdge(2, 3, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(2);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(5);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1, 0, 1});
+    schedule.SetAssignedSupersteps({0, 1, 1, 2});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestType kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({0, 1, 2, 3});
+
+    RunAndValidate(kl, instance, policyName + "_Diamond iter1");
+    RunAndValidate(kl, instance, policyName + "_Diamond iter2");
+}
+
+template <typename KlTestType>
+void TestSequentialMoves(const std::string &policyName) {
+    Graph dag;
+    for (int i = 0; i < 8; i++) {
+        dag.AddVertex(10 + i, 5, 2 + i % 3);
+    }
+    dag.AddEdge(0, 1, 2);
+    dag.AddEdge(0, 2, 3);
+    dag.AddEdge(1, 3, 1);
+    dag.AddEdge(2, 3, 2);
+    dag.AddEdge(3, 4, 1);
+    dag.AddEdge(4, 5, 3);
+    dag.AddEdge(4, 6, 2);
+    dag.AddEdge(5, 7, 1);
+    dag.AddEdge(6, 7, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(3);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(5);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1, 2, 0, 1, 2, 0, 1});
+    schedule.SetAssignedSupersteps({0, 1, 1, 2, 2, 3, 3, 4});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestType kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({0, 1, 2, 3, 4, 5, 6, 7});
+
+    for (int i = 0; i < 5; i++) {
+        RunAndValidateCommAndCost(kl, instance, policyName + "_Seq iter" + std::to_string(i));
+    }
+}
+
+template <typename KlTestType>
+void TestStructuredGrid(const std::string &policyName) {
+    Graph dag;
+    const int rows = 4, cols = 4;
+    for (int i = 0; i < rows * cols; i++) {
+        dag.AddVertex(10 + i % 7, 5, 1 + i % 3);
+    }
+    for (int r = 0; r < rows; r++) {
+        for (int c = 0; c < cols; c++) {
+            VertexType idx = static_cast<VertexType>(r * cols + c);
+            if (c + 1 < cols) {
+                dag.AddEdge(idx, idx + 1, 2);
+            }
+            if (r + 1 < rows) {
+                dag.AddEdge(idx, static_cast<VertexType>((r + 1) * cols + c), 1);
+            }
+        }
+    }
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(3);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(5);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    std::vector<unsigned> procs, steps;
+    for (int i = 0; i < rows * cols; i++) {
+        procs.push_back(static_cast<unsigned>(i % 3));
+        steps.push_back(static_cast<unsigned>(i / cols));
+    }
+    schedule.SetAssignedProcessors(procs);
+    schedule.SetAssignedSupersteps(steps);
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestType kl;
+    kl.SetupSchedule(schedule);
+    std::vector<VertexType> nodes;
+    for (int i = 0; i < rows * cols; i++) {
+        nodes.push_back(static_cast<VertexType>(i));
+    }
+    kl.InsertGainHeapTest(nodes);
+
+    for (int i = 0; i < 4; i++) {
+        RunAndValidateCommAndCost(kl, instance, policyName + "_Grid iter" + std::to_string(i));
+    }
+}
+
+template <typename KlTestType>
+void TestNuma(const std::string &policyName) {
+    Graph dag;
+    dag.AddVertex(10, 5, 3);
+    dag.AddVertex(8, 4, 2);
+    dag.AddVertex(6, 3, 1);
+    dag.AddVertex(12, 6, 2);
+    dag.AddEdge(0, 1, 3);
+    dag.AddEdge(0, 2, 2);
+    dag.AddEdge(1, 3, 1);
+    dag.AddEdge(2, 3, 1);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(4);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(5);
+    std::vector<std::vector<int>> sendCosts = {
+        {0, 1, 4, 4},
+        {1, 0, 4, 4},
+        {4, 4, 0, 1},
+        {4, 4, 1, 0}
+    };
+    arch.SetSendCosts(sendCosts);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1, 2, 3});
+    schedule.SetAssignedSupersteps({0, 1, 1, 2});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestType kl;
+    kl.SetupSchedule(schedule);
+    kl.InsertGainHeapTest({0, 1, 2, 3});
+
+    RunAndValidate(kl, instance, policyName + "_Numa iter1");
+    RunAndValidate(kl, instance, policyName + "_Numa iter2");
+}
+
+BOOST_AUTO_TEST_SUITE(LazyBufferedPolicies)
+
+BOOST_AUTO_TEST_CASE(Lazy_SimpleParentChild) { TestSimpleParentChild<KlTestLazyT>("Lazy"); }
+
+BOOST_AUTO_TEST_CASE(Lazy_FanOut) { TestFanOut<KlTestLazyT>("Lazy"); }
+
+BOOST_AUTO_TEST_CASE(Lazy_Diamond) { TestDiamond<KlTestLazyT>("Lazy"); }
+
+BOOST_AUTO_TEST_CASE(Lazy_SequentialMoves) { TestSequentialMoves<KlTestLazyT>("Lazy"); }
+
+BOOST_AUTO_TEST_CASE(Lazy_StructuredGrid) { TestStructuredGrid<KlTestLazyT>("Lazy"); }
+
+BOOST_AUTO_TEST_CASE(Lazy_Numa) { TestNuma<KlTestLazyT>("Lazy"); }
+
+BOOST_AUTO_TEST_CASE(Buffered_SimpleParentChild) { TestSimpleParentChild<KlTestBufferedT>("Buffered"); }
+
+BOOST_AUTO_TEST_CASE(Buffered_FanOut) { TestFanOut<KlTestBufferedT>("Buffered"); }
+
+BOOST_AUTO_TEST_CASE(Buffered_Diamond) { TestDiamond<KlTestBufferedT>("Buffered"); }
+
+BOOST_AUTO_TEST_CASE(Buffered_SequentialMoves) { TestSequentialMoves<KlTestBufferedT>("Buffered"); }
+
+BOOST_AUTO_TEST_CASE(Buffered_StructuredGrid) { TestStructuredGrid<KlTestBufferedT>("Buffered"); }
+
+BOOST_AUTO_TEST_CASE(Buffered_Numa) { TestNuma<KlTestBufferedT>("Buffered"); }
+
+BOOST_AUTO_TEST_SUITE_END()    // LazyBufferedPolicies

@@ -1749,3 +1749,123 @@ BOOST_AUTO_TEST_CASE(kl_bsp_comm_large_test_graphs) {
         BOOST_CHECK_EQUAL(schedule.SatisfiesPrecedenceConstraints(), true);
     }
 }
+
+BOOST_AUTO_TEST_CASE(kl_bsp_comm_large_test_graphs_lazy) {
+    std::vector<std::string> filenames_graph = LargeSpaaGraphs();
+    using graph = ComputationalDagEdgeIdxVectorImplDefIntT;
+
+    std::filesystem::path cwd = std::filesystem::current_path();
+    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
+        cwd = cwd.parent_path();
+    }
+
+    for (auto &filename_graph : filenames_graph) {
+        GreedyBspScheduler<graph> test_scheduler;
+        BspInstance<graph> instance;
+        bool status_graph
+            = file_reader::ReadComputationalDagHyperdagFormatDB((cwd / filename_graph).string(), instance.GetComputationalDag());
+
+        instance.GetArchitecture().SetSynchronisationCosts(500);
+        instance.GetArchitecture().SetCommunicationCosts(5);
+        instance.GetArchitecture().SetNumberOfProcessors(4);
+
+        std::vector<std::vector<int>> send_cost = {
+            {0, 1, 4, 4},
+            {1, 0, 4, 4},
+            {4, 4, 0, 1},
+            {4, 4, 1, 0}
+        };
+        instance.GetArchitecture().SetSendCosts(send_cost);
+
+        if (!status_graph) {
+            std::cout << "Reading files failed." << std::endl;
+            BOOST_CHECK(false);
+        }
+
+        AddMemWeights(instance.GetComputationalDag());
+
+        BspSchedule<graph> schedule(instance);
+        const auto result = test_scheduler.ComputeSchedule(schedule);
+        schedule.UpdateNumberOfSupersteps();
+
+        std::cout << "[Lazy] initial schedule with costs: " << schedule.ComputeCosts() << " and " << schedule.NumberOfSupersteps()
+                  << " number of supersteps" << std::endl;
+
+        BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
+        BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
+
+        KlBspCommImprover<graph, NoLocalSearchMemoryConstraint, LazyCommCostPolicy> kl;
+
+        auto start_time = std::chrono::high_resolution_clock::now();
+        auto status = kl.ImproveSchedule(schedule);
+        auto finish_time = std::chrono::high_resolution_clock::now();
+
+        auto duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
+
+        std::cout << "[Lazy] kl bsp comm finished in " << duration << " seconds, costs: " << schedule.ComputeCosts() << " with "
+                  << schedule.NumberOfSupersteps() << " number of supersteps" << std::endl;
+
+        BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
+        BOOST_CHECK_EQUAL(schedule.SatisfiesPrecedenceConstraints(), true);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(kl_bsp_comm_large_test_graphs_buffered) {
+    std::vector<std::string> filenames_graph = LargeSpaaGraphs();
+    using graph = ComputationalDagEdgeIdxVectorImplDefIntT;
+
+    std::filesystem::path cwd = std::filesystem::current_path();
+    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
+        cwd = cwd.parent_path();
+    }
+
+    for (auto &filename_graph : filenames_graph) {
+        GreedyBspScheduler<graph> test_scheduler;
+        BspInstance<graph> instance;
+        bool status_graph
+            = file_reader::ReadComputationalDagHyperdagFormatDB((cwd / filename_graph).string(), instance.GetComputationalDag());
+
+        instance.GetArchitecture().SetSynchronisationCosts(500);
+        instance.GetArchitecture().SetCommunicationCosts(5);
+        instance.GetArchitecture().SetNumberOfProcessors(4);
+
+        std::vector<std::vector<int>> send_cost = {
+            {0, 1, 4, 4},
+            {1, 0, 4, 4},
+            {4, 4, 0, 1},
+            {4, 4, 1, 0}
+        };
+        instance.GetArchitecture().SetSendCosts(send_cost);
+
+        if (!status_graph) {
+            std::cout << "Reading files failed." << std::endl;
+            BOOST_CHECK(false);
+        }
+
+        AddMemWeights(instance.GetComputationalDag());
+
+        BspSchedule<graph> schedule(instance);
+        const auto result = test_scheduler.ComputeSchedule(schedule);
+        schedule.UpdateNumberOfSupersteps();
+
+        std::cout << "[Buffered] initial schedule with costs: " << schedule.ComputeCosts() << " and "
+                  << schedule.NumberOfSupersteps() << " number of supersteps" << std::endl;
+
+        BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
+        BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
+
+        KlBspCommImprover<graph, NoLocalSearchMemoryConstraint, BufferedCommCostPolicy> kl;
+
+        auto start_time = std::chrono::high_resolution_clock::now();
+        auto status = kl.ImproveSchedule(schedule);
+        auto finish_time = std::chrono::high_resolution_clock::now();
+
+        auto duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
+
+        std::cout << "[Buffered] kl bsp comm finished in " << duration << " seconds, costs: " << schedule.ComputeCosts()
+                  << " with " << schedule.NumberOfSupersteps() << " number of supersteps" << std::endl;
+
+        BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
+        BOOST_CHECK_EQUAL(schedule.SatisfiesPrecedenceConstraints(), true);
+    }
+}
