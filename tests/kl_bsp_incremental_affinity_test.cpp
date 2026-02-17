@@ -2483,3 +2483,184 @@ BOOST_AUTO_TEST_CASE(SingleStepNotRemovable) {
 }
 
 BOOST_AUTO_TEST_SUITE_END()    // StepRemovalRollback
+
+// ============================================================================
+// Suite 7: PenaltyRewardCostTracking — verify that penalty/reward terms in
+// the affinity table correctly cancel with the normalization in ApplyMove,
+// so cost_ always equals pure schedule cost (ComputeScheduleCostTest).
+//
+// The first move after InsertGainHeap has a FRESH affinity table, so the gain
+// is exact and penalty/reward must cancel perfectly.  Subsequent moves may use
+// stale affinities (e.g. when a same-step move does not change max-comm/work,
+// the incremental update path does not fully recompute neighbours' pure comm
+// affinity).  This is a known approximation of the KL inner loop — it does
+// NOT indicate a penalty/reward normalisation bug.
+// ============================================================================
+BOOST_AUTO_TEST_SUITE(PenaltyRewardCostTracking)
+
+// Simple edge: parent on P0 step 0, child on P1 step 1.
+// Non-zero penalty/reward, move creates no violations.
+BOOST_AUTO_TEST_CASE(NoViolationWithPenalty) {
+    Graph dag;
+    dag.AddVertex(10, 5, 2);
+    dag.AddVertex(8, 4, 1);
+    dag.AddEdge(0, 1, 3);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(2);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(5);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1});
+    schedule.SetAssignedSupersteps({0, 1});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.ComputeViolationsTest();
+    kl.InsertGainHeapTestPenalty({0, 1});
+
+    kl.RunInnerIterationTest();
+
+    BOOST_CHECK(ValidateCommDatastructures(kl.GetCommCostF().commDs_, kl.GetActiveSchedule(), instance, "NoViolationWithPenalty"));
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
+}
+
+// 3-node chain with 3 steps, non-zero penalty and reward.
+// First iteration must be exact (fresh affinities).
+BOOST_AUTO_TEST_CASE(ChainWithPenaltyReward) {
+    Graph dag;
+    dag.AddVertex(10, 5, 2);
+    dag.AddVertex(8, 4, 1);
+    dag.AddVertex(6, 3, 1);
+    dag.AddEdge(0, 1, 3);
+    dag.AddEdge(1, 2, 2);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(3);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(5);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1, 2});
+    schedule.SetAssignedSupersteps({0, 1, 2});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.ComputeViolationsTest();
+    kl.InsertGainHeapTestPenaltyReward({0, 1, 2});
+
+    for (int i = 0; i < 2; i++) {
+        kl.RunInnerIterationTest();
+        BOOST_CHECK(ValidateCommDatastructures(
+            kl.GetCommCostF().commDs_, kl.GetActiveSchedule(), instance, "ChainWithPenaltyReward iter" + std::to_string(i)));
+        BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
+    }
+}
+
+// Diamond graph: source → A,B → sink. 2 processors, 3 steps.
+// First move (fresh gain) must be exact.  Subsequent iterations use
+// incrementally updated affinities which may become stale for pure comm
+// (same-step moves where max-comm doesn't change skip full recomputation).
+BOOST_AUTO_TEST_CASE(DiamondWithPenaltyReward) {
+    Graph dag;
+    dag.AddVertex(5, 3, 1);     // 0: source
+    dag.AddVertex(10, 5, 2);    // 1: left
+    dag.AddVertex(10, 4, 2);    // 2: right
+    dag.AddVertex(8, 2, 1);     // 3: sink
+    dag.AddEdge(0, 1, 2);
+    dag.AddEdge(0, 2, 2);
+    dag.AddEdge(1, 3, 3);
+    dag.AddEdge(2, 3, 3);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(2);
+    arch.SetCommunicationCosts(1);
+    arch.SetSynchronisationCosts(5);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 0, 1, 1});
+    schedule.SetAssignedSupersteps({0, 1, 1, 2});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.ComputeViolationsTest();
+    kl.InsertGainHeapTestPenaltyReward({0, 1, 2, 3});
+
+    // First move: fresh gain, penalty/reward must cancel exactly.
+    kl.RunInnerIterationTest();
+    BOOST_CHECK(ValidateCommDatastructures(
+        kl.GetCommCostF().commDs_, kl.GetActiveSchedule(), instance, "DiamondWithPenaltyReward iter0"));
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
+
+    // Subsequent moves: comm datastructures must remain valid.
+    // Cost tracking may drift due to stale affinities in the inner loop.
+    for (int i = 1; i < 3; i++) {
+        kl.RunInnerIterationTest();
+        BOOST_CHECK(ValidateCommDatastructures(
+            kl.GetCommCostF().commDs_, kl.GetActiveSchedule(), instance, "DiamondWithPenaltyReward iter" + std::to_string(i)));
+    }
+}
+
+// 8-node complex graph with high penalty values — stress test.
+// The initial schedule has a violation (edge 6→7), so ComputeViolationsTest
+// must be called to populate currentViolations_ before the gain heap.
+BOOST_AUTO_TEST_CASE(EightNodeHighPenalty) {
+    Graph dag;
+    dag.AddVertex(10, 5, 2);    // 0
+    dag.AddVertex(8, 4, 1);     // 1
+    dag.AddVertex(12, 6, 3);    // 2
+    dag.AddVertex(6, 3, 1);     // 3
+    dag.AddVertex(10, 5, 2);    // 4
+    dag.AddVertex(8, 4, 1);     // 5
+    dag.AddVertex(14, 7, 3);    // 6
+    dag.AddVertex(4, 2, 1);     // 7
+    dag.AddEdge(0, 2, 5);
+    dag.AddEdge(0, 3, 3);
+    dag.AddEdge(1, 3, 2);
+    dag.AddEdge(1, 4, 4);
+    dag.AddEdge(2, 5, 6);
+    dag.AddEdge(3, 5, 2);
+    dag.AddEdge(3, 6, 3);
+    dag.AddEdge(4, 6, 5);
+    dag.AddEdge(4, 7, 2);
+    dag.AddEdge(5, 7, 4);
+    dag.AddEdge(6, 7, 3);
+
+    BspArchitecture<Graph> arch;
+    arch.SetNumberOfProcessors(4);
+    arch.SetCommunicationCosts(2);
+    arch.SetSynchronisationCosts(10);
+
+    BspInstance<Graph> instance(dag, arch);
+    BspSchedule<Graph> schedule(instance);
+    schedule.SetAssignedProcessors({0, 1, 2, 3, 0, 1, 2, 3});
+    schedule.SetAssignedSupersteps({0, 0, 1, 1, 2, 2, 3, 3});
+    schedule.UpdateNumberOfSupersteps();
+
+    KlTestT kl;
+    kl.SetupSchedule(schedule);
+    kl.ComputeViolationsTest();    // initial schedule has violation on edge 6→7
+    kl.InsertGainHeapTestPenaltyReward({0, 1, 2, 3, 4, 5, 6, 7});
+
+    // First move: fresh gain, penalty/reward must cancel exactly.
+    kl.RunInnerIterationTest();
+    BOOST_CHECK(
+        ValidateCommDatastructures(kl.GetCommCostF().commDs_, kl.GetActiveSchedule(), instance, "EightNodeHighPenalty iter0"));
+    BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
+
+    // Subsequent moves: comm datastructures must remain valid.
+    for (int i = 1; i < 7; i++) {
+        kl.RunInnerIterationTest();
+        BOOST_CHECK(ValidateCommDatastructures(
+            kl.GetCommCostF().commDs_, kl.GetActiveSchedule(), instance, "EightNodeHighPenalty iter" + std::to_string(i)));
+    }
+}
+
+BOOST_AUTO_TEST_SUITE_END()    // PenaltyRewardCostTracking

@@ -501,6 +501,189 @@ BOOST_AUTO_TEST_CASE(ActiveScheduleRemoveEmptyStepTest) {
     BOOST_CHECK_EQUAL(activeSchedule_.AssignedSuperstep(3), 2);
 }
 
+// --- Tests for REMOVE_STEP sentinel move ---
+
+BOOST_AUTO_TEST_CASE(RevertRemoveStepSentinelRestoresEndStep) {
+    using KlMove = KlMoveStruct<double, VertexType>;
+    using ThreadDataT = ThreadLocalActiveScheduleData<Graph, double>;
+
+    ThreadDataT threadData;
+    threadData.InitializeCost(100);
+
+    // Move node 1 to same proc as parent (proc 0, step 0) to make step 1 empty
+    // without creating a violation (same-proc: step(0)=0 <= step(1)=0 is OK)
+    KlMove moveNode1(1, 10.0, 1, 1, 0, 0);
+    activeSchedule_.ApplyMove(moveNode1, threadData);
+    threadData.UpdateCost(-10);    // cost 90, best here at idx=1
+
+    unsigned endStep = activeSchedule_.NumSteps() - 1;    // 19
+    BOOST_CHECK_EQUAL(endStep, 19u);
+
+    // Swap empty step 1 forward and push sentinel
+    activeSchedule_.SwapEmptyStepFwd(1, endStep);
+    endStep--;    // 18
+    threadData.appliedMoves_.push_back(KlMove::MakeRemoveStep(1, 10.0));
+    threadData.UpdateCost(-10);    // cost 80, new best at idx=2
+
+    BOOST_CHECK_EQUAL(endStep, 18u);
+    // Node 2 was at step 2, now should be at step 1 (shifted down)
+    BOOST_CHECK_EQUAL(activeSchedule_.AssignedSuperstep(2), 1u);
+
+    // Apply a same-step proc change that worsens cost (no precedence issues)
+    KlMove moveNode3(3, -5.0, 3 % 4, 2, 0, 2);    // node 3 proc change, same step 2
+    activeSchedule_.ApplyMove(moveNode3, threadData);
+    threadData.UpdateCost(5);    // cost 85
+
+    // Best was at index 2 (after move1 + sentinel)
+    BOOST_CHECK_EQUAL(threadData.bestScheduleIdx_, 2u);
+
+    struct DummyCommDs {
+        void UpdateDatastructureAfterMove(const KlMove &, unsigned, unsigned) {}
+
+        void SwapCommSteps(unsigned, unsigned) {}
+    } commDs;
+
+    // Revert to best — should undo moveNode3 but keep the step removal
+    activeSchedule_.RevertToBestSchedule(commDs, threadData, 0, endStep);
+
+    BOOST_CHECK_EQUAL(threadData.cost_, 80.0);
+    BOOST_CHECK_EQUAL(endStep, 18u);    // Step removal is kept
+    BOOST_CHECK_EQUAL(threadData.appliedMoves_.size(), 0u);
+}
+
+BOOST_AUTO_TEST_CASE(RevertPastRemoveStepSentinelRestoresStep) {
+    using KlMove = KlMoveStruct<double, VertexType>;
+    using ThreadDataT = ThreadLocalActiveScheduleData<Graph, double>;
+
+    ThreadDataT threadData;
+    threadData.InitializeCost(100);
+
+    unsigned endStep = activeSchedule_.NumSteps() - 1;    // 19
+
+    // Apply a move that worsens cost
+    KlMove moveNode0(0, -10.0, 0, 0, 1, 0);    // proc change, worsens
+    activeSchedule_.ApplyMove(moveNode0, threadData);
+    threadData.UpdateCost(10);    // cost 110
+
+    // Move node 1 to proc 1 step 0 — makes step 1 empty
+    KlMove moveNode1(1, -5.0, 1, 1, 1, 0);
+    activeSchedule_.ApplyMove(moveNode1, threadData);
+    threadData.UpdateCost(5);    // cost 115
+
+    // Swap empty step 1 forward and push sentinel
+    activeSchedule_.SwapEmptyStepFwd(1, endStep);
+    endStep--;    // 18
+    threadData.appliedMoves_.push_back(KlMove::MakeRemoveStep(1, 10.0));
+    threadData.UpdateCost(-10);    // cost 105 (sync saving)
+
+    // Best should still be the initial state (idx=0, cost=100)
+    BOOST_CHECK_EQUAL(threadData.bestScheduleIdx_, 0u);
+
+    struct DummyCommDs {
+        void UpdateDatastructureAfterMove(const KlMove &, unsigned, unsigned) {}
+
+        void SwapCommSteps(unsigned, unsigned) {}
+    } commDs;
+
+    // Revert to best — should undo sentinel, moveNode1, moveNode0
+    activeSchedule_.RevertToBestSchedule(commDs, threadData, 0, endStep);
+
+    BOOST_CHECK_EQUAL(threadData.cost_, 100.0);
+    BOOST_CHECK_EQUAL(endStep, 19u);    // Step is restored
+    BOOST_CHECK_EQUAL(threadData.appliedMoves_.size(), 0u);
+
+    // Node 1 should be back at step 1 (sentinel reverted)
+    BOOST_CHECK_EQUAL(activeSchedule_.AssignedSuperstep(1), 1u);
+    BOOST_CHECK_EQUAL(activeSchedule_.AssignedProcessor(1), 1u);
+    // Node 0 should be back at its original position
+    BOOST_CHECK_EQUAL(activeSchedule_.AssignedProcessor(0), 0u);
+}
+
+BOOST_AUTO_TEST_CASE(RevertRemoveStepSentinelCallsSwapCommSteps) {
+    using KlMove = KlMoveStruct<double, VertexType>;
+    using ThreadDataT = ThreadLocalActiveScheduleData<Graph, double>;
+
+    ThreadDataT threadData;
+    threadData.InitializeCost(100);
+
+    // Move node 1 to same proc as parent (proc 0, step 0) — makes step 1 empty
+    KlMove moveNode1(1, 10.0, 1, 1, 0, 0);
+    activeSchedule_.ApplyMove(moveNode1, threadData);
+    threadData.UpdateCost(-10);    // cost 90
+
+    unsigned endStep = activeSchedule_.NumSteps() - 1;    // 19
+
+    // Swap empty step 1 forward and push sentinel
+    activeSchedule_.SwapEmptyStepFwd(1, endStep);
+    endStep--;    // 18
+    threadData.appliedMoves_.push_back(KlMove::MakeRemoveStep(1, 10.0));
+    threadData.UpdateCost(-10);    // cost 80
+
+    // Track SwapCommSteps calls
+    struct TrackingCommDs {
+        std::vector<std::pair<unsigned, unsigned>> swapCalls_;
+
+        void UpdateDatastructureAfterMove(const KlMove &, unsigned, unsigned) {}
+
+        void SwapCommSteps(unsigned step1, unsigned step2) { swapCalls_.emplace_back(step1, step2); }
+    } commDs;
+
+    // Revert to initial (bound=0) — should revert all including the sentinel
+    activeSchedule_.RevertScheduleToBound(0, 100.0, true, commDs, threadData, 0, endStep);
+
+    BOOST_CHECK_EQUAL(endStep, 19u);    // Step restored
+
+    // SwapEmptyStepBwd(19, 1) swaps pairs: (18,19), (17,18), ..., (1,2)
+    // So SwapCommSteps should be called for each of those pairs
+    BOOST_CHECK(!commDs.swapCalls_.empty());
+    BOOST_CHECK_EQUAL(commDs.swapCalls_.size(), 18u);    // 19-1 = 18 swaps
+    // First swap should be (18, 19), last should be (1, 2)
+    BOOST_CHECK_EQUAL(commDs.swapCalls_.front().first, 18u);
+    BOOST_CHECK_EQUAL(commDs.swapCalls_.front().second, 19u);
+    BOOST_CHECK_EQUAL(commDs.swapCalls_.back().first, 1u);
+    BOOST_CHECK_EQUAL(commDs.swapCalls_.back().second, 2u);
+}
+
+BOOST_AUTO_TEST_CASE(RevertScheduleToBoundWithSentinel) {
+    using KlMove = KlMoveStruct<double, VertexType>;
+    using ThreadDataT = ThreadLocalActiveScheduleData<Graph, double>;
+
+    ThreadDataT threadData;
+    threadData.InitializeCost(100);
+
+    unsigned endStep = activeSchedule_.NumSteps() - 1;    // 19
+
+    // Apply a proc-change move (node 0 stays at step 0)
+    KlMove moveNode0(0, 10.0, 0, 0, 1, 0);
+    activeSchedule_.ApplyMove(moveNode0, threadData);
+    threadData.UpdateCost(-10);    // cost 90
+
+    // Move node 1 to proc 1 step 0 (same proc as node 0 after move0) — makes step 1 empty
+    KlMove moveNode1(1, 5.0, 1, 1, 1, 0);
+    activeSchedule_.ApplyMove(moveNode1, threadData);
+    threadData.UpdateCost(-5);    // cost 85
+
+    // Swap empty step 1 forward and push sentinel
+    activeSchedule_.SwapEmptyStepFwd(1, endStep);
+    endStep--;    // 18
+    threadData.appliedMoves_.push_back(KlMove::MakeRemoveStep(1, 10.0));
+
+    // RevertScheduleToBound to bound=1 (after first move only)
+    struct DummyCommDs {
+        void UpdateDatastructureAfterMove(const KlMove &, unsigned, unsigned) {}
+
+        void SwapCommSteps(unsigned, unsigned) {}
+    } commDs;
+
+    activeSchedule_.RevertScheduleToBound(1, 90.0, true, commDs, threadData, 0, endStep);
+
+    BOOST_CHECK_EQUAL(endStep, 19u);    // Step restored
+    BOOST_CHECK_EQUAL(threadData.cost_, 90.0);
+    BOOST_CHECK(threadData.feasible_);
+    // Node 1 should be back at step 1
+    BOOST_CHECK_EQUAL(activeSchedule_.AssignedSuperstep(1), 1u);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_CASE(StalenessTest) {
