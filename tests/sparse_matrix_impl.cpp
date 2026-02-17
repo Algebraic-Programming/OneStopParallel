@@ -262,7 +262,7 @@ BOOST_AUTO_TEST_CASE(TestSparseMatrixAdapter2) {
                 BOOST_CHECK(it == it_other);
                 BOOST_CHECK(cntr == 0U || it != begin);
                 BOOST_CHECK(cntr == 0U || (not (it == begin)));
-                BOOST_CHECK_EQUAL(it, it != end);
+                BOOST_CHECK_EQUAL(static_cast<bool>(it), it != end);
 
                 ++cntr;
                 ++it;
@@ -274,7 +274,7 @@ BOOST_AUTO_TEST_CASE(TestSparseMatrixAdapter2) {
             BOOST_CHECK_EQUAL(cntr, graph2.OutDegree(vert));
             BOOST_CHECK(it == end);
             BOOST_CHECK(it2 == end2);
-            BOOST_CHECK_EQUAL(it, it != end);
+            BOOST_CHECK_EQUAL(static_cast<bool>(it), it != end);
         }
 
         for (const auto &vert : graph2.Vertices()) {
@@ -295,7 +295,7 @@ BOOST_AUTO_TEST_CASE(TestSparseMatrixAdapter2) {
                 BOOST_CHECK_EQUAL(*it, *it2);
                 BOOST_CHECK(cntr == 0U || it != begin);
                 BOOST_CHECK(cntr == 0U || (not (it == begin)));
-                BOOST_CHECK_EQUAL(it, it != end);
+                BOOST_CHECK_EQUAL(static_cast<bool>(it), it != end);
 
                 ++cntr;
                 ++it;
@@ -306,7 +306,7 @@ BOOST_AUTO_TEST_CASE(TestSparseMatrixAdapter2) {
             BOOST_CHECK_EQUAL(cntr, graph2.InDegree(vert));
             BOOST_CHECK(it == end);
             BOOST_CHECK(it2 == end2);
-            BOOST_CHECK_EQUAL(it, it != end);
+            BOOST_CHECK_EQUAL(static_cast<bool>(it), it != end);
         }
     }
 }
