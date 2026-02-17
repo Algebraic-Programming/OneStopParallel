@@ -251,8 +251,11 @@ BOOST_AUTO_TEST_CASE(TestSparseMatrixAdapter2) {
             auto it_other = chldren.begin();
             const auto begin = chldren.begin();
             auto it2 = chldren2.begin();
-            auto end = chldren.end();
-            auto end2 = chldren2.end();
+            const auto end = chldren.end();
+            const auto end_other = chldren.end();
+            const auto end2 = chldren2.end();
+
+            BOOST_CHECK(end == end_other);
 
             std::size_t cntr = 0;
             while ((it != end) && (it2 != end2)) {
@@ -280,8 +283,11 @@ BOOST_AUTO_TEST_CASE(TestSparseMatrixAdapter2) {
             auto it_other = parents.begin();
             const auto begin = parents.begin();
             auto it2 = parents2.begin();
-            auto end = parents.end();
-            auto end2 = parents2.end();
+            const auto end = parents.end();
+            const auto end_other = parents.end();
+            const auto end2 = parents2.end();
+
+            BOOST_CHECK(end == end_other);
 
             std::size_t cntr = 0;
             while ((it != end) && (it2 != end2)) {
