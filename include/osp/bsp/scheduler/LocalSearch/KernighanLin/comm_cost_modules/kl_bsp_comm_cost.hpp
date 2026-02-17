@@ -103,6 +103,8 @@ struct KlBspCommCostFunction {
         commDs_.UpdateDatastructureAfterMove(move, startStep, endStep);
     }
 
+    void SwapCommSteps(unsigned step1, unsigned step2) { commDs_.SwapSteps(step1, step2); }
+
     // Structure to hold thread-local scratchpads to avoid re-allocation.
     struct ScratchData {
         std::vector<FastDeltaTracker<CommWeightT>> sendDeltas_;    // Size: num_steps

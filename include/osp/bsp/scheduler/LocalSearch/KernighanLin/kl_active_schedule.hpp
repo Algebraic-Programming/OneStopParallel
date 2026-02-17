@@ -445,6 +445,9 @@ class KlActiveSchedule {
 
             if (move.type_ == KlMoveType::REMOVE_STEP) {
                 SwapEmptyStepBwd(++endStep, move.fromStep_);
+                for (unsigned i = endStep; i > move.fromStep_; i--) {
+                    commDatastructures.SwapCommSteps(i - 1, i);
+                }
                 continue;
             }
 

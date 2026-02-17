@@ -406,6 +406,8 @@ BOOST_AUTO_TEST_CASE(ActiveScheduleRevertMovesTest) {
 
     struct DummyCommDs {
         void UpdateDatastructureAfterMove(const KlMove &, unsigned, unsigned) {}
+
+        void SwapCommSteps(unsigned, unsigned) {}
     } commDs;
 
     // Revert both moves
@@ -443,6 +445,8 @@ BOOST_AUTO_TEST_CASE(ActiveScheduleRevertToBestScheduleTest) {
 
     struct DummyCommDs {
         void UpdateDatastructureAfterMove(const KlMove &, unsigned, unsigned) {}
+
+        void SwapCommSteps(unsigned, unsigned) {}
     } commDs;
 
     unsigned endStep = activeSchedule_.NumSteps() - 1;

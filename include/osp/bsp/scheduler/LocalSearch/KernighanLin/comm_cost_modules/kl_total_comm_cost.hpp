@@ -72,6 +72,8 @@ struct KlTotalCommCostFunction {
 
     void UpdateDatastructureAfterMove(const KlMove &, const unsigned, const unsigned) {}
 
+    void SwapCommSteps(unsigned, unsigned) {}
+
     CostT ComputeScheduleCost() {
         CostT workCosts = 0;
         for (unsigned step = 0; step < activeSchedule_->NumSteps(); step++) {

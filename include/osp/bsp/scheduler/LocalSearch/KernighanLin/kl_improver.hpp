@@ -1192,6 +1192,9 @@ class KlImprover : public ImprovementScheduler<GraphT> {
     void SelectActiveNodes(ThreadSearchContext &threadData) {
         if (SelectNodesCheckRemoveSuperstep(threadData.stepToRemove_, threadData)) {
             activeSchedule_.SwapEmptyStepFwd(threadData.stepToRemove_, threadData.endStep_);
+            for (unsigned i = threadData.stepToRemove_; i < threadData.endStep_; i++) {
+                commCostF_.SwapCommSteps(i, i + 1);
+            }
             threadData.endStep_--;
 
             // Push a sentinel move to record the step removal in the move history.
