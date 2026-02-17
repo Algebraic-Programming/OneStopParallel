@@ -31,7 +31,6 @@ limitations under the License.
 #    include "osp/graph_implementations/adj_list_impl/compact_sparse_graph.hpp"
 #    include "osp/graph_implementations/eigen_matrix_adapter/sparse_matrix.hpp"
 #    include "test_graphs.hpp"
-// #include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 #    include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 
 using namespace osp;
