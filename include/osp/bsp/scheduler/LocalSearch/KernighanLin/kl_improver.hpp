@@ -1004,59 +1004,88 @@ class KlImprover : public ImprovementScheduler<GraphT> {
                                  std::vector<VertexType> &newNodes,
                                  const PreMoveWorkData<VertexWorkWeightT> &prevWorkData) {
         if constexpr (CommCostFunctionT::isMaxCommCostFunction_) {
-            commCostF_.UpdateNodeCommAffinity(
-                bestMove,
-                threadData,
-                threadData.rewardPenaltyStrat_.penalty_,
-                threadData.rewardPenaltyStrat_.reward_,
-                recomputeMaxGain,
-                newNodes);    // this only updated reward/penalty, collects newNodes, and fills recomputeMaxGain
+            // Collect newNodes: non-selected, unlocked direct neighbors of moved node
+            const auto &dag = *graph_;
+            for (const auto &child : dag.Children(bestMove.node_)) {
+                if (activeSchedule_.AssignedSuperstep(child) < threadData.startStep_
+                    || activeSchedule_.AssignedSuperstep(child) > threadData.endStep_) {
+                    continue;
+                }
+                if (threadData.lockManager_.IsLocked(child)) {
+                    continue;
+                }
+                if (!threadData.affinityTable_.IsSelected(child)) {
+                    newNodes.push_back(child);
+                }
+            }
+            for (const auto &parent : dag.Parents(bestMove.node_)) {
+                if (activeSchedule_.AssignedSuperstep(parent) < threadData.startStep_
+                    || activeSchedule_.AssignedSuperstep(parent) > threadData.endStep_) {
+                    continue;
+                }
+                if (threadData.lockManager_.IsLocked(parent)) {
+                    continue;
+                }
+                if (!threadData.affinityTable_.IsSelected(parent)) {
+                    newNodes.push_back(parent);
+                }
+            }
 
-            // Collect steps affected by this move
+            // Collect steps where the cost landscape changed after this move:
+            //  - fromStep/toStep: work changed
+            //  - parents' steps: comm send/recv changed
+            //  - children's steps: comm depends on moved node's new position
+            //  - siblings' steps (children of parents): parents' nodeLambdaMap_ changed
             std::unordered_set<unsigned> changedSteps;
-
-            // Work changes happen at fromStep and toStep
             changedSteps.insert(bestMove.fromStep_);
             changedSteps.insert(bestMove.toStep_);
 
-            // Comm changes: use exact list from UpdateDatastructureAfterMove
-            for (unsigned step : commCostF_.commDs_.affectedStepsList_) {
-                changedSteps.insert(step);
+            for (const auto &parent : dag.Parents(bestMove.node_)) {
+                changedSteps.insert(activeSchedule_.AssignedSuperstep(parent));
+                for (const auto &sibling : dag.Children(parent)) {
+                    changedSteps.insert(activeSchedule_.AssignedSuperstep(sibling));
+                }
+            }
+            for (const auto &child : dag.Children(bestMove.node_)) {
+                changedSteps.insert(activeSchedule_.AssignedSuperstep(child));
             }
 
-            // Recompute affinities for all active nodes
+            // Recompute affinities for active nodes that are affected by the move.
+            // A node needs recomputation if:
+            //  1. Its window overlaps a changed step (work + outgoing comm deltas)
+            //  2. It has a parent at a changed step (incoming comm deltas via
+            //     CalculateStepCostChange at parent steps outside the window)
             const size_t activeCount = threadData.affinityTable_.size();
             for (size_t i = 0; i < activeCount; ++i) {
                 const VertexType node = threadData.affinityTable_.GetSelectedNodes()[i];
-
-                // Determine if this node needs affinity recomputation
-                // A node needs recomputation if it's in or adjacent to changed steps
                 const unsigned nodeStep = activeSchedule_.AssignedSuperstep(node);
-
-                // Calculate window bounds for this node once
                 const int nodeLowerBound = static_cast<int>(nodeStep) - static_cast<int>(windowSize);
                 const unsigned nodeUpperBound = nodeStep + windowSize;
 
                 bool needsUpdate = false;
-                // Check if any changed step falls within the node's window
                 for (unsigned step : changedSteps) {
                     if (static_cast<int>(step) >= nodeLowerBound && step <= nodeUpperBound) {
                         needsUpdate = true;
                         break;
                     }
                 }
+                if (!needsUpdate) {
+                    for (const auto &parent : dag.Parents(node)) {
+                        if (changedSteps.count(activeSchedule_.AssignedSuperstep(parent))) {
+                            needsUpdate = true;
+                            break;
+                        }
+                    }
+                }
 
                 if (needsUpdate) {
                     auto &affinityTableNode = threadData.affinityTable_.GetAffinityTable(node);
-
-                    // Reset affinity table entries to zero
                     const unsigned numProcs = activeSchedule_.GetInstance().NumberOfProcessors();
                     for (unsigned p = 0; p < numProcs; ++p) {
                         for (unsigned idx = 0; idx < affinityTableNode[p].size(); ++idx) {
                             affinityTableNode[p][idx] = 0;
                         }
                     }
-
                     ComputeNodeAffinities(node, affinityTableNode, threadData);
                     recomputeMaxGain[node] = KlGainUpdateInfo(node, true);
                 }
