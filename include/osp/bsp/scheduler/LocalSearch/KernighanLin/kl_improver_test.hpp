@@ -113,11 +113,10 @@ class KlImproverTest : public KlImprover<GraphT, CommCostFunctionT, MemoryConstr
         std::vector<VertexType> newNodes;
 
         const auto prevWorkData = this->activeSchedule_.GetPreMoveWorkData(bestMove);
-        const auto prevCommData = this->commCostF_.GetPreMoveCommData(bestMove);
         this->ApplyMove(bestMove, this->threadDataVec_[0]);
 
         this->threadDataVec_[0].affinityTable_.Trim();
-        this->UpdateAffinities(bestMove, this->threadDataVec_[0], recomputeMaxGain, newNodes, prevWorkData, prevCommData);
+        this->UpdateAffinities(bestMove, this->threadDataVec_[0], recomputeMaxGain, newNodes, prevWorkData);
     }
 
     auto RunInnerIterationTest() {
@@ -137,11 +136,10 @@ class KlImproverTest : public KlImprover<GraphT, CommCostFunctionT, MemoryConstr
 #endif
 
         const auto prevWorkData = this->activeSchedule_.GetPreMoveWorkData(bestMove);
-        const auto prevCommData = this->commCostF_.GetPreMoveCommData(bestMove);
         this->ApplyMove(bestMove, this->threadDataVec_[0]);
 
         this->threadDataVec_[0].affinityTable_.Trim();
-        this->UpdateAffinities(bestMove, this->threadDataVec_[0], recomputeMaxGain, newNodes, prevWorkData, prevCommData);
+        this->UpdateAffinities(bestMove, this->threadDataVec_[0], recomputeMaxGain, newNodes, prevWorkData);
 
 #ifdef KL_DEBUG
         std::cout << "New nodes: { ";

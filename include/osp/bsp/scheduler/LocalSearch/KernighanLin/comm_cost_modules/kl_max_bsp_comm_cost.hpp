@@ -530,170 +530,170 @@ struct KlMaxBspCommCostFunction {
                                 const CostT &reward,
                                 std::map<VertexType, KlGainUpdateInfo> &,
                                 std::vector<VertexType> &new_nodes) {
-        // const unsigned start_step = thread_data.start_step;
-        // const unsigned end_step = thread_data.end_step;
+        const unsigned start_step = thread_data.startStep_;
+        const unsigned end_step = thread_data.endStep_;
 
-        // for (const auto &target : instance->getComputationalDag().children(move.node)) {
-        //     const unsigned target_step = active_schedule->assigned_superstep(target);
-        //     if (target_step < start_step || target_step > end_step) {
-        //         continue;
-        //     }
+        for (const auto &target : instance->GetComputationalDag().Children(move.node_)) {
+            const unsigned target_step = active_schedule->AssignedSuperstep(target);
+            if (target_step < start_step || target_step > end_step) {
+                continue;
+            }
 
-        //     if (thread_data.lock_manager.is_locked(target)) {
-        //         continue;
-        //     }
+            if (thread_data.lockManager_.IsLocked(target)) {
+                continue;
+            }
 
-        //     if (not thread_data.affinity_table.is_selected(target)) {
-        //         new_nodes.push_back(target);
-        //         continue;
-        //     }
+            if (not thread_data.affinityTable_.IsSelected(target)) {
+                new_nodes.push_back(target);
+                continue;
+            }
 
-        //     const unsigned target_proc = active_schedule->assigned_processor(target);
-        //     const unsigned target_start_idx = start_idx(target_step, start_step);
-        //     auto &affinity_table = thread_data.affinity_table.at(target);
+            const unsigned target_proc = active_schedule->AssignedProcessor(target);
+            const unsigned target_start_idx = StartIdx(target_step, start_step);
+            auto &affinity_table = thread_data.affinityTable_.At(target);
 
-        //     if (move.from_step < target_step + (move.from_proc == target_proc)) {
-        //         const unsigned diff = target_step - move.from_step;
-        //         const unsigned bound = WindowSize >= diff ? WindowSize - diff + 1 : 0;
-        //         unsigned idx = target_start_idx;
-        //         for (; idx < bound; idx++) {
-        //             for (const unsigned p : proc_range->compatible_processors_vertex(target)) {
-        //                 affinity_table[p][idx] -= penalty;
-        //             }
-        //         }
+            if (move.fromStep_ < target_step + (move.fromProc_ == target_proc)) {
+                const unsigned diff = target_step - move.fromStep_;
+                const unsigned bound = WindowSize >= diff ? WindowSize - diff + 1 : 0;
+                unsigned idx = target_start_idx;
+                for (; idx < bound; idx++) {
+                    for (const unsigned p : proc_range->CompatibleProcessorsVertex(target)) {
+                        affinity_table[p][idx] -= penalty;
+                    }
+                }
 
-        //         if (idx - 1 < bound && is_compatible(target, move.from_proc)) {
-        //             affinity_table[move.from_proc][idx - 1] += penalty;
-        //         }
+                if (idx - 1 < bound && IsCompatible(target, move.fromProc_)) {
+                    affinity_table[move.fromProc_][idx - 1] += penalty;
+                }
 
-        //     } else {
-        //         const unsigned diff = move.from_step - target_step;
-        //         const unsigned window_bound = end_idx(target_step, end_step);
-        //         unsigned idx = std::min(WindowSize + diff, window_bound);
+            } else {
+                const unsigned diff = move.fromStep_ - target_step;
+                const unsigned window_bound = EndIdx(target_step, end_step);
+                unsigned idx = std::min(WindowSize + diff, window_bound);
 
-        //         if (idx < window_bound && is_compatible(target, move.from_proc)) {
-        //             affinity_table[move.from_proc][idx] += reward;
-        //         }
+                if (idx < window_bound && IsCompatible(target, move.fromProc_)) {
+                    affinity_table[move.fromProc_][idx] += reward;
+                }
 
-        //         idx++;
+                idx++;
 
-        //         for (; idx < window_bound; idx++) {
-        //             for (const unsigned p : proc_range->compatible_processors_vertex(target)) {
-        //                 affinity_table[p][idx] += reward;
-        //             }
-        //         }
-        //     }
+                for (; idx < window_bound; idx++) {
+                    for (const unsigned p : proc_range->CompatibleProcessorsVertex(target)) {
+                        affinity_table[p][idx] += reward;
+                    }
+                }
+            }
 
-        //     if (move.to_step < target_step + (move.to_proc == target_proc)) {
-        //         unsigned idx = target_start_idx;
-        //         const unsigned diff = target_step - move.to_step;
-        //         const unsigned bound = WindowSize >= diff ? WindowSize - diff + 1 : 0;
-        //         for (; idx < bound; idx++) {
-        //             for (const unsigned p : proc_range->compatible_processors_vertex(target)) {
-        //                 affinity_table[p][idx] += penalty;
-        //             }
-        //         }
+            if (move.toStep_ < target_step + (move.toProc_ == target_proc)) {
+                unsigned idx = target_start_idx;
+                const unsigned diff = target_step - move.toStep_;
+                const unsigned bound = WindowSize >= diff ? WindowSize - diff + 1 : 0;
+                for (; idx < bound; idx++) {
+                    for (const unsigned p : proc_range->CompatibleProcessorsVertex(target)) {
+                        affinity_table[p][idx] += penalty;
+                    }
+                }
 
-        //         if (idx - 1 < bound && is_compatible(target, move.to_proc)) {
-        //             affinity_table[move.to_proc][idx - 1] -= penalty;
-        //         }
+                if (idx - 1 < bound && IsCompatible(target, move.toProc_)) {
+                    affinity_table[move.toProc_][idx - 1] -= penalty;
+                }
 
-        //     } else {
-        //         const unsigned diff = move.to_step - target_step;
-        //         const unsigned window_bound = end_idx(target_step, end_step);
-        //         unsigned idx = std::min(WindowSize + diff, window_bound);
+            } else {
+                const unsigned diff = move.toStep_ - target_step;
+                const unsigned window_bound = EndIdx(target_step, end_step);
+                unsigned idx = std::min(WindowSize + diff, window_bound);
 
-        //         if (idx < window_bound && is_compatible(target, move.to_proc)) {
-        //             affinity_table[move.to_proc][idx] -= reward;
-        //         }
+                if (idx < window_bound && IsCompatible(target, move.toProc_)) {
+                    affinity_table[move.toProc_][idx] -= reward;
+                }
 
-        //         idx++;
+                idx++;
 
-        //         for (; idx < window_bound; idx++) {
-        //             for (const unsigned p : proc_range->compatible_processors_vertex(target)) {
-        //                 affinity_table[p][idx] -= reward;
-        //             }
-        //         }
-        //     }
-        // }
+                for (; idx < window_bound; idx++) {
+                    for (const unsigned p : proc_range->CompatibleProcessorsVertex(target)) {
+                        affinity_table[p][idx] -= reward;
+                    }
+                }
+            }
+        }
 
-        // for (const auto &source : instance->getComputationalDag().parents(move.node)) {
-        //     const unsigned source_step = active_schedule->assigned_superstep(source);
-        //     if (source_step < start_step || source_step > end_step) {
-        //         continue;
-        //     }
+        for (const auto &source : instance->GetComputationalDag().Parents(move.node_)) {
+            const unsigned source_step = active_schedule->AssignedSuperstep(source);
+            if (source_step < start_step || source_step > end_step) {
+                continue;
+            }
 
-        //     if (thread_data.lock_manager.is_locked(source)) {
-        //         continue;
-        //     }
+            if (thread_data.lockManager_.IsLocked(source)) {
+                continue;
+            }
 
-        //     if (not thread_data.affinity_table.is_selected(source)) {
-        //         new_nodes.push_back(source);
-        //         continue;
-        //     }
+            if (not thread_data.affinityTable_.IsSelected(source)) {
+                new_nodes.push_back(source);
+                continue;
+            }
 
-        //     const unsigned source_proc = active_schedule->assigned_processor(source);
-        //     const unsigned source_start_idx = start_idx(source_step, start_step);
-        //     const unsigned window_bound = end_idx(source_step, end_step);
-        //     auto &affinity_table_source = thread_data.affinity_table.at(source);
+            const unsigned source_proc = active_schedule->AssignedProcessor(source);
+            const unsigned source_start_idx = StartIdx(source_step, start_step);
+            const unsigned window_bound = EndIdx(source_step, end_step);
+            auto &affinity_table_source = thread_data.affinityTable_.At(source);
 
-        //     if (move.from_step < source_step + (move.from_proc != source_proc)) {
-        //         const unsigned diff = source_step - move.from_step;
-        //         const unsigned bound = WindowSize > diff ? WindowSize - diff : 0;
-        //         unsigned idx = source_start_idx;
-        //         for (; idx < bound; idx++) {
-        //             for (const unsigned p : proc_range->compatible_processors_vertex(source)) {
-        //                 affinity_table_source[p][idx] += reward;
-        //             }
-        //         }
+            if (move.fromStep_ < source_step + (move.fromProc_ != source_proc)) {
+                const unsigned diff = source_step - move.fromStep_;
+                const unsigned bound = WindowSize > diff ? WindowSize - diff : 0;
+                unsigned idx = source_start_idx;
+                for (; idx < bound; idx++) {
+                    for (const unsigned p : proc_range->CompatibleProcessorsVertex(source)) {
+                        affinity_table_source[p][idx] += reward;
+                    }
+                }
 
-        //         if (WindowSize >= diff && is_compatible(source, move.from_proc)) {
-        //             affinity_table_source[move.from_proc][idx] += reward;
-        //         }
+                if (WindowSize >= diff && IsCompatible(source, move.fromProc_)) {
+                    affinity_table_source[move.fromProc_][idx] += reward;
+                }
 
-        //     } else {
-        //         const unsigned diff = move.from_step - source_step;
-        //         unsigned idx = WindowSize + diff;
+            } else {
+                const unsigned diff = move.fromStep_ - source_step;
+                unsigned idx = WindowSize + diff;
 
-        //         if (idx < window_bound && is_compatible(source, move.from_proc)) {
-        //             affinity_table_source[move.from_proc][idx] += penalty;
-        //         }
+                if (idx < window_bound && IsCompatible(source, move.fromProc_)) {
+                    affinity_table_source[move.fromProc_][idx] += penalty;
+                }
 
-        //         for (; idx < window_bound; idx++) {
-        //             for (const unsigned p : proc_range->compatible_processors_vertex(source)) {
-        //                 affinity_table_source[p][idx] -= penalty;
-        //             }
-        //         }
-        //     }
+                for (; idx < window_bound; idx++) {
+                    for (const unsigned p : proc_range->CompatibleProcessorsVertex(source)) {
+                        affinity_table_source[p][idx] -= penalty;
+                    }
+                }
+            }
 
-        //     if (move.to_step < source_step + (move.to_proc != source_proc)) {
-        //         const unsigned diff = source_step - move.to_step;
-        //         const unsigned bound = WindowSize > diff ? WindowSize - diff : 0;
-        //         unsigned idx = source_start_idx;
-        //         for (; idx < bound; idx++) {
-        //             for (const unsigned p : proc_range->compatible_processors_vertex(source)) {
-        //                 affinity_table_source[p][idx] -= reward;
-        //             }
-        //         }
+            if (move.toStep_ < source_step + (move.toProc_ != source_proc)) {
+                const unsigned diff = source_step - move.toStep_;
+                const unsigned bound = WindowSize > diff ? WindowSize - diff : 0;
+                unsigned idx = source_start_idx;
+                for (; idx < bound; idx++) {
+                    for (const unsigned p : proc_range->CompatibleProcessorsVertex(source)) {
+                        affinity_table_source[p][idx] -= reward;
+                    }
+                }
 
-        //         if (WindowSize >= diff && is_compatible(source, move.to_proc)) {
-        //             affinity_table_source[move.to_proc][idx] -= reward;
-        //         }
+                if (WindowSize >= diff && IsCompatible(source, move.toProc_)) {
+                    affinity_table_source[move.toProc_][idx] -= reward;
+                }
 
-        //     } else {
-        //         const unsigned diff = move.to_step - source_step;
-        //         unsigned idx = WindowSize + diff;
+            } else {
+                const unsigned diff = move.toStep_ - source_step;
+                unsigned idx = WindowSize + diff;
 
-        //         if (idx < window_bound && is_compatible(source, move.to_proc)) {
-        //             affinity_table_source[move.to_proc][idx] -= penalty;
-        //         }
-        //         for (; idx < window_bound; idx++) {
-        //             for (const unsigned p : proc_range->compatible_processors_vertex(source)) {
-        //                 affinity_table_source[p][idx] += penalty;
-        //             }
-        //         }
-        //     }
-        // }
+                if (idx < window_bound && IsCompatible(source, move.toProc_)) {
+                    affinity_table_source[move.toProc_][idx] -= penalty;
+                }
+                for (; idx < window_bound; idx++) {
+                    for (const unsigned p : proc_range->CompatibleProcessorsVertex(source)) {
+                        affinity_table_source[p][idx] += penalty;
+                    }
+                }
+            }
+        }
     }
 };
 

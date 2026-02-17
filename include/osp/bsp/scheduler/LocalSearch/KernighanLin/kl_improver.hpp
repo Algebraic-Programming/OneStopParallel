@@ -860,7 +860,6 @@ class KlImprover : public ImprovementScheduler<GraphT> {
 #endif
 
                 const auto prevWorkData = activeSchedule_.GetPreMoveWorkData(bestMove);
-                const typename CommCostFunctionT::PreMoveCommDataT prevCommData = commCostF_.GetPreMoveCommData(bestMove);
                 const CostT changeInCost = ApplyMove(bestMove, threadData);
                 DebugCostCheck(threadData);
                 if constexpr (enableQuickMoves_) {
@@ -888,7 +887,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
                 }
 
                 threadData.affinityTable_.Trim();
-                UpdateAffinities(bestMove, threadData, recomputeMaxGain, newNodes, prevWorkData, prevCommData);
+                UpdateAffinities(bestMove, threadData, recomputeMaxGain, newNodes, prevWorkData);
 
                 for (const auto v : unlockNodes) {
                     threadData.lockManager_.Unlock(v);
@@ -1003,8 +1002,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
                                  ThreadSearchContext &threadData,
                                  std::map<VertexType, KlGainUpdateInfo> &recomputeMaxGain,
                                  std::vector<VertexType> &newNodes,
-                                 const PreMoveWorkData<VertexWorkWeightT> &prevWorkData,
-                                 const typename CommCostFunctionT::PreMoveCommDataT &prevCommData) {
+                                 const PreMoveWorkData<VertexWorkWeightT> &prevWorkData) {
         if constexpr (CommCostFunctionT::isMaxCommCostFunction_) {
             commCostF_.UpdateNodeCommAffinity(
                 bestMove,
@@ -1014,49 +1012,16 @@ class KlImprover : public ImprovementScheduler<GraphT> {
                 recomputeMaxGain,
                 newNodes);    // this only updated reward/penalty, collects newNodes, and fills recomputeMaxGain
 
-            // Determine the steps where max/second_max/max_count for work/comm changed
+            // Collect steps affected by this move
             std::unordered_set<unsigned> changedSteps;
 
-            // Check work changes for fromStep
-            if (bestMove.fromStep_ == bestMove.toStep_) {
-                // Same step - check if max/second_max changed
-                const auto currentMax = activeSchedule_.GetStepMaxWork(bestMove.fromStep_);
-                const auto currentSecondMax = activeSchedule_.GetStepSecondMaxWork(bestMove.fromStep_);
-                const auto currentCount = activeSchedule_.GetStepMaxWorkProcessorCount()[bestMove.fromStep_];
-                if (currentMax != prevWorkData.fromStepMaxWork_ || currentSecondMax != prevWorkData.fromStepSecondMaxWork_
-                    || currentCount != prevWorkData.fromStepMaxWorkProcessorCount_) {
-                    changedSteps.insert(bestMove.fromStep_);
-                }
-            } else {
-                // Different steps - check both
-                const auto currentFromMax = activeSchedule_.GetStepMaxWork(bestMove.fromStep_);
-                const auto currentFromSecondMax = activeSchedule_.GetStepSecondMaxWork(bestMove.fromStep_);
-                const auto currentFromCount = activeSchedule_.GetStepMaxWorkProcessorCount()[bestMove.fromStep_];
-                if (currentFromMax != prevWorkData.fromStepMaxWork_ || currentFromSecondMax != prevWorkData.fromStepSecondMaxWork_
-                    || currentFromCount != prevWorkData.fromStepMaxWorkProcessorCount_) {
-                    changedSteps.insert(bestMove.fromStep_);
-                }
+            // Work changes happen at fromStep and toStep
+            changedSteps.insert(bestMove.fromStep_);
+            changedSteps.insert(bestMove.toStep_);
 
-                const auto currentToMax = activeSchedule_.GetStepMaxWork(bestMove.toStep_);
-                const auto currentToSecondMax = activeSchedule_.GetStepSecondMaxWork(bestMove.toStep_);
-                const auto currentToCount = activeSchedule_.GetStepMaxWorkProcessorCount()[bestMove.toStep_];
-                if (currentToMax != prevWorkData.toStepMaxWork_ || currentToSecondMax != prevWorkData.toStepSecondMaxWork_
-                    || currentToCount != prevWorkData.toStepMaxWorkProcessorCount_) {
-                    changedSteps.insert(bestMove.toStep_);
-                }
-            }
-
-            for (const auto &[step, stepInfo] : prevCommData.stepData_) {
-                // typename CommCostFunctionT::PreMoveCommDataT::StepInfo currentInfo;
-                // Query current values
-                const auto currentMax = commCostF_.commDs_.StepMaxComm(step);
-                const auto currentSecondMax = commCostF_.commDs_.StepSecondMaxComm(step);
-                const auto currentCount = commCostF_.commDs_.StepMaxCommCount(step);
-
-                if (currentMax != stepInfo.maxComm_ || currentSecondMax != stepInfo.secondMaxComm_
-                    || currentCount != stepInfo.maxCommCount_) {
-                    changedSteps.insert(step);
-                }
+            // Comm changes: use exact list from UpdateDatastructureAfterMove
+            for (unsigned step : commCostF_.commDs_.affectedStepsList_) {
+                changedSteps.insert(step);
             }
 
             // Recompute affinities for all active nodes
