@@ -57,6 +57,18 @@ std::vector<std::string> TestGraphs() {
             "data/spaa/tiny/instance_CG_N3_K1_nzP0d5.hdag"};
 }
 
+std::vector<std::string> TestMTXGraphs() {
+    return {"data/mtx_tests/ErdosRenyi_100_1k_A.mtx",
+            "data/mtx_tests/ErdosRenyi_200_5k_A.mtx",
+            "data/mtx_tests/ErdosRenyi_2k_14k_A.mtx",
+            "data/mtx_tests/ErdosRenyi_500_8k_A.mtx",
+            "data/mtx_tests/ErdosRenyi_8_19_A.mtx",
+            "data/mtx_tests/RandomBand_p40_b30_2k_23k_A.mtx",
+            "data/mtx_tests/RandomBand_p70_b12_500_4k_A.mtx",
+            "data/mtx_tests/RandomBand_p80_b14_200_2k_A.mtx",
+            "data/mtx_tests/RandomBand_p80_b5_100_419_A.mtx"};
+}
+
 /**
  * @brief Constructs a DAG with multiple identical, parallel pipelines.
  *
