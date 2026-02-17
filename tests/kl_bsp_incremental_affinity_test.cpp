@@ -61,7 +61,8 @@ using KlTestW2T = KlImproverTest<Graph, CommCostW2T, NoLocalSearchMemoryConstrai
 
 /// Validate comm datastructures: compare incrementally maintained values
 /// against freshly computed ones.
-bool ValidateCommDatastructures(const MaxCommDatastructure<Graph, double, KlActiveScheduleT> &commDsIncremental,
+template <typename CommPolicyT>
+bool ValidateCommDatastructures(const MaxCommDatastructure<Graph, double, KlActiveScheduleT, CommPolicyT> &commDsIncremental,
                                 KlActiveScheduleT &activeSched,
                                 const BspInstance<Graph> &instance,
                                 const std::string &context) {
@@ -71,7 +72,7 @@ bool ValidateCommDatastructures(const MaxCommDatastructure<Graph, double, KlActi
     KlActiveScheduleT klSchedFresh;
     klSchedFresh.Initialize(currentSchedule);
 
-    MaxCommDatastructure<Graph, double, KlActiveScheduleT> commDsFresh;
+    MaxCommDatastructure<Graph, double, KlActiveScheduleT, CommPolicyT> commDsFresh;
     commDsFresh.Initialize(klSchedFresh);
 
     unsigned maxStep = currentSchedule.NumberOfSupersteps();
@@ -97,18 +98,21 @@ bool ValidateCommDatastructures(const MaxCommDatastructure<Graph, double, KlActi
     // Validate lambda maps
     for (const auto v : instance.Vertices()) {
         for (unsigned p = 0; p < instance.NumberOfProcessors(); ++p) {
-            unsigned countInc = 0;
-            if (commDsIncremental.nodeLambdaMap_.HasProcEntry(v, p)) {
-                countInc = commDsIncremental.nodeLambdaMap_.GetProcEntry(v, p);
-            }
-            unsigned countFresh = 0;
-            if (commDsFresh.nodeLambdaMap_.HasProcEntry(v, p)) {
-                countFresh = commDsFresh.nodeLambdaMap_.GetProcEntry(v, p);
-            }
-            if (countInc != countFresh) {
+            bool hasInc = commDsIncremental.nodeLambdaMap_.HasProcEntry(v, p);
+            bool hasFresh = commDsFresh.nodeLambdaMap_.HasProcEntry(v, p);
+
+            if (hasInc != hasFresh) {
                 allMatch = false;
                 std::cout << "  LAMBDA MISMATCH [" << context << "] node " << v << " proc " << p << ":"
-                          << " inc=" << countInc << " fresh=" << countFresh << std::endl;
+                          << " inc_has=" << hasInc << " fresh_has=" << hasFresh << std::endl;
+            } else if (hasInc) {
+                auto valInc = commDsIncremental.nodeLambdaMap_.GetProcEntry(v, p);
+                auto valFresh = commDsFresh.nodeLambdaMap_.GetProcEntry(v, p);
+                if (valInc != valFresh) {
+                    allMatch = false;
+                    std::cout << "  LAMBDA MISMATCH [" << context << "] node " << v << " proc " << p << ": values differ"
+                              << std::endl;
+                }
             }
         }
     }
@@ -118,13 +122,14 @@ bool ValidateCommDatastructures(const MaxCommDatastructure<Graph, double, KlActi
 
 /// Validate affinity tables: compare incrementally maintained affinity values
 /// against freshly computed ones, skipping out-of-range step indices.
-bool ValidateAffinityTables(KlTestT &klIncremental, const BspInstance<Graph> &instance, const std::string &context) {
+template <typename KlTestType>
+bool ValidateAffinityTables(KlTestType &klIncremental, const BspInstance<Graph> &instance, const std::string &context) {
     constexpr unsigned windowSize = 1;
 
     BspSchedule<Graph> currentSchedule(instance);
     klIncremental.GetActiveScheduleTest(currentSchedule);
 
-    KlTestT klFresh;
+    KlTestType klFresh;
     klFresh.SetupSchedule(currentSchedule);
 
     std::vector<VertexType> selectedNodes;
@@ -178,7 +183,8 @@ bool ValidateAffinityTables(KlTestT &klIncremental, const BspInstance<Graph> &in
 }
 
 /// Run one inner iteration and validate all consistency checks.
-void RunAndValidate(KlTestT &kl, const BspInstance<Graph> &instance, const std::string &context) {
+template <typename KlTestType>
+void RunAndValidate(KlTestType &kl, const BspInstance<Graph> &instance, const std::string &context) {
     kl.RunInnerIterationTest();
 
     BOOST_CHECK(ValidateCommDatastructures(kl.GetCommCostF().commDs_, kl.GetActiveSchedule(), instance, context));
