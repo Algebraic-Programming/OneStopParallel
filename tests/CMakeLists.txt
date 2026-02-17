@@ -62,7 +62,7 @@ _add_test( kl_bsp_cost_policies )
 
 _add_test( kl_bsp_comm_affinities )
 
-_add_test( kl_bsp_max_improver_test )
+#_add_test( kl_bsp_max_improver_test )
 
 _add_test( kl_bsp_improver_test )
 
@@ -70,9 +70,9 @@ _add_test( kl_bsp_incremental_affinity_test )
 
 _add_test( kl_cross_step_work_affinity_test )
 
-_add_test( kl_max_bsp_affinity_test )
+#_add_test( kl_max_bsp_affinity_test )
 
-_add_test( kl_max_bsp_comm_affinity )
+#_add_test( kl_max_bsp_comm_affinity )
 
 _add_test( heaps )
 

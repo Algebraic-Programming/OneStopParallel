@@ -1166,17 +1166,17 @@ BOOST_AUTO_TEST_CASE(Buffered_LargeFanIn) {
 BOOST_AUTO_TEST_SUITE_END()    // AffinityBruteForceLazyBuffered
 
 // ============================================================================
-// Suite 2: Staleness penalty/reward
+// Staleness test helpers - templated to run under all three policies.
 //
-// The regular BSP cost function hardcodes staleness to 1 (cross-proc edges
-// require target_step >= source_step + 1). Tests verify the penalty/reward
-// component of ComputeCommAffinity by differencing (with vs without penalty).
+// The penalty/reward logic in ComputeCommAffinity is policy-independent: it
+// depends only on DAG topology and step assignments, not on how communication
+// is attributed between supersteps. Instantiating under Lazy and Buffered
+// confirms that the full combined affinity (comm delta + staleness term) is
+// correct for each policy type.
 // ============================================================================
 
-BOOST_AUTO_TEST_SUITE(StalenessTests)
-
-// Same-proc candidates should have zero staleness contribution.
-BOOST_AUTO_TEST_CASE(StalenessZeroForSameProc) {
+template <typename KlTestType>
+static void RunStalenessZeroForSameProc() {
     Graph dag;
     dag.AddVertex(10, 5, 1);
     dag.AddVertex(10, 3, 1);
@@ -1193,7 +1193,7 @@ BOOST_AUTO_TEST_CASE(StalenessZeroForSameProc) {
     schedule.SetAssignedSupersteps({0, 1});
     schedule.UpdateNumberOfSupersteps();
 
-    KlTestT kl;
+    KlTestType kl;
     kl.SetupSchedule(schedule);
     kl.GetCommCostF().ComputeSendReceiveDatastructures();
 
@@ -1206,8 +1206,9 @@ BOOST_AUTO_TEST_CASE(StalenessZeroForSameProc) {
     kl.GetCommCostF().ComputeCommAffinity(1, withStale, 100.0, 100.0, 0, 1);
     kl.GetCommCostF().ComputeCommAffinity(1, noStale, 0.0, 0.0, 0, 1);
 
-    // Staleness contribution on parent's proc (P0) should be zero
-    // (same-proc → no staleness constraint)
+    // Staleness contribution on parent's proc (P0) should be zero:
+    // moving v1 to P0 makes it same-proc as its parent v0, so no staleness
+    // constraint applies and the penalty/reward term must cancel out.
     unsigned sourceProc = 0;
     for (unsigned sIdx = 0; sIdx < WR; ++sIdx) {
         double staleContrib = withStale[sourceProc][sIdx] - noStale[sourceProc][sIdx];
@@ -1215,8 +1216,8 @@ BOOST_AUTO_TEST_CASE(StalenessZeroForSameProc) {
     }
 }
 
-// Cross-proc candidates at violating positions should have non-zero staleness.
-BOOST_AUTO_TEST_CASE(StalenessNonZeroCrossProc) {
+template <typename KlTestType>
+static void RunStalenessNonZeroCrossProc() {
     Graph dag;
     dag.AddVertex(10, 5, 1);
     dag.AddVertex(10, 3, 1);
@@ -1234,7 +1235,7 @@ BOOST_AUTO_TEST_CASE(StalenessNonZeroCrossProc) {
     schedule.SetAssignedSupersteps({0, 1});
     schedule.UpdateNumberOfSupersteps();
 
-    KlTestT kl;
+    KlTestType kl;
     kl.SetupSchedule(schedule);
     kl.GetCommCostF().ComputeSendReceiveDatastructures();
 
@@ -1247,13 +1248,15 @@ BOOST_AUTO_TEST_CASE(StalenessNonZeroCrossProc) {
     kl.GetCommCostF().ComputeCommAffinity(1, withStale, 100.0, 100.0, 0, 1);
     kl.GetCommCostF().ComputeCommAffinity(1, noStale, 0.0, 0.0, 0, 1);
 
-    // Moving v1 to S0 on P1 (cross-proc from parent v0@P0) violates staleness.
+    // Moving v1 to (P1, S0) is cross-proc with parent v0@P0 and violates
+    // staleness=1 (child step must be >= parent step + 1). The staleness
+    // contribution at this candidate must be non-zero.
     double staleContribP1_S0 = withStale[1][0] - noStale[1][0];
     BOOST_CHECK_NE(staleContribP1_S0, 0.0);
 }
 
-// Staleness contribution should scale linearly with penalty/reward magnitude.
-BOOST_AUTO_TEST_CASE(StalenessScalesWithMagnitude) {
+template <typename KlTestType>
+static void RunStalenessScalesWithMagnitude() {
     Graph dag;
     dag.AddVertex(10, 5, 1);
     dag.AddVertex(10, 3, 1);
@@ -1270,7 +1273,7 @@ BOOST_AUTO_TEST_CASE(StalenessScalesWithMagnitude) {
     schedule.SetAssignedSupersteps({0, 1});
     schedule.UpdateNumberOfSupersteps();
 
-    KlTestT kl;
+    KlTestType kl;
     kl.SetupSchedule(schedule);
     kl.GetCommCostF().ComputeSendReceiveDatastructures();
 
@@ -1285,6 +1288,8 @@ BOOST_AUTO_TEST_CASE(StalenessScalesWithMagnitude) {
     kl.GetCommCostF().ComputeCommAffinity(1, aff2, 100.0, 100.0, 0, 1);
     kl.GetCommCostF().ComputeCommAffinity(1, noStale, 0.0, 0.0, 0, 1);
 
+    // The penalty/reward logic is linear: doubling penalty doubles the
+    // staleness contribution at any violating candidate.
     double stale1 = aff1[1][0] - noStale[1][0];
     double stale2 = aff2[1][0] - noStale[1][0];
 
@@ -1293,8 +1298,8 @@ BOOST_AUTO_TEST_CASE(StalenessScalesWithMagnitude) {
     }
 }
 
-// Self-move should have zero TOTAL affinity (staleness + comm delta = 0).
-BOOST_AUTO_TEST_CASE(StalenessZeroAtSelfMove) {
+template <typename KlTestType>
+static void RunStalenessZeroAtSelfMove() {
     Graph dag;
     dag.AddVertex(10, 5, 1);
     dag.AddVertex(10, 3, 1);
@@ -1311,7 +1316,7 @@ BOOST_AUTO_TEST_CASE(StalenessZeroAtSelfMove) {
     schedule.SetAssignedSupersteps({0, 1});
     schedule.UpdateNumberOfSupersteps();
 
-    KlTestT kl;
+    KlTestType kl;
     kl.SetupSchedule(schedule);
     kl.GetCommCostF().ComputeSendReceiveDatastructures();
 
@@ -1321,8 +1326,60 @@ BOOST_AUTO_TEST_CASE(StalenessZeroAtSelfMove) {
 
     kl.GetCommCostF().ComputeCommAffinity(1, aff, 100.0, 100.0, 0, 1);
 
-    // Self-move: v1 at (P1, S1), window index = WS = 1.
+    // Self-move: v1 at (P1, S1) maps to window index WS. The combined
+    // affinity (comm delta + staleness) must be exactly zero.
     BOOST_CHECK_SMALL(aff[1][WS], 1e-6);
 }
 
+// ============================================================================
+// Suite 2: Staleness penalty/reward
+//
+// The regular BSP cost function hardcodes staleness to 1 (cross-proc edges
+// require target_step >= source_step + 1). Tests verify the penalty/reward
+// component of ComputeCommAffinity by differencing (with vs without penalty).
+// ============================================================================
+
+BOOST_AUTO_TEST_SUITE(StalenessTests)
+
+// Same-proc candidates should have zero staleness contribution.
+BOOST_AUTO_TEST_CASE(StalenessZeroForSameProc) { RunStalenessZeroForSameProc<KlTestT>(); }
+
+// Cross-proc candidates at violating positions should have non-zero staleness.
+BOOST_AUTO_TEST_CASE(StalenessNonZeroCrossProc) { RunStalenessNonZeroCrossProc<KlTestT>(); }
+
+// Staleness contribution should scale linearly with penalty/reward magnitude.
+BOOST_AUTO_TEST_CASE(StalenessScalesWithMagnitude) { RunStalenessScalesWithMagnitude<KlTestT>(); }
+
+// Self-move should have zero TOTAL affinity (staleness + comm delta = 0).
+BOOST_AUTO_TEST_CASE(StalenessZeroAtSelfMove) { RunStalenessZeroAtSelfMove<KlTestT>(); }
+
 BOOST_AUTO_TEST_SUITE_END()    // StalenessTests
+
+// ============================================================================
+// Suite 3: Staleness penalty/reward for Lazy and Buffered policies
+//
+// Instantiates the same four staleness helpers under KlTestLazyT and
+// KlTestBufferedT. The penalty/reward term of ComputeCommAffinity is
+// policy-independent, but the combined affinity (comm delta + staleness)
+// must still be correct for each policy type.
+// ============================================================================
+
+BOOST_AUTO_TEST_SUITE(StalenessTestsLazyBuffered)
+
+BOOST_AUTO_TEST_CASE(Lazy_StalenessZeroForSameProc) { RunStalenessZeroForSameProc<KlTestLazyT>(); }
+
+BOOST_AUTO_TEST_CASE(Lazy_StalenessNonZeroCrossProc) { RunStalenessNonZeroCrossProc<KlTestLazyT>(); }
+
+BOOST_AUTO_TEST_CASE(Lazy_StalenessScalesWithMagnitude) { RunStalenessScalesWithMagnitude<KlTestLazyT>(); }
+
+BOOST_AUTO_TEST_CASE(Lazy_StalenessZeroAtSelfMove) { RunStalenessZeroAtSelfMove<KlTestLazyT>(); }
+
+BOOST_AUTO_TEST_CASE(Buffered_StalenessZeroForSameProc) { RunStalenessZeroForSameProc<KlTestBufferedT>(); }
+
+BOOST_AUTO_TEST_CASE(Buffered_StalenessNonZeroCrossProc) { RunStalenessNonZeroCrossProc<KlTestBufferedT>(); }
+
+BOOST_AUTO_TEST_CASE(Buffered_StalenessScalesWithMagnitude) { RunStalenessScalesWithMagnitude<KlTestBufferedT>(); }
+
+BOOST_AUTO_TEST_CASE(Buffered_StalenessZeroAtSelfMove) { RunStalenessZeroAtSelfMove<KlTestBufferedT>(); }
+
+BOOST_AUTO_TEST_SUITE_END()    // StalenessTestsLazyBuffered
