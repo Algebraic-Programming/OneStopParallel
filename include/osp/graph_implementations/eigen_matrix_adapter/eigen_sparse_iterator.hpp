@@ -72,8 +72,11 @@ class EigenCSRRange {
             return temp;
         }
 
-        bool operator==(const Iterator &other) const {return it_ == other.it_;}
-        bool operator!=(const Iterator &other) const { return not (*this == other);}
+        inline bool operator==(const Iterator &other) const {
+            return (it_ && other.it_ && it_.index() == other.it_.index()) || ((not it_) && (not other.it_));
+        }
+
+        inline bool operator!=(const Iterator &other) const { return not(*this == other); }
     };
 
     EigenCSRRange(const Graph &graph, EigenIdxType idx) : graph_(graph), index_(idx) {}
@@ -132,8 +135,11 @@ class EigenCSCRange {
             return temp;
         }
 
-        bool operator==(const Iterator &other) const {return it_ == other.it_;}
-        bool operator!=(const Iterator &other) const { return not (*this == other);}
+        inline bool operator==(const Iterator &other) const {
+            return (it_ && other.it_ && it_.index() == other.it_.index()) || ((not it_) && (not other.it_));
+        }
+
+        inline bool operator!=(const Iterator &other) const { return not(*this == other); }
     };
 
     EigenCSCRange(const Graph &graph, EigenIdxType idx) : graph_(graph), index_(idx) {}
