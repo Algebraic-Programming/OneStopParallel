@@ -148,7 +148,15 @@ int PartitioningTestSuiteRunner<GraphType>::Run(int argc, char *argv[]) {
                 continue;
             }
 
-            instance.SetMaxWorkWeightViaImbalanceFactor(static_cast<double>(arch.CommunicationCosts()) / 100.0);
+            double epsilon = static_cast<double>(arch.CommunicationCosts());
+            if (epsilon > 100.0) {    // hack to get fractional epsilon with the current setup. g = 250 => 2.5
+                epsilon /= 100.0;
+                std::cout << "Adjusting epsilon: " << epsilon << std::endl;
+            } else {
+                std::cout << "Using epsilon: " << epsilon << std::endl;
+            }
+
+            instance.SetMaxWorkWeightViaImbalanceFactor(epsilon / 100.0);
 
             for (auto &algorithmConfigPair : this->parser_.scheduler_) {
                 const pt::ptree &algoConfig = algorithmConfigPair.second;
