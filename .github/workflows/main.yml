@@ -55,12 +55,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             make gcc g++ git libboost-all-dev \
-            doxygen graphviz python3-pip libeigen3-dev lcov
+            doxygen graphviz python3-pip libeigen3-dev lcov \
+            libasan6
           pip3 install --upgrade pip
           pip3 install cmake==3.21.3
 
       - name: Configure
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DENABLE_ASAN=ON
 
       - name: Build all targets
         working-directory: ${{ github.workspace }}/build
