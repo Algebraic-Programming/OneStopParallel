@@ -94,8 +94,8 @@ class KlImprover : public ImprovementScheduler<GraphT> {
 
   protected:
     constexpr static unsigned windowRange_ = 2 * windowSize + 1;
-    constexpr static bool enableQuickMoves_ = true;
-    constexpr static bool enablePreresolvingViolations_ = true;
+    constexpr static bool enableQuickMoves_ = false;
+    constexpr static bool enablePreresolvingViolations_ = false;
     constexpr static double epsilon_ = 1e-9;
 
     using VertexMemWeightT = osp::VMemwT<GraphT>;
@@ -571,36 +571,66 @@ class KlImprover : public ImprovementScheduler<GraphT> {
 
     inline void DebugCostCheck([[maybe_unused]] const ThreadSearchContext &threadData) {
 #ifdef KL_DEBUG_COST_CHECK
-        activeSchedule_.GetVectorSchedule().numberOfSupersteps_ = threadDataVec_[0].NumSteps();
-        const CostT computedCost = commCostF_.ComputeScheduleCostTest();
-        const CostT currentCost = threadData.activeScheduleData_.cost_;
-        if (std::abs(computedCost - currentCost) > 0.00001) {
-            const size_t numViolations = threadData.activeScheduleData_.currentViolations_.size();
-            std::cout << "computed cost: " << computedCost << ", current cost: " << currentCost
-                      << ", violations: " << numViolations
-                      << ", feasible: " << (threadData.activeScheduleData_.feasible_ ? "true" : "false") << std::endl;
-            if (numViolations == 0) {
-                std::cout << ">>>>>>>>>>>>>>>>>>>>>> compute cost not equal to new cost <<<<<<<<<<<<<<<<<<<<" << std::endl;
-            } else {
-                std::cout << ">>>>>> [expected: violation penalty gap] <<<<<<" << std::endl;
-            }
-        }
-        if constexpr (ActiveScheduleT::useMemoryConstraint_) {
-            if (not activeSchedule_.memoryConstraint_.SatisfiedMemoryConstraint()) {
-                std::cout << "memory constraint not satisfied" << std::endl;
-            }
-        }
+        // activeSchedule_.GetVectorSchedule().numberOfSupersteps_ = threadDataVec_[0].NumSteps();
+        // const CostT computedCost = commCostF_.ComputeScheduleCostTest();
+        // const CostT currentCost = threadData.activeScheduleData_.cost_;
+        // if (std::abs(computedCost - currentCost) > 0.00001) {
+        //     const size_t numViolations = threadData.activeScheduleData_.currentViolations_.size();
+        //     std::cout << "computed cost: " << computedCost << ", current cost: " << currentCost
+        //               << ", violations: " << numViolations
+        //               << ", feasible: " << (threadData.activeScheduleData_.feasible_ ? "true" : "false") << std::endl;
+        //     if (numViolations == 0) {
+        //         std::cout << ">>>>>>>>>>>>>>>>>>>>>> compute cost not equal to new cost <<<<<<<<<<<<<<<<<<<<" << std::endl;
+        //     } else {
+        //         std::cout << ">>>>>> [expected: violation penalty gap] <<<<<<" << std::endl;
+        //     }
+        // }
+        // if constexpr (ActiveScheduleT::useMemoryConstraint_) {
+        //     if (not activeSchedule_.memoryConstraint_.SatisfiedMemoryConstraint()) {
+        //         std::cout << "memory constraint not satisfied" << std::endl;
+        //     }
+        // }
 #endif
     }
 
     inline CostT ApplyMove(KlMove move, ThreadSearchContext &threadData) {
+#ifdef KL_DEBUG_COST_CHECK
+        // Measure TRUE cost before move (from arrays, no violations)
+        activeSchedule_.GetVectorSchedule().numberOfSupersteps_ = threadDataVec_[0].NumSteps();
+        const CostT costBeforeMove = commCostF_.ComputeScheduleCostTest();
+#endif
         activeSchedule_.ApplyMove(move, threadData.activeScheduleData_);
         commCostF_.UpdateDatastructureAfterMove(move, threadData.startStep_, threadData.endStep_);
+#ifdef KL_DEBUG_COST_CHECK
+        // Measure TRUE cost after move (from updated arrays)
+        const CostT costAfterMove = commCostF_.ComputeScheduleCostTest();
+        const CostT actualDelta = costAfterMove - costBeforeMove;
+#endif
         CostT changeInCost = -move.gain_;
         changeInCost += static_cast<CostT>(threadData.activeScheduleData_.resolvedViolations_.size())
                         * threadData.rewardPenaltyStrat_.reward_;
         changeInCost
             -= static_cast<CostT>(threadData.activeScheduleData_.newViolations_.size()) * threadData.rewardPenaltyStrat_.penalty_;
+
+#ifdef KL_DEBUG_COST_CHECK
+        // changeInCost is the PURE cost prediction (violations extracted from gain)
+        if (std::abs(actualDelta - changeInCost) > 0.00001) {
+            static unsigned gainDivergenceCount = 0;
+            gainDivergenceCount++;
+            if (gainDivergenceCount <= 10) {
+                std::cout << "\n[GAIN DIVERGENCE #" << gainDivergenceCount << "] "
+                          << "node=" << move.node_ << " (" << move.fromProc_ << "," << move.fromStep_ << ")"
+                          << " -> (" << move.toProc_ << "," << move.toStep_ << ")"
+                          << "\n  gain=" << move.gain_ << " purePredicted=" << changeInCost << " actualDelta=" << actualDelta
+                          << " error=" << (actualDelta - changeInCost) << "\n  costBefore=" << costBeforeMove
+                          << " costAfter=" << costAfterMove
+                          << "\n  newViolations=" << threadData.activeScheduleData_.newViolations_.size()
+                          << " resolvedViolations=" << threadData.activeScheduleData_.resolvedViolations_.size()
+                          << " penalty=" << threadData.rewardPenaltyStrat_.penalty_
+                          << " reward=" << threadData.rewardPenaltyStrat_.reward_ << std::endl;
+            }
+        }
+#endif
 
 #ifdef KL_DEBUG
         std::cout << "penalty: " << threadData.rewardPenaltyStrat_.penalty_
@@ -1193,53 +1223,53 @@ class KlImprover : public ImprovementScheduler<GraphT> {
     }
 
     void SelectActiveNodes(ThreadSearchContext &threadData) {
-        if (SelectNodesCheckRemoveSuperstep(threadData.stepToRemove_, threadData)) {
-            activeSchedule_.SwapEmptyStepFwd(threadData.stepToRemove_, threadData.endStep_);
-            const unsigned oldEndStep = threadData.endStep_;
-            for (unsigned i = threadData.stepToRemove_; i < threadData.endStep_; i++) {
-                commCostF_.SwapCommSteps(i, i + 1);
-            }
-            threadData.endStep_--;
-            commCostF_.UpdateLambdaAfterStepRemoval(threadData.stepToRemove_);
-            commCostF_.FixupSendRecvAfterStepRemoval(threadData.stepToRemove_, oldEndStep);
+        //         if (SelectNodesCheckRemoveSuperstep(threadData.stepToRemove_, threadData)) {
+        //             activeSchedule_.SwapEmptyStepFwd(threadData.stepToRemove_, threadData.endStep_);
+        //             const unsigned oldEndStep = threadData.endStep_;
+        //             for (unsigned i = threadData.stepToRemove_; i < threadData.endStep_; i++) {
+        //                 commCostF_.SwapCommSteps(i, i + 1);
+        //             }
+        //             threadData.endStep_--;
+        //             commCostF_.UpdateLambdaAfterStepRemoval(threadData.stepToRemove_);
+        //             commCostF_.FixupSendRecvAfterStepRemoval(threadData.stepToRemove_, oldEndStep);
 
-            // Push a sentinel move to record the step removal in the move history.
-            // This must happen BEFORE UpdateCost so that bestScheduleIdx_ can
-            // unambiguously point before or after the removal.
-            const CostT syncCost = static_cast<CostT>(instance_->SynchronisationCosts());
-            threadData.activeScheduleData_.appliedMoves_.push_back(KlMove::MakeRemoveStep(threadData.stepToRemove_, syncCost));
+        //             // Push a sentinel move to record the step removal in the move history.
+        //             // This must happen BEFORE UpdateCost so that bestScheduleIdx_ can
+        //             // unambiguously point before or after the removal.
+        //             const CostT syncCost = static_cast<CostT>(instance_->SynchronisationCosts());
+        //             threadData.activeScheduleData_.appliedMoves_.push_back(KlMove::MakeRemoveStep(threadData.stepToRemove_, syncCost));
 
-            // SwapEmptyStepFwd shifts nodes after the removed step down by 1,
-            // which can reduce cross-processor gaps below staleness.  Update the
-            // violation set for the affected boundary BEFORE UpdateCost, so that
-            // feasible_ is correct when UpdateCost decides whether to save the
-            // current state as the new best.
-            if (activeSchedule_.GetStaleness() > 1) {
-                activeSchedule_.UpdateViolationsAfterStepRemoval(threadData.stepToRemove_, threadData.activeScheduleData_);
-            }
+        //             // SwapEmptyStepFwd shifts nodes after the removed step down by 1,
+        //             // which can reduce cross-processor gaps below staleness.  Update the
+        //             // violation set for the affected boundary BEFORE UpdateCost, so that
+        //             // feasible_ is correct when UpdateCost decides whether to save the
+        //             // current state as the new best.
+        //             if (activeSchedule_.GetStaleness() > 1) {
+        //                 activeSchedule_.UpdateViolationsAfterStepRemoval(threadData.stepToRemove_, threadData.activeScheduleData_);
+        //             }
 
-            threadData.activeScheduleData_.UpdateCost(static_cast<CostT>(-1.0 * syncCost));
+        //             threadData.activeScheduleData_.UpdateCost(static_cast<CostT>(-1.0 * syncCost));
 
-            if constexpr (enablePreresolvingViolations_) {
-                ResolveViolations(threadData);
-            }
+        //             if constexpr (enablePreresolvingViolations_) {
+        //                 ResolveViolations(threadData);
+        //             }
 
-            if (threadData.activeScheduleData_.currentViolations_.size() > parameters_.initialViolationThreshold_) {
-                activeSchedule_.RevertToBestSchedule(
-                    commCostF_, threadData.activeScheduleData_, threadData.startStep_, threadData.endStep_);
-            } else {
-                threadData.unlockEdgeBacktrackCounter_
-                    = static_cast<unsigned>(threadData.activeScheduleData_.currentViolations_.size());
-                threadData.maxInnerIterations_
-                    = std::max(threadData.unlockEdgeBacktrackCounter_ * 5u, parameters_.maxInnerIterationsReset_);
-                threadData.maxNoViolationsRemovedBacktrack_ = parameters_.maxNoViolationsRemovedBacktrackForRemoveStepReset_;
-#ifdef KL_DEBUG_1
-                std::cout << "thread " << threadData.threadId_ << ", Trying to remove step " << threadData.stepToRemove_
-                          << std::endl;
-#endif
-                return;
-            }
-        }
+        //             if (threadData.activeScheduleData_.currentViolations_.size() > parameters_.initialViolationThreshold_) {
+        //                 activeSchedule_.RevertToBestSchedule(
+        //                     commCostF_, threadData.activeScheduleData_, threadData.startStep_, threadData.endStep_);
+        //             } else {
+        //                 threadData.unlockEdgeBacktrackCounter_
+        //                     = static_cast<unsigned>(threadData.activeScheduleData_.currentViolations_.size());
+        //                 threadData.maxInnerIterations_
+        //                     = std::max(threadData.unlockEdgeBacktrackCounter_ * 5u, parameters_.maxInnerIterationsReset_);
+        //                 threadData.maxNoViolationsRemovedBacktrack_ = parameters_.maxNoViolationsRemovedBacktrackForRemoveStepReset_;
+        // #ifdef KL_DEBUG_1
+        //                 std::cout << "thread " << threadData.threadId_ << ", Trying to remove step " << threadData.stepToRemove_
+        //                           << std::endl;
+        // #endif
+        //                 return;
+        //             }
+        //         }
         threadData.selectionStrategy_.SelectActiveNodes(threadData.affinityTable_, threadData.startStep_, threadData.endStep_);
     }
 
