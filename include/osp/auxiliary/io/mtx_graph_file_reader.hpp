@@ -102,6 +102,8 @@ bool ReadComputationalDagMartixMarketFormat(std::ifstream &infile, GraphT &graph
             return false;
         }
 
+        std::cout << "row: " << row << " col: " << col << " val: " << val << std::endl;
+
         row -= 1;
         col -= 1;    // Convert to 0-based
 
@@ -152,7 +154,7 @@ bool ReadComputationalDagMartixMarketFormat(std::ifstream &infile, GraphT &graph
 template <typename GraphT>
 bool ReadComputationalDagMartixMarketFormat(const std::string &filename, GraphT &graph) {
     // Ensure the file is .mtx format
-    if (std::filesystem::path(filename).extension() != ".mtx") {
+    if (std::filesystem::path(filename).extension() != ".mtx" && std::filesystem::path(filename).extension() != ".mtx2") {
         std::cerr << "Error: Only .mtx files are accepted.\n";
         return false;
     }

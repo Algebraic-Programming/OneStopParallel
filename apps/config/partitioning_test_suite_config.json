@@ -1,0 +1,30 @@
+{
+    "globalParameters": {
+        "timeLimit": 3600,
+        "graphDirectory": "graphs/",
+        "archDirectory": "machines/",
+        "outputStatsFile": "all_run_stats.csv",
+        "outputLogFile": "log.txt",
+        "outputSchedule": false
+    },
+    "algorithms": [
+        {
+            "name": "ILP",
+            "id" : "ILP",
+            "run" : true,
+            "parameters": {}
+        },
+        {
+            "name": "ILP_dupl",
+            "id" : "ILP_dupl",
+            "run" : true,
+            "parameters": {}
+        },
+        {
+            "name": "ILP_repl",
+            "id" : "ILP_repl",
+            "run" : true,
+            "parameters": {}
+        }
+    ]
+}
