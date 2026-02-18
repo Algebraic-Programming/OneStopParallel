@@ -19,6 +19,7 @@ limitations under the License.
 #pragma once
 
 #include <algorithm>
+#include <iostream>
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
@@ -332,6 +333,71 @@ struct MaxCommDatastructure {
         std::fill(stepProcSend_[step].begin(), stepProcSend_[step].end(), 0);
         std::fill(stepProcReceive_[step].begin(), stepProcReceive_[step].end(), 0);
         ArrangeSuperstepCommData(step);
+    }
+
+    /// Validate incremental send/recv against from-scratch recomputation.
+    /// Saves current incremental arrays, recomputes everything from scratch,
+    /// compares cell-by-cell, and prints diagnostics on divergence.
+    /// After return, the datastructure is in the from-scratch (correct) state
+    /// so each subsequent move is independently testable.
+    /// Returns true if incremental state matches from-scratch computation.
+    bool ValidateCommDs(unsigned moveCounter, const KlMove &move) {
+        const unsigned numSteps = static_cast<unsigned>(stepProcSend_.size());
+        const unsigned numProcs = numSteps > 0 ? static_cast<unsigned>(stepProcSend_[0].size()) : 0;
+
+        // 1. Snapshot the incremental state
+        auto savedSend = stepProcSend_;
+        auto savedRecv = stepProcReceive_;
+
+        // 2. Recompute from scratch (resets nodeLambdaMap_ + stepProcSend_/Receive_)
+        ComputeCommDatastructures(0, numSteps > 0 ? numSteps - 1 : 0);
+
+        // 3. Compare cell-by-cell
+        bool ok = true;
+        for (unsigned s = 0; s < numSteps; s++) {
+            for (unsigned p = 0; p < numProcs; p++) {
+                const bool sendMismatch = (savedSend[s][p] != stepProcSend_[s][p]);
+                const bool recvMismatch = (savedRecv[s][p] != stepProcReceive_[s][p]);
+                if (sendMismatch || recvMismatch) {
+                    if (ok) {
+                        // First divergence header
+                        std::cout << "\n========== COMM DS DIVERGENCE at move #" << moveCounter << ": node=" << move.node_ << " ("
+                                  << move.fromProc_ << "," << move.fromStep_ << ")"
+                                  << "->(" << move.toProc_ << "," << move.toStep_ << ")"
+                                  << " ==========" << std::endl;
+                    }
+                    ok = false;
+                    if (sendMismatch) {
+                        std::cout << "  SEND[step=" << s << "][proc=" << p << "]"
+                                  << "  incremental=" << savedSend[s][p] << "  from_scratch=" << stepProcSend_[s][p] << "  delta="
+                                  << (static_cast<long long>(savedSend[s][p]) - static_cast<long long>(stepProcSend_[s][p]))
+                                  << std::endl;
+                    }
+                    if (recvMismatch) {
+                        std::cout << "  RECV[step=" << s << "][proc=" << p << "]"
+                                  << "  incremental=" << savedRecv[s][p] << "  from_scratch=" << stepProcReceive_[s][p]
+                                  << "  delta="
+                                  << (static_cast<long long>(savedRecv[s][p]) - static_cast<long long>(stepProcReceive_[s][p]))
+                                  << std::endl;
+                    }
+                }
+            }
+        }
+
+        if (!ok) {
+            // Print full schedule snapshot for context
+            const auto &vecSched = activeSchedule_->GetVectorSchedule();
+            const auto &graph = instance_->GetComputationalDag();
+            std::cout << "  Schedule state (node -> proc,step):" << std::endl;
+            for (const auto &u : graph.Vertices()) {
+                std::cout << "    node " << u << " -> (P" << vecSched.AssignedProcessor(u) << ", S"
+                          << vecSched.AssignedSuperstep(u) << ")" << std::endl;
+            }
+            std::cout << "  ========== END DIVERGENCE ==========\n" << std::endl;
+        }
+
+        // State is now fresh-computed (correct) — next incremental update starts clean
+        return ok;
     }
 
     void ComputeCommDatastructures(unsigned startStep, unsigned endStep) {

@@ -15,7 +15,8 @@ limitations under the License.
 
 @author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
-#define KL_DEBUG_COST_CHECK
+// #define KL_DEBUG_COST_CHECK
+#define KL_DEBUG_VALIDATE_COMM_DS
 #pragma once
 
 #include <algorithm>
@@ -570,25 +571,25 @@ class KlImprover : public ImprovementScheduler<GraphT> {
 
     inline void DebugCostCheck([[maybe_unused]] const ThreadSearchContext &threadData) {
 #ifdef KL_DEBUG_COST_CHECK
-        activeSchedule_.GetVectorSchedule().numberOfSupersteps_ = threadDataVec_[0].NumSteps();
-        const CostT computedCost = commCostF_.ComputeScheduleCostTest();
-        const CostT currentCost = threadData.activeScheduleData_.cost_;
-        if (std::abs(computedCost - currentCost) > 0.00001) {
-            const size_t numViolations = threadData.activeScheduleData_.currentViolations_.size();
-            std::cout << "computed cost: " << computedCost << ", current cost: " << currentCost
-                      << ", violations: " << numViolations
-                      << ", feasible: " << (threadData.activeScheduleData_.feasible_ ? "true" : "false") << std::endl;
-            if (numViolations == 0) {
-                std::cout << ">>>>>>>>>>>>>>>>>>>>>> compute cost not equal to new cost <<<<<<<<<<<<<<<<<<<<" << std::endl;
-            } else {
-                std::cout << ">>>>>> [expected: violation penalty gap] <<<<<<" << std::endl;
-            }
-        }
-        if constexpr (ActiveScheduleT::useMemoryConstraint_) {
-            if (not activeSchedule_.memoryConstraint_.SatisfiedMemoryConstraint()) {
-                std::cout << "memory constraint not satisfied" << std::endl;
-            }
-        }
+        // activeSchedule_.GetVectorSchedule().numberOfSupersteps_ = threadDataVec_[0].NumSteps();
+        // const CostT computedCost = commCostF_.ComputeScheduleCostTest();
+        // const CostT currentCost = threadData.activeScheduleData_.cost_;
+        // if (std::abs(computedCost - currentCost) > 0.00001) {
+        //     const size_t numViolations = threadData.activeScheduleData_.currentViolations_.size();
+        //     std::cout << "computed cost: " << computedCost << ", current cost: " << currentCost
+        //               << ", violations: " << numViolations
+        //               << ", feasible: " << (threadData.activeScheduleData_.feasible_ ? "true" : "false") << std::endl;
+        //     if (numViolations == 0) {
+        //         std::cout << ">>>>>>>>>>>>>>>>>>>>>> compute cost not equal to new cost <<<<<<<<<<<<<<<<<<<<" << std::endl;
+        //     } else {
+        //         std::cout << ">>>>>> [expected: violation penalty gap] <<<<<<" << std::endl;
+        //     }
+        // }
+        // if constexpr (ActiveScheduleT::useMemoryConstraint_) {
+        //     if (not activeSchedule_.memoryConstraint_.SatisfiedMemoryConstraint()) {
+        //         std::cout << "memory constraint not satisfied" << std::endl;
+        //     }
+        // }
 #endif
     }
 

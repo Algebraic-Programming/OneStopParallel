@@ -58,7 +58,7 @@ _add_test( directed_graph_top_sort )
 
 _add_test( kl_util )
 
-#_add_test( kl_bsp_cost_policies )
+_add_test( kl_bsp_cost_policies )
 
 _add_test( kl_bsp_comm_cost )
 
