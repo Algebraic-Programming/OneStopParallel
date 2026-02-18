@@ -78,7 +78,9 @@ struct KlTotalCommCostFunction {
 
     void FixupSendRecvAfterStepRemoval(unsigned, unsigned) {}
 
-    void RecomputeAfterStepInsertion(unsigned, unsigned) {}
+    void UpdateLambdaAfterStepInsertion(unsigned) {}
+
+    void FixupSendRecvAfterStepInsertion(unsigned, unsigned, unsigned) {}
 
     CostT ComputeScheduleCost() {
         CostT workCosts = 0;

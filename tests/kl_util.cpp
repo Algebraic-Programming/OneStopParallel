@@ -409,6 +409,8 @@ BOOST_AUTO_TEST_CASE(ActiveScheduleRevertMovesTest) {
 
         void UpdateLambdaAfterStepRemoval(unsigned) {}
 
+        void FixupSendRecvAfterStepInsertion(unsigned insertedStep, unsigned startStep, unsigned endStep) {}
+
         void UpdateLambdaAfterStepInsertion(unsigned) {}
 
         void SwapCommSteps(unsigned, unsigned) {}
@@ -451,6 +453,8 @@ BOOST_AUTO_TEST_CASE(ActiveScheduleRevertToBestScheduleTest) {
         void UpdateDatastructureAfterMove(const KlMove &, unsigned, unsigned) {}
 
         void UpdateLambdaAfterStepRemoval(unsigned) {}
+
+        void FixupSendRecvAfterStepInsertion(unsigned insertedStep, unsigned startStep, unsigned endStep) {}
 
         void UpdateLambdaAfterStepInsertion(unsigned) {}
 
@@ -550,6 +554,8 @@ BOOST_AUTO_TEST_CASE(RevertRemoveStepSentinelRestoresEndStep) {
 
         void UpdateLambdaAfterStepRemoval(unsigned) {}
 
+        void FixupSendRecvAfterStepInsertion(unsigned insertedStep, unsigned startStep, unsigned endStep) {}
+
         void UpdateLambdaAfterStepInsertion(unsigned) {}
 
         void SwapCommSteps(unsigned, unsigned) {}
@@ -595,6 +601,8 @@ BOOST_AUTO_TEST_CASE(RevertPastRemoveStepSentinelRestoresStep) {
         void UpdateDatastructureAfterMove(const KlMove &, unsigned, unsigned) {}
 
         void UpdateLambdaAfterStepRemoval(unsigned) {}
+
+        void FixupSendRecvAfterStepInsertion(unsigned insertedStep, unsigned startStep, unsigned endStep) {}
 
         void UpdateLambdaAfterStepInsertion(unsigned) {}
 
@@ -642,6 +650,8 @@ BOOST_AUTO_TEST_CASE(RevertRemoveStepSentinelCallsSwapCommSteps) {
         void UpdateDatastructureAfterMove(const KlMove &, unsigned, unsigned) {}
 
         void UpdateLambdaAfterStepRemoval(unsigned) {}
+
+        void FixupSendRecvAfterStepInsertion(unsigned insertedStep, unsigned startStep, unsigned endStep) {}
 
         void UpdateLambdaAfterStepInsertion(unsigned) {}
 
@@ -693,6 +703,8 @@ BOOST_AUTO_TEST_CASE(RevertScheduleToBoundWithSentinel) {
         void UpdateDatastructureAfterMove(const KlMove &, unsigned, unsigned) {}
 
         void UpdateLambdaAfterStepRemoval(unsigned) {}
+
+        void FixupSendRecvAfterStepInsertion(unsigned insertedStep, unsigned startStep, unsigned endStep) {}
 
         void UpdateLambdaAfterStepInsertion(unsigned) {}
 

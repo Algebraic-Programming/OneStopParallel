@@ -540,16 +540,16 @@ struct MaxCommDatastructure {
     }
 
     /// After step removal, the SwapSteps loop bubbled the removed step's data to
-    /// oldEndStep (the last position). For Lazy/Buffered, the removed empty step
-    /// can carry comm data (from min(child_steps)-1 attribution). That data should
-    /// go to removedStep-1, not to the end. This method fixes up the arrays.
+    /// oldEndStep. For Lazy/Buffered, that empty step can carry comm data (from
+    /// min(child_steps)-1 attribution). Merge it into removedStep-1 (the new
+    /// correct position) but KEEP oldEndStep as a backup so that insertion can
+    /// reverse this merge in O(P).
     /// Call AFTER the SwapSteps loop and AFTER UpdateLambdaAfterStepRemoval.
     void FixupSendRecvAfterStepRemoval(unsigned removedStep, unsigned oldEndStep) {
         if constexpr (std::is_same_v<typename CommPolicy::ValueType, std::vector<unsigned>>) {
             if (removedStep == 0) {
-                // Edge case: comm at step 0 means min(child_steps)=1.
-                // After removal children shift to step 0, min-1 = -1: no comm.
-                // Just clear the data that was bubbled to oldEndStep.
+                // No position -1 to merge into. Clear backup — data is lost.
+                // Insertion at step 0 will need a full recompute (extremely rare).
                 std::fill(stepProcSend_[oldEndStep].begin(), stepProcSend_[oldEndStep].end(), 0);
                 std::fill(stepProcReceive_[oldEndStep].begin(), stepProcReceive_[oldEndStep].end(), 0);
                 ArrangeSuperstepCommData(oldEndStep);
@@ -559,23 +559,47 @@ struct MaxCommDatastructure {
             for (unsigned p = 0; p < numProcs; p++) {
                 stepProcSend_[removedStep - 1][p] += stepProcSend_[oldEndStep][p];
                 stepProcReceive_[removedStep - 1][p] += stepProcReceive_[oldEndStep][p];
-                stepProcSend_[oldEndStep][p] = 0;
-                stepProcReceive_[oldEndStep][p] = 0;
+                // DON'T clear oldEndStep — it serves as backup for insertion reversal
             }
             ArrangeSuperstepCommData(removedStep - 1);
-            ArrangeSuperstepCommData(oldEndStep);
         }
     }
 
-    /// After a step insertion (reverting a removal), the comm data that was moved
-    /// from removedStep to removedStep-1 during removal must be moved back.
-    /// This is harder to reverse surgically (we'd need to know which contributions
-    /// at removedStep-1 came from the removed step), so we do a full recompute
-    /// of lambda and send/recv from the current schedule state.
-    /// Step insertions only happen during RevertMoves, which is rare.
-    void RecomputeAfterStepInsertion(unsigned startStep, unsigned endStep) {
+    /// After a step insertion (reverting a removal), increment all lambda entries
+    /// >= insertedStep to match the new step numbering.
+    void UpdateLambdaAfterStepInsertion(unsigned insertedStep) {
         if constexpr (std::is_same_v<typename CommPolicy::ValueType, std::vector<unsigned>>) {
-            ComputeCommDatastructures(startStep, endStep);
+            for (auto &nodeEntries : nodeLambdaMap_.nodeLambdaVec_) {
+                for (auto &procEntry : nodeEntries) {
+                    for (auto &step : procEntry) {
+                        if (step >= insertedStep) {
+                            step++;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /// After step insertion, the SwapSteps loop brought the backup data from
+    /// beyond endStep back to position insertedStep. Position insertedStep-1
+    /// still has the merged data (original + backup from removal). Subtract
+    /// the backup to un-merge, restoring both positions to their correct state.
+    /// Call AFTER the SwapSteps loop and AFTER UpdateLambdaAfterStepInsertion.
+    void FixupSendRecvAfterStepInsertion(unsigned insertedStep, unsigned startStep, unsigned endStep) {
+        if constexpr (std::is_same_v<typename CommPolicy::ValueType, std::vector<unsigned>>) {
+            if (insertedStep == 0) {
+                // Backup was lost during removal (cleared). Full recompute needed.
+                ComputeCommDatastructures(startStep, endStep);
+                return;
+            }
+            const unsigned numProcs = stepProcSend_[0].size();
+            for (unsigned p = 0; p < numProcs; p++) {
+                stepProcSend_[insertedStep - 1][p] -= stepProcSend_[insertedStep][p];
+                stepProcReceive_[insertedStep - 1][p] -= stepProcReceive_[insertedStep][p];
+            }
+            ArrangeSuperstepCommData(insertedStep - 1);
+            ArrangeSuperstepCommData(insertedStep);
         }
     }
 

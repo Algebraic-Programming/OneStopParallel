@@ -124,7 +124,9 @@ struct KlHyperTotalCommCostFunction {
 
     void FixupSendRecvAfterStepRemoval(unsigned, unsigned) {}
 
-    void RecomputeAfterStepInsertion(unsigned, unsigned) {}
+    void UpdateLambdaAfterStepInsertion(unsigned) {}
+
+    void FixupSendRecvAfterStepInsertion(unsigned, unsigned, unsigned) {}
 
     inline void UpdateDatastructureAfterMove(const KlMove &move, const unsigned startStep, const unsigned endStep) {
         if (move.toProc_ != move.fromProc_) {
