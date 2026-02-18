@@ -95,7 +95,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
   protected:
     constexpr static unsigned windowRange_ = 2 * windowSize + 1;
     constexpr static bool enableQuickMoves_ = true;
-    constexpr static bool enablePreresolvingViolations_ = false;
+    constexpr static bool enablePreresolvingViolations_ = true;
     constexpr static double epsilon_ = 1e-9;
 
     using VertexMemWeightT = osp::VMemwT<GraphT>;

@@ -123,50 +123,47 @@ struct KlBspCommCostFunction {
     const std::vector<unsigned> &GetLastAffectedCommSteps() const { return commDs_.GetLastAffectedCommSteps(); }
 
     /// Check if any comm step that node's gain depends on is in changedSteps.
-    /// This covers steps outside the node's window that CalculateStepCostChange
-    /// would read: the node's outgoing comm steps (min(lambda[node][q])-1)
-    /// and its parents' comm steps (min(lambda[parent][q])-1) for all procs q.
+    ///
+    /// For Lazy/Buffered, CalculateDeltaRemove/Add produce deltas at positions
+    /// v-1 where v is ANY step value in a lambda entry (not just the minimum).
+    /// For example, CalculateDeltaRemove with val=[19,30,45] and nodeStep=19
+    /// produces deltas at step 18 (min-1) AND step 29 (nextMin-1).
+    ///
+    /// So the complete dependency set is: {v-1 : v ∈ lambda[N or parent][q]}.
+    /// We check if any of these fall in changedSteps.
     bool NodeCommDependsOnChangedSteps(VertexType node, const std::unordered_set<unsigned> &changedSteps) {
-        // Check node's own outgoing comm steps
-        for (const auto [proc, val] : commDs_.nodeLambdaMap_.IterateProcEntries(node)) {
-            if (CommPolicy::HasEntry(val)) {
-                int recvStep = CommPolicy::OutgoingRecvStep(0, val);
-                if (recvStep >= 0 && changedSteps.count(static_cast<unsigned>(recvStep))) {
-                    return true;
-                }
-                if constexpr (CommPolicy::outgoing_send_at_parent_step) {
-                    // Buffered: send at parent step — covered by window/position checks
-                } else {
-                    int sendStep = CommPolicy::OutgoingSendStep(0, val);
-                    if (sendStep >= 0 && sendStep != recvStep && changedSteps.count(static_cast<unsigned>(sendStep))) {
-                        return true;
-                    }
-                }
-            }
-        }
-        // Check parents' comm steps to all procs
-        const auto &graph = instance_->GetComputationalDag();
-        for (const auto &parent : graph.Parents(node)) {
-            const unsigned parentStep = activeSchedule_->AssignedSuperstep(parent);
-            for (const auto [proc, val] : commDs_.nodeLambdaMap_.IterateProcEntries(parent)) {
-                if (CommPolicy::HasEntry(val)) {
-                    int recvStep = CommPolicy::OutgoingRecvStep(parentStep, val);
-                    if (recvStep >= 0 && changedSteps.count(static_cast<unsigned>(recvStep))) {
-                        return true;
-                    }
-                    if constexpr (CommPolicy::outgoing_send_at_parent_step) {
-                        // Buffered: send at parentStep — already in changedSteps
-                        // if parent position is there
-                    } else {
-                        int sendStep = CommPolicy::OutgoingSendStep(parentStep, val);
-                        if (sendStep >= 0 && sendStep != recvStep && changedSteps.count(static_cast<unsigned>(sendStep))) {
+        // For Eager (ValueType=unsigned, just a count): comm is always at node
+        // steps, fully covered by window and parent-position checks.
+        if constexpr (std::is_same_v<typename CommPolicy::ValueType, unsigned>) {
+            return false;
+        } else {
+            // For Lazy/Buffered (ValueType=vector<unsigned>): check if any
+            // step value v in any lambda entry has (v-1) in changedSteps.
+            auto checkLambda = [&](VertexType n) -> bool {
+                for (const auto [proc, val] : commDs_.nodeLambdaMap_.IterateProcEntries(n)) {
+                    for (unsigned v : val) {
+                        if (v > 0 && changedSteps.count(v - 1)) {
                             return true;
                         }
                     }
                 }
+                return false;
+            };
+
+            // Check node's own outgoing comm steps
+            if (checkLambda(node)) {
+                return true;
             }
+
+            // Check all parents' comm steps
+            const auto &graph = instance_->GetComputationalDag();
+            for (const auto &parent : graph.Parents(node)) {
+                if (checkLambda(parent)) {
+                    return true;
+                }
+            }
+            return false;
         }
-        return false;
     }
 
     void UpdateLambdaAfterStepRemoval(unsigned removedStep) { commDs_.UpdateLambdaAfterStepRemoval(removedStep); }
