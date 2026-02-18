@@ -118,7 +118,13 @@ struct KlBspCommCostFunction {
 
     void UpdateLambdaAfterStepRemoval(unsigned removedStep) { commDs_.UpdateLambdaAfterStepRemoval(removedStep); }
 
-    void UpdateLambdaAfterStepInsertion(unsigned insertedStep) { commDs_.UpdateLambdaAfterStepInsertion(insertedStep); }
+    void FixupSendRecvAfterStepRemoval(unsigned removedStep, unsigned oldEndStep) {
+        commDs_.FixupSendRecvAfterStepRemoval(removedStep, oldEndStep);
+    }
+
+    void RecomputeAfterStepInsertion(unsigned startStep, unsigned endStep) {
+        commDs_.RecomputeAfterStepInsertion(startStep, endStep);
+    }
 
     // Structure to hold thread-local scratchpads to avoid re-allocation.
     struct ScratchData {

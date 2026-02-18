@@ -334,6 +334,13 @@ struct MaxCommDatastructure {
         const auto &graph = instance_->GetComputationalDag();
         const auto &vecSched = activeSchedule_->GetVectorSchedule();
 
+        // Determine active step range (max step any node is assigned to)
+        unsigned activeEndStep = 0;
+        for (const auto &u : graph.Vertices()) {
+            activeEndStep = std::max(activeEndStep, vecSched.AssignedSuperstep(u));
+        }
+        const unsigned compareSteps = activeEndStep + 1;
+
         // 1. Snapshot the incremental state (send/recv + lambda)
         auto savedSend = stepProcSend_;
         auto savedRecv = stepProcReceive_;
@@ -366,11 +373,11 @@ struct MaxCommDatastructure {
         }
 
         // 2. Recompute from scratch (resets nodeLambdaMap_ + stepProcSend_/Receive_)
-        ComputeCommDatastructures(0, numSteps > 0 ? numSteps - 1 : 0);
+        ComputeCommDatastructures(0, activeEndStep);
 
-        // 3. Compare send/recv cell-by-cell
+        // 3. Compare send/recv cell-by-cell (active range only)
         bool sendRecvOk = true;
-        for (unsigned s = 0; s < numSteps; s++) {
+        for (unsigned s = 0; s < compareSteps; s++) {
             for (unsigned p = 0; p < numProcs; p++) {
                 if (savedSend[s][p] != stepProcSend_[s][p] || savedRecv[s][p] != stepProcReceive_[s][p]) {
                     sendRecvOk = false;
@@ -432,12 +439,13 @@ struct MaxCommDatastructure {
             std::cout << "\n========== COMM DS DIVERGENCE at move #" << moveCounter << ": node=" << move.node_ << " ("
                       << move.fromProc_ << "," << move.fromStep_ << ")"
                       << "->(" << move.toProc_ << "," << move.toStep_ << ")"
-                      << "  sendRecvOk=" << sendRecvOk << " lambdaOk=" << lambdaOk << " ==========" << std::endl;
+                      << "  sendRecvOk=" << sendRecvOk << " lambdaOk=" << lambdaOk << " activeSteps=0.." << activeEndStep
+                      << " arraySize=" << numSteps << " ==========" << std::endl;
 
             // Print send/recv divergences
             if (!sendRecvOk) {
                 std::cout << "  --- Send/Recv mismatches ---" << std::endl;
-                for (unsigned s = 0; s < numSteps; s++) {
+                for (unsigned s = 0; s < compareSteps; s++) {
                     for (unsigned p = 0; p < numProcs; p++) {
                         if (savedSend[s][p] != stepProcSend_[s][p]) {
                             std::cout << "  SEND[s=" << s << "][p=" << p << "]"
@@ -531,20 +539,43 @@ struct MaxCommDatastructure {
         }
     }
 
-    /// After a step insertion (bubble empty step backward to insertedStep),
-    /// all nodes that were at step S >= insertedStep are now at step S+1.
-    /// Update lambda entries to match the new step numbering.
-    void UpdateLambdaAfterStepInsertion(unsigned insertedStep) {
+    /// After step removal, the SwapSteps loop bubbled the removed step's data to
+    /// oldEndStep (the last position). For Lazy/Buffered, the removed empty step
+    /// can carry comm data (from min(child_steps)-1 attribution). That data should
+    /// go to removedStep-1, not to the end. This method fixes up the arrays.
+    /// Call AFTER the SwapSteps loop and AFTER UpdateLambdaAfterStepRemoval.
+    void FixupSendRecvAfterStepRemoval(unsigned removedStep, unsigned oldEndStep) {
         if constexpr (std::is_same_v<typename CommPolicy::ValueType, std::vector<unsigned>>) {
-            for (auto &nodeEntries : nodeLambdaMap_.nodeLambdaVec_) {
-                for (auto &procEntry : nodeEntries) {
-                    for (auto &step : procEntry) {
-                        if (step >= insertedStep) {
-                            step++;
-                        }
-                    }
-                }
+            if (removedStep == 0) {
+                // Edge case: comm at step 0 means min(child_steps)=1.
+                // After removal children shift to step 0, min-1 = -1: no comm.
+                // Just clear the data that was bubbled to oldEndStep.
+                std::fill(stepProcSend_[oldEndStep].begin(), stepProcSend_[oldEndStep].end(), 0);
+                std::fill(stepProcReceive_[oldEndStep].begin(), stepProcReceive_[oldEndStep].end(), 0);
+                ArrangeSuperstepCommData(oldEndStep);
+                return;
             }
+            const unsigned numProcs = stepProcSend_[0].size();
+            for (unsigned p = 0; p < numProcs; p++) {
+                stepProcSend_[removedStep - 1][p] += stepProcSend_[oldEndStep][p];
+                stepProcReceive_[removedStep - 1][p] += stepProcReceive_[oldEndStep][p];
+                stepProcSend_[oldEndStep][p] = 0;
+                stepProcReceive_[oldEndStep][p] = 0;
+            }
+            ArrangeSuperstepCommData(removedStep - 1);
+            ArrangeSuperstepCommData(oldEndStep);
+        }
+    }
+
+    /// After a step insertion (reverting a removal), the comm data that was moved
+    /// from removedStep to removedStep-1 during removal must be moved back.
+    /// This is harder to reverse surgically (we'd need to know which contributions
+    /// at removedStep-1 came from the removed step), so we do a full recompute
+    /// of lambda and send/recv from the current schedule state.
+    /// Step insertions only happen during RevertMoves, which is rare.
+    void RecomputeAfterStepInsertion(unsigned startStep, unsigned endStep) {
+        if constexpr (std::is_same_v<typename CommPolicy::ValueType, std::vector<unsigned>>) {
+            ComputeCommDatastructures(startStep, endStep);
         }
     }
 

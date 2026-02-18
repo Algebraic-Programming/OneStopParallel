@@ -448,7 +448,7 @@ class KlActiveSchedule {
                 for (unsigned i = endStep; i > move.fromStep_; i--) {
                     commDatastructures.SwapCommSteps(i - 1, i);
                 }
-                commDatastructures.UpdateLambdaAfterStepInsertion(move.fromStep_);
+                commDatastructures.RecomputeAfterStepInsertion(startStep, endStep);
                 continue;
             }
 

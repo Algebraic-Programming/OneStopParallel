@@ -179,13 +179,14 @@ class KlImproverTest : public KlImprover<GraphT, CommCostFunctionT, MemoryConstr
     /// Bubble the empty step at position @p step forward to endStep and
     /// decrement endStep.
     void SwapEmptyStepFwdTest(unsigned step) {
-        unsigned endStep = this->threadDataVec_[0].endStep_;
-        this->activeSchedule_.SwapEmptyStepFwd(step, endStep);
-        for (unsigned i = step; i < endStep; i++) {
+        unsigned oldEndStep = this->threadDataVec_[0].endStep_;
+        this->activeSchedule_.SwapEmptyStepFwd(step, oldEndStep);
+        for (unsigned i = step; i < oldEndStep; i++) {
             this->commCostF_.SwapCommSteps(i, i + 1);
         }
-        this->commCostF_.UpdateLambdaAfterStepRemoval(step);
         this->threadDataVec_[0].endStep_--;
+        this->commCostF_.UpdateLambdaAfterStepRemoval(step);
+        this->commCostF_.FixupSendRecvAfterStepRemoval(step, oldEndStep);
     }
 
     /// Push a REMOVE_STEP sentinel into appliedMoves_ after the step has
