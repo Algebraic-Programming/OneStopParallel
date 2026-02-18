@@ -184,6 +184,7 @@ class KlImproverTest : public KlImprover<GraphT, CommCostFunctionT, MemoryConstr
         for (unsigned i = step; i < endStep; i++) {
             this->commCostF_.SwapCommSteps(i, i + 1);
         }
+        this->commCostF_.UpdateLambdaAfterStepRemoval(step);
         this->threadDataVec_[0].endStep_--;
     }
 

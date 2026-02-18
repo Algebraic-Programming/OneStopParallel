@@ -74,6 +74,10 @@ struct KlTotalCommCostFunction {
 
     void SwapCommSteps(unsigned, unsigned) {}
 
+    void UpdateLambdaAfterStepRemoval(unsigned) {}
+
+    void UpdateLambdaAfterStepInsertion(unsigned) {}
+
     CostT ComputeScheduleCost() {
         CostT workCosts = 0;
         for (unsigned step = 0; step < activeSchedule_->NumSteps(); step++) {

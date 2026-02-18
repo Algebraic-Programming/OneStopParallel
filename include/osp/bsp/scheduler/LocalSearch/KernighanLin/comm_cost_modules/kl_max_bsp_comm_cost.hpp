@@ -107,6 +107,41 @@ struct KlMaxBspCommCostFunction {
 
     void SwapCommSteps(unsigned step1, unsigned step2) { commDs_.SwapSteps(step1, step2); }
 
+    /// After a step removal (bubble empty step forward from removedStep to endStep),
+    /// all nodes that were at step S > removedStep are now at step S-1.
+    /// Update lambda entries to match the new step numbering.
+    /// Only needed for policies that store step values (Lazy, Buffered).
+    void UpdateLambdaAfterStepRemoval(unsigned removedStep) {
+        if constexpr (std::is_same_v<typename CommPolicy::ValueType, std::vector<unsigned>>) {
+            for (auto &nodeEntries : nodeLambdaMap_.nodeLambdaVec_) {
+                for (auto &procEntry : nodeEntries) {
+                    for (auto &step : procEntry) {
+                        if (step > removedStep) {
+                            step--;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /// After a step insertion (bubble empty step backward to insertedStep),
+    /// all nodes that were at step S >= insertedStep are now at step S+1.
+    /// Update lambda entries to match the new step numbering.
+    void UpdateLambdaAfterStepInsertion(unsigned insertedStep) {
+        if constexpr (std::is_same_v<typename CommPolicy::ValueType, std::vector<unsigned>>) {
+            for (auto &nodeEntries : nodeLambdaMap_.nodeLambdaVec_) {
+                for (auto &procEntry : nodeEntries) {
+                    for (auto &step : procEntry) {
+                        if (step >= insertedStep) {
+                            step++;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     // Structure to hold thread-local scratchpads to avoid re-allocation.
     struct ScratchData {
         std::vector<FastDeltaTracker<CommWeightT>> send_deltas;    // Size: num_steps

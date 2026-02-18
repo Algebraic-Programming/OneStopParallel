@@ -120,6 +120,10 @@ struct KlHyperTotalCommCostFunction {
 
     void SwapCommSteps(unsigned, unsigned) {}
 
+    void UpdateLambdaAfterStepRemoval(unsigned) {}
+
+    void UpdateLambdaAfterStepInsertion(unsigned) {}
+
     inline void UpdateDatastructureAfterMove(const KlMove &move, const unsigned startStep, const unsigned endStep) {
         if (move.toProc_ != move.fromProc_) {
             for (const auto &source : instance_->GetComputationalDag().Parents(move.node_)) {

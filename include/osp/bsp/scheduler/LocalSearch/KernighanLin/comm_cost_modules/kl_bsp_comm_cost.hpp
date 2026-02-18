@@ -20,7 +20,6 @@ limitations under the License.
 
 #include <algorithm>
 #include <array>
-#include <iostream>
 
 #include "../kl_active_schedule.hpp"
 #include "../kl_improver.hpp"
@@ -116,6 +115,10 @@ struct KlBspCommCostFunction {
     }
 
     void SwapCommSteps(unsigned step1, unsigned step2) { commDs_.SwapSteps(step1, step2); }
+
+    void UpdateLambdaAfterStepRemoval(unsigned removedStep) { commDs_.UpdateLambdaAfterStepRemoval(removedStep); }
+
+    void UpdateLambdaAfterStepInsertion(unsigned insertedStep) { commDs_.UpdateLambdaAfterStepInsertion(insertedStep); }
 
     // Structure to hold thread-local scratchpads to avoid re-allocation.
     struct ScratchData {

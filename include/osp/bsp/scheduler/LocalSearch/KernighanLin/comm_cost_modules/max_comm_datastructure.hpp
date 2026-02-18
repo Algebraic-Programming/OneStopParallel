@@ -19,7 +19,6 @@ limitations under the License.
 #pragma once
 
 #include <algorithm>
-#include <iostream>
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
@@ -318,6 +317,41 @@ struct MaxCommDatastructure {
         // Re-arrange Affected Steps
         for (unsigned step : affectedStepsList_) {
             ArrangeSuperstepCommData(step);
+        }
+    }
+
+    /// After a step removal (bubble empty step forward from removedStep to endStep),
+    /// all nodes that were at step S > removedStep are now at step S-1.
+    /// Update lambda entries to match the new step numbering.
+    /// Only needed for policies that store step values (Lazy, Buffered).
+    void UpdateLambdaAfterStepRemoval(unsigned removedStep) {
+        if constexpr (std::is_same_v<typename CommPolicy::ValueType, std::vector<unsigned>>) {
+            for (auto &nodeEntries : nodeLambdaMap_.nodeLambdaVec_) {
+                for (auto &procEntry : nodeEntries) {
+                    for (auto &step : procEntry) {
+                        if (step > removedStep) {
+                            step--;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /// After a step insertion (bubble empty step backward to insertedStep),
+    /// all nodes that were at step S >= insertedStep are now at step S+1.
+    /// Update lambda entries to match the new step numbering.
+    void UpdateLambdaAfterStepInsertion(unsigned insertedStep) {
+        if constexpr (std::is_same_v<typename CommPolicy::ValueType, std::vector<unsigned>>) {
+            for (auto &nodeEntries : nodeLambdaMap_.nodeLambdaVec_) {
+                for (auto &procEntry : nodeEntries) {
+                    for (auto &step : procEntry) {
+                        if (step >= insertedStep) {
+                            step++;
+                        }
+                    }
+                }
+            }
         }
     }
 

@@ -407,6 +407,10 @@ BOOST_AUTO_TEST_CASE(ActiveScheduleRevertMovesTest) {
     struct DummyCommDs {
         void UpdateDatastructureAfterMove(const KlMove &, unsigned, unsigned) {}
 
+        void UpdateLambdaAfterStepRemoval(unsigned) {}
+
+        void UpdateLambdaAfterStepInsertion(unsigned) {}
+
         void SwapCommSteps(unsigned, unsigned) {}
     } commDs;
 
@@ -445,6 +449,10 @@ BOOST_AUTO_TEST_CASE(ActiveScheduleRevertToBestScheduleTest) {
 
     struct DummyCommDs {
         void UpdateDatastructureAfterMove(const KlMove &, unsigned, unsigned) {}
+
+        void UpdateLambdaAfterStepRemoval(unsigned) {}
+
+        void UpdateLambdaAfterStepInsertion(unsigned) {}
 
         void SwapCommSteps(unsigned, unsigned) {}
     } commDs;
@@ -540,6 +548,10 @@ BOOST_AUTO_TEST_CASE(RevertRemoveStepSentinelRestoresEndStep) {
     struct DummyCommDs {
         void UpdateDatastructureAfterMove(const KlMove &, unsigned, unsigned) {}
 
+        void UpdateLambdaAfterStepRemoval(unsigned) {}
+
+        void UpdateLambdaAfterStepInsertion(unsigned) {}
+
         void SwapCommSteps(unsigned, unsigned) {}
     } commDs;
 
@@ -581,6 +593,10 @@ BOOST_AUTO_TEST_CASE(RevertPastRemoveStepSentinelRestoresStep) {
 
     struct DummyCommDs {
         void UpdateDatastructureAfterMove(const KlMove &, unsigned, unsigned) {}
+
+        void UpdateLambdaAfterStepRemoval(unsigned) {}
+
+        void UpdateLambdaAfterStepInsertion(unsigned) {}
 
         void SwapCommSteps(unsigned, unsigned) {}
     } commDs;
@@ -624,6 +640,10 @@ BOOST_AUTO_TEST_CASE(RevertRemoveStepSentinelCallsSwapCommSteps) {
         std::vector<std::pair<unsigned, unsigned>> swapCalls_;
 
         void UpdateDatastructureAfterMove(const KlMove &, unsigned, unsigned) {}
+
+        void UpdateLambdaAfterStepRemoval(unsigned) {}
+
+        void UpdateLambdaAfterStepInsertion(unsigned) {}
 
         void SwapCommSteps(unsigned step1, unsigned step2) { swapCalls_.emplace_back(step1, step2); }
     } commDs;
@@ -671,6 +691,10 @@ BOOST_AUTO_TEST_CASE(RevertScheduleToBoundWithSentinel) {
     // RevertScheduleToBound to bound=1 (after first move only)
     struct DummyCommDs {
         void UpdateDatastructureAfterMove(const KlMove &, unsigned, unsigned) {}
+
+        void UpdateLambdaAfterStepRemoval(unsigned) {}
+
+        void UpdateLambdaAfterStepInsertion(unsigned) {}
 
         void SwapCommSteps(unsigned, unsigned) {}
     } commDs;

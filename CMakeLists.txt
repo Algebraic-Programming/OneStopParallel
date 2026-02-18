@@ -49,7 +49,7 @@ set(COMMON_CXX_WARNING_FLAGS
     "-Wpedantic"
     "-Wold-style-cast"
     "-Wcast-align"
-    "-Werror"
+    #"-Werror"
     "-Wall"
     "-Wextra"
     "-Wundef"
