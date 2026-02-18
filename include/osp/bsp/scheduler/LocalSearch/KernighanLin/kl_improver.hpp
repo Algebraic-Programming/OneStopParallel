@@ -15,8 +15,8 @@ limitations under the License.
 
 @author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
-#define KL_DEBUG_COST_CHECK
-#define KL_DEBUG_VALIDATE_COMM_DS
+// #define KL_DEBUG_COST_CHECK
+// #define KL_DEBUG_VALIDATE_COMM_DS
 #pragma once
 
 #include <algorithm>
