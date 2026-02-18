@@ -99,6 +99,12 @@ struct MaxCommDatastructure {
 
     inline unsigned StepMaxCommCount(unsigned step) const { return stepMaxCommCountCache_[step]; }
 
+    /// Returns the list of steps where send/recv arrays were modified by the last
+    /// UpdateDatastructureAfterMove call.  For Lazy/Buffered policies these include
+    /// the min(child_steps)-1 steps where communication is actually placed, which
+    /// may differ from the node positions used by the higher-level changedSteps set.
+    inline const std::vector<unsigned> &GetLastAffectedCommSteps() const { return affectedStepsList_; }
+
     inline void Initialize(KlActiveScheduleT &klSched) {
         activeSchedule_ = &klSched;
         instance_ = &activeSchedule_->GetInstance();

@@ -107,6 +107,8 @@ struct KlMaxBspCommCostFunction {
 
     void SwapCommSteps(unsigned step1, unsigned step2) { commDs_.SwapSteps(step1, step2); }
 
+    auto StepMaxComm(unsigned step) const { return commDs_.StepMaxComm(step); }
+
     /// After a step removal (bubble empty step forward from removedStep to endStep),
     /// all nodes that were at step S > removedStep are now at step S-1.
     /// Update lambda entries to match the new step numbering.

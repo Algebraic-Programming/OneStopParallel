@@ -120,6 +120,8 @@ struct KlHyperTotalCommCostFunction {
 
     void SwapCommSteps(unsigned, unsigned) {}
 
+    auto StepMaxComm(unsigned) const { return 0; }
+
     void UpdateLambdaAfterStepRemoval(unsigned) {}
 
     void FixupSendRecvAfterStepRemoval(unsigned, unsigned) {}

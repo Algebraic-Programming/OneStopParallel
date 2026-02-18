@@ -116,6 +116,59 @@ struct KlBspCommCostFunction {
 
     void SwapCommSteps(unsigned step1, unsigned step2) { commDs_.SwapSteps(step1, step2); }
 
+    auto StepMaxComm(unsigned step) const { return commDs_.StepMaxComm(step); }
+
+    /// Returns the steps where send/recv arrays changed during the last move.
+    /// For Lazy/Buffered, these include the min(child_steps)-1 comm steps.
+    const std::vector<unsigned> &GetLastAffectedCommSteps() const { return commDs_.GetLastAffectedCommSteps(); }
+
+    /// Check if any comm step that node's gain depends on is in changedSteps.
+    /// This covers steps outside the node's window that CalculateStepCostChange
+    /// would read: the node's outgoing comm steps (min(lambda[node][q])-1)
+    /// and its parents' comm steps (min(lambda[parent][q])-1) for all procs q.
+    bool NodeCommDependsOnChangedSteps(VertexType node, const std::unordered_set<unsigned> &changedSteps) {
+        // Check node's own outgoing comm steps
+        for (const auto [proc, val] : commDs_.nodeLambdaMap_.IterateProcEntries(node)) {
+            if (CommPolicy::HasEntry(val)) {
+                int recvStep = CommPolicy::OutgoingRecvStep(0, val);
+                if (recvStep >= 0 && changedSteps.count(static_cast<unsigned>(recvStep))) {
+                    return true;
+                }
+                if constexpr (CommPolicy::outgoing_send_at_parent_step) {
+                    // Buffered: send at parent step — covered by window/position checks
+                } else {
+                    int sendStep = CommPolicy::OutgoingSendStep(0, val);
+                    if (sendStep >= 0 && sendStep != recvStep && changedSteps.count(static_cast<unsigned>(sendStep))) {
+                        return true;
+                    }
+                }
+            }
+        }
+        // Check parents' comm steps to all procs
+        const auto &graph = instance_->GetComputationalDag();
+        for (const auto &parent : graph.Parents(node)) {
+            const unsigned parentStep = activeSchedule_->AssignedSuperstep(parent);
+            for (const auto [proc, val] : commDs_.nodeLambdaMap_.IterateProcEntries(parent)) {
+                if (CommPolicy::HasEntry(val)) {
+                    int recvStep = CommPolicy::OutgoingRecvStep(parentStep, val);
+                    if (recvStep >= 0 && changedSteps.count(static_cast<unsigned>(recvStep))) {
+                        return true;
+                    }
+                    if constexpr (CommPolicy::outgoing_send_at_parent_step) {
+                        // Buffered: send at parentStep — already in changedSteps
+                        // if parent position is there
+                    } else {
+                        int sendStep = CommPolicy::OutgoingSendStep(parentStep, val);
+                        if (sendStep >= 0 && sendStep != recvStep && changedSteps.count(static_cast<unsigned>(sendStep))) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     void UpdateLambdaAfterStepRemoval(unsigned removedStep) { commDs_.UpdateLambdaAfterStepRemoval(removedStep); }
 
     void FixupSendRecvAfterStepRemoval(unsigned removedStep, unsigned oldEndStep) {

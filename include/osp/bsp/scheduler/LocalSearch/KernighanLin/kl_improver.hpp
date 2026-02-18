@@ -15,8 +15,8 @@ limitations under the License.
 
 @author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
-// #define KL_DEBUG_COST_CHECK
-// #define KL_DEBUG_VALIDATE_COMM_DS
+#define KL_DEBUG_COST_CHECK
+#define KL_DEBUG_VALIDATE_COMM_DS
 #pragma once
 
 #include <algorithm>
@@ -94,7 +94,7 @@ class KlImprover : public ImprovementScheduler<GraphT> {
 
   protected:
     constexpr static unsigned windowRange_ = 2 * windowSize + 1;
-    constexpr static bool enableQuickMoves_ = false;
+    constexpr static bool enableQuickMoves_ = true;
     constexpr static bool enablePreresolvingViolations_ = false;
     constexpr static double epsilon_ = 1e-9;
 
@@ -595,16 +595,33 @@ class KlImprover : public ImprovementScheduler<GraphT> {
 
     inline CostT ApplyMove(KlMove move, ThreadSearchContext &threadData) {
 #ifdef KL_DEBUG_COST_CHECK
-        // Measure TRUE cost before move (from arrays, no violations)
-        activeSchedule_.GetVectorSchedule().numberOfSupersteps_ = threadDataVec_[0].NumSteps();
-        const CostT costBeforeMove = commCostF_.ComputeScheduleCostTest();
+        // Measure TRUE cost before move — separate work and comm per step
+        activeSchedule_.GetVectorSchedule().numberOfSupersteps_ = threadData.NumSteps();
+        const unsigned numStepsCheck = threadData.NumSteps();
+        static thread_local std::vector<double> perStepCommBefore;
+        static thread_local std::vector<double> perStepWorkBefore;
+        perStepCommBefore.resize(numStepsCheck);
+        perStepWorkBefore.resize(numStepsCheck);
+        CostT workBefore = 0, commBefore = 0;
+        for (unsigned step = 0; step < numStepsCheck; step++) {
+            perStepWorkBefore[step] = activeSchedule_.GetStepMaxWork(step);
+            perStepCommBefore[step] = commCostF_.StepMaxComm(step);
+            workBefore += perStepWorkBefore[step];
+            commBefore += perStepCommBefore[step];
+        }
 #endif
         activeSchedule_.ApplyMove(move, threadData.activeScheduleData_);
         commCostF_.UpdateDatastructureAfterMove(move, threadData.startStep_, threadData.endStep_);
 #ifdef KL_DEBUG_COST_CHECK
-        // Measure TRUE cost after move (from updated arrays)
-        const CostT costAfterMove = commCostF_.ComputeScheduleCostTest();
-        const CostT actualDelta = costAfterMove - costBeforeMove;
+        // Measure TRUE cost after move
+        CostT workAfter = 0, commAfter = 0;
+        for (unsigned step = 0; step < numStepsCheck; step++) {
+            workAfter += activeSchedule_.GetStepMaxWork(step);
+            commAfter += commCostF_.StepMaxComm(step);
+        }
+        const CostT actualWorkDelta = workAfter - workBefore;
+        const CostT actualCommDelta = (commAfter - commBefore) * instance_->CommunicationCosts();
+        const CostT actualDelta = actualWorkDelta + actualCommDelta;
 #endif
         CostT changeInCost = -move.gain_;
         changeInCost += static_cast<CostT>(threadData.activeScheduleData_.resolvedViolations_.size())
@@ -613,21 +630,51 @@ class KlImprover : public ImprovementScheduler<GraphT> {
             -= static_cast<CostT>(threadData.activeScheduleData_.newViolations_.size()) * threadData.rewardPenaltyStrat_.penalty_;
 
 #ifdef KL_DEBUG_COST_CHECK
-        // changeInCost is the PURE cost prediction (violations extracted from gain)
         if (std::abs(actualDelta - changeInCost) > 0.00001) {
             static unsigned gainDivergenceCount = 0;
             gainDivergenceCount++;
             if (gainDivergenceCount <= 10) {
                 std::cout << "\n[GAIN DIVERGENCE #" << gainDivergenceCount << "] "
-                          << "node=" << move.node_ << " (" << move.fromProc_ << "," << move.fromStep_ << ")"
-                          << " -> (" << move.toProc_ << "," << move.toStep_ << ")"
+                          << "node=" << move.node_ << " (" << move.fromProc_ << ",S" << move.fromStep_ << ")"
+                          << " -> (" << move.toProc_ << ",S" << move.toStep_ << ")"
                           << "\n  gain=" << move.gain_ << " purePredicted=" << changeInCost << " actualDelta=" << actualDelta
-                          << " error=" << (actualDelta - changeInCost) << "\n  costBefore=" << costBeforeMove
-                          << " costAfter=" << costAfterMove
+                          << " error=" << (actualDelta - changeInCost) << "\n  workDelta=" << actualWorkDelta
+                          << " commDelta=" << actualCommDelta << " commCosts=" << instance_->CommunicationCosts()
+                          << " rawCommDelta=" << (commAfter - commBefore)
                           << "\n  newViolations=" << threadData.activeScheduleData_.newViolations_.size()
                           << " resolvedViolations=" << threadData.activeScheduleData_.resolvedViolations_.size()
                           << " penalty=" << threadData.rewardPenaltyStrat_.penalty_
                           << " reward=" << threadData.rewardPenaltyStrat_.reward_ << std::endl;
+                // Per-step comm max changes
+                std::cout << "  Per-step comm changes:" << std::endl;
+                for (unsigned s = 0; s < numStepsCheck; s++) {
+                    double csAfter = commCostF_.StepMaxComm(s);
+                    if (std::abs(csAfter - perStepCommBefore[s]) > 0.00001) {
+                        std::cout << "    step " << s << ": commMax " << perStepCommBefore[s] << " -> " << csAfter
+                                  << " (delta=" << (csAfter - perStepCommBefore[s]) << ")" << std::endl;
+                    }
+                }
+                // Per-step work changes
+                for (unsigned s = 0; s < numStepsCheck; s++) {
+                    double wsAfter = activeSchedule_.GetStepMaxWork(s);
+                    if (std::abs(wsAfter - perStepWorkBefore[s]) > 0.00001) {
+                        std::cout << "    step " << s << ": maxWork " << perStepWorkBefore[s] << " -> " << wsAfter
+                                  << " (delta=" << (wsAfter - perStepWorkBefore[s]) << ")" << std::endl;
+                    }
+                }
+                // Parent/child context
+                const auto &graph = instance_->GetComputationalDag();
+                std::cout << "  Parents:";
+                for (const auto &p : graph.Parents(move.node_)) {
+                    std::cout << " " << p << "(P" << activeSchedule_.AssignedProcessor(p) << ",S"
+                              << activeSchedule_.AssignedSuperstep(p) << ",cw=" << graph.VertexCommWeight(p) << ")";
+                }
+                std::cout << "\n  Children:";
+                for (const auto &c : graph.Children(move.node_)) {
+                    std::cout << " " << c << "(P" << activeSchedule_.AssignedProcessor(c) << ",S"
+                              << activeSchedule_.AssignedSuperstep(c) << ")";
+                }
+                std::cout << "\n  Node commW=" << graph.VertexCommWeight(move.node_) << std::endl;
             }
         }
 #endif
@@ -1089,11 +1136,25 @@ class KlImprover : public ImprovementScheduler<GraphT> {
                 changedSteps.insert(activeSchedule_.AssignedSuperstep(child));
             }
 
+            // For Lazy/Buffered policies, communication is placed at min(child_steps)-1,
+            // which can differ from the node positions above.  Include the actual steps
+            // where send/recv arrays were modified so that nodes whose gain predictions
+            // depend on those steps get recomputed.
+            for (unsigned commStep : commCostF_.GetLastAffectedCommSteps()) {
+                changedSteps.insert(commStep);
+            }
+
             // Recompute affinities for active nodes that are affected by the move.
             // A node needs recomputation if:
             //  1. Its window overlaps a changed step (work + outgoing comm deltas)
             //  2. It has a parent at a changed step (incoming comm deltas via
             //     CalculateStepCostChange at parent steps outside the window)
+            //  3. Any comm step that its gain depends on changed.
+            //     For Lazy/Buffered, comm is at min(child_steps)-1 which can be
+            //     far from any node position.  The gain reads CalculateStepCostChange
+            //     at these steps, so if send/recv changed there, the gain is stale.
+            //     This covers: node's outgoing comm steps (min(lambda[N][q])-1)
+            //     and parents' comm steps (min(lambda[P][q])-1) for all procs q.
             const size_t activeCount = threadData.affinityTable_.size();
             for (size_t i = 0; i < activeCount; ++i) {
                 const VertexType node = threadData.affinityTable_.GetSelectedNodes()[i];
@@ -1102,12 +1163,14 @@ class KlImprover : public ImprovementScheduler<GraphT> {
                 const unsigned nodeUpperBound = nodeStep + windowSize;
 
                 bool needsUpdate = false;
+                // Check 1: window overlap
                 for (unsigned step : changedSteps) {
                     if (static_cast<int>(step) >= nodeLowerBound && step <= nodeUpperBound) {
                         needsUpdate = true;
                         break;
                     }
                 }
+                // Check 2: parent position at a changed step
                 if (!needsUpdate) {
                     for (const auto &parent : dag.Parents(node)) {
                         if (changedSteps.count(activeSchedule_.AssignedSuperstep(parent))) {
@@ -1115,6 +1178,10 @@ class KlImprover : public ImprovementScheduler<GraphT> {
                             break;
                         }
                     }
+                }
+                // Check 3: comm-dependency steps (min(lambda)-1) at changed steps
+                if (!needsUpdate) {
+                    needsUpdate = commCostF_.NodeCommDependsOnChangedSteps(node, changedSteps);
                 }
 
                 if (needsUpdate) {
@@ -1223,53 +1290,53 @@ class KlImprover : public ImprovementScheduler<GraphT> {
     }
 
     void SelectActiveNodes(ThreadSearchContext &threadData) {
-        //         if (SelectNodesCheckRemoveSuperstep(threadData.stepToRemove_, threadData)) {
-        //             activeSchedule_.SwapEmptyStepFwd(threadData.stepToRemove_, threadData.endStep_);
-        //             const unsigned oldEndStep = threadData.endStep_;
-        //             for (unsigned i = threadData.stepToRemove_; i < threadData.endStep_; i++) {
-        //                 commCostF_.SwapCommSteps(i, i + 1);
-        //             }
-        //             threadData.endStep_--;
-        //             commCostF_.UpdateLambdaAfterStepRemoval(threadData.stepToRemove_);
-        //             commCostF_.FixupSendRecvAfterStepRemoval(threadData.stepToRemove_, oldEndStep);
+        if (SelectNodesCheckRemoveSuperstep(threadData.stepToRemove_, threadData)) {
+            activeSchedule_.SwapEmptyStepFwd(threadData.stepToRemove_, threadData.endStep_);
+            const unsigned oldEndStep = threadData.endStep_;
+            for (unsigned i = threadData.stepToRemove_; i < threadData.endStep_; i++) {
+                commCostF_.SwapCommSteps(i, i + 1);
+            }
+            threadData.endStep_--;
+            commCostF_.UpdateLambdaAfterStepRemoval(threadData.stepToRemove_);
+            commCostF_.FixupSendRecvAfterStepRemoval(threadData.stepToRemove_, oldEndStep);
 
-        //             // Push a sentinel move to record the step removal in the move history.
-        //             // This must happen BEFORE UpdateCost so that bestScheduleIdx_ can
-        //             // unambiguously point before or after the removal.
-        //             const CostT syncCost = static_cast<CostT>(instance_->SynchronisationCosts());
-        //             threadData.activeScheduleData_.appliedMoves_.push_back(KlMove::MakeRemoveStep(threadData.stepToRemove_, syncCost));
+            // Push a sentinel move to record the step removal in the move history.
+            // This must happen BEFORE UpdateCost so that bestScheduleIdx_ can
+            // unambiguously point before or after the removal.
+            const CostT syncCost = static_cast<CostT>(instance_->SynchronisationCosts());
+            threadData.activeScheduleData_.appliedMoves_.push_back(KlMove::MakeRemoveStep(threadData.stepToRemove_, syncCost));
 
-        //             // SwapEmptyStepFwd shifts nodes after the removed step down by 1,
-        //             // which can reduce cross-processor gaps below staleness.  Update the
-        //             // violation set for the affected boundary BEFORE UpdateCost, so that
-        //             // feasible_ is correct when UpdateCost decides whether to save the
-        //             // current state as the new best.
-        //             if (activeSchedule_.GetStaleness() > 1) {
-        //                 activeSchedule_.UpdateViolationsAfterStepRemoval(threadData.stepToRemove_, threadData.activeScheduleData_);
-        //             }
+            // SwapEmptyStepFwd shifts nodes after the removed step down by 1,
+            // which can reduce cross-processor gaps below staleness.  Update the
+            // violation set for the affected boundary BEFORE UpdateCost, so that
+            // feasible_ is correct when UpdateCost decides whether to save the
+            // current state as the new best.
+            if (activeSchedule_.GetStaleness() > 1) {
+                activeSchedule_.UpdateViolationsAfterStepRemoval(threadData.stepToRemove_, threadData.activeScheduleData_);
+            }
 
-        //             threadData.activeScheduleData_.UpdateCost(static_cast<CostT>(-1.0 * syncCost));
+            threadData.activeScheduleData_.UpdateCost(static_cast<CostT>(-1.0 * syncCost));
 
-        //             if constexpr (enablePreresolvingViolations_) {
-        //                 ResolveViolations(threadData);
-        //             }
+            if constexpr (enablePreresolvingViolations_) {
+                ResolveViolations(threadData);
+            }
 
-        //             if (threadData.activeScheduleData_.currentViolations_.size() > parameters_.initialViolationThreshold_) {
-        //                 activeSchedule_.RevertToBestSchedule(
-        //                     commCostF_, threadData.activeScheduleData_, threadData.startStep_, threadData.endStep_);
-        //             } else {
-        //                 threadData.unlockEdgeBacktrackCounter_
-        //                     = static_cast<unsigned>(threadData.activeScheduleData_.currentViolations_.size());
-        //                 threadData.maxInnerIterations_
-        //                     = std::max(threadData.unlockEdgeBacktrackCounter_ * 5u, parameters_.maxInnerIterationsReset_);
-        //                 threadData.maxNoViolationsRemovedBacktrack_ = parameters_.maxNoViolationsRemovedBacktrackForRemoveStepReset_;
-        // #ifdef KL_DEBUG_1
-        //                 std::cout << "thread " << threadData.threadId_ << ", Trying to remove step " << threadData.stepToRemove_
-        //                           << std::endl;
-        // #endif
-        //                 return;
-        //             }
-        //         }
+            if (threadData.activeScheduleData_.currentViolations_.size() > parameters_.initialViolationThreshold_) {
+                activeSchedule_.RevertToBestSchedule(
+                    commCostF_, threadData.activeScheduleData_, threadData.startStep_, threadData.endStep_);
+            } else {
+                threadData.unlockEdgeBacktrackCounter_
+                    = static_cast<unsigned>(threadData.activeScheduleData_.currentViolations_.size());
+                threadData.maxInnerIterations_
+                    = std::max(threadData.unlockEdgeBacktrackCounter_ * 5u, parameters_.maxInnerIterationsReset_);
+                threadData.maxNoViolationsRemovedBacktrack_ = parameters_.maxNoViolationsRemovedBacktrackForRemoveStepReset_;
+#ifdef KL_DEBUG_1
+                std::cout << "thread " << threadData.threadId_ << ", Trying to remove step " << threadData.stepToRemove_
+                          << std::endl;
+#endif
+                return;
+            }
+        }
         threadData.selectionStrategy_.SelectActiveNodes(threadData.affinityTable_, threadData.startStep_, threadData.endStep_);
     }
 
