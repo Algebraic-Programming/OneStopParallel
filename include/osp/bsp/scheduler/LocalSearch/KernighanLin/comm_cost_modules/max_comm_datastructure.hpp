@@ -19,6 +19,7 @@ limitations under the License.
 #pragma once
 
 #include <algorithm>
+#include <iostream>
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
@@ -320,6 +321,198 @@ struct MaxCommDatastructure {
         }
     }
 
+    /// Validate incremental send/recv AND lambda against from-scratch recomputation.
+    /// Saves current state, recomputes everything from scratch, compares cell-by-cell
+    /// and lambda entry-by-entry for the moved node and its parents.
+    /// On divergence: prints full diagnostic and aborts.
+    /// After return (if no divergence), the datastructure is in the from-scratch
+    /// (correct) state so each subsequent move is independently testable.
+    /// Returns true if incremental state matches from-scratch computation.
+    bool ValidateCommDs(unsigned moveCounter, const KlMove &move) {
+        const unsigned numSteps = stepProcSend_.size();
+        const unsigned numProcs = numSteps > 0 ? stepProcSend_[0].size() : 0;
+        const auto &graph = instance_->GetComputationalDag();
+        const auto &vecSched = activeSchedule_->GetVectorSchedule();
+
+        // 1. Snapshot the incremental state (send/recv + lambda)
+        auto savedSend = stepProcSend_;
+        auto savedRecv = stepProcReceive_;
+
+        // Snapshot lambda for moved node and its parents
+        using LambdaEntry = typename CommPolicy::ValueType;
+
+        struct NodeLambdaSnapshot {
+            VertexType node;
+            std::vector<LambdaEntry> procEntries;    // indexed by proc
+        };
+
+        auto snapshotLambda = [&](VertexType n) -> NodeLambdaSnapshot {
+            NodeLambdaSnapshot snap;
+            snap.node = n;
+            snap.procEntries.resize(numProcs);
+            for (unsigned p = 0; p < numProcs; p++) {
+                snap.procEntries[p] = nodeLambdaMap_.GetProcEntry(n, p);
+            }
+            return snap;
+        };
+
+        // Snapshot moved node's lambda (its children grouped by proc)
+        NodeLambdaSnapshot movedNodeLambda = snapshotLambda(move.node_);
+
+        // Snapshot all parents' lambdas (parents of the moved node)
+        std::vector<NodeLambdaSnapshot> parentLambdas;
+        for (const auto &parent : graph.Parents(move.node_)) {
+            parentLambdas.push_back(snapshotLambda(parent));
+        }
+
+        // 2. Recompute from scratch (resets nodeLambdaMap_ + stepProcSend_/Receive_)
+        ComputeCommDatastructures(0, numSteps > 0 ? numSteps - 1 : 0);
+
+        // 3. Compare send/recv cell-by-cell
+        bool sendRecvOk = true;
+        for (unsigned s = 0; s < numSteps; s++) {
+            for (unsigned p = 0; p < numProcs; p++) {
+                if (savedSend[s][p] != stepProcSend_[s][p] || savedRecv[s][p] != stepProcReceive_[s][p]) {
+                    sendRecvOk = false;
+                }
+            }
+        }
+
+        // 4. Compare lambda for moved node and parents
+        auto compareLambdaEntry = [](const LambdaEntry &a, const LambdaEntry &b) -> bool {
+            if constexpr (std::is_same_v<LambdaEntry, unsigned>) {
+                return a == b;
+            } else {
+                // For vector<unsigned>: compare as sorted multisets
+                if (a.size() != b.size()) {
+                    return false;
+                }
+                auto sa = a;
+                std::sort(sa.begin(), sa.end());
+                auto sb = b;
+                std::sort(sb.begin(), sb.end());
+                return sa == sb;
+            }
+        };
+
+        auto printLambdaEntry = [](const LambdaEntry &entry, std::ostream &os) {
+            if constexpr (std::is_same_v<LambdaEntry, unsigned>) {
+                os << entry;
+            } else {
+                os << "[";
+                for (size_t i = 0; i < entry.size(); i++) {
+                    if (i > 0) {
+                        os << ",";
+                    }
+                    os << entry[i];
+                }
+                os << "]";
+            }
+        };
+
+        bool lambdaOk = true;
+        // Check moved node
+        for (unsigned p = 0; p < numProcs; p++) {
+            auto freshEntry = nodeLambdaMap_.GetProcEntry(move.node_, p);
+            if (!compareLambdaEntry(movedNodeLambda.procEntries[p], freshEntry)) {
+                lambdaOk = false;
+            }
+        }
+        // Check parents
+        for (const auto &parentSnap : parentLambdas) {
+            for (unsigned p = 0; p < numProcs; p++) {
+                auto freshEntry = nodeLambdaMap_.GetProcEntry(parentSnap.node, p);
+                if (!compareLambdaEntry(parentSnap.procEntries[p], freshEntry)) {
+                    lambdaOk = false;
+                }
+            }
+        }
+
+        if (!sendRecvOk || !lambdaOk) {
+            std::cout << "\n========== COMM DS DIVERGENCE at move #" << moveCounter << ": node=" << move.node_ << " ("
+                      << move.fromProc_ << "," << move.fromStep_ << ")"
+                      << "->(" << move.toProc_ << "," << move.toStep_ << ")"
+                      << "  sendRecvOk=" << sendRecvOk << " lambdaOk=" << lambdaOk << " ==========" << std::endl;
+
+            // Print send/recv divergences
+            if (!sendRecvOk) {
+                std::cout << "  --- Send/Recv mismatches ---" << std::endl;
+                for (unsigned s = 0; s < numSteps; s++) {
+                    for (unsigned p = 0; p < numProcs; p++) {
+                        if (savedSend[s][p] != stepProcSend_[s][p]) {
+                            std::cout << "  SEND[s=" << s << "][p=" << p << "]"
+                                      << "  inc=" << savedSend[s][p] << "  fresh=" << stepProcSend_[s][p] << "  delta="
+                                      << (static_cast<long long>(savedSend[s][p]) - static_cast<long long>(stepProcSend_[s][p]))
+                                      << std::endl;
+                        }
+                        if (savedRecv[s][p] != stepProcReceive_[s][p]) {
+                            std::cout << "  RECV[s=" << s << "][p=" << p << "]"
+                                      << "  inc=" << savedRecv[s][p] << "  fresh=" << stepProcReceive_[s][p] << "  delta="
+                                      << (static_cast<long long>(savedRecv[s][p]) - static_cast<long long>(stepProcReceive_[s][p]))
+                                      << std::endl;
+                        }
+                    }
+                }
+            }
+
+            // Print lambda divergences for moved node
+            std::cout << "  --- Lambda for moved node " << move.node_ << " (now at P" << vecSched.AssignedProcessor(move.node_)
+                      << ",S" << vecSched.AssignedSuperstep(move.node_) << ") ---" << std::endl;
+            for (unsigned p = 0; p < numProcs; p++) {
+                auto freshEntry = nodeLambdaMap_.GetProcEntry(move.node_, p);
+                bool differs = !compareLambdaEntry(movedNodeLambda.procEntries[p], freshEntry);
+                if (differs || CommPolicy::HasEntry(movedNodeLambda.procEntries[p]) || CommPolicy::HasEntry(freshEntry)) {
+                    std::cout << "    lambda[" << move.node_ << "][P" << p << "]" << (differs ? " *** DIFFERS *** " : "  ");
+                    std::cout << "inc=";
+                    printLambdaEntry(movedNodeLambda.procEntries[p], std::cout);
+                    std::cout << "  fresh=";
+                    printLambdaEntry(freshEntry, std::cout);
+                    std::cout << std::endl;
+                }
+            }
+
+            // Print lambda divergences for parents
+            for (const auto &parentSnap : parentLambdas) {
+                unsigned parentProc = vecSched.AssignedProcessor(parentSnap.node);
+                unsigned parentStep = vecSched.AssignedSuperstep(parentSnap.node);
+                std::cout << "  --- Lambda for parent " << parentSnap.node << " (at P" << parentProc << ",S" << parentStep
+                          << ") ---" << std::endl;
+                for (unsigned p = 0; p < numProcs; p++) {
+                    auto freshEntry = nodeLambdaMap_.GetProcEntry(parentSnap.node, p);
+                    bool differs = !compareLambdaEntry(parentSnap.procEntries[p], freshEntry);
+                    if (differs || CommPolicy::HasEntry(parentSnap.procEntries[p]) || CommPolicy::HasEntry(freshEntry)) {
+                        std::cout << "    lambda[" << parentSnap.node << "][P" << p << "]"
+                                  << (differs ? " *** DIFFERS *** " : "  ");
+                        std::cout << "inc=";
+                        printLambdaEntry(parentSnap.procEntries[p], std::cout);
+                        std::cout << "  fresh=";
+                        printLambdaEntry(freshEntry, std::cout);
+                        std::cout << std::endl;
+                    }
+                }
+            }
+
+            // Print children of moved node for context
+            std::cout << "  --- Children of moved node " << move.node_ << " ---" << std::endl;
+            for (const auto &child : graph.Children(move.node_)) {
+                std::cout << "    child " << child << " -> (P" << vecSched.AssignedProcessor(child) << ", S"
+                          << vecSched.AssignedSuperstep(child) << ")" << std::endl;
+            }
+
+            // Print parents of moved node for context
+            std::cout << "  --- Parents of moved node " << move.node_ << " ---" << std::endl;
+            for (const auto &parent : graph.Parents(move.node_)) {
+                std::cout << "    parent " << parent << " -> (P" << vecSched.AssignedProcessor(parent) << ", S"
+                          << vecSched.AssignedSuperstep(parent) << ")" << std::endl;
+            }
+
+            std::cout << "  ========== END DIVERGENCE ==========\n" << std::endl;
+        }
+
+        // State is now fresh-computed (correct) — next incremental update starts clean
+        return sendRecvOk && lambdaOk;
+    }
+
     /// After a step removal (bubble empty step forward from removedStep to endStep),
     /// all nodes that were at step S > removedStep are now at step S-1.
     /// Update lambda entries to match the new step numbering.
@@ -367,71 +560,6 @@ struct MaxCommDatastructure {
         std::fill(stepProcSend_[step].begin(), stepProcSend_[step].end(), 0);
         std::fill(stepProcReceive_[step].begin(), stepProcReceive_[step].end(), 0);
         ArrangeSuperstepCommData(step);
-    }
-
-    /// Validate incremental send/recv against from-scratch recomputation.
-    /// Saves current incremental arrays, recomputes everything from scratch,
-    /// compares cell-by-cell, and prints diagnostics on divergence.
-    /// After return, the datastructure is in the from-scratch (correct) state
-    /// so each subsequent move is independently testable.
-    /// Returns true if incremental state matches from-scratch computation.
-    bool ValidateCommDs(unsigned moveCounter, const KlMove &move) {
-        const unsigned numSteps = static_cast<unsigned>(stepProcSend_.size());
-        const unsigned numProcs = numSteps > 0 ? static_cast<unsigned>(stepProcSend_[0].size()) : 0;
-
-        // 1. Snapshot the incremental state
-        auto savedSend = stepProcSend_;
-        auto savedRecv = stepProcReceive_;
-
-        // 2. Recompute from scratch (resets nodeLambdaMap_ + stepProcSend_/Receive_)
-        ComputeCommDatastructures(0, numSteps > 0 ? numSteps - 1 : 0);
-
-        // 3. Compare cell-by-cell
-        bool ok = true;
-        for (unsigned s = 0; s < numSteps; s++) {
-            for (unsigned p = 0; p < numProcs; p++) {
-                const bool sendMismatch = (savedSend[s][p] != stepProcSend_[s][p]);
-                const bool recvMismatch = (savedRecv[s][p] != stepProcReceive_[s][p]);
-                if (sendMismatch || recvMismatch) {
-                    if (ok) {
-                        // First divergence header
-                        std::cout << "\n========== COMM DS DIVERGENCE at move #" << moveCounter << ": node=" << move.node_ << " ("
-                                  << move.fromProc_ << "," << move.fromStep_ << ")"
-                                  << "->(" << move.toProc_ << "," << move.toStep_ << ")"
-                                  << " ==========" << std::endl;
-                    }
-                    ok = false;
-                    if (sendMismatch) {
-                        std::cout << "  SEND[step=" << s << "][proc=" << p << "]"
-                                  << "  incremental=" << savedSend[s][p] << "  from_scratch=" << stepProcSend_[s][p] << "  delta="
-                                  << (static_cast<long long>(savedSend[s][p]) - static_cast<long long>(stepProcSend_[s][p]))
-                                  << std::endl;
-                    }
-                    if (recvMismatch) {
-                        std::cout << "  RECV[step=" << s << "][proc=" << p << "]"
-                                  << "  incremental=" << savedRecv[s][p] << "  from_scratch=" << stepProcReceive_[s][p]
-                                  << "  delta="
-                                  << (static_cast<long long>(savedRecv[s][p]) - static_cast<long long>(stepProcReceive_[s][p]))
-                                  << std::endl;
-                    }
-                }
-            }
-        }
-
-        if (!ok) {
-            // Print full schedule snapshot for context
-            const auto &vecSched = activeSchedule_->GetVectorSchedule();
-            const auto &graph = instance_->GetComputationalDag();
-            std::cout << "  Schedule state (node -> proc,step):" << std::endl;
-            for (const auto &u : graph.Vertices()) {
-                std::cout << "    node " << u << " -> (P" << vecSched.AssignedProcessor(u) << ", S"
-                          << vecSched.AssignedSuperstep(u) << ")" << std::endl;
-            }
-            std::cout << "  ========== END DIVERGENCE ==========\n" << std::endl;
-        }
-
-        // State is now fresh-computed (correct) — next incremental update starts clean
-        return ok;
     }
 
     void ComputeCommDatastructures(unsigned startStep, unsigned endStep) {

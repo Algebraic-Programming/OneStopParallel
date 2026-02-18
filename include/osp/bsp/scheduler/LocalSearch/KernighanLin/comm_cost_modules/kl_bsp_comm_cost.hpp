@@ -20,6 +20,7 @@ limitations under the License.
 
 #include <algorithm>
 #include <array>
+#include <iostream>
 
 #include "../kl_active_schedule.hpp"
 #include "../kl_improver.hpp"
@@ -107,9 +108,8 @@ struct KlBspCommCostFunction {
         static unsigned moveCounter_ = 0;
         moveCounter_++;
         if (!commDs_.ValidateCommDs(moveCounter_, move)) {
-            std::cout << "[KL_DEBUG_VALIDATE_COMM_DS] *** FIRST DIVERGENCE at move #" << moveCounter_ << " ***" << std::endl;
-            // Uncomment to halt on first divergence:
-            // std::abort();
+            std::cout << "[KL_DEBUG_VALIDATE_COMM_DS] *** DIVERGENCE at move #" << moveCounter_ << " — ABORTING ***" << std::endl;
+            std::abort();
         }
 #endif
     }
