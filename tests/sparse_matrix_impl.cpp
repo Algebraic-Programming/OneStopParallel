@@ -24,11 +24,22 @@ limitations under the License.
 #    include <iostream>
 #    include <vector>
 
+#    include "osp/auxiliary/io/general_file_reader.hpp"
+#    include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 #    include "osp/graph_algorithms/directed_graph_path_util.hpp"
 #    include "osp/graph_algorithms/directed_graph_util.hpp"
+#    include "osp/graph_implementations/adj_list_impl/compact_sparse_graph.hpp"
 #    include "osp/graph_implementations/eigen_matrix_adapter/sparse_matrix.hpp"
+#    include "test_graphs.hpp"
+#    include "osp/graph_implementations/adj_list_impl/computational_dag_vector_impl.hpp"
 
 using namespace osp;
+
+using SmCsr = Eigen::SparseMatrix<double, Eigen::RowMajor, int32_t>;
+using SmCsc = Eigen::SparseMatrix<double, Eigen::ColMajor, int32_t>;
+using Triplet = Eigen::Triplet<double>;
+
+using VImpl1 = CDagVertexImpl<std::size_t, unsigned, unsigned, unsigned, unsigned>;
 
 BOOST_AUTO_TEST_CASE(TestSparseMatrixAdapter1) {
     /*
@@ -57,9 +68,6 @@ BOOST_AUTO_TEST_CASE(TestSparseMatrixAdapter1) {
       6 | 0.0  10.0  11.0     0     0  12.0     0
 
     */
-    using SmCsr = Eigen::SparseMatrix<double, Eigen::RowMajor, int32_t>;
-    using SmCsc = Eigen::SparseMatrix<double, Eigen::ColMajor, int32_t>;
-    using Triplet = Eigen::Triplet<double>;
     const int size = 7;
     std::vector<Triplet> triplets;
 
@@ -132,29 +140,42 @@ BOOST_AUTO_TEST_CASE(TestSparseMatrixAdapter1) {
         BOOST_CHECK_EQUAL(v, vertices[idx++]);
 
         size_t i = 0;
+        size_t cntr = 0;
         const size_t vi = static_cast<size_t>(v);
 
         for (const auto &e : graph.Children(v)) {
+            ++cntr;
             BOOST_CHECK_EQUAL(e, outNeighbors[vi][i++]);
         }
+        BOOST_CHECK_EQUAL(cntr, outNeighbors[vi].size());
+        BOOST_CHECK_EQUAL(graph.OutDegree(v), outNeighbors[vi].size());
 
         i = 0;
+        cntr = 0;
         for (const auto &e : graph.Parents(v)) {
+            ++cntr;
             BOOST_CHECK_EQUAL(e, inNeighbors[vi][i++]);
         }
+        BOOST_CHECK_EQUAL(cntr, inNeighbors[vi].size());
+        BOOST_CHECK_EQUAL(graph.InDegree(v), inNeighbors[vi].size());
 
         i = 0;
+        cntr = 0;
         for (const auto &e : OutEdges(v, graph)) {
+            ++cntr;
             BOOST_CHECK_EQUAL(Target(e, graph), outNeighbors[vi][i++]);
         }
+        BOOST_CHECK_EQUAL(cntr, outNeighbors[vi].size());
+        BOOST_CHECK_EQUAL(graph.OutDegree(v), outNeighbors[vi].size());
 
         i = 0;
+        cntr = 0;
         for (const auto &e : InEdges(v, graph)) {
+            ++cntr;
             BOOST_CHECK_EQUAL(Source(e, graph), inNeighbors[vi][i++]);
         }
-
+        BOOST_CHECK_EQUAL(cntr, inNeighbors[vi].size());
         BOOST_CHECK_EQUAL(graph.InDegree(v), inNeighbors[vi].size());
-        BOOST_CHECK_EQUAL(graph.OutDegree(v), outNeighbors[vi].size());
     }
 
     unsigned count = 0;
@@ -163,6 +184,131 @@ BOOST_AUTO_TEST_CASE(TestSparseMatrixAdapter1) {
         count++;
     }
     BOOST_CHECK_EQUAL(count, 11);
+}
+
+BOOST_AUTO_TEST_CASE(TestSparseMatrixAdapter2) {
+    std::vector<std::string> filenamesGraph = TestMTXGraphs();
+
+    // Getting root git directory
+    std::filesystem::path cwd = std::filesystem::current_path();
+    std::cout << cwd << std::endl;
+    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
+        cwd = cwd.parent_path();
+        std::cout << cwd << std::endl;
+    }
+
+    for (auto &filenameGraph : filenamesGraph) {
+        std::string nameGraph = filenameGraph.substr(filenameGraph.find_last_of("/\\") + 1);
+        nameGraph = nameGraph.substr(0, nameGraph.find_last_of("."));
+
+        std::cout << "Graph: " << nameGraph << std::endl;
+
+        ComputationalDagVectorImpl<VImpl1> graph1;
+
+        const bool statusGraph = file_reader::ReadGraph((cwd / filenameGraph).string(), graph1);
+
+        BOOST_CHECK(statusGraph);
+        if (!statusGraph) {
+            std::cout << "Reading files failed." << std::endl;
+        }
+
+        CompactSparseGraph<true, true, true, true, true> graph2(graph1);
+
+        std::vector<Triplet> triplets;
+        // Diagonal entries
+        for (const auto &vert : graph1.Vertices()) {
+            triplets.emplace_back(vert, vert, 1.0);
+        }
+
+        // Below Diagonal
+        for (const auto &vert : graph1.Vertices()) {
+            for (const auto &child : graph1.Children(vert)) {
+                triplets.emplace_back(child, vert, 2.0);
+            }
+        }
+
+        const int32_t nVert = static_cast<int32_t>(graph1.NumVertices());
+        SmCsr lCsr(nVert, nVert);
+        lCsr.setFromTriplets(triplets.begin(), triplets.end());
+        SmCsc lCsc{};
+        lCsc = lCsr;
+
+        SparseMatrixImp<int32_t> graph;
+        graph.SetCsr(&lCsr);
+        graph.SetCsc(&lCsc);
+
+        BOOST_CHECK_EQUAL(static_cast<std::size_t>(graph.NumVertices()), graph1.NumVertices());
+        BOOST_CHECK_EQUAL(static_cast<std::size_t>(graph.NumVertices()), graph2.NumVertices());
+
+        BOOST_CHECK_EQUAL(static_cast<std::size_t>(graph.NumEdges()), graph1.NumEdges());
+        BOOST_CHECK_EQUAL(static_cast<std::size_t>(graph.NumEdges()), graph2.NumEdges());
+
+        for (const auto &vert : graph2.Vertices()) {
+            auto chldren = graph.Children(vert);
+            auto chldren2 = graph2.Children(vert);
+            auto it = chldren.begin();
+            auto it_other = chldren.begin();
+            const auto begin = chldren.begin();
+            auto it2 = chldren2.begin();
+            const auto end = chldren.end();
+            const auto end_other = chldren.end();
+            const auto end2 = chldren2.end();
+
+            BOOST_CHECK(end == end_other);
+
+            std::size_t cntr = 0;
+            while ((it != end) && (it2 != end2)) {
+                BOOST_CHECK_EQUAL(*it, *it2);
+                BOOST_CHECK(it == it_other);
+                BOOST_CHECK(cntr == 0U || it != begin);
+                BOOST_CHECK(cntr == 0U || (not (it == begin)));
+                BOOST_CHECK_EQUAL(static_cast<bool>(it), it != end);
+
+                ++cntr;
+                ++it;
+                ++it_other;
+                ++it2;
+            }
+            BOOST_CHECK_EQUAL(cntr, graph.OutDegree(vert));
+            BOOST_CHECK_EQUAL(cntr, graph1.OutDegree(vert));
+            BOOST_CHECK_EQUAL(cntr, graph2.OutDegree(vert));
+            BOOST_CHECK(it == end);
+            BOOST_CHECK(it2 == end2);
+            BOOST_CHECK_EQUAL(static_cast<bool>(it), it != end);
+        }
+
+        for (const auto &vert : graph2.Vertices()) {
+            auto parents = graph.Parents(vert);
+            auto parents2 = graph2.Parents(vert);
+            auto it = parents.begin();
+            auto it_other = parents.begin();
+            const auto begin = parents.begin();
+            auto it2 = parents2.begin();
+            const auto end = parents.end();
+            const auto end_other = parents.end();
+            const auto end2 = parents2.end();
+
+            BOOST_CHECK(end == end_other);
+
+            std::size_t cntr = 0;
+            while ((it != end) && (it2 != end2)) {
+                BOOST_CHECK_EQUAL(*it, *it2);
+                BOOST_CHECK(cntr == 0U || it != begin);
+                BOOST_CHECK(cntr == 0U || (not (it == begin)));
+                BOOST_CHECK_EQUAL(static_cast<bool>(it), it != end);
+
+                ++cntr;
+                ++it;
+                ++it2;
+            }
+            BOOST_CHECK_EQUAL(cntr, graph.InDegree(vert));
+            BOOST_CHECK_EQUAL(cntr, graph1.InDegree(vert));
+            BOOST_CHECK_EQUAL(cntr, graph2.InDegree(vert));
+            BOOST_CHECK(it == end);
+            BOOST_CHECK(it2 == end2);
+            BOOST_CHECK_EQUAL(static_cast<bool>(it), it != end);
+        }
+    }
 }
 
 #endif

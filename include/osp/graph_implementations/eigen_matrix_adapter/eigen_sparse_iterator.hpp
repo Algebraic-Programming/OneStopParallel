@@ -20,10 +20,6 @@ limitations under the License.
 
 #ifdef EIGEN_FOUND
 
-#    include <Eigen/SparseCore>
-
-#    include "osp/concepts/graph_traits.hpp"
-
 namespace osp {
 
 template <typename Graph, typename EigenIdxType>
@@ -37,12 +33,10 @@ class EigenCSRRange {
 
     class Iterator {
         Inner it_;
-        EigenIdxType skip_;
-        bool atEnd_;
 
         void SkipDiagonal() {
-            while (((!atEnd_) && (it_.row() == skip_)) & (it_.col() == skip_)) {
-                ++(*this);
+            while (it_ && (it_.row() == it_.col())) {
+                ++it_;
             }
         }
 
@@ -55,28 +49,19 @@ class EigenCSRRange {
 
         Iterator() = default;
 
-        Iterator(const Iterator &other) : it_(other.it_), skip_(other.skip_), atEnd_(other.atEnd_) {}
+        Iterator(const Iterator &other) : it_(other.it_) {}
 
         Iterator &operator=(const Iterator &other) {
             it_ = other.it_;
-            skip_ = other.skip_;
-            atEnd_ = other.atEnd_;
             return *this;
         }
 
-        Iterator(const CSRMatrix &mat, EigenIdxType idx, bool end = false) : skip_(idx), atEnd_(end) {
-            if (!end) {
-                it_ = Inner(mat, idx);
-                atEnd_ = !it_;
-                SkipDiagonal();
-            }
-        }
+        Iterator(const CSRMatrix &mat, EigenIdxType idx) : it_(mat, idx) { SkipDiagonal(); }
 
         reference operator*() const { return static_cast<std::size_t>(it_.col()); }
 
         Iterator &operator++() {
             ++it_;
-            atEnd_ = !it_;
             SkipDiagonal();
             return *this;
         }
@@ -87,16 +72,20 @@ class EigenCSRRange {
             return temp;
         }
 
-        bool operator==(const Iterator &) const { return atEnd_; }
+        inline bool operator==(const Iterator &other) const {
+            return (it_ && other.it_ && it_.index() == other.it_.index()) || ((not it_) && (not other.it_));
+        }
 
-        bool operator!=(const Iterator &) const { return !atEnd_; }
+        inline bool operator!=(const Iterator &other) const { return not(*this == other); }
+
+        inline explicit operator bool() const { return it_; }
     };
 
     EigenCSRRange(const Graph &graph, EigenIdxType idx) : graph_(graph), index_(idx) {}
 
     Iterator begin() const { return Iterator(*graph_.GetCSR(), index_); }
 
-    Iterator end() const { return Iterator(*graph_.GetCSR(), index_, true); }
+    Iterator end() const { return Iterator(); }
 };
 
 template <typename Graph, typename EigenIdxType>
@@ -110,12 +99,10 @@ class EigenCSCRange {
 
     class Iterator {
         Inner it_;
-        EigenIdxType skip_;
-        bool atEnd_;
 
         void SkipDiagonal() {
-            while ((!atEnd_) & (it_.row() == skip_) & (it_.col() == skip_)) {
-                ++(*this);
+            while (it_ && (it_.row() == it_.col())) {
+                ++it_;
             }
         }
 
@@ -128,29 +115,19 @@ class EigenCSCRange {
 
         Iterator() = default;
 
-        Iterator(const Iterator &other) : it_(other.it_), skip_(other.skip_), atEnd_(other.atEnd_) {}
+        Iterator(const Iterator &other) : it_(other.it_) {}
 
         Iterator &operator=(const Iterator &other) {
             it_ = other.it_;
-            skip_ = other.skip_;
-            atEnd_ = other.atEnd_;
             return *this;
         }
 
-        Iterator(const CSCMatrix &mat, EigenIdxType idx, bool end = false) : skip_(idx), atEnd_(end) {
-            if (!end) {
-                it_ = Inner(mat, idx);
-                atEnd_ = !it_;
-                SkipDiagonal();
-            }
-        }
+        Iterator(const CSCMatrix &mat, EigenIdxType idx) : it_(mat, idx) { SkipDiagonal(); }
 
         reference operator*() const { return static_cast<std::size_t>(it_.row()); }
 
         Iterator &operator++() {
             ++it_;
-            atEnd_ = !it_;
-            SkipDiagonal();
             return *this;
         }
 
@@ -160,16 +137,20 @@ class EigenCSCRange {
             return temp;
         }
 
-        bool operator==(const Iterator &) const { return atEnd_; }
+        inline bool operator==(const Iterator &other) const {
+            return (it_ && other.it_ && it_.index() == other.it_.index()) || ((not it_) && (not other.it_));
+        }
 
-        bool operator!=(const Iterator &) const { return !atEnd_; }
+        inline bool operator!=(const Iterator &other) const { return not(*this == other); }
+
+        inline explicit operator bool() const { return it_; }
     };
 
     EigenCSCRange(const Graph &graph, EigenIdxType idx) : graph_(graph), index_(idx) {}
 
     Iterator begin() const { return Iterator(*graph_.GetCSC(), index_); }
 
-    Iterator end() const { return Iterator(*graph_.GetCSC(), index_, true); }
+    Iterator end() const { return Iterator(); }
 };
 
 }    // namespace osp
