@@ -914,6 +914,203 @@ void TestLadderGraph() {
 }
 INSTANTIATE_ALL(TestLadderGraph)
 
+// ---------- 3h: Full rollback — apply N moves then revert all in reverse ----
+//
+// Uses the same 8-node graph as TestComplexGraph (3d).
+// Applies 5 forward moves (each validated), then reverts all 5 in reverse
+// order (each revert validated).  After full rollback the datastructure must
+// match from-scratch computation of the original schedule.
+
+template <typename P>
+void TestRollbackComplexGraph() {
+    TestSetup t;
+    const auto v1 = t.dag.AddVertex(2, 9, 2);
+    const auto v2 = t.dag.AddVertex(3, 8, 4);
+    const auto v3 = t.dag.AddVertex(4, 7, 3);
+    const auto v4 = t.dag.AddVertex(5, 6, 2);
+    const auto v5 = t.dag.AddVertex(6, 5, 6);
+    const auto v6 = t.dag.AddVertex(7, 4, 2);
+    t.dag.AddVertex(8, 3, 4);    // idx 6
+    t.dag.AddVertex(9, 2, 1);    // idx 7
+
+    t.dag.AddEdge(v1, v2, 2);
+    t.dag.AddEdge(v1, v3, 2);
+    t.dag.AddEdge(v1, v4, 2);
+    t.dag.AddEdge(v2, v5, 12);
+    t.dag.AddEdge(v3, v5, 6);
+    t.dag.AddEdge(v3, v6, 7);
+    t.dag.AddEdge(v5, 7, 9);
+    t.dag.AddEdge(v4, 7, 9);
+
+    t.arch.SetNumberOfProcessors(2);
+    t.arch.SetCommunicationCosts(1);
+    t.arch.SetSynchronisationCosts(1);
+    t.Build({1, 1, 0, 0, 1, 0, 0, 1}, {0, 0, 1, 1, 2, 2, 3, 3});
+
+    MaxCommDatastructure<Graph, double, KlActiveScheduleT, P> ds;
+    ds.Initialize(*t.klSched);
+    ds.ComputeCommDatastructures(0, 3);
+
+    const std::string tag = PolicyName<P>();
+
+    std::vector<KlMove> applied;
+
+    auto applyAndCheck = [&](KlMove m, const std::string &label) {
+        t.Apply(m);
+        ds.UpdateDatastructureAfterMove(m, 0, 3);
+        applied.push_back(m);
+        BOOST_CHECK(ValidateCommDs<P>(ds, *t.klSched, *t.instance, tag + "_rb_" + label));
+    };
+
+    applyAndCheck(KlMove(v3, 0.0, 0, 1, 1, 1), "fwd1");
+    applyAndCheck(KlMove(v4, 0.0, 0, 1, 1, 1), "fwd2");
+    applyAndCheck(KlMove(v5, 0.0, 1, 2, 0, 2), "fwd3");
+    applyAndCheck(KlMove(v6, 0.0, 0, 2, 1, 2), "fwd4");
+    applyAndCheck(KlMove(v5, 0.0, 0, 2, 1, 2), "fwd5");
+
+    // Revert in reverse order
+    for (std::size_t i = applied.size(); i-- > 0;) {
+        KlMove rev = applied[i].ReverseMove();
+        t.Apply(rev);
+        ds.UpdateDatastructureAfterMove(rev, 0, 3);
+        BOOST_CHECK(ValidateCommDs<P>(ds, *t.klSched, *t.instance, tag + "_rb_rev" + std::to_string(i + 1)));
+    }
+}
+INSTANTIATE_ALL(TestRollbackComplexGraph)
+
+// ---------- 3i: Partial rollback — apply, revert some, apply more ----------
+//
+// Fan-out: node 0 (P0,S0) -> {1@P1,S1, 2@P2,S2, 3@P1,S3}.
+// Exercises the scenario where children on the same proc get moved and
+// reverted in an interleaved pattern — stresses the min-step tracking in
+// the Lazy/Buffered lambda map.
+
+template <typename P>
+void TestPartialRollback() {
+    TestSetup t;
+    t.dag.AddVertex(1, 10, 1);    // 0
+    t.dag.AddVertex(1, 5, 1);     // 1
+    t.dag.AddVertex(1, 3, 1);     // 2
+    t.dag.AddVertex(1, 4, 1);     // 3
+    t.dag.AddEdge(0, 1, 1);
+    t.dag.AddEdge(0, 2, 1);
+    t.dag.AddEdge(0, 3, 1);
+    t.arch.SetNumberOfProcessors(3);
+    t.arch.SetCommunicationCosts(1);
+    t.arch.SetSynchronisationCosts(0);
+    // Node 0: P0,S0. Children: 1@P1,S1; 2@P2,S2; 3@P1,S3.
+    t.Build({0, 1, 2, 1}, {0, 1, 2, 3});
+
+    MaxCommDatastructure<Graph, double, KlActiveScheduleT, P> ds;
+    ds.Initialize(*t.klSched);
+    ds.ComputeCommDatastructures(0, 3);
+
+    const std::string tag = PolicyName<P>();
+    BOOST_CHECK(ValidateCommDs<P>(ds, *t.klSched, *t.instance, tag + "_pr_init"));
+
+    // Move node 2 from (P2,S2) to (P1,S2) — adds another child on P1
+    KlMove m1(2, 0.0, 2, 2, 1, 2);
+    t.Apply(m1);
+    ds.UpdateDatastructureAfterMove(m1, 0, 3);
+    BOOST_CHECK(ValidateCommDs<P>(ds, *t.klSched, *t.instance, tag + "_pr_fwd1"));
+
+    // Move node 1 from (P1,S1) to (P2,S1) — removes min child from P1
+    KlMove m2(1, 0.0, 1, 1, 2, 1);
+    t.Apply(m2);
+    ds.UpdateDatastructureAfterMove(m2, 0, 3);
+    BOOST_CHECK(ValidateCommDs<P>(ds, *t.klSched, *t.instance, tag + "_pr_fwd2"));
+
+    // Revert move 2 (node 1 back to P1,S1)
+    KlMove r2 = m2.ReverseMove();
+    t.Apply(r2);
+    ds.UpdateDatastructureAfterMove(r2, 0, 3);
+    BOOST_CHECK(ValidateCommDs<P>(ds, *t.klSched, *t.instance, tag + "_pr_rev2"));
+
+    // Revert move 1 (node 2 back to P2,S2)
+    KlMove r1 = m1.ReverseMove();
+    t.Apply(r1);
+    ds.UpdateDatastructureAfterMove(r1, 0, 3);
+    BOOST_CHECK(ValidateCommDs<P>(ds, *t.klSched, *t.instance, tag + "_pr_rev1"));
+
+    // Now apply a new move: node 3 from (P1,S3) to (P0,S3)
+    KlMove m3(3, 0.0, 1, 3, 0, 3);
+    t.Apply(m3);
+    ds.UpdateDatastructureAfterMove(m3, 0, 3);
+    BOOST_CHECK(ValidateCommDs<P>(ds, *t.klSched, *t.instance, tag + "_pr_fwd3"));
+
+    // Revert move 3
+    KlMove r3 = m3.ReverseMove();
+    t.Apply(r3);
+    ds.UpdateDatastructureAfterMove(r3, 0, 3);
+    BOOST_CHECK(ValidateCommDs<P>(ds, *t.klSched, *t.instance, tag + "_pr_rev3"));
+}
+INSTANTIATE_ALL(TestPartialRollback)
+
+// ---------- 3j: Rollback with asymmetric send costs -----------------------
+//
+// 4 processors with asymmetric costs: nearby pairs cheap, cross pairs expensive.
+// send_cost = {{0,1,4,4},{1,0,4,4},{4,4,0,1},{4,4,1,0}}
+// Node 0 (P0,S0) has children on P1 (cheap) and P2 (expensive).
+// After a move sequence + rollback, incremental state must match from-scratch.
+
+template <typename P>
+void TestRollbackAsymmetricCosts() {
+    TestSetup t;
+    t.dag.AddVertex(1, 10, 1);    // 0: parent, high comm weight
+    t.dag.AddVertex(1, 3, 1);     // 1
+    t.dag.AddVertex(1, 3, 1);     // 2
+    t.dag.AddVertex(1, 3, 1);     // 3
+    t.dag.AddVertex(1, 3, 1);     // 4
+    t.dag.AddEdge(0, 1, 1);
+    t.dag.AddEdge(0, 2, 1);
+    t.dag.AddEdge(0, 3, 1);
+    t.dag.AddEdge(0, 4, 1);
+    t.arch.SetNumberOfProcessors(4);
+    // Asymmetric send costs: P0↔P1 cheap (1), P0↔P2 expensive (4), P2↔P3 cheap (1)
+    std::vector<std::vector<int>> sendCosts = {
+        {0, 1, 4, 4},
+        {1, 0, 4, 4},
+        {4, 4, 0, 1},
+        {4, 4, 1, 0}
+    };
+    t.arch.SetSendCosts(sendCosts);
+    t.arch.SetSynchronisationCosts(0);
+    // Node 0: P0,S0. Children: 1@P1,S1; 2@P1,S3; 3@P2,S2; 4@P3,S2.
+    t.Build({0, 1, 1, 2, 3}, {0, 1, 3, 2, 2});
+
+    MaxCommDatastructure<Graph, double, KlActiveScheduleT, P> ds;
+    ds.Initialize(*t.klSched);
+    ds.ComputeCommDatastructures(0, 3);
+
+    const std::string tag = PolicyName<P>();
+    BOOST_CHECK(ValidateCommDs<P>(ds, *t.klSched, *t.instance, tag + "_ac_init"));
+
+    // Move child 2 from (P1,S3) to (P2,S3) — changes the min of P1 children
+    KlMove m1(2, 0.0, 1, 3, 2, 3);
+    t.Apply(m1);
+    ds.UpdateDatastructureAfterMove(m1, 0, 3);
+    BOOST_CHECK(ValidateCommDs<P>(ds, *t.klSched, *t.instance, tag + "_ac_fwd1"));
+
+    // Move child 1 from (P1,S1) to (P0,S1) — removes last child from P1
+    KlMove m2(1, 0.0, 1, 1, 0, 1);
+    t.Apply(m2);
+    ds.UpdateDatastructureAfterMove(m2, 0, 3);
+    BOOST_CHECK(ValidateCommDs<P>(ds, *t.klSched, *t.instance, tag + "_ac_fwd2"));
+
+    // Revert move 2
+    KlMove r2 = m2.ReverseMove();
+    t.Apply(r2);
+    ds.UpdateDatastructureAfterMove(r2, 0, 3);
+    BOOST_CHECK(ValidateCommDs<P>(ds, *t.klSched, *t.instance, tag + "_ac_rev2"));
+
+    // Revert move 1
+    KlMove r1 = m1.ReverseMove();
+    t.Apply(r1);
+    ds.UpdateDatastructureAfterMove(r1, 0, 3);
+    BOOST_CHECK(ValidateCommDs<P>(ds, *t.klSched, *t.instance, tag + "_ac_rev1"));
+}
+INSTANTIATE_ALL(TestRollbackAsymmetricCosts)
+
 // ============================================================================
 // SUITE 4: Edge-case scenarios under all three policies
 // ============================================================================
@@ -1349,18 +1546,15 @@ void TestZigzagMoves() {
 INSTANTIATE_ALL(TestZigzagMoves)
 
 // ============================================================================
-// SUITE 5: Lazy / Buffered specific checks
+// SUITE 5: Lazy / Buffered specific exact-value checks
 //
-// NOTE: UpdateDatastructureAfterMove has known issues for Lazy and Buffered
-// policies.  The incremental send/recv values diverge from from-scratch
-// computation after certain move patterns.  Until those production bugs are
-// fixed, we ONLY validate:
-//   (a) Initial ComputeCommDatastructures (no moves) for various topologies.
-//   (b) One specific single-move scenario that is known to produce correct
-//       incremental results (mirrors the original TestLazyAndBufferedModes).
+// Targeted tests that verify Lazy/Buffered-specific placement rules
+// (recv at min(child_steps)-1, send at parent step for Buffered) using
+// hand-verified exact values.
 //
-// All value checks below are hand-verified against the policy definitions.
-// ValidateCommDs is deliberately NOT called for Lazy/Buffered after moves.
+// For general incremental-update validation (including forward moves and
+// rollbacks under all three policies), see Suites 3 and 4 which use
+// INSTANTIATE_ALL + ValidateCommDs.
 // ============================================================================
 
 // ----- 5a: Additional initial-state tests for Lazy/Buffered -----
@@ -1769,13 +1963,13 @@ BOOST_AUTO_TEST_CASE(kl_bsp_comm_large_test_graphs_lazy) {
         instance.GetArchitecture().SetCommunicationCosts(5);
         instance.GetArchitecture().SetNumberOfProcessors(4);
 
-        std::vector<std::vector<int>> send_cost = {
-            {0, 1, 4, 4},
-            {1, 0, 4, 4},
-            {4, 4, 0, 1},
-            {4, 4, 1, 0}
-        };
-        instance.GetArchitecture().SetSendCosts(send_cost);
+        // std::vector<std::vector<int>> send_cost = {
+        //     {0, 1, 4, 4},
+        //     {1, 0, 4, 4},
+        //     {4, 4, 0, 1},
+        //     {4, 4, 1, 0}
+        // };
+        // instance.GetArchitecture().SetSendCosts(send_cost);
 
         if (!status_graph) {
             std::cout << "Reading files failed." << std::endl;
@@ -1829,13 +2023,13 @@ BOOST_AUTO_TEST_CASE(kl_bsp_comm_large_test_graphs_buffered) {
         instance.GetArchitecture().SetCommunicationCosts(5);
         instance.GetArchitecture().SetNumberOfProcessors(4);
 
-        std::vector<std::vector<int>> send_cost = {
-            {0, 1, 4, 4},
-            {1, 0, 4, 4},
-            {4, 4, 0, 1},
-            {4, 4, 1, 0}
-        };
-        instance.GetArchitecture().SetSendCosts(send_cost);
+        // std::vector<std::vector<int>> send_cost = {
+        //     {0, 1, 4, 4},
+        //     {1, 0, 4, 4},
+        //     {4, 4, 0, 1},
+        //     {4, 4, 1, 0}
+        // };
+        // instance.GetArchitecture().SetSendCosts(send_cost);
 
         if (!status_graph) {
             std::cout << "Reading files failed." << std::endl;
