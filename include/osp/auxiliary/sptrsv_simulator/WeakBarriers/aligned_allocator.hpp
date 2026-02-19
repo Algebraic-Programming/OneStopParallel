@@ -42,9 +42,8 @@ struct AlignedAllocator {
     template <class U>
     AlignedAllocator(const AlignedAllocator<U, alignment> &) noexcept {}
 
-    inline T *allocate(std::size_t size) { return reinterpret_cast<T *>(std::aligned_alloc(alignment, size * sizeof(T))); }
-
-    inline void deallocate(T *p, [[maybe_unused]] std::size_t size) { std::free(p); }
+    inline T *allocate(std::size_t size);
+    inline void deallocate(T *p, [[maybe_unused]] std::size_t size);
 
     template <typename U, typename... Args>
     inline void construct(U *p, Args &&...args) {
@@ -56,6 +55,17 @@ struct AlignedAllocator {
         p->~U();
     }
 };
+
+template <class T, std::size_t alignment>
+inline T *AlignedAllocator<T, alignment>::allocate(std::size_t size) {
+    std::size_t allocationSize = ((size * sizeof(T) + alignment - 1U) / alignment) * alignment;
+    return reinterpret_cast<T *>(std::aligned_alloc(alignment, allocationSize));
+}
+
+template <class T, std::size_t alignment>
+inline void AlignedAllocator<T, alignment>::deallocate(T *p, [[maybe_unused]] std::size_t size) {
+    std::free(p);
+}
 
 template <class T, std::size_t T_alignment, class U, std::size_t U_alignment>
 constexpr bool operator==(const AlignedAllocator<T, T_alignment> &, const AlignedAllocator<U, U_alignment> &) noexcept {
