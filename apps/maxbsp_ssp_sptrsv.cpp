@@ -116,10 +116,8 @@ int main(int argc, char *argv[]) {
         sptrsv_kernel.SetupCsrNoPermutation(ssp_var_schedule);
         sptrsv_kernel.x_ = x.data();
         sptrsv_kernel.b_ = b.data();
-        FlatCheckpointCounterBarrier barrier(num_threads);
-        auto ops = Sptrsv<int32_t>::MakeBarrierOps(barrier);
         auto start = std::chrono::high_resolution_clock::now();
-        sptrsv_kernel.SspLsolveStaleness2(ops);
+        sptrsv_kernel.SspLsolveStaleness2();
         auto end = std::chrono::high_resolution_clock::now();
         ssp_var_flat_total_time += std::chrono::duration<double>(end - start).count();
         if (iter == 0) {
@@ -137,10 +135,8 @@ int main(int argc, char *argv[]) {
         sptrsv_kernel.SetupCsrNoPermutation(ssp_gl_schedule);
         sptrsv_kernel.x_ = x.data();
         sptrsv_kernel.b_ = b.data();
-        FlatCheckpointCounterBarrier barrier(num_threads);
-        auto ops = Sptrsv<int32_t>::MakeBarrierOps(barrier);
         auto start = std::chrono::high_resolution_clock::now();
-        sptrsv_kernel.SspLsolveStaleness2(ops);
+        sptrsv_kernel.SspLsolveStaleness2();
         auto end = std::chrono::high_resolution_clock::now();
         ssp_gl_flat_total_time += std::chrono::duration<double>(end - start).count();
         if (iter == 0) {

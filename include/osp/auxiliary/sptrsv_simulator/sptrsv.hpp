@@ -36,7 +36,6 @@ limitations under the License.
 #    include <vector>
 
 #    include "osp/auxiliary/sptrsv_simulator/WeakBarriers/flat_checkpoint_counter_barrier.hpp"
-#    include "osp/auxiliary/sptrsv_simulator/WeakBarriers/flat_checkpoint_counter_barrier_cached.hpp"
 #    include "osp/bsp/model/BspInstance.hpp"
 #    include "osp/bsp/model/BspSchedule.hpp"
 #    include "osp/graph_implementations/eigen_matrix_adapter/sparse_matrix.hpp"
@@ -51,23 +50,6 @@ class Sptrsv {
     const BspInstance<SparseMatrixImp<EigenIdxType>> *instance_;
 
   public:
-    struct BarrierOps {
-        void *ctx;
-        void (*arrive)(void *ctx, std::size_t threadId);
-        void (*wait)(void *ctx, std::size_t threadId, std::size_t diff);
-    };
-
-    template <typename BarrierT>
-    static BarrierOps MakeBarrierOps(BarrierT &barrier) {
-        return BarrierOps{
-            static_cast<void *>(&barrier),
-            [](void *ctx, std::size_t threadId) {
-                static_cast<BarrierT *>(ctx)->Arrive(threadId);
-            },
-            [](void *ctx, std::size_t threadId, std::size_t diff) {
-                static_cast<BarrierT *>(ctx)->Wait(threadId, diff);
-            }};
-    }
     std::vector<double> val_;
     std::vector<double> cscVal_;
 
@@ -505,10 +487,11 @@ class Sptrsv {
     std::size_t GetNumberOfVertices() { return instance_->NumberOfVertices(); }
 
     // SSP Lsolve with staleness=2 (allowing at most one superstep of lag).
-    // Barrier operations are injected via function pointers.
-    void SspLsolveStaleness2(const BarrierOps &barrierOps) {
+    // Uses FlatCheckpointCounterBarrier created internally.
+    void SspLsolveStaleness2() {
         constexpr std::size_t staleness = 2U; // Maximum allowed superstep difference
         const unsigned nthreads = instance_->NumberOfProcessors();
+        FlatCheckpointCounterBarrier barrier(nthreads);
 
         auto *csr = instance_->GetComputationalDag().GetCSR();
         const auto *outer = csr->outerIndexPtr();
@@ -520,7 +503,7 @@ class Sptrsv {
             const std::size_t proc = static_cast<std::size_t>(omp_get_thread_num());
             for (unsigned step = 0; step < numSupersteps_; ++step) {
                 // Enforce staleness window before starting this superstep.
-                barrierOps.wait(barrierOps.ctx, proc, staleness - 1U);
+                barrier.Wait(proc, staleness - 1U);
                 // Process nodes assigned to this (step, proc) pair.
                 const size_t boundsStrSize = boundsArrayL_[step][proc].size();
                 for (size_t index = 0; index < boundsStrSize; index += 2) {
@@ -539,17 +522,9 @@ class Sptrsv {
                     }
                 }
                 // Signal completion of this superstep.
-                barrierOps.arrive(barrierOps.ctx, proc);
+                barrier.Arrive(proc);
             }
         }
-    }
-
-    // Default SSP Lsolve uses the cached flat checkpoint counter barrier.
-    void SspLsolveStaleness2() {
-        const unsigned nthreads = instance_->NumberOfProcessors();
-        FlatCheckpointCounterBarrierCached barrier(nthreads);
-        const BarrierOps ops = MakeBarrierOps(barrier);
-        SspLsolveStaleness2(ops);
     }
 
     virtual ~Sptrsv() = default;
