@@ -15,8 +15,7 @@ limitations under the License.
 
 @author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
-#define KL_DEBUG_COST_CHECK
-#define KL_DEBUG_VALIDATE_COMM_DS
+
 #pragma once
 
 #include <algorithm>
@@ -571,113 +570,33 @@ class KlImprover : public ImprovementScheduler<GraphT> {
 
     inline void DebugCostCheck([[maybe_unused]] const ThreadSearchContext &threadData) {
 #ifdef KL_DEBUG_COST_CHECK
-        // activeSchedule_.GetVectorSchedule().numberOfSupersteps_ = threadDataVec_[0].NumSteps();
-        // const CostT computedCost = commCostF_.ComputeScheduleCostTest();
-        // const CostT currentCost = threadData.activeScheduleData_.cost_;
-        // if (std::abs(computedCost - currentCost) > 0.00001) {
-        //     const size_t numViolations = threadData.activeScheduleData_.currentViolations_.size();
-        //     std::cout << "computed cost: " << computedCost << ", current cost: " << currentCost
-        //               << ", violations: " << numViolations
-        //               << ", feasible: " << (threadData.activeScheduleData_.feasible_ ? "true" : "false") << std::endl;
-        //     if (numViolations == 0) {
-        //         std::cout << ">>>>>>>>>>>>>>>>>>>>>> compute cost not equal to new cost <<<<<<<<<<<<<<<<<<<<" << std::endl;
-        //     } else {
-        //         std::cout << ">>>>>> [expected: violation penalty gap] <<<<<<" << std::endl;
-        //     }
-        // }
-        // if constexpr (ActiveScheduleT::useMemoryConstraint_) {
-        //     if (not activeSchedule_.memoryConstraint_.SatisfiedMemoryConstraint()) {
-        //         std::cout << "memory constraint not satisfied" << std::endl;
-        //     }
-        // }
+        activeSchedule_.GetVectorSchedule().numberOfSupersteps_ = threadDataVec_[0].NumSteps();
+        const CostT computedCost = commCostF_.ComputeScheduleCostTest();
+        const CostT currentCost = threadData.activeScheduleData_.cost_;
+        if (std::abs(computedCost - currentCost) > 0.00001) {
+            const size_t numViolations = threadData.activeScheduleData_.currentViolations_.size();
+            std::cout << "computed cost: " << computedCost << ", current cost: " << currentCost
+                      << ", violations: " << numViolations
+                      << ", feasible: " << (threadData.activeScheduleData_.feasible_ ? "true" : "false") << std::endl;
+            std::cout << ">>>>>>>>>>>>>>>>>>>>>> compute cost not equal to new cost <<<<<<<<<<<<<<<<<<<<" << std::endl;
+        }
+        if constexpr (ActiveScheduleT::useMemoryConstraint_) {
+            if (not activeSchedule_.memoryConstraint_.SatisfiedMemoryConstraint()) {
+                std::cout << "memory constraint not satisfied" << std::endl;
+            }
+        }
 #endif
     }
 
     inline CostT ApplyMove(KlMove move, ThreadSearchContext &threadData) {
-#ifdef KL_DEBUG_COST_CHECK
-        // Measure TRUE cost before move — separate work and comm per step
-        activeSchedule_.GetVectorSchedule().numberOfSupersteps_ = threadData.NumSteps();
-        const unsigned numStepsCheck = threadData.NumSteps();
-        static thread_local std::vector<double> perStepCommBefore;
-        static thread_local std::vector<double> perStepWorkBefore;
-        perStepCommBefore.resize(numStepsCheck);
-        perStepWorkBefore.resize(numStepsCheck);
-        CostT workBefore = 0, commBefore = 0;
-        for (unsigned step = 0; step < numStepsCheck; step++) {
-            perStepWorkBefore[step] = activeSchedule_.GetStepMaxWork(step);
-            perStepCommBefore[step] = commCostF_.StepMaxComm(step);
-            workBefore += perStepWorkBefore[step];
-            commBefore += perStepCommBefore[step];
-        }
-#endif
         activeSchedule_.ApplyMove(move, threadData.activeScheduleData_);
         commCostF_.UpdateDatastructureAfterMove(move, threadData.startStep_, threadData.endStep_);
-#ifdef KL_DEBUG_COST_CHECK
-        // Measure TRUE cost after move
-        CostT workAfter = 0, commAfter = 0;
-        for (unsigned step = 0; step < numStepsCheck; step++) {
-            workAfter += activeSchedule_.GetStepMaxWork(step);
-            commAfter += commCostF_.StepMaxComm(step);
-        }
-        const CostT actualWorkDelta = workAfter - workBefore;
-        const CostT actualCommDelta = (commAfter - commBefore) * instance_->CommunicationCosts();
-        const CostT actualDelta = actualWorkDelta + actualCommDelta;
-#endif
+
         CostT changeInCost = -move.gain_;
         changeInCost += static_cast<CostT>(threadData.activeScheduleData_.resolvedViolations_.size())
                         * threadData.rewardPenaltyStrat_.reward_;
         changeInCost
             -= static_cast<CostT>(threadData.activeScheduleData_.newViolations_.size()) * threadData.rewardPenaltyStrat_.penalty_;
-
-#ifdef KL_DEBUG_COST_CHECK
-        if (std::abs(actualDelta - changeInCost) > 0.00001) {
-            static unsigned gainDivergenceCount = 0;
-            gainDivergenceCount++;
-            if (gainDivergenceCount <= 10) {
-                std::cout << "\n[GAIN DIVERGENCE #" << gainDivergenceCount << "] "
-                          << "node=" << move.node_ << " (" << move.fromProc_ << ",S" << move.fromStep_ << ")"
-                          << " -> (" << move.toProc_ << ",S" << move.toStep_ << ")"
-                          << "\n  gain=" << move.gain_ << " purePredicted=" << changeInCost << " actualDelta=" << actualDelta
-                          << " error=" << (actualDelta - changeInCost) << "\n  workDelta=" << actualWorkDelta
-                          << " commDelta=" << actualCommDelta << " commCosts=" << instance_->CommunicationCosts()
-                          << " rawCommDelta=" << (commAfter - commBefore)
-                          << "\n  newViolations=" << threadData.activeScheduleData_.newViolations_.size()
-                          << " resolvedViolations=" << threadData.activeScheduleData_.resolvedViolations_.size()
-                          << " penalty=" << threadData.rewardPenaltyStrat_.penalty_
-                          << " reward=" << threadData.rewardPenaltyStrat_.reward_ << std::endl;
-                // Per-step comm max changes
-                std::cout << "  Per-step comm changes:" << std::endl;
-                for (unsigned s = 0; s < numStepsCheck; s++) {
-                    double csAfter = commCostF_.StepMaxComm(s);
-                    if (std::abs(csAfter - perStepCommBefore[s]) > 0.00001) {
-                        std::cout << "    step " << s << ": commMax " << perStepCommBefore[s] << " -> " << csAfter
-                                  << " (delta=" << (csAfter - perStepCommBefore[s]) << ")" << std::endl;
-                    }
-                }
-                // Per-step work changes
-                for (unsigned s = 0; s < numStepsCheck; s++) {
-                    double wsAfter = activeSchedule_.GetStepMaxWork(s);
-                    if (std::abs(wsAfter - perStepWorkBefore[s]) > 0.00001) {
-                        std::cout << "    step " << s << ": maxWork " << perStepWorkBefore[s] << " -> " << wsAfter
-                                  << " (delta=" << (wsAfter - perStepWorkBefore[s]) << ")" << std::endl;
-                    }
-                }
-                // Parent/child context
-                const auto &graph = instance_->GetComputationalDag();
-                std::cout << "  Parents:";
-                for (const auto &p : graph.Parents(move.node_)) {
-                    std::cout << " " << p << "(P" << activeSchedule_.AssignedProcessor(p) << ",S"
-                              << activeSchedule_.AssignedSuperstep(p) << ",cw=" << graph.VertexCommWeight(p) << ")";
-                }
-                std::cout << "\n  Children:";
-                for (const auto &c : graph.Children(move.node_)) {
-                    std::cout << " " << c << "(P" << activeSchedule_.AssignedProcessor(c) << ",S"
-                              << activeSchedule_.AssignedSuperstep(c) << ")";
-                }
-                std::cout << "\n  Node commW=" << graph.VertexCommWeight(move.node_) << std::endl;
-            }
-        }
-#endif
 
 #ifdef KL_DEBUG
         std::cout << "penalty: " << threadData.rewardPenaltyStrat_.penalty_
