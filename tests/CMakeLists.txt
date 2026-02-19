@@ -60,6 +60,8 @@ _add_test( kl_util )
 
 _add_test( kl_bsp_cost_policies )
 
+_add_test( kl_step_removal )
+
 _add_test( kl_bsp_comm_cost )
 
 _add_test( kl_bsp_comm_affinities )

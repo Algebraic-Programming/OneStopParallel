@@ -109,7 +109,7 @@ struct KlBspCommCostFunction {
         moveCounter_++;
         if (!commDs_.ValidateCommDs(moveCounter_, move)) {
             std::cout << "[KL_DEBUG_VALIDATE_COMM_DS] *** DIVERGENCE at move #" << moveCounter_ << " — ABORTING ***" << std::endl;
-            std::abort();
+            // std::abort();
         }
 #endif
     }

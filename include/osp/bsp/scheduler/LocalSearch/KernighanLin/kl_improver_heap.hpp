@@ -197,18 +197,6 @@ class KlImproverHeap : public KlImproverBase<KlImproverHeap<GraphT, CommCostFunc
                                                 recomputeMaxGain,
                                                 newNodes);
 
-#ifdef KL_DEBUG
-        std::cout << "recmopute max gain: {";
-        for (const auto mapPair : recomputeMaxGain) {
-            std::cout << mapPair.first << ", ";
-        }
-        std::cout << "}" << std::endl;
-        std::cout << "new nodes: {";
-        for (const auto v : newNodes) {
-            std::cout << v << ", ";
-        }
-        std::cout << "}" << std::endl;
-#endif
         this->DebugCostCheck(threadData);
 
         // Heap updates for recomputed existing nodes
