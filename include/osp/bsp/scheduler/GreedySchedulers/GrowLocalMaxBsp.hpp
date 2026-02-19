@@ -34,7 +34,7 @@ namespace osp {
 
 template <typename VertT, typename WeightT>
 struct GrowLocalSSPParams {
-    VertT minSuperstepSize_ = 10;
+    VertT minSuperstepSize_ = 20;
     WeightT syncCostMultiplierMinSuperstepWeight_ = 1;
     WeightT syncCostMultiplierParallelCheck_ = 4;
 };
