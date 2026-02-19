@@ -305,7 +305,7 @@ void KlImproverHeap<GraphT, CommCostFunctionT, MemoryConstraintT, windowSize, Co
             }
         }
         const unsigned idx = this->RelStepIdx(nodeStep, step);
-        const CostT gain = affinityTable[node][nodeProc][Base::windowSize] - affinityTable[node][proc][idx];
+        const CostT gain = affinityTable[node][nodeProc][windowSize] - affinityTable[node][proc][idx];
         if (gain > maxGain) {
             maxGain = gain;
             maxProc = proc;
@@ -346,7 +346,7 @@ void KlImproverHeap<GraphT, CommCostFunctionT, MemoryConstraintT, windowSize, Co
                         continue;
                     }
                 }
-                const CostT gain = affinityTable[node][nodeProc][Base::windowSize] - affinityTable[node][p][idx];
+                const CostT gain = affinityTable[node][nodeProc][windowSize] - affinityTable[node][p][idx];
                 if (gain > maxGain) {
                     maxGain = gain;
                     maxProc = p;
@@ -363,7 +363,7 @@ void KlImproverHeap<GraphT, CommCostFunctionT, MemoryConstraintT, windowSize, Co
                         continue;
                     }
                 }
-                const CostT gain = affinityTable[node][nodeProc][Base::windowSize] - affinityTable[node][proc][Base::windowSize];
+                const CostT gain = affinityTable[node][nodeProc][windowSize] - affinityTable[node][proc][windowSize];
                 if (gain > maxGain) {
                     maxGain = gain;
                     maxProc = proc;

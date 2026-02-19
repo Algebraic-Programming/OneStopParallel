@@ -274,40 +274,16 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopTest) {
     BOOST_CHECK_CLOSE(affinity[v4][1][1], -6.5, 0.00001);
     BOOST_CHECK_CLOSE(affinity[v4][1][2], -3.5, 0.00001);
 
-    auto recomputeMaxGain = kl.RunInnerIterationTest();
-    std::cout << "------------------------recompute max_gain: { ";
-    for (const auto &[key, value] : recomputeMaxGain) {
-        std::cout << key << " ";
-    }
-    std::cout << "}" << std::endl;
-
+    kl.RunInnerIterationTest();
     BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
 
-    recomputeMaxGain = kl.RunInnerIterationTest();
-    std::cout << "recompute max_gain: { ";
-    for (const auto &[key, value] : recomputeMaxGain) {
-        std::cout << key << " ";
-    }
-    std::cout << "}" << std::endl;
-
+    kl.RunInnerIterationTest();
     BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
 
-    recomputeMaxGain = kl.RunInnerIterationTest();
-    std::cout << "recompute max_gain: { ";
-    for (const auto &[key, value] : recomputeMaxGain) {
-        std::cout << key << " ";
-    }
-    std::cout << "}" << std::endl;
-
+    kl.RunInnerIterationTest();
     BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
 
-    recomputeMaxGain = kl.RunInnerIterationTest();
-    std::cout << "recompute max_gain: { ";
-    for (const auto &[key, value] : recomputeMaxGain) {
-        std::cout << key << " ";
-    }
-    std::cout << "}" << std::endl;
-
+    kl.RunInnerIterationTest();
     BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
 }
 
@@ -358,40 +334,16 @@ BOOST_AUTO_TEST_CASE(KlImproverInnerLoopPenaltyTest) {
 
     auto nodeSelection = kl.InsertGainHeapTestPenalty({7});
 
-    auto recomputeMaxGain = kl.RunInnerIterationTest();
-    std::cout << "-----------recompute max_gain: { ";
-    for (const auto &[key, value] : recomputeMaxGain) {
-        std::cout << key << " ";
-    }
-    std::cout << "}" << std::endl;
-
+    kl.RunInnerIterationTest();
     BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
 
-    recomputeMaxGain = kl.RunInnerIterationTest();
-    std::cout << "recompute max_gain: { ";
-    for (const auto &[key, value] : recomputeMaxGain) {
-        std::cout << key << " ";
-    }
-    std::cout << "}" << std::endl;
-
+    kl.RunInnerIterationTest();
     BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
 
-    recomputeMaxGain = kl.RunInnerIterationTest();
-    std::cout << "recompute max_gain: { ";
-    for (const auto &[key, value] : recomputeMaxGain) {
-        std::cout << key << " ";
-    }
-    std::cout << "}" << std::endl;
-
+    kl.RunInnerIterationTest();
     BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
 
-    recomputeMaxGain = kl.RunInnerIterationTest();
-    std::cout << "recompute max_gain: { ";
-    for (const auto &[key, value] : recomputeMaxGain) {
-        std::cout << key << " ";
-    }
-    std::cout << "}" << std::endl;
-
+    kl.RunInnerIterationTest();
     BOOST_CHECK_CLOSE(kl.GetCommCostF().ComputeScheduleCostTest(), kl.GetCurrentCost(), 0.00001);
 }
 

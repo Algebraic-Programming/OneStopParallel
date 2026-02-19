@@ -356,8 +356,10 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
         commCostF_.UpdateDatastructureAfterMove(move, threadData.startStep_, threadData.endStep_);
 
         CostT changeInCost = -move.gain_;
-        changeInCost += threadData.activeScheduleData_.resolvedViolations_.size() * threadData.rewardPenaltyStrat_.reward_;
-        changeInCost -= threadData.activeScheduleData_.newViolations_.size() * threadData.rewardPenaltyStrat_.penalty_;
+        changeInCost += static_cast<CostT>(threadData.activeScheduleData_.resolvedViolations_.size())
+                        * threadData.rewardPenaltyStrat_.reward_;
+        changeInCost
+            -= static_cast<CostT>(threadData.activeScheduleData_.newViolations_.size()) * threadData.rewardPenaltyStrat_.penalty_;
 
 #ifdef KL_DEBUG_COST_CHECK
         {
