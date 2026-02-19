@@ -32,7 +32,7 @@ _add_executable( graph_analyser )
 
 _add_executable( graph_converter )
 
-_add_executable( kl_profile )
+#_add_executable( kl_profile )
 
 if(Boost_FOUND)
 

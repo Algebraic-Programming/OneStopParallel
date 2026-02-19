@@ -14,7 +14,7 @@ Run with perf or vtune:
 #include "osp/auxiliary/io/hdag_graph_file_reader.hpp"
 #include "osp/bsp/model/cost/TotalCommunicationCost.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
-#include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_include.hpp"
+#include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_improver.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 
 using namespace osp;

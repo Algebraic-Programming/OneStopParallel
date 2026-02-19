@@ -23,7 +23,7 @@ limitations under the License.
 #include <iostream>
 
 #include "../kl_active_schedule.hpp"
-#include "../kl_improver.hpp"
+#include "../kl_improver_base.hpp"
 #include "FastDeltaTacker.hpp"
 #include "comm_cost_policies.hpp"
 #include "max_comm_datastructure.hpp"

@@ -20,8 +20,8 @@ limitations under the License.
 #include <boost/test/unit_test.hpp>
 #include <set>
 
+#include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_improver.hpp"
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_improver_test.hpp"
-#include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_include.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 
 using namespace osp;
