@@ -663,7 +663,7 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
                       << "computed=" << computedCost << " tracked=" << currentCost << " error=" << (computedCost - currentCost)
                       << " violations=" << numViolations
                       << " feasible=" << (threadData.activeScheduleData_.feasible_ ? "true" : "false") << std::endl;
-            // std::abort();
+            std::abort();
         }
         if constexpr (ActiveScheduleT::useMemoryConstraint_) {
             if (not activeSchedule_.memoryConstraint_.SatisfiedMemoryConstraint()) {
@@ -1177,12 +1177,31 @@ void KlImproverBase<Derived, GraphT, CommCostFunctionT, MemoryConstraintT, windo
     if (SelectNodesCheckRemoveSuperstep(threadData.stepToRemove_, threadData)) {
         activeSchedule_.SwapEmptyStepFwd(threadData.stepToRemove_, threadData.endStep_);
         const unsigned oldEndStep = threadData.endStep_;
+        // Capture comm costs BEFORE the swap loop moves data around.
+        // removedStep may carry comm data (lazy/buffered placement), and
+        // removedStep-1 will absorb it during FixupSendRecv.
+        const CostT removedStepMaxComm = static_cast<CostT>(commCostF_.StepMaxComm(threadData.stepToRemove_));
+        const CostT prevStepMaxComm
+            = (threadData.stepToRemove_ > 0) ? static_cast<CostT>(commCostF_.StepMaxComm(threadData.stepToRemove_ - 1)) : CostT(0);
+
         for (unsigned i = threadData.stepToRemove_; i < threadData.endStep_; i++) {
             commCostF_.SwapCommSteps(i, i + 1);
         }
         threadData.endStep_--;
         commCostF_.UpdateLambdaAfterStepRemoval(threadData.stepToRemove_);
         commCostF_.FixupSendRecvAfterStepRemoval(threadData.stepToRemove_, oldEndStep);
+
+        // Compute the comm delta from the merge.
+        // FixupSendRecv merged the removed step's comm into removedStep-1 and
+        // called ArrangeSuperstepCommData, updating the cache. The cost lost
+        // the removed step's comm (now at oldEndStep, out of range) and gained
+        // the increase at removedStep-1 from the merge.
+        const CostT commCostMultiplier = static_cast<CostT>(instance_->CommunicationCosts());
+        CostT commDelta = -removedStepMaxComm * commCostMultiplier;
+        if (threadData.stepToRemove_ > 0) {
+            const CostT newPrevStepMaxComm = static_cast<CostT>(commCostF_.StepMaxComm(threadData.stepToRemove_ - 1));
+            commDelta += (newPrevStepMaxComm - prevStepMaxComm) * commCostMultiplier;
+        }
 
         const CostT syncCost = static_cast<CostT>(instance_->SynchronisationCosts());
         threadData.activeScheduleData_.appliedMoves_.push_back(KlMove::MakeRemoveStep(threadData.stepToRemove_, syncCost));
@@ -1191,7 +1210,7 @@ void KlImproverBase<Derived, GraphT, CommCostFunctionT, MemoryConstraintT, windo
             activeSchedule_.UpdateViolationsAfterStepRemoval(threadData.stepToRemove_, threadData.activeScheduleData_);
         }
 
-        threadData.activeScheduleData_.UpdateCost(static_cast<CostT>(-1.0 * syncCost));
+        threadData.activeScheduleData_.UpdateCost(static_cast<CostT>(-1.0 * syncCost) + commDelta);
         DebugCostCheck(threadData, "SelectActiveNodes_after_StepRemoval_UpdateCost");
 
         if constexpr (enablePreresolvingViolations_) {
