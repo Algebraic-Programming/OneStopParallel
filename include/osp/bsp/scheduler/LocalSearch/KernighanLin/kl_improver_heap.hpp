@@ -188,6 +188,7 @@ class KlImproverHeap : public KlImproverBase<KlImproverHeap<GraphT, CommCostFunc
         std::map<VertexType, KlGainUpdateInfo> recomputeMaxGain;
 
         // Incremental affinity updates
+        // Note: unlockNodes are still LOCKED here, so UpdateNodeCommAffinity skips them.
         UpdateNodeWorkAffinity(threadData.affinityTable_, bestMove, prevWorkData, recomputeMaxGain);
         this->commCostF_.UpdateNodeCommAffinity(bestMove,
                                                 threadData,
@@ -213,7 +214,10 @@ class KlImproverHeap : public KlImproverBase<KlImproverHeap<GraphT, CommCostFunc
         // Heap updates for recomputed existing nodes
         UpdateMaxGain(bestMove, recomputeMaxGain, threadData);
 
-        // Combine neighbor nodes + unlocked nodes (already unlocked by caller)
+        // Now unlock and merge — after UpdateNodeCommAffinity has run
+        for (const auto v : unlockNodes) {
+            threadData.lockManager_.Unlock(v);
+        }
         newNodes.insert(newNodes.end(), unlockNodes.begin(), unlockNodes.end());
 
         // Insert all new nodes into heap

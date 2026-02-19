@@ -123,10 +123,13 @@ class KlImproverScan : public KlImproverBase<KlImproverScan<GraphT, CommCostFunc
                         std::vector<VertexType> &newNodes,
                         std::vector<VertexType> &unlockNodes,
                         [[maybe_unused]] const PreMoveWorkData<VertexWorkWeightT> &prevWorkData) {
-        // Collect new neighbor nodes → add to active set
+        // Collect new neighbor nodes (unlockNodes still locked → skipped)
         this->CollectNewNodes(bestMove, threadData, newNodes);
 
-        // Combine neighbor nodes + unlocked nodes (already unlocked by caller)
+        // Now unlock and merge
+        for (const auto v : unlockNodes) {
+            threadData.lockManager_.Unlock(v);
+        }
         newNodes.insert(newNodes.end(), unlockNodes.begin(), unlockNodes.end());
 
         for (const auto &node : newNodes) {

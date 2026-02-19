@@ -860,19 +860,15 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
 
                 threadData.affinityTable_.Trim();
 
-                // Unlock nodes first so PostMoveUpdate can re-insert them
-                for (const auto v : unlockNodes) {
-                    threadData.lockManager_.Unlock(v);
-                }
-
-                // DISPATCH: post-move update (handles newNodes + unlockNodes)
+                // DISPATCH: post-move update (affinity updates + heap/scan maintenance)
+                // Note: unlockNodes are still LOCKED here, so UpdateNodeCommAffinity
+                // skips them (important: avoids duplicate insertion into heap).
                 derived().PostMoveUpdate(bestMove, threadData, newNodes, unlockNodes, prevWorkData);
 
                 newNodes.clear();
                 unlockNodes.clear();
 
                 DebugCostCheck(threadData);
-                newNodes.clear();
                 innerIter++;
             }
 

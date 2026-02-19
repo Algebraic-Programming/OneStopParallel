@@ -152,11 +152,7 @@ class KlImproverTest : public KlImprover<GraphT, CommCostFunctionT, MemoryConstr
 
         td.affinityTable_.Trim();
 
-        // Unlock first (matches base loop ordering)
-        for (const auto v : unlockNodes) {
-            td.lockManager_.Unlock(v);
-        }
-
+        // PostMoveUpdate handles unlock internally
         this->PostMoveUpdate(bestMove, td, newNodes, unlockNodes, prevWorkData);
 
         return bestMove;
