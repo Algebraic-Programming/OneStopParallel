@@ -58,11 +58,11 @@ _add_test( kl_lambda )
 
 _add_test( kl_util )
 
-#_add_test( kl_bsp_cost_policies )
+_add_test( kl_bsp_cost_policies )
 
-#_add_test( kl_bsp_comm_cost )
+_add_test( kl_bsp_comm_cost )
 
-#_add_test( kl_bsp_comm_affinities )
+_add_test( kl_bsp_comm_affinities )
 
 #_add_test( kl_bsp_max_improver_test )
 
@@ -70,7 +70,7 @@ _add_test( kl_util )
 
 #_add_test( kl_bsp_incremental_affinity_test )
 
-#_add_test( kl_cross_step_work_affinity_test )
+_add_test( kl_cross_step_work_affinity_test )
 
 #_add_test( kl_max_bsp_affinity_test )
 
@@ -78,7 +78,7 @@ _add_test( kl_util )
 
 _add_test( heaps )
 
-#_add_test( kl_mem_constr )
+_add_test( kl_mem_constr )
 
 _add_test( isomorphic_subgraph_scheduler )
 

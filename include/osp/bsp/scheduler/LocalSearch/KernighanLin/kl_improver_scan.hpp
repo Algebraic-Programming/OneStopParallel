@@ -75,12 +75,6 @@ class KlImproverScan : public KlImproverBase<KlImproverScan<GraphT, CommCostFunc
             }
 
             auto &atn = threadData.affinityTable_.At(node);
-            for (unsigned p = 0; p < numProcs; ++p) {
-                for (unsigned idx = 0; idx < atn[p].size(); ++idx) {
-                    atn[p][idx] = 0;
-                }
-            }
-
             this->ComputeNodeAffinities(node, atn, threadData);
 
             const auto bestMove = this->template ComputeBestMove<true>(node, atn, threadData);
