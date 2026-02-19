@@ -488,8 +488,8 @@ class Sptrsv {
 
     // SSP Lsolve with staleness=2 (allowing at most one superstep of lag).
     // Uses FlatCheckpointCounterBarrier created internally.
-    void SspLsolveStaleness2() {
-        constexpr std::size_t staleness = 2U; // Maximum allowed superstep difference
+    template <unsigned staleness = 2U>
+    void SspLsolveStaleness() {
         const unsigned nthreads = instance_->NumberOfProcessors();
         FlatCheckpointCounterBarrier barrier(nthreads);
 

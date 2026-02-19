@@ -20,7 +20,7 @@
 
 using namespace osp;
 
-#define EPSILON 1e-20
+#define EPSILON 1e-50
 
 double L2NormalisedDiff(const std::vector<double> &v, const std::vector<double> &w) {
     assert(v.size() == w.size());
@@ -87,13 +87,15 @@ int main(int argc, char *argv[]) {
     BspArchitecture<SparseMatrixImp<int32_t>> architecture(num_threads, 1, 500);    // configurable processors
     BspInstance<SparseMatrixImp<int32_t>> instance(graph, architecture);
 
+    constexpr unsigned staleness = 2U;
+
     // Create SSP-aware schedule using GreedyVarianceSspScheduler (staleness=2)
     GreedyVarianceSspScheduler<SparseMatrixImp<int32_t>> ssp_var_scheduler;
     MaxBspSchedule<SparseMatrixImp<int32_t>> ssp_var_schedule(instance);
-    ssp_var_scheduler.ComputeSchedule(ssp_var_schedule);
+    ssp_var_scheduler.ComputeSspSchedule(ssp_var_schedule, staleness);
 
     // Create SSP-aware schedule using GrowLocalMaxBsp (staleness=2)
-    GrowLocalSSP<SparseMatrixImp<int32_t>> ssp_gl_scheduler;
+    GrowLocalSSP<SparseMatrixImp<int32_t>, staleness> ssp_gl_scheduler;
     MaxBspSchedule<SparseMatrixImp<int32_t>> ssp_gl_schedule(instance);
     ssp_gl_scheduler.ComputeSchedule(ssp_gl_schedule);
 
@@ -117,7 +119,7 @@ int main(int argc, char *argv[]) {
         sptrsv_kernel.x_ = x.data();
         sptrsv_kernel.b_ = b.data();
         auto start = std::chrono::high_resolution_clock::now();
-        sptrsv_kernel.SspLsolveStaleness2();
+        sptrsv_kernel.SspLsolveStaleness<staleness>();
         auto end = std::chrono::high_resolution_clock::now();
         ssp_var_flat_total_time += std::chrono::duration<double>(end - start).count();
         if (iter == 0) {
@@ -136,7 +138,7 @@ int main(int argc, char *argv[]) {
         sptrsv_kernel.x_ = x.data();
         sptrsv_kernel.b_ = b.data();
         auto start = std::chrono::high_resolution_clock::now();
-        sptrsv_kernel.SspLsolveStaleness2();
+        sptrsv_kernel.SspLsolveStaleness<staleness>();
         auto end = std::chrono::high_resolution_clock::now();
         ssp_gl_flat_total_time += std::chrono::duration<double>(end - start).count();
         if (iter == 0) {

@@ -39,7 +39,7 @@ struct GrowLocalSSPParams {
     WeightT syncCostMultiplierParallelCheck_ = 4;
 };
 
-template <typename GraphT>
+template <typename GraphT, unsigned staleness_t = 2U>
 class GrowLocalSSP : public MaxBspScheduler<GraphT> {
     static_assert(isDirectedGraphV<GraphT>);
     static_assert(hasVertexWeightsV<GraphT>);
@@ -47,7 +47,7 @@ class GrowLocalSSP : public MaxBspScheduler<GraphT> {
   private:
     using VertexType = VertexIdxT<GraphT>;
 
-    static constexpr unsigned staleness{2U};
+    static constexpr unsigned staleness{staleness_t};
     GrowLocalSSPParams<VertexIdxT<GraphT>, VWorkwT<GraphT>> params_;
 
     /*! Vertices ready in current superstep */
@@ -89,18 +89,18 @@ class GrowLocalSSP : public MaxBspScheduler<GraphT> {
     std::string GetScheduleName() const override { return "GrowLocalSSP"; }
 };
 
-template <typename GraphT>
-inline GrowLocalSSPParams<VertexIdxT<GraphT>, VWorkwT<GraphT>> &GrowLocalSSP<GraphT>::GetParameters() {
+template <typename GraphT, unsigned staleness_t>
+inline GrowLocalSSPParams<VertexIdxT<GraphT>, VWorkwT<GraphT>> &GrowLocalSSP<GraphT, staleness_t>::GetParameters() {
     return params_;
 }
 
-template <typename GraphT>
-inline const GrowLocalSSPParams<VertexIdxT<GraphT>, VWorkwT<GraphT>> &GrowLocalSSP<GraphT>::GetParameters() const {
+template <typename GraphT, unsigned staleness_t>
+inline const GrowLocalSSPParams<VertexIdxT<GraphT>, VWorkwT<GraphT>> &GrowLocalSSP<GraphT, staleness_t>::GetParameters() const {
     return params_;
 }
 
-template <typename GraphT>
-void GrowLocalSSP<GraphT>::Init(const unsigned numProcs) {
+template <typename GraphT, unsigned staleness_t>
+void GrowLocalSSP<GraphT, staleness_t>::Init(const unsigned numProcs) {
     currentlyReady_.clear();
 
     for (auto &stepFutureReady : futureReady_) {
@@ -125,8 +125,8 @@ void GrowLocalSSP<GraphT>::Init(const unsigned numProcs) {
     }
 }
 
-template <typename GraphT>
-void GrowLocalSSP<GraphT>::ReleaseMemory() {
+template <typename GraphT, unsigned staleness_t>
+void GrowLocalSSP<GraphT, staleness_t>::ReleaseMemory() {
     currentlyReady_.clear();
     currentlyReady_.shrink_to_fit();
 
@@ -159,8 +159,8 @@ void GrowLocalSSP<GraphT>::ReleaseMemory() {
     }
 }
 
-template <typename GraphT>
-inline typename std::deque<VertexIdxT<GraphT>>::difference_type GrowLocalSSP<GraphT>::MaxAllReadyUsage(
+template <typename GraphT, unsigned staleness_t>
+inline typename std::deque<VertexIdxT<GraphT>>::difference_type GrowLocalSSP<GraphT, staleness_t>::MaxAllReadyUsage(
     const std::deque<VertexIdxT<GraphT>> &currentlyReady, const std::deque<VertexIdxT<GraphT>> &nextSuperstepReady) const {
     if constexpr (staleness == 1U) {
         return std::distance(currentlyReady.cbegin(), currentlyReady.cend());
@@ -176,8 +176,8 @@ inline typename std::deque<VertexIdxT<GraphT>>::difference_type GrowLocalSSP<Gra
     }
 }
 
-template <typename GraphT>
-bool GrowLocalSSP<GraphT>::ChanceToFinish(const unsigned superStep) const {
+template <typename GraphT, unsigned staleness_t>
+bool GrowLocalSSP<GraphT, staleness_t>::ChanceToFinish(const unsigned superStep) const {
     bool ans = std::all_of(futureReady_.cbegin(), futureReady_.cend(), [](const auto &deq) { return deq.empty(); });
 
     if (ans) {
@@ -204,13 +204,13 @@ bool GrowLocalSSP<GraphT>::ChanceToFinish(const unsigned superStep) const {
     return ans;
 }
 
-template <typename GraphT>
-ReturnStatus GrowLocalSSP<GraphT>::ComputeSchedule(BspSchedule<GraphT> &schedule) {
+template <typename GraphT, unsigned staleness_t>
+ReturnStatus GrowLocalSSP<GraphT, staleness_t>::ComputeSchedule(BspSchedule<GraphT> &schedule) {
     return MaxBspScheduler<GraphT>::ComputeSchedule(schedule);
 }
 
-template <typename GraphT>
-ReturnStatus GrowLocalSSP<GraphT>::ComputeSchedule(MaxBspSchedule<GraphT> &schedule) {
+template <typename GraphT, unsigned staleness_t>
+ReturnStatus GrowLocalSSP<GraphT, staleness_t>::ComputeSchedule(MaxBspSchedule<GraphT> &schedule) {
     const BspInstance<GraphT> &instance = schedule.GetInstance();
     const GraphT &graph = instance.GetComputationalDag();
     const VertexType numVertices = graph.NumVertices();
