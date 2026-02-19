@@ -89,12 +89,12 @@ int main(int argc, char *argv[]) {
 
     constexpr unsigned staleness = 2U;
 
-    // Create SSP-aware schedule using GreedyVarianceSspScheduler (staleness=2)
+    // Create SSP-aware schedule using GreedyVarianceSspScheduler (staleness)
     GreedyVarianceSspScheduler<SparseMatrixImp<int32_t>> ssp_var_scheduler;
     MaxBspSchedule<SparseMatrixImp<int32_t>> ssp_var_schedule(instance);
     ssp_var_scheduler.ComputeSspSchedule(ssp_var_schedule, staleness);
 
-    // Create SSP-aware schedule using GrowLocalMaxBsp (staleness=2)
+    // Create SSP-aware schedule using GrowLocalMaxBsp (staleness)
     GrowLocalSSP<SparseMatrixImp<int32_t>, staleness> ssp_gl_scheduler;
     MaxBspSchedule<SparseMatrixImp<int32_t>> ssp_gl_schedule(instance);
     ssp_gl_scheduler.ComputeSchedule(ssp_gl_schedule);
