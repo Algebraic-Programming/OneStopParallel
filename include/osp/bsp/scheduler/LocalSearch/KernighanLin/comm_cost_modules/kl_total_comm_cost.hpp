@@ -19,7 +19,7 @@ limitations under the License.
 #pragma once
 
 #include "../kl_active_schedule.hpp"
-#include "../kl_improver.hpp"
+#include "../kl_improver_base.hpp"
 
 namespace osp {
 

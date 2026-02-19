@@ -347,7 +347,7 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
         std::vector<double> perStepCommBefore(numStepsCheck);
         std::vector<double> perStepWorkBefore(numStepsCheck);
         for (unsigned s = 0; s < numStepsCheck; s++) {
-            perStepCommBefore[s] = commCostF_.StepCost(s);
+            perStepCommBefore[s] = commCostF_.StepMaxComm(s);
             perStepWorkBefore[s] = activeSchedule_.GetStepMaxWork(s);
         }
 #endif
@@ -371,7 +371,7 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
                           << " error=" << (computedCost - expectedCost) << std::endl;
                 // Per-step comm changes
                 for (unsigned s = 0; s < numStepsCheck; s++) {
-                    double csAfter = commCostF_.StepCost(s);
+                    double csAfter = commCostF_.StepMaxComm(s);
                     if (std::abs(csAfter - perStepCommBefore[s]) > 0.00001) {
                         std::cout << "    step " << s << ": commMax " << perStepCommBefore[s] << " -> " << csAfter
                                   << " (delta=" << (csAfter - perStepCommBefore[s]) << ")" << std::endl;

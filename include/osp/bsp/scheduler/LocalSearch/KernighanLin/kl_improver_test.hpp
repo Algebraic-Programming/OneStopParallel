@@ -177,7 +177,7 @@ class KlImproverTest : public KlImprover<GraphT, CommCostFunctionT, MemoryConstr
     void ApplyMoveWithFreshCost(KlMove move) {
         this->activeSchedule_.ApplyMove(move, this->threadDataVec_[0].activeScheduleData_);
         this->commCostF_.UpdateDatastructureAfterMove(move, this->threadDataVec_[0].startStep_, this->threadDataVec_[0].endStep_);
-        CostT freshCost = this->commCostF_.template ComputeScheduleCost<false>();
+        CostT freshCost = this->commCostF_.ComputeScheduleCostTest();
         CostT changeInCost = freshCost - this->threadDataVec_[0].activeScheduleData_.cost_;
         this->threadDataVec_[0].activeScheduleData_.UpdateCost(changeInCost);
     }

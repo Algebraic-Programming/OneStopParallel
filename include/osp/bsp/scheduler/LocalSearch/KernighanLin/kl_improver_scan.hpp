@@ -47,19 +47,23 @@ class KlImproverScan : public KlImproverBase<KlImproverScan<GraphT, CommCostFunc
 
     // --- Per-thread scan data ---
 
+    static constexpr size_t kMaxTieBreakCandidates = 50;
+
     struct ScanThreadData {
-        KlMove currentBest_;
+        std::vector<KlMove> topMoves_;    // up to kMaxTieBreakCandidates equal-gain moves
     };
 
     std::vector<ScanThreadData> scanData_;
 
     ScanThreadData &SD(ThreadSearchContext &td) { return scanData_[td.threadId_]; }
 
-    // --- Core: recompute all unlocked active nodes, find global best ---
+    // --- Core: recompute all unlocked active nodes, collect top moves ---
 
-    KlMove ComputeAllAffinitiesAndFindBest(ThreadSearchContext &threadData) {
-        KlMove globalBest;
-        globalBest.gain_ = std::numeric_limits<CostT>::lowest();
+    void ComputeAllAffinitiesAndFindBest(ThreadSearchContext &threadData) {
+        auto &sd = SD(threadData);
+        sd.topMoves_.clear();
+
+        CostT bestGain = std::numeric_limits<CostT>::lowest();
 
         const unsigned numProcs = this->activeSchedule_.GetInstance().NumberOfProcessors();
         const size_t activeCount = threadData.affinityTable_.size();
@@ -81,26 +85,36 @@ class KlImproverScan : public KlImproverBase<KlImproverScan<GraphT, CommCostFunc
 
             const auto bestMove = this->template ComputeBestMove<true>(node, atn, threadData);
 
-            if (bestMove.gain_ > globalBest.gain_) {
-                globalBest = bestMove;
+            if (bestMove.gain_ > bestGain) {
+                bestGain = bestMove.gain_;
+                sd.topMoves_.clear();
+                sd.topMoves_.push_back(bestMove);
+            } else if (bestMove.gain_ == bestGain && sd.topMoves_.size() < kMaxTieBreakCandidates) {
+                sd.topMoves_.push_back(bestMove);
             }
         }
-        return globalBest;
     }
 
     // --- DISPATCH IMPLEMENTATIONS ---
 
-    void ReinitializeMoveFinding(ThreadSearchContext &threadData) {
-        SD(threadData).currentBest_ = ComputeAllAffinitiesAndFindBest(threadData);
-    }
+    void ReinitializeMoveFinding(ThreadSearchContext &threadData) { ComputeAllAffinitiesAndFindBest(threadData); }
 
     KlMove GetBestMove(ThreadSearchContext &threadData) {
         auto &sd = SD(threadData);
-        KlMove move = sd.currentBest_;
-        if (move.gain_ > std::numeric_limits<CostT>::lowest()) {
-            threadData.lockManager_.Lock(move.node_);
-            threadData.affinityTable_.Remove(move.node_);
+
+        if (sd.topMoves_.empty()) {
+            KlMove invalid;
+            invalid.gain_ = std::numeric_limits<CostT>::lowest();
+            return invalid;
         }
+
+        // Uniform random selection among equal-gain candidates
+        std::uniform_int_distribution<size_t> dis(0, sd.topMoves_.size() - 1);
+        KlMove move = sd.topMoves_[dis(this->gen_)];
+
+        threadData.lockManager_.Lock(move.node_);
+        threadData.affinityTable_.Remove(move.node_);
+
         return move;
     }
 
@@ -120,7 +134,7 @@ class KlImproverScan : public KlImproverBase<KlImproverScan<GraphT, CommCostFunc
         }
 
         // Recompute ALL and find next best — correct by construction
-        SD(threadData).currentBest_ = ComputeAllAffinitiesAndFindBest(threadData);
+        ComputeAllAffinitiesAndFindBest(threadData);
     }
 
   public:
