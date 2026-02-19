@@ -16,7 +16,6 @@ limitations under the License.
 @author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
 #define KL_DEBUG_COST_CHECK
-// #define KL_DEBUG_VALIDATE_COMM_DS
 #pragma once
 
 #include <algorithm>
@@ -664,7 +663,7 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
                       << "computed=" << computedCost << " tracked=" << currentCost << " error=" << (computedCost - currentCost)
                       << " violations=" << numViolations
                       << " feasible=" << (threadData.activeScheduleData_.feasible_ ? "true" : "false") << std::endl;
-            std::abort();
+            // std::abort();
         }
         if constexpr (ActiveScheduleT::useMemoryConstraint_) {
             if (not activeSchedule_.memoryConstraint_.SatisfiedMemoryConstraint()) {

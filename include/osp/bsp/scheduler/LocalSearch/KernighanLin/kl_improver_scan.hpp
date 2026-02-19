@@ -65,7 +65,6 @@ class KlImproverScan : public KlImproverBase<KlImproverScan<GraphT, CommCostFunc
 
         CostT bestGain = std::numeric_limits<CostT>::lowest();
 
-        const unsigned numProcs = this->activeSchedule_.GetInstance().NumberOfProcessors();
         const size_t activeCount = threadData.affinityTable_.size();
 
         for (size_t i = 0; i < activeCount; ++i) {
