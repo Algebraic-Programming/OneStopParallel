@@ -21,6 +21,7 @@ limitations under the License.
 
 #include <algorithm>
 #include <chrono>
+#include <cstdlib>
 #include <limits>
 #include <numeric>
 #include <random>
@@ -400,6 +401,7 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
                               << activeSchedule_.AssignedSuperstep(c) << ")";
                 }
                 std::cout << "\n  Node commW=" << graph.VertexCommWeight(move.node_) << std::endl;
+                std::abort();
             }
         }
 #endif
@@ -515,6 +517,7 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
 #endif
 
             ApplyMove(bestQuickMove, threadData);
+            DebugCostCheck(threadData, "RunQuickMoves_after_ApplyMove");
             innerIter++;
 
             if (threadData.activeScheduleData_.newViolations_.size() > 0) {
@@ -612,6 +615,7 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
                 }
 
                 ApplyMove(bestMove, threadData);
+                DebugCostCheck(threadData, "ResolveViolations_after_ApplyMove");
                 threadData.affinityTable_.Insert(bestMove.node_);
 #ifdef KL_DEBUG_1
                 std::cout << "move node " << bestMove.node_ << " with gain " << bestMove.gain_
@@ -648,25 +652,24 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
 
     // --- DebugCostCheck ---
 
-    inline void DebugCostCheck([[maybe_unused]] const ThreadSearchContext &threadData) {
+    inline void DebugCostCheck([[maybe_unused]] const ThreadSearchContext &threadData,
+                               [[maybe_unused]] const char *label = "unknown") {
 #ifdef KL_DEBUG_COST_CHECK
         activeSchedule_.GetVectorSchedule().numberOfSupersteps_ = threadDataVec_[0].NumSteps();
         const CostT computedCost = commCostF_.ComputeScheduleCostTest();
         const CostT currentCost = threadData.activeScheduleData_.cost_;
         if (std::abs(computedCost - currentCost) > 0.00001) {
             const size_t numViolations = threadData.activeScheduleData_.currentViolations_.size();
-            std::cout << "computed cost: " << computedCost << ", current cost: " << currentCost
-                      << ", violations: " << numViolations
-                      << ", feasible: " << (threadData.activeScheduleData_.feasible_ ? "true" : "false") << std::endl;
-            if (numViolations == 0) {
-                std::cout << ">>>>>>>>>>>>>>>>>>>>>> compute cost not equal to new cost <<<<<<<<<<<<<<<<<<<<" << std::endl;
-            } else {
-                std::cout << ">>>>>> [expected: violation penalty gap] <<<<<<" << std::endl;
-            }
+            std::cout << "\n[COST DIVERGENCE at " << label << "] "
+                      << "computed=" << computedCost << " tracked=" << currentCost << " error=" << (computedCost - currentCost)
+                      << " violations=" << numViolations
+                      << " feasible=" << (threadData.activeScheduleData_.feasible_ ? "true" : "false") << std::endl;
+            std::abort();
         }
         if constexpr (ActiveScheduleT::useMemoryConstraint_) {
             if (not activeSchedule_.memoryConstraint_.SatisfiedMemoryConstraint()) {
-                std::cout << "memory constraint not satisfied" << std::endl;
+                std::cout << "[" << label << "] memory constraint not satisfied" << std::endl;
+                std::abort();
             }
         }
 #endif
@@ -763,12 +766,15 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
         std::vector<VertexType> newNodes;
         std::vector<VertexType> unlockNodes;
 
+        DebugCostCheck(threadData, "RunLocalSearch_entry");
+
         const auto startTime = std::chrono::high_resolution_clock::now();
 
         unsigned noImprovementIterCounter = 0;
         unsigned outerIter = 0;
 
         for (; outerIter < parameters_.maxOuterIterations_; outerIter++) {
+            DebugCostCheck(threadData, "outer_loop_start");
             CostT initialInnerIterCost = threadData.activeScheduleData_.cost_;
 
             ResetInnerSearchStructures(threadData);
@@ -776,6 +782,7 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
             const unsigned numStepsBeforeSelect = threadData.endStep_;
 #endif
             SelectActiveNodes(threadData);
+            DebugCostCheck(threadData, "after_SelectActiveNodes");
             threadData.rewardPenaltyStrat_.InitRewardPenalty(
                 static_cast<double>(threadData.activeScheduleData_.currentViolations_.size()) + 1.0);
 
@@ -803,7 +810,7 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
                           << ", reward: " << threadData.rewardPenaltyStrat_.reward_ << std::endl;
             }
 #endif
-            DebugCostCheck(threadData);
+            DebugCostCheck(threadData, "before_inner_loop");
 
             while (innerIter < threadData.maxInnerIterations_) {
                 // DISPATCH: get best move
@@ -832,12 +839,12 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
 
                 const auto prevWorkData = activeSchedule_.GetPreMoveWorkData(bestMove);
                 const CostT changeInCost = ApplyMove(bestMove, threadData);
-                DebugCostCheck(threadData);
+                DebugCostCheck(threadData, "after_ApplyMove");
 
                 if constexpr (enableQuickMoves_) {
                     if (iterInitalFeasible && threadData.activeScheduleData_.newViolations_.size() > 0) {
                         RunQuickMoves(innerIter, threadData, changeInCost, bestMove.node_);
-                        DebugCostCheck(threadData);
+                        DebugCostCheck(threadData, "after_RunQuickMoves");
                         continue;    // ReinitializeMoveFinding already called inside
                     }
                 }
@@ -868,7 +875,7 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
                 newNodes.clear();
                 unlockNodes.clear();
 
-                DebugCostCheck(threadData);
+                DebugCostCheck(threadData, "after_PostMoveUpdate");
                 innerIter++;
             }
 
@@ -893,7 +900,7 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
                 }
             }
 #endif
-            DebugCostCheck(threadData);
+            DebugCostCheck(threadData, "after_RevertToBestSchedule");
 
             if (computeWithTimeLimit_) {
                 auto finishTime = std::chrono::high_resolution_clock::now();
@@ -1186,14 +1193,17 @@ void KlImproverBase<Derived, GraphT, CommCostFunctionT, MemoryConstraintT, windo
         }
 
         threadData.activeScheduleData_.UpdateCost(static_cast<CostT>(-1.0 * syncCost));
+        DebugCostCheck(threadData, "SelectActiveNodes_after_StepRemoval_UpdateCost");
 
         if constexpr (enablePreresolvingViolations_) {
             ResolveViolations(threadData);
+            DebugCostCheck(threadData, "SelectActiveNodes_after_ResolveViolations");
         }
 
         if (threadData.activeScheduleData_.currentViolations_.size() > parameters_.initialViolationThreshold_) {
             activeSchedule_.RevertToBestSchedule(
                 commCostF_, threadData.activeScheduleData_, threadData.startStep_, threadData.endStep_);
+            DebugCostCheck(threadData, "SelectActiveNodes_after_Revert_tooManyViolations");
         } else {
             threadData.unlockEdgeBacktrackCounter_
                 = static_cast<unsigned>(threadData.activeScheduleData_.currentViolations_.size());
@@ -1276,6 +1286,7 @@ bool KlImproverBase<Derived, GraphT, CommCostFunctionT, MemoryConstraintT, windo
             }
 
             ApplyMove(bestMove, threadData);
+            DebugCostCheck(threadData, "ScatterNodes_after_ApplyMove_immediate");
             if (threadData.activeScheduleData_.currentViolations_.size() > parameters_.abortScatterNodesViolationThreshold_) {
                 abort = true;
                 break;
@@ -1294,7 +1305,7 @@ bool KlImproverBase<Derived, GraphT, CommCostFunctionT, MemoryConstraintT, windo
                       << ", from proc|step: " << bestMove.fromProc_ << "|" << bestMove.fromStep_ << " to: " << bestMove.toProc_
                       << "|" << bestMove.toStep_ << std::endl;
 #endif
-            DebugCostCheck(threadData);
+            DebugCostCheck(threadData, "ScatterNodes_after_ApplyMove");
         }
 
         if (abort) {

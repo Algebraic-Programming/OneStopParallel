@@ -70,9 +70,6 @@ class KlImproverScan : public KlImproverBase<KlImproverScan<GraphT, CommCostFunc
 
         for (size_t i = 0; i < activeCount; ++i) {
             const VertexType node = threadData.affinityTable_.GetSelectedNodes()[i];
-            if (threadData.lockManager_.IsLocked(node)) {
-                continue;
-            }
 
             auto &atn = threadData.affinityTable_.At(node);
             this->ComputeNodeAffinities(node, atn, threadData);
