@@ -163,6 +163,10 @@ class IsomorphicSubgraphScheduler {
                 timestamp + "isomorphic_groups.dot", instance.GetComputationalDag(), orbitProcessor.GetFinalContractionMap());
             writer.WriteColoredGraph(
                 timestamp + "orbits_colored.dot", instance.GetComputationalDag(), orbitProcessor.GetContractionMap());
+            auto contractionMap = orbitProcessor.GetContractionMap();
+            ConstrGraphT orbitContractedGraph;
+            coarser_util::ConstructCoarseDag(instance.GetComputationalDag(), orbitContractedGraph, contractionMap);
+            writer.WriteGraph(timestamp + "orbits_contracted.dot", orbitContractedGraph);
             writer.WriteGraph(timestamp + "iso_groups_contracted.dot", input.instance_.GetComputationalDag());
             writer.WriteColoredGraph(timestamp + "graph_partition.dot", instance.GetComputationalDag(), partition);
             ConstrGraphT coarseGraph;

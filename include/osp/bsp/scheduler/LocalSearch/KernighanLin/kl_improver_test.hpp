@@ -113,11 +113,10 @@ class KlImproverTest : public KlImprover<GraphT, CommCostFunctionT, MemoryConstr
         std::vector<VertexType> newNodes;
 
         const auto prevWorkData = this->activeSchedule_.GetPreMoveWorkData(bestMove);
-        const auto prevCommData = this->commCostF_.GetPreMoveCommData(bestMove);
         this->ApplyMove(bestMove, this->threadDataVec_[0]);
 
         this->threadDataVec_[0].affinityTable_.Trim();
-        this->UpdateAffinities(bestMove, this->threadDataVec_[0], recomputeMaxGain, newNodes, prevWorkData, prevCommData);
+        this->UpdateAffinities(bestMove, this->threadDataVec_[0], recomputeMaxGain, newNodes, prevWorkData);
     }
 
     auto RunInnerIterationTest() {
@@ -137,11 +136,10 @@ class KlImproverTest : public KlImprover<GraphT, CommCostFunctionT, MemoryConstr
 #endif
 
         const auto prevWorkData = this->activeSchedule_.GetPreMoveWorkData(bestMove);
-        const auto prevCommData = this->commCostF_.GetPreMoveCommData(bestMove);
         this->ApplyMove(bestMove, this->threadDataVec_[0]);
 
         this->threadDataVec_[0].affinityTable_.Trim();
-        this->UpdateAffinities(bestMove, this->threadDataVec_[0], recomputeMaxGain, newNodes, prevWorkData, prevCommData);
+        this->UpdateAffinities(bestMove, this->threadDataVec_[0], recomputeMaxGain, newNodes, prevWorkData);
 
 #ifdef KL_DEBUG
         std::cout << "New nodes: { ";
@@ -160,6 +158,67 @@ class KlImproverTest : public KlImprover<GraphT, CommCostFunctionT, MemoryConstr
     bool IsNodeLocked(VertexType node) const { return this->threadDataVec_[0].lockManager_.IsLocked(node); }
 
     void GetActiveScheduleTest(BspSchedule<GraphT> &schedule) { this->activeSchedule_.WriteSchedule(schedule); }
+
+    // Step removal/rollback testing
+
+    bool CheckRemoveSuperstepTest(unsigned step) { return this->CheckRemoveSuperstep(step); }
+
+    bool ScatterNodesSuperstepTest(unsigned step) { return this->ScatterNodesSuperstep(step, this->threadDataVec_[0]); }
+
+    /// Apply a move to the schedule and update cost using a fresh cost computation
+    /// instead of relying on the gain_ field.  This allows manually constructed
+    /// moves (e.g. deliberately bad scatters) with correct cost tracking.
+    void ApplyMoveWithFreshCost(KlMove move) {
+        this->activeSchedule_.ApplyMove(move, this->threadDataVec_[0].activeScheduleData_);
+        this->commCostF_.UpdateDatastructureAfterMove(move, this->threadDataVec_[0].startStep_, this->threadDataVec_[0].endStep_);
+        CostT freshCost = this->commCostF_.template ComputeScheduleCost<false>();
+        CostT changeInCost = freshCost - this->threadDataVec_[0].activeScheduleData_.cost_;
+        this->threadDataVec_[0].activeScheduleData_.UpdateCost(changeInCost);
+    }
+
+    /// Bubble the empty step at position @p step forward to endStep and
+    /// decrement endStep.
+    void SwapEmptyStepFwdTest(unsigned step) {
+        unsigned oldEndStep = this->threadDataVec_[0].endStep_;
+        this->activeSchedule_.SwapEmptyStepFwd(step, oldEndStep);
+        for (unsigned i = step; i < oldEndStep; i++) {
+            this->commCostF_.SwapCommSteps(i, i + 1);
+        }
+        this->threadDataVec_[0].endStep_--;
+        this->commCostF_.UpdateLambdaAfterStepRemoval(step);
+        this->commCostF_.FixupSendRecvAfterStepRemoval(step, oldEndStep);
+    }
+
+    /// Push a REMOVE_STEP sentinel into appliedMoves_ after the step has
+    /// been physically removed via SwapEmptyStepFwdTest.
+    void PushRemoveStepSentinel(unsigned stepToRemove) {
+        auto &data = this->threadDataVec_[0].activeScheduleData_;
+        CostT syncCost = static_cast<CostT>(this->instance_->SynchronisationCosts());
+        data.appliedMoves_.push_back(KlMove::MakeRemoveStep(stepToRemove, syncCost));
+    }
+
+    /// Record the sync-cost saving after step removal.
+    void UpdateCostAfterRemoval() {
+        auto &data = this->threadDataVec_[0].activeScheduleData_;
+        data.UpdateCost(static_cast<CostT>(-1.0 * this->instance_->SynchronisationCosts()));
+    }
+
+    /// Revert to the best schedule found so far.  If a REMOVE_STEP sentinel
+    /// is encountered during reversal, the step is automatically re-inserted.
+    void RevertToBestScheduleTest() {
+        this->activeSchedule_.RevertToBestSchedule(this->commCostF_,
+                                                   this->threadDataVec_[0].activeScheduleData_,
+                                                   this->threadDataVec_[0].startStep_,
+                                                   this->threadDataVec_[0].endStep_);
+    }
+
+    unsigned GetEndStep() const { return this->threadDataVec_[0].endStep_; }
+
+    unsigned NumSteps() const { return this->threadDataVec_[0].NumSteps(); }
+
+    unsigned GetBestScheduleIdx() const { return this->threadDataVec_[0].activeScheduleData_.bestScheduleIdx_; }
+
+    CostT GetBestCost() const { return this->threadDataVec_[0].activeScheduleData_.bestCost_; }
 };
 
 }    // namespace osp

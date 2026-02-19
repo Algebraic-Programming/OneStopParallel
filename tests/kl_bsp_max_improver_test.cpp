@@ -16,25 +16,28 @@ limitations under the License.
 @author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
 
-/// End-to-end tests for KlBspCommCostFunction under all three
+/// End-to-end tests for KlMaxBspCommCostFunction under all three
 /// communication-cost policies (Eager, Lazy, Buffered).
 ///
-/// Uses standard BspSchedule (staleness=0) for all tests.
+/// Uses MaxBspSchedule (staleness=2) for all tests.
 ///
 /// Tests verify:
 ///   1. Inner-loop cost-tracking consistency (ComputeScheduleCostTest ==
 ///      GetCurrentCost after each RunInnerIterationTest).
-///   2. Full ImproveSchedule: precedence constraints are satisfied.
+///   2. Full ImproveSchedule: precedence constraints are satisfied and
+///      staleness=2 cross-processor gaps are respected.
 ///   3. All three policies produce valid results on varied topologies.
 ///
-/// The inner-loop check is the key test: it validates that
-/// UpdateDatastructureAfterMove + ComputeCommAffinity together maintain
-/// consistent incremental cost tracking across all three policies.
+/// NOTE: With staleness=2 and WindowSize=1, superstep gaps are wide
+/// (0,0,2,2,4,4,...), so few nodes have valid moves within the window.
+/// InsertGainHeapTestPenalty typically yields only 2 heap entries.
+/// Inner-loop iterations are therefore limited to 2.
 
-#define BOOST_TEST_MODULE kl_bsp_improver
+#define BOOST_TEST_MODULE kl_max_bsp_improver
 #include <boost/test/unit_test.hpp>
 
-#include "osp/bsp/scheduler/LocalSearch/KernighanLin/comm_cost_modules/kl_bsp_comm_cost.hpp"
+#include "osp/bsp/model/MaxBspSchedule.hpp"
+#include "osp/bsp/scheduler/LocalSearch/KernighanLin/comm_cost_modules/kl_max_bsp_comm_cost.hpp"
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_improver.hpp"
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_improver_test.hpp"
 #include "osp/bsp/scheduler/LocalSearch/LocalSearchMemoryConstraintModules.hpp"
@@ -51,16 +54,38 @@ using CostT = double;
 // ============================================================================
 
 template <typename CommPolicy, unsigned WindowSize = 1>
-using BspCommCostF = KlBspCommCostFunction<Graph, CostT, NoLocalSearchMemoryConstraint, CommPolicy, WindowSize>;
+using MaxCommCostF = KlMaxBspCommCostFunction<Graph, CostT, NoLocalSearchMemoryConstraint, CommPolicy, WindowSize>;
 
 template <typename CommPolicy, unsigned WindowSize = 1>
-using BspImprover = KlImprover<Graph, BspCommCostF<CommPolicy, WindowSize>, NoLocalSearchMemoryConstraint, WindowSize, CostT>;
+using MaxBspImprover = KlImprover<Graph, MaxCommCostF<CommPolicy, WindowSize>, NoLocalSearchMemoryConstraint, WindowSize, CostT>;
 
 // ============================================================================
-//  Helper: run up to maxIter inner iterations and check cost consistency
-//
-// Uses no penalty (InsertGainHeapTest) so GetCurrentCost() equals the pure
-// comm+work+sync cost — identical to ComputeScheduleCostTest().
+//  Helper: verify staleness constraints in a schedule
+// ============================================================================
+static void VerifyStalenessConstraints(const BspSchedule<Graph> &schedule) {
+    const unsigned staleness = schedule.GetStaleness();
+    const auto &dag = schedule.GetInstance().GetComputationalDag();
+    for (const auto &u : dag.Vertices()) {
+        for (const auto &v : dag.Children(u)) {
+            const unsigned uStep = schedule.AssignedSuperstep(u);
+            const unsigned vStep = schedule.AssignedSuperstep(v);
+            const unsigned uProc = schedule.AssignedProcessor(u);
+            const unsigned vProc = schedule.AssignedProcessor(v);
+
+            const unsigned gap = (uProc != vProc) ? staleness : 0;
+
+            BOOST_CHECK_GE(vStep, uStep + gap);
+            if (vStep < uStep + gap) {
+                BOOST_TEST_MESSAGE("Staleness violation: edge " << u << "->" << v << " uStep=" << uStep << " vStep=" << vStep
+                                                                << " uProc=" << uProc << " vProc=" << vProc
+                                                                << " staleness=" << staleness << " required gap=" << gap);
+            }
+        }
+    }
+}
+
+// ============================================================================
+//  Inner-loop helper: run up to maxIter iterations, break on cost mismatch
 // ============================================================================
 template <typename TestT>
 static void RunInnerLoopAndCheckCost(TestT &kl, int maxIter, const std::string &label) {
@@ -84,14 +109,20 @@ static void RunInnerLoopAndCheckCost(TestT &kl, int maxIter, const std::string &
 // ============================================================================
 
 /// Fan-out / fan-in graph (6 nodes, 2 procs).
-/// 0 -> {1,2,3}, {1,2,3} -> 4, 4 -> 5
-/// Steps: 0:s0p0, 1:s1p1, 2:s1p0, 3:s1p1, 4:s2p0, 5:s3p1
+///
+///     0           step 0, proc 0
+///    /|
+///   1  2  3       step 2, proc 1/0/1
+///    \|/
+///     4           step 4, proc 0
+///     |
+///     5           step 6, proc 1
 ///
 struct SmallFanGraph {
     Graph dag;
     BspArchitecture<Graph> arch;
     BspInstance<Graph> *instance = nullptr;
-    BspSchedule<Graph> *schedule = nullptr;
+    MaxBspSchedule<Graph> *schedule = nullptr;
 
     SmallFanGraph() {
         //                          work  mem  comm
@@ -115,12 +146,20 @@ struct SmallFanGraph {
         arch.SetSynchronisationCosts(3);
     }
 
-    BspSchedule<Graph> &Build() {
+    MaxBspSchedule<Graph> &Build() {
         instance = new BspInstance<Graph>(dag, arch);
-        schedule = new BspSchedule<Graph>(*instance);
+        schedule = new MaxBspSchedule<Graph>(*instance);
 
+        // All cross-processor edges have gap >= 2 (staleness=2).
+        //   0(p0,s0)->1(p1,s2) cross gap=2 ok
+        //   0(p0,s0)->2(p0,s2) same proc ok
+        //   0(p0,s0)->3(p1,s2) cross gap=2 ok
+        //   1(p1,s2)->4(p0,s4) cross gap=2 ok
+        //   2(p0,s2)->4(p0,s4) same proc ok
+        //   3(p1,s2)->4(p0,s4) cross gap=2 ok
+        //   4(p0,s4)->5(p1,s6) cross gap=2 ok
         schedule->SetAssignedProcessors({0, 1, 0, 1, 0, 1});
-        schedule->SetAssignedSupersteps({0, 1, 1, 1, 2, 3});
+        schedule->SetAssignedSupersteps({0, 2, 2, 2, 4, 6});
         schedule->UpdateNumberOfSupersteps();
         return *schedule;
     }
@@ -131,7 +170,7 @@ struct SmallFanGraph {
     }
 };
 
-/// 8-node graph with cross-processor edges.
+/// 8-node graph (adapted from kl_bsp_improver_test.cpp for staleness=2).
 ///
 ///   0->1, 0->2, 0->3, 1->4, 2->4, 2->5, 4->7, 3->7
 ///
@@ -139,7 +178,7 @@ struct EightNodeGraph {
     Graph dag;
     BspArchitecture<Graph> arch;
     BspInstance<Graph> *instance = nullptr;
-    BspSchedule<Graph> *schedule = nullptr;
+    MaxBspSchedule<Graph> *schedule = nullptr;
 
     EightNodeGraph() {
         dag.AddVertex(2, 9, 2);    // 0
@@ -165,20 +204,20 @@ struct EightNodeGraph {
         arch.SetSynchronisationCosts(1);
     }
 
-    BspSchedule<Graph> &Build() {
+    MaxBspSchedule<Graph> &Build() {
         instance = new BspInstance<Graph>(dag, arch);
-        schedule = new BspSchedule<Graph>(*instance);
+        schedule = new MaxBspSchedule<Graph>(*instance);
 
-        //   0(p1,s0)->1(p1,s1) same proc ok
-        //   0(p1,s0)->2(p0,s1) cross ok
-        //   0(p1,s0)->3(p0,s1) cross ok
-        //   1(p1,s1)->4(p1,s3) same proc ok
-        //   2(p0,s1)->4(p1,s3) cross ok
-        //   2(p0,s1)->5(p0,s3) same proc ok
-        //   4(p1,s3)->7(p1,s4) same proc ok
-        //   3(p0,s1)->7(p1,s4) cross ok
+        //   0(p1,s0)->1(p1,s0) same proc ok
+        //   0(p1,s0)->2(p0,s2) cross gap=2 ok
+        //   0(p1,s0)->3(p0,s2) cross gap=2 ok
+        //   1(p1,s0)->4(p1,s4) same proc ok
+        //   2(p0,s2)->4(p1,s4) cross gap=2 ok
+        //   2(p0,s2)->5(p0,s4) same proc ok
+        //   4(p1,s4)->7(p1,s6) same proc ok
+        //   3(p0,s2)->7(p1,s6) cross gap=4 ok
         schedule->SetAssignedProcessors({1, 1, 0, 0, 1, 0, 0, 1});
-        schedule->SetAssignedSupersteps({0, 1, 1, 1, 3, 3, 4, 4});
+        schedule->SetAssignedSupersteps({0, 0, 2, 2, 4, 4, 6, 6});
         schedule->UpdateNumberOfSupersteps();
         return *schedule;
     }
@@ -194,31 +233,35 @@ struct EightNodeGraph {
 //
 // Uses KlImproverTest to run individual inner iterations and checks that
 // the incremental cost tracking matches full recomputation at each step.
-// This validates both ComputeCommAffinity gain prediction and
-// UpdateDatastructureAfterMove correctness.
 // ============================================================================
 
 BOOST_AUTO_TEST_CASE(InnerLoopCostConsistencyEager) {
     EightNodeGraph g;
     auto &schedule = g.Build();
 
-    BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
+    BOOST_CHECK_EQUAL(schedule.GetStaleness(), 2u);
 
-    using CommCostT = BspCommCostF<EagerCommCostPolicy>;
+    using CommCostT = MaxCommCostF<EagerCommCostPolicy>;
     using TestT = KlImproverTest<Graph, CommCostT>;
 
     TestT kl;
     kl.SetupSchedule(schedule);
 
-    BOOST_CHECK_EQUAL(kl.GetActiveSchedule().IsFeasible(), true);
+    auto &klSched = kl.GetActiveSchedule();
+    BOOST_CHECK_EQUAL(klSched.NumSteps(), 7);
+    BOOST_CHECK_EQUAL(klSched.IsFeasible(), true);
+    BOOST_CHECK_EQUAL(klSched.GetStaleness(), 2u);
 
+    // Initial cost consistency
     CostT recomputed = kl.GetCommCostF().ComputeScheduleCostTest();
     CostT tracked = kl.GetCurrentCost();
     BOOST_CHECK_CLOSE(recomputed, tracked, 0.00001);
 
-    auto nodeSelection = kl.InsertGainHeapTest({0, 7});
+    // Insert nodes into gain heap and iterate.
+    // With staleness=2 and WindowSize=1, only ~2 nodes get valid moves.
+    auto nodeSelection = kl.InsertGainHeapTestPenalty({0, 7});
 
-    RunInnerLoopAndCheckCost(kl, 4, "Eager");
+    RunInnerLoopAndCheckCost(kl, 2, "Eager");
 }
 
 // ============================================================================
@@ -229,9 +272,7 @@ BOOST_AUTO_TEST_CASE(InnerLoopCostConsistencyLazy) {
     EightNodeGraph g;
     auto &schedule = g.Build();
 
-    BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
-
-    using CommCostT = BspCommCostF<LazyCommCostPolicy>;
+    using CommCostT = MaxCommCostF<LazyCommCostPolicy>;
     using TestT = KlImproverTest<Graph, CommCostT>;
 
     TestT kl;
@@ -243,9 +284,9 @@ BOOST_AUTO_TEST_CASE(InnerLoopCostConsistencyLazy) {
     CostT tracked = kl.GetCurrentCost();
     BOOST_CHECK_CLOSE(recomputed, tracked, 0.00001);
 
-    auto nodeSelection = kl.InsertGainHeapTest({0, 7});
+    auto nodeSelection = kl.InsertGainHeapTestPenalty({0, 7});
 
-    RunInnerLoopAndCheckCost(kl, 4, "Lazy");
+    RunInnerLoopAndCheckCost(kl, 2, "Lazy");
 }
 
 // ============================================================================
@@ -256,9 +297,7 @@ BOOST_AUTO_TEST_CASE(InnerLoopCostConsistencyBuffered) {
     EightNodeGraph g;
     auto &schedule = g.Build();
 
-    BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
-
-    using CommCostT = BspCommCostF<BufferedCommCostPolicy>;
+    using CommCostT = MaxCommCostF<BufferedCommCostPolicy>;
     using TestT = KlImproverTest<Graph, CommCostT>;
 
     TestT kl;
@@ -270,9 +309,9 @@ BOOST_AUTO_TEST_CASE(InnerLoopCostConsistencyBuffered) {
     CostT tracked = kl.GetCurrentCost();
     BOOST_CHECK_CLOSE(recomputed, tracked, 0.00001);
 
-    auto nodeSelection = kl.InsertGainHeapTest({0, 7});
+    auto nodeSelection = kl.InsertGainHeapTestPenalty({0, 7});
 
-    RunInnerLoopAndCheckCost(kl, 4, "Buffered");
+    RunInnerLoopAndCheckCost(kl, 2, "Buffered");
 }
 
 // ============================================================================
@@ -282,13 +321,11 @@ BOOST_AUTO_TEST_CASE(InnerLoopCostConsistencyBuffered) {
 BOOST_AUTO_TEST_CASE(InnerLoopSmallFanAllPolicies) {
     auto RunPolicyTest = [](auto policyTag, const std::string &name) {
         using Policy = decltype(policyTag);
-        using CommCostT = BspCommCostF<Policy>;
+        using CommCostT = MaxCommCostF<Policy>;
         using TestT = KlImproverTest<Graph, CommCostT>;
 
         SmallFanGraph g;
         auto &schedule = g.Build();
-
-        BOOST_CHECK_MESSAGE(schedule.SatisfiesPrecedenceConstraints(), name + ": initial schedule violates precedence");
 
         TestT kl;
         kl.SetupSchedule(schedule);
@@ -299,9 +336,9 @@ BOOST_AUTO_TEST_CASE(InnerLoopSmallFanAllPolicies) {
         CostT tracked = kl.GetCurrentCost();
         BOOST_CHECK_CLOSE(recomputed, tracked, 0.00001);
 
-        auto nodeSelection = kl.InsertGainHeapTest({0, 5});
+        auto nodeSelection = kl.InsertGainHeapTestPenalty({0, 5});
 
-        RunInnerLoopAndCheckCost(kl, 4, name);
+        RunInnerLoopAndCheckCost(kl, 2, name);
     };
 
     RunPolicyTest(EagerCommCostPolicy{}, "EagerFan");
@@ -336,24 +373,24 @@ BOOST_AUTO_TEST_CASE(InnerLoopThreeProcsAllPolicies) {
     arch.SetSynchronisationCosts(3);
 
     BspInstance<Graph> instance(dag, arch);
-    BspSchedule<Graph> schedule(instance);
+    MaxBspSchedule<Graph> schedule(instance);
 
-    //   0(p0,s0)->2(p2,s1) cross ok
-    //   0(p0,s0)->3(p0,s1) same proc ok
-    //   1(p1,s0)->3(p0,s1) cross ok
-    //   1(p1,s0)->4(p1,s1) same proc ok
-    //   2(p2,s1)->5(p2,s2) same proc ok
-    //   3(p0,s1)->5(p2,s2) cross ok
-    //   4(p1,s1)->5(p2,s2) cross ok
+    //   0(p0,s0)->2(p2,s2) cross gap=2 ok
+    //   0(p0,s0)->3(p0,s2) same proc ok
+    //   1(p1,s0)->3(p0,s2) cross gap=2 ok
+    //   1(p1,s0)->4(p1,s2) same proc ok
+    //   2(p2,s2)->5(p2,s4) same proc ok
+    //   3(p0,s2)->5(p2,s4) cross gap=2 ok
+    //   4(p1,s2)->5(p2,s4) cross gap=2 ok
     schedule.SetAssignedProcessors({0, 1, 2, 0, 1, 2});
-    schedule.SetAssignedSupersteps({0, 0, 1, 1, 1, 2});
+    schedule.SetAssignedSupersteps({0, 0, 2, 2, 2, 4});
     schedule.UpdateNumberOfSupersteps();
 
     BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
 
     auto RunPolicyTest = [&](auto policyTag, const std::string &name) {
         using Policy = decltype(policyTag);
-        using CommCostT = BspCommCostF<Policy>;
+        using CommCostT = MaxCommCostF<Policy>;
         using TestT = KlImproverTest<Graph, CommCostT>;
 
         TestT kl;
@@ -365,9 +402,9 @@ BOOST_AUTO_TEST_CASE(InnerLoopThreeProcsAllPolicies) {
         CostT tracked = kl.GetCurrentCost();
         BOOST_CHECK_CLOSE(recomputed, tracked, 0.00001);
 
-        auto nodeSelection = kl.InsertGainHeapTest({0, 5});
+        auto nodeSelection = kl.InsertGainHeapTestPenalty({0, 5});
 
-        RunInnerLoopAndCheckCost(kl, 4, name);
+        RunInnerLoopAndCheckCost(kl, 2, name);
     };
 
     RunPolicyTest(EagerCommCostPolicy{}, "Eager3P");
@@ -377,6 +414,8 @@ BOOST_AUTO_TEST_CASE(InnerLoopThreeProcsAllPolicies) {
 
 // ============================================================================
 // TEST 6: Full ImproveSchedule - Eager policy
+//
+// Runs the complete KL improver and verifies precedence + staleness.
 // ============================================================================
 
 BOOST_AUTO_TEST_CASE(FullImproveScheduleEager) {
@@ -384,12 +423,14 @@ BOOST_AUTO_TEST_CASE(FullImproveScheduleEager) {
     auto &schedule = g.Build();
 
     BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
+    VerifyStalenessConstraints(schedule);
 
-    BspImprover<EagerCommCostPolicy> kl(42);
+    MaxBspImprover<EagerCommCostPolicy> kl(42);
     auto status = kl.ImproveSchedule(schedule);
 
     BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
     BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
+    VerifyStalenessConstraints(schedule);
 
     BOOST_TEST_MESSAGE("Eager ImproveSchedule: status=" << (status == ReturnStatus::OSP_SUCCESS ? "SUCCESS" : "BEST_FOUND")
                                                         << " steps=" << schedule.NumberOfSupersteps());
@@ -404,12 +445,14 @@ BOOST_AUTO_TEST_CASE(FullImproveScheduleLazy) {
     auto &schedule = g.Build();
 
     BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
+    VerifyStalenessConstraints(schedule);
 
-    BspImprover<LazyCommCostPolicy> kl(42);
+    MaxBspImprover<LazyCommCostPolicy> kl(42);
     auto status = kl.ImproveSchedule(schedule);
 
     BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
     BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
+    VerifyStalenessConstraints(schedule);
 
     BOOST_TEST_MESSAGE("Lazy ImproveSchedule: steps=" << schedule.NumberOfSupersteps());
 }
@@ -423,12 +466,14 @@ BOOST_AUTO_TEST_CASE(FullImproveScheduleBuffered) {
     auto &schedule = g.Build();
 
     BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
+    VerifyStalenessConstraints(schedule);
 
-    BspImprover<BufferedCommCostPolicy> kl(42);
+    MaxBspImprover<BufferedCommCostPolicy> kl(42);
     auto status = kl.ImproveSchedule(schedule);
 
     BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
     BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
+    VerifyStalenessConstraints(schedule);
 
     BOOST_TEST_MESSAGE("Buffered ImproveSchedule: steps=" << schedule.NumberOfSupersteps());
 }
@@ -445,13 +490,15 @@ BOOST_AUTO_TEST_CASE(FullImproveScheduleEightNode) {
         auto &schedule = g.Build();
 
         BOOST_CHECK_MESSAGE(schedule.SatisfiesPrecedenceConstraints(), name + ": initial schedule violates precedence");
+        VerifyStalenessConstraints(schedule);
 
-        BspImprover<Policy> kl(42);
+        MaxBspImprover<Policy> kl(42);
         auto status = kl.ImproveSchedule(schedule);
 
         BOOST_CHECK_MESSAGE(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND,
                             name + ": unexpected return status");
         BOOST_CHECK_MESSAGE(schedule.SatisfiesPrecedenceConstraints(), name + ": precedence violated after improvement");
+        VerifyStalenessConstraints(schedule);
 
         BOOST_TEST_MESSAGE(name << ": completed, steps=" << schedule.NumberOfSupersteps());
     };
@@ -498,33 +545,37 @@ BOOST_AUTO_TEST_CASE(FullImproveScheduleThreeProcs) {
     arch.SetSendCosts(sendCosts);
 
     BspInstance<Graph> instance(dag, arch);
-    BspSchedule<Graph> schedule(instance);
+    MaxBspSchedule<Graph> schedule(instance);
 
-    //   0(p0,s0)->1(p1,s1) cross ok
-    //   0(p0,s0)->2(p2,s1) cross ok
-    //   1(p1,s1)->3(p0,s2) cross ok
-    //   2(p2,s1)->3(p0,s2) cross ok
-    //   3(p0,s2)->4(p1,s3) cross ok
-    //   3(p0,s2)->5(p2,s3) cross ok
-    //   4(p1,s3)->6(p0,s4) cross ok
-    //   5(p2,s3)->6(p0,s4) cross ok
+    // Chain with cross-proc edges, all gaps >= 2:
+    //   0(p0,s0)->1(p1,s2) cross gap=2
+    //   0(p0,s0)->2(p2,s2) cross gap=2
+    //   1(p1,s2)->3(p0,s4) cross gap=2
+    //   2(p2,s2)->3(p0,s4) cross gap=2
+    //   3(p0,s4)->4(p1,s6) cross gap=2
+    //   3(p0,s4)->5(p2,s6) cross gap=2
+    //   4(p1,s6)->6(p0,s8) cross gap=2
+    //   5(p2,s6)->6(p0,s8) cross gap=2
     schedule.SetAssignedProcessors({0, 1, 2, 0, 1, 2, 0});
-    schedule.SetAssignedSupersteps({0, 1, 1, 2, 3, 3, 4});
+    schedule.SetAssignedSupersteps({0, 2, 2, 4, 6, 6, 8});
     schedule.UpdateNumberOfSupersteps();
 
     BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
+    VerifyStalenessConstraints(schedule);
 
     auto RunForPolicy = [&](auto policyTag, const std::string &name) {
         using Policy = decltype(policyTag);
 
-        BspSchedule<Graph> sched(schedule);
+        // Copy schedule so each policy starts fresh
+        MaxBspSchedule<Graph> sched(schedule);
 
-        BspImprover<Policy> kl(42);
+        MaxBspImprover<Policy> kl(42);
         auto status = kl.ImproveSchedule(sched);
 
         BOOST_CHECK_MESSAGE(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND,
                             name + ": unexpected status");
         BOOST_CHECK_MESSAGE(sched.SatisfiesPrecedenceConstraints(), name + ": precedence violated");
+        VerifyStalenessConstraints(sched);
 
         BOOST_TEST_MESSAGE(name << ": completed, steps=" << sched.NumberOfSupersteps());
     };
@@ -553,13 +604,14 @@ BOOST_AUTO_TEST_CASE(SingleProcChainNoRegression) {
     arch.SetSynchronisationCosts(3);
 
     BspInstance<Graph> instance(dag, arch);
-    BspSchedule<Graph> schedule(instance);
+    MaxBspSchedule<Graph> schedule(instance);
 
+    // All nodes on same proc, sequential steps -> no comm cost
     schedule.SetAssignedProcessors({0, 0, 0});
     schedule.SetAssignedSupersteps({0, 1, 2});
     schedule.UpdateNumberOfSupersteps();
 
-    BspImprover<EagerCommCostPolicy> kl(42);
+    MaxBspImprover<EagerCommCostPolicy> kl(42);
     auto status = kl.ImproveSchedule(schedule);
 
     BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
@@ -575,20 +627,27 @@ BOOST_AUTO_TEST_CASE(WindowSize2ImproveSchedule) {
     auto &schedule = g.Build();
 
     BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
+    VerifyStalenessConstraints(schedule);
 
-    BspImprover<EagerCommCostPolicy, 2> kl(42);
+    MaxBspImprover<EagerCommCostPolicy, 2> kl(42);
     auto status = kl.ImproveSchedule(schedule);
 
     BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
     BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
+    VerifyStalenessConstraints(schedule);
 
     BOOST_TEST_MESSAGE("Window2: completed, steps=" << schedule.NumberOfSupersteps());
 }
 
 // ============================================================================
-// TEST 13: Dense diamond DAG with 3 processors (all policies)
-// 0->{1,2}, {1,2}->3
-// Steps: 0:s0p0, 1:s1p1, 2:s1p2, 3:s2p0
+// TEST 13: Dense diamond DAG with 3 processors
+//
+//     0       step 0, proc 0
+//    /
+//   1   2     step 2, proc 1/2
+//    \ /
+//     3       step 4, proc 0
+//
 // ============================================================================
 
 BOOST_AUTO_TEST_CASE(FullImproveScheduleDiamondThreeProcs) {
@@ -613,19 +672,21 @@ BOOST_AUTO_TEST_CASE(FullImproveScheduleDiamondThreeProcs) {
     auto RunForPolicy = [&](auto policyTag, const std::string &name) {
         using Policy = decltype(policyTag);
 
-        BspSchedule<Graph> schedule(instance);
+        MaxBspSchedule<Graph> schedule(instance);
         schedule.SetAssignedProcessors({0, 1, 2, 0});
-        schedule.SetAssignedSupersteps({0, 1, 1, 2});
+        schedule.SetAssignedSupersteps({0, 2, 2, 4});
         schedule.UpdateNumberOfSupersteps();
 
         BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
+        VerifyStalenessConstraints(schedule);
 
-        BspImprover<Policy> kl(42);
+        MaxBspImprover<Policy> kl(42);
         auto status = kl.ImproveSchedule(schedule);
 
         BOOST_CHECK_MESSAGE(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND,
                             name + ": unexpected status");
         BOOST_CHECK_MESSAGE(schedule.SatisfiesPrecedenceConstraints(), name + ": precedence violated");
+        VerifyStalenessConstraints(schedule);
 
         BOOST_TEST_MESSAGE(name << ": completed, steps=" << schedule.NumberOfSupersteps());
     };

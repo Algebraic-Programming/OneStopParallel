@@ -50,7 +50,7 @@ struct KlTotalCommCostFunction {
 
     inline CostT GetMaxCommWeightMultiplied() { return maxCommWeight_ * commMultiplier_; }
 
-    const std::string Name() const { return "toal_comm_cost"; }
+    const std::string Name() const { return "total_comm_cost"; }
 
     inline bool IsCompatible(VertexType node, unsigned proc) { return activeSchedule_->GetInstance().IsCompatible(node, proc); }
 
@@ -71,6 +71,18 @@ struct KlTotalCommCostFunction {
     CostT ComputeScheduleCostTest() { return ComputeScheduleCost(); }
 
     void UpdateDatastructureAfterMove(const KlMove &, const unsigned, const unsigned) {}
+
+    void SwapCommSteps(unsigned, unsigned) {}
+
+    void UpdateLambdaAfterStepRemoval(unsigned) {}
+
+    void FixupSendRecvAfterStepRemoval(unsigned, unsigned) {}
+
+    auto StepMaxComm(unsigned) const { return 0; }
+
+    void UpdateLambdaAfterStepInsertion(unsigned) {}
+
+    void FixupSendRecvAfterStepInsertion(unsigned, unsigned, unsigned) {}
 
     CostT ComputeScheduleCost() {
         CostT workCosts = 0;
@@ -395,7 +407,7 @@ struct KlTotalCommCostFunction {
                 }
             }
 
-        }    // traget
+        }    // target
 
         for (const auto &source : instance_->GetComputationalDag().Parents(node)) {
             const unsigned sourceStep = activeSchedule_->AssignedSuperstep(source);

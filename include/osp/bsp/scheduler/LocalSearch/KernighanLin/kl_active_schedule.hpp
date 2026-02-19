@@ -18,6 +18,8 @@ limitations under the License.
 
 #pragma once
 
+#include <cstdint>
+
 #include "osp/bsp/model/BspSchedule.hpp"
 #include "osp/bsp/model/IBspSchedule.hpp"
 #include "osp/bsp/model/util/SetSchedule.hpp"
@@ -27,6 +29,8 @@ limitations under the License.
 #include "osp/graph_algorithms/directed_graph_util.hpp"
 
 namespace osp {
+
+enum class KlMoveType : uint8_t { BASIC, REMOVE_STEP };
 
 template <typename CostT, typename VertexIdxT>
 struct KlMoveStruct {
@@ -39,18 +43,32 @@ struct KlMoveStruct {
     unsigned toProc_;
     unsigned toStep_;
 
-    KlMoveStruct() : node_(0), gain_(0), fromProc_(0), fromStep_(0), toProc_(0), toStep_(0) {}
+    KlMoveType type_ = KlMoveType::BASIC;
+
+    KlMoveStruct() : node_(0), gain_(0), fromProc_(0), fromStep_(0), toProc_(0), toStep_(0), type_(KlMoveType::BASIC) {}
 
     KlMoveStruct(VertexIdxT node, CostT gain, unsigned fromProc, unsigned fromStep, unsigned toProc, unsigned toStep)
-        : node_(node), gain_(gain), fromProc_(fromProc), fromStep_(fromStep), toProc_(toProc), toStep_(toStep) {}
+        : node_(node),
+          gain_(gain),
+          fromProc_(fromProc),
+          fromStep_(fromStep),
+          toProc_(toProc),
+          toStep_(toStep),
+          type_(KlMoveType::BASIC) {}
+
+    static KlMoveStruct MakeRemoveStep(unsigned removedStep, CostT syncCostSaving) {
+        KlMoveStruct m;
+        m.type_ = KlMoveType::REMOVE_STEP;
+        m.fromStep_ = removedStep;
+        m.gain_ = syncCostSaving;
+        return m;
+    }
 
     bool operator<(KlMoveStruct<CostT, VertexIdxT> const &rhs) const {
-        return (gain_ < rhs.gain_) or (gain_ == rhs.gain_ and node_ > rhs.node_);
+        return (gain_ < rhs.gain_) or (gain_ <= rhs.gain_ and node_ > rhs.node_);
     }
 
-    bool operator>(KlMoveStruct<CostT, VertexIdxT> const &rhs) const {
-        return (gain_ > rhs.gain_) or (gain_ >= rhs.gain_ and node_ < rhs.node_);
-    }
+    bool operator>(KlMoveStruct<CostT, VertexIdxT> const &rhs) const { return rhs < *this; }
 
     KlMoveStruct<CostT, VertexIdxT> ReverseMove() const {
         return KlMoveStruct(node_, -gain_, toProc_, toStep_, fromProc_, fromStep_);
@@ -291,6 +309,8 @@ class KlActiveSchedule {
     CostT cost_ = 0;
     bool feasible_ = true;
 
+    unsigned staleness_ = 1;
+
   public:
     virtual ~KlActiveSchedule() = default;
 
@@ -301,6 +321,8 @@ class KlActiveSchedule {
     inline VectorSchedule<GraphT> &GetVectorSchedule() { return vectorSchedule_; }
 
     inline const SetSchedule<GraphT> &GetSetSchedule() const { return setSchedule_; }
+
+    unsigned GetStaleness() const { return staleness_; }
 
     inline CostT GetCost() { return cost_; }
 
@@ -363,19 +385,10 @@ class KlActiveSchedule {
     }
 
     template <typename CommDatastructuresT>
-    void RevertToBestSchedule(unsigned startMove,
-                              unsigned insertStep,
-                              CommDatastructuresT &commDatastructures,
+    void RevertToBestSchedule(CommDatastructuresT &commDatastructures,
                               ThreadDataT &threadData,
                               unsigned startStep,
                               unsigned &endStep) {
-        const unsigned bound = std::max(startMove, threadData.bestScheduleIdx_);
-        RevertMoves(bound, commDatastructures, threadData, startStep, endStep);
-
-        if (startMove > threadData.bestScheduleIdx_) {
-            SwapEmptyStepBwd(++endStep, insertStep);
-        }
-
         RevertMoves(threadData.bestScheduleIdx_, commDatastructures, threadData, startStep, endStep);
 
 #ifdef KL_DEBUG
@@ -399,7 +412,7 @@ class KlActiveSchedule {
                                CommDatastructuresT &commDatastructures,
                                ThreadDataT &threadData,
                                unsigned startStep,
-                               unsigned endStep) {
+                               unsigned &endStep) {
         RevertMoves(bound, commDatastructures, threadData, startStep, endStep);
 
         threadData.currentViolations_.clear();
@@ -408,6 +421,7 @@ class KlActiveSchedule {
     }
 
     void ComputeViolations(ThreadDataT &threadData);
+    void UpdateViolationsAfterStepRemoval(unsigned removedStep, ThreadDataT &threadData);
     void ComputeWorkMemoryDatastructures(unsigned startStep, unsigned endStep);
     void WriteSchedule(BspSchedule<GraphT> &schedule);
     inline void Initialize(const IBspSchedule<GraphT> &schedule);
@@ -424,20 +438,32 @@ class KlActiveSchedule {
                      CommDatastructuresT &commDatastructures,
                      ThreadDataT &threadData,
                      unsigned startStep,
-                     unsigned endStep) {
+                     unsigned &endStep) {
         while (threadData.appliedMoves_.size() > bound) {
-            const auto move = threadData.appliedMoves_.back().ReverseMove();
+            const auto move = threadData.appliedMoves_.back();
             threadData.appliedMoves_.pop_back();
 
-            vectorSchedule_.SetAssignedProcessor(move.node_, move.toProc_);
-            vectorSchedule_.SetAssignedSuperstep(move.node_, move.toStep_);
+            if (move.type_ == KlMoveType::REMOVE_STEP) {
+                SwapEmptyStepBwd(++endStep, move.fromStep_);
+                for (unsigned i = endStep; i > move.fromStep_; i--) {
+                    commDatastructures.SwapCommSteps(i - 1, i);
+                }
+                commDatastructures.UpdateLambdaAfterStepInsertion(move.fromStep_);
+                commDatastructures.FixupSendRecvAfterStepInsertion(move.fromStep_, startStep, endStep);
+                continue;
+            }
 
-            setSchedule_.GetProcessorStepVertices()[move.fromStep_][move.fromProc_].erase(move.node_);
-            setSchedule_.GetProcessorStepVertices()[move.toStep_][move.toProc_].insert(move.node_);
-            workDatastructures_.ApplyMove(move, instance_->GetComputationalDag().VertexWorkWeight(move.node_));
-            commDatastructures.UpdateDatastructureAfterMove(move, startStep, endStep);
+            const auto reversed = move.ReverseMove();
+            vectorSchedule_.SetAssignedProcessor(reversed.node_, reversed.toProc_);
+            vectorSchedule_.SetAssignedSuperstep(reversed.node_, reversed.toStep_);
+
+            setSchedule_.GetProcessorStepVertices()[reversed.fromStep_][reversed.fromProc_].erase(reversed.node_);
+            setSchedule_.GetProcessorStepVertices()[reversed.toStep_][reversed.toProc_].insert(reversed.node_);
+            workDatastructures_.ApplyMove(reversed, instance_->GetComputationalDag().VertexWorkWeight(reversed.node_));
+            commDatastructures.UpdateDatastructureAfterMove(reversed, startStep, endStep);
             if constexpr (useMemoryConstraint_) {
-                memoryConstraint_.ApplyMove(move.node_, move.fromProc_, move.fromStep_, move.toProc_, move.toStep_);
+                memoryConstraint_.ApplyMove(
+                    reversed.node_, reversed.fromProc_, reversed.fromStep_, reversed.toProc_, reversed.toStep_);
             }
         }
     }
@@ -453,16 +479,14 @@ class KlActiveSchedule {
             const auto &child = Target(edge, instance_->GetComputationalDag());
 
             if (threadData.currentViolations_.find(edge) == threadData.currentViolations_.end()) {
-                if ((nodeStep > vectorSchedule_.AssignedSuperstep(child))
-                    || (nodeStep == vectorSchedule_.AssignedSuperstep(child)
-                        && nodeProc != vectorSchedule_.AssignedProcessor(child))) {
+                const unsigned differentProcessors = (nodeProc == vectorSchedule_.AssignedProcessor(child)) ? 0 : staleness_;
+                if (nodeStep + differentProcessors > vectorSchedule_.AssignedSuperstep(child)) {
                     threadData.currentViolations_.insert(edge);
                     threadData.newViolations_[child] = edge;
                 }
             } else {
-                if ((nodeStep < vectorSchedule_.AssignedSuperstep(child))
-                    || (nodeStep == vectorSchedule_.AssignedSuperstep(child)
-                        && nodeProc == vectorSchedule_.AssignedProcessor(child))) {
+                const unsigned differentProcessors = (nodeProc == vectorSchedule_.AssignedProcessor(child)) ? 0 : staleness_;
+                if (nodeStep + differentProcessors <= vectorSchedule_.AssignedSuperstep(child)) {
                     threadData.currentViolations_.erase(edge);
                     threadData.resolvedViolations_.insert(edge);
                 }
@@ -473,16 +497,14 @@ class KlActiveSchedule {
             const auto &parent = Source(edge, instance_->GetComputationalDag());
 
             if (threadData.currentViolations_.find(edge) == threadData.currentViolations_.end()) {
-                if ((nodeStep < vectorSchedule_.AssignedSuperstep(parent))
-                    || (nodeStep == vectorSchedule_.AssignedSuperstep(parent)
-                        && nodeProc != vectorSchedule_.AssignedProcessor(parent))) {
+                const unsigned differentProcessors = (nodeProc == vectorSchedule_.AssignedProcessor(parent)) ? 0 : staleness_;
+                if (vectorSchedule_.AssignedSuperstep(parent) + differentProcessors > nodeStep) {
                     threadData.currentViolations_.insert(edge);
                     threadData.newViolations_[parent] = edge;
                 }
             } else {
-                if ((nodeStep > vectorSchedule_.AssignedSuperstep(parent))
-                    || (nodeStep == vectorSchedule_.AssignedSuperstep(parent)
-                        && nodeProc == vectorSchedule_.AssignedProcessor(parent))) {
+                const unsigned differentProcessors = (nodeProc == vectorSchedule_.AssignedProcessor(parent)) ? 0 : staleness_;
+                if (vectorSchedule_.AssignedSuperstep(parent) + differentProcessors <= nodeStep) {
                     threadData.currentViolations_.erase(edge);
                     threadData.resolvedViolations_.insert(edge);
                 }
@@ -541,11 +563,58 @@ void KlActiveSchedule<GraphT, CostT, MemoryConstraintT>::ComputeViolations(Threa
         const unsigned sourceStep = AssignedSuperstep(sourceV);
         const unsigned targetStep = AssignedSuperstep(targetV);
 
-        if (sourceStep > targetStep || (sourceStep == targetStep && sourceProc != targetProc)) {
+        const unsigned differentProcessors = (sourceProc == targetProc) ? 0 : staleness_;
+
+        if (sourceStep + differentProcessors > targetStep) {
             threadData.currentViolations_.insert(edge);
             threadData.feasible_ = false;
         }
     }
+}
+
+template <typename GraphT, typename CostT, typename MemoryConstraintT>
+void KlActiveSchedule<GraphT, CostT, MemoryConstraintT>::UpdateViolationsAfterStepRemoval(unsigned removedStep,
+                                                                                          ThreadDataT &threadData) {
+    // After SwapEmptyStepFwd(removedStep, ...) bubbles the empty step forward,
+    // all nodes formerly at steps removedStep+1.. shift down by 1.  Nodes at
+    // steps 0..removedStep-1 are untouched.
+    //
+    // Only cross-processor edges that cross from the unshifted region into the
+    // shifted region lose 1 from their gap.  For staleness <= 2 the only
+    // boundary that can drop below the staleness threshold is:
+    //
+    //   parent at step removedStep-1  -->  child now at step removedStep
+    //                                      (formerly at removedStep+1)
+    //   gap went from 2 to 1 -- violates staleness == 2
+    //
+    // We iterate only the nodes in the affected superstep (removedStep after
+    // the swap) and check their incoming edges from the step above.
+    //
+    // TODO: for staleness > 2, parents at steps removedStep-2 down to
+    //       removedStep-(staleness-1) could also create new violations.
+    //       Extend the check to cover those additional steps.
+
+    if (staleness_ <= 1 || removedStep == 0) {
+        return;
+    }
+
+    const auto &dag = instance_->GetComputationalDag();
+
+    for (unsigned proc = 0; proc < instance_->NumberOfProcessors(); proc++) {
+        for (const auto &node : setSchedule_.GetProcessorStepVertices()[removedStep][proc]) {
+            for (const auto &edge : InEdges(node, dag)) {
+                const auto &parent = Source(edge, dag);
+                const unsigned parentStep = vectorSchedule_.AssignedSuperstep(parent);
+                const unsigned parentProc = vectorSchedule_.AssignedProcessor(parent);
+
+                if (parentProc != proc && parentStep + staleness_ > removedStep) {
+                    threadData.currentViolations_.insert(edge);
+                }
+            }
+        }
+    }
+
+    threadData.feasible_ = threadData.currentViolations_.empty();
 }
 
 template <typename GraphT, typename CostT, typename MemoryConstraintT>
@@ -554,6 +623,8 @@ void KlActiveSchedule<GraphT, CostT, MemoryConstraintT>::Initialize(const IBspSc
     vectorSchedule_ = VectorSchedule(schedule);
     setSchedule_ = SetSchedule(schedule);
     workDatastructures_.Initialize(setSchedule_, *instance_, NumSteps());
+
+    staleness_ = schedule.GetStaleness();
 
     cost_ = 0;
     feasible_ = true;

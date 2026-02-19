@@ -42,8 +42,11 @@ template <typename GraphT, typename MemoryConstraintT = NoLocalSearchMemoryConst
 using KlTotalLambdaCommImproverMt
     = KlImproverMt<GraphT, KlHyperTotalCommCostFunction<GraphT, double, MemoryConstraintT, windowSize>, MemoryConstraintT, windowSize, double>;
 
-template <typename GraphT, typename MemoryConstraintT = NoLocalSearchMemoryConstraint, unsigned windowSize = 1>
+template <typename GraphT,
+          typename MemoryConstraintT = NoLocalSearchMemoryConstraint,
+          typename CommPolicy = EagerCommCostPolicy,
+          unsigned windowSize = 1>
 using KlBspCommImproverMt
-    = KlImproverMt<GraphT, KlBspCommCostFunction<GraphT, double, MemoryConstraintT, windowSize>, MemoryConstraintT, windowSize, double>;
+    = KlImproverMt<GraphT, KlBspCommCostFunction<GraphT, double, MemoryConstraintT, CommPolicy, windowSize>, MemoryConstraintT, windowSize, double>;
 
 }    // namespace osp

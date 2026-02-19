@@ -19,6 +19,7 @@ limitations under the License.
 #pragma once
 
 #include <algorithm>
+#include <iostream>
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
@@ -97,6 +98,12 @@ struct MaxCommDatastructure {
     inline CommWeightT StepSecondMaxComm(unsigned step) const { return stepSecondMaxCommCache_[step]; }
 
     inline unsigned StepMaxCommCount(unsigned step) const { return stepMaxCommCountCache_[step]; }
+
+    /// Returns the list of steps where send/recv arrays were modified by the last
+    /// UpdateDatastructureAfterMove call.  For Lazy/Buffered policies these include
+    /// the min(child_steps)-1 steps where communication is actually placed, which
+    /// may differ from the node positions used by the higher-level changedSteps set.
+    inline const std::vector<unsigned> &GetLastAffectedCommSteps() const { return affectedStepsList_; }
 
     inline void Initialize(KlActiveScheduleT &klSched) {
         activeSchedule_ = &klSched;
@@ -239,7 +246,7 @@ struct MaxCommDatastructure {
                 if (proc != fromProc) {
                     const CommWeightT cost = commWNode * instance_->SendCosts(fromProc, proc);
                     if (cost > 0) {
-                        CommPolicy::UnattributeCommunication(*this, cost, fromStep, fromProc, proc, 0, val);
+                        CommPolicy::RemoveOutgoingComm(*this, cost, fromStep, fromProc, proc, val, MarkStep);
                     }
                 }
 
@@ -247,12 +254,10 @@ struct MaxCommDatastructure {
                 if (proc != toProc) {
                     const CommWeightT cost = commWNode * instance_->SendCosts(toProc, proc);
                     if (cost > 0) {
-                        CommPolicy::AttributeCommunication(*this, cost, toStep, toProc, proc, 0, val);
+                        CommPolicy::AddOutgoingComm(*this, cost, toStep, toProc, proc, val, MarkStep);
                     }
                 }
             }
-            MarkStep(fromStep);
-            MarkStep(toStep);
 
         } else if (fromProc != toProc) {
             // Case 2: Node stays in same Step, but changes Processor
@@ -262,7 +267,7 @@ struct MaxCommDatastructure {
                 if (proc != fromProc) {
                     const CommWeightT cost = commWNode * instance_->SendCosts(fromProc, proc);
                     if (cost > 0) {
-                        CommPolicy::UnattributeCommunication(*this, cost, fromStep, fromProc, proc, 0, val);
+                        CommPolicy::RemoveOutgoingComm(*this, cost, fromStep, fromProc, proc, val, MarkStep);
                     }
                 }
 
@@ -270,11 +275,10 @@ struct MaxCommDatastructure {
                 if (proc != toProc) {
                     const CommWeightT cost = commWNode * instance_->SendCosts(toProc, proc);
                     if (cost > 0) {
-                        CommPolicy::AttributeCommunication(*this, cost, fromStep, toProc, proc, 0, val);
+                        CommPolicy::AddOutgoingComm(*this, cost, fromStep, toProc, proc, val, MarkStep);
                     }
                 }
             }
-            MarkStep(fromStep);
         }
 
         // Update Parents' Outgoing Communication (Parents → Node)
@@ -297,7 +301,8 @@ struct MaxCommDatastructure {
                 if (fromProc != parentProc) {
                     const CommWeightT cost = commWParent * instance_->SendCosts(parentProc, fromProc);
                     if (cost > 0) {
-                        CommPolicy::UnattributeCommunication(*this, cost, parentStep, parentProc, fromProc, fromStep, val);
+                        CommPolicy::UnattributeCommunication(
+                            *this, cost, parentStep, parentProc, fromProc, fromStep, val, MarkStep);
                     }
                 }
             }
@@ -310,17 +315,97 @@ struct MaxCommDatastructure {
                 if (toProc != parentProc) {
                     const CommWeightT cost = commWParent * instance_->SendCosts(parentProc, toProc);
                     if (cost > 0) {
-                        CommPolicy::AttributeCommunication(*this, cost, parentStep, parentProc, toProc, toStep, valTo);
+                        CommPolicy::AttributeCommunication(*this, cost, parentStep, parentProc, toProc, toStep, valTo, MarkStep);
                     }
                 }
             }
-
-            MarkStep(parentStep);
         }
 
         // Re-arrange Affected Steps
         for (unsigned step : affectedStepsList_) {
             ArrangeSuperstepCommData(step);
+        }
+    }
+
+    /// After a step removal (bubble empty step forward from removedStep to endStep),
+    /// all nodes that were at step S > removedStep are now at step S-1.
+    /// Update lambda entries to match the new step numbering.
+    /// Only needed for policies that store step values (Lazy, Buffered).
+    void UpdateLambdaAfterStepRemoval(unsigned removedStep) {
+        if constexpr (std::is_same_v<typename CommPolicy::ValueType, std::vector<unsigned>>) {
+            for (auto &nodeEntries : nodeLambdaMap_.nodeLambdaVec_) {
+                for (auto &procEntry : nodeEntries) {
+                    for (auto &step : procEntry) {
+                        if (step > removedStep) {
+                            step--;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /// After step removal, the SwapSteps loop bubbled the removed step's data to
+    /// oldEndStep. For Lazy/Buffered, that empty step can carry comm data (from
+    /// min(child_steps)-1 attribution). Merge it into removedStep-1 (the new
+    /// correct position) but KEEP oldEndStep as a backup so that insertion can
+    /// reverse this merge in O(P).
+    /// Call AFTER the SwapSteps loop and AFTER UpdateLambdaAfterStepRemoval.
+    void FixupSendRecvAfterStepRemoval(unsigned removedStep, unsigned oldEndStep) {
+        if constexpr (std::is_same_v<typename CommPolicy::ValueType, std::vector<unsigned>>) {
+            if (removedStep == 0) {
+                // No position -1 to merge into. Clear backup — data is lost.
+                // Insertion at step 0 will need a full recompute (extremely rare).
+                std::fill(stepProcSend_[oldEndStep].begin(), stepProcSend_[oldEndStep].end(), 0);
+                std::fill(stepProcReceive_[oldEndStep].begin(), stepProcReceive_[oldEndStep].end(), 0);
+                ArrangeSuperstepCommData(oldEndStep);
+                return;
+            }
+            const unsigned numProcs = stepProcSend_[0].size();
+            for (unsigned p = 0; p < numProcs; p++) {
+                stepProcSend_[removedStep - 1][p] += stepProcSend_[oldEndStep][p];
+                stepProcReceive_[removedStep - 1][p] += stepProcReceive_[oldEndStep][p];
+                // DON'T clear oldEndStep — it serves as backup for insertion reversal
+            }
+            ArrangeSuperstepCommData(removedStep - 1);
+        }
+    }
+
+    /// After a step insertion (reverting a removal), increment all lambda entries
+    /// >= insertedStep to match the new step numbering.
+    void UpdateLambdaAfterStepInsertion(unsigned insertedStep) {
+        if constexpr (std::is_same_v<typename CommPolicy::ValueType, std::vector<unsigned>>) {
+            for (auto &nodeEntries : nodeLambdaMap_.nodeLambdaVec_) {
+                for (auto &procEntry : nodeEntries) {
+                    for (auto &step : procEntry) {
+                        if (step >= insertedStep) {
+                            step++;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /// After step insertion, the SwapSteps loop brought the backup data from
+    /// beyond endStep back to position insertedStep. Position insertedStep-1
+    /// still has the merged data (original + backup from removal). Subtract
+    /// the backup to un-merge, restoring both positions to their correct state.
+    /// Call AFTER the SwapSteps loop and AFTER UpdateLambdaAfterStepInsertion.
+    void FixupSendRecvAfterStepInsertion(unsigned insertedStep, unsigned startStep, unsigned endStep) {
+        if constexpr (std::is_same_v<typename CommPolicy::ValueType, std::vector<unsigned>>) {
+            if (insertedStep == 0) {
+                // Backup was lost during removal (cleared). Full recompute needed.
+                ComputeCommDatastructures(startStep, endStep);
+                return;
+            }
+            const unsigned numProcs = stepProcSend_[0].size();
+            for (unsigned p = 0; p < numProcs; p++) {
+                stepProcSend_[insertedStep - 1][p] -= stepProcSend_[insertedStep][p];
+                stepProcReceive_[insertedStep - 1][p] -= stepProcReceive_[insertedStep][p];
+            }
+            ArrangeSuperstepCommData(insertedStep - 1);
+            ArrangeSuperstepCommData(insertedStep);
         }
     }
 
@@ -363,7 +448,7 @@ struct MaxCommDatastructure {
                 auto &val = nodeLambdaMap_.GetProcEntry(u, vProc);
                 if (CommPolicy::AddChild(val, vStep)) {
                     if (uProc != vProc && commWSendCost > 0) {
-                        CommPolicy::AttributeCommunication(*this, commWSendCost, uStep, uProc, vProc, vStep, val);
+                        CommPolicy::AttributeCommunication(*this, commWSendCost, uStep, uProc, vProc, vStep, val, [](unsigned) {});
                     }
                 }
             }

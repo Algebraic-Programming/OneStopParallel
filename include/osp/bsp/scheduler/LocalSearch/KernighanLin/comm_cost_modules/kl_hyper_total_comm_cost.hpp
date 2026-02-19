@@ -51,7 +51,7 @@ struct KlHyperTotalCommCostFunction {
 
     inline CostT GetMaxCommWeightMultiplied() { return maxCommWeight_ * commMultiplier_; }
 
-    const std::string Name() const { return "toal_comm_cost"; }
+    const std::string Name() const { return "total_comm_cost"; }
 
     inline bool IsCompatible(VertexType node, unsigned proc) { return activeSchedule_->GetInstance().IsCompatible(node, proc); }
 
@@ -117,6 +117,18 @@ struct KlHyperTotalCommCostFunction {
         return workCosts + commCosts * commMultiplier_
                + static_cast<VCommwT<GraphT>>(activeSchedule_->NumSteps() - 1) * instance_->SynchronisationCosts();
     }
+
+    void SwapCommSteps(unsigned, unsigned) {}
+
+    auto StepMaxComm(unsigned) const { return 0; }
+
+    void UpdateLambdaAfterStepRemoval(unsigned) {}
+
+    void FixupSendRecvAfterStepRemoval(unsigned, unsigned) {}
+
+    void UpdateLambdaAfterStepInsertion(unsigned) {}
+
+    void FixupSendRecvAfterStepInsertion(unsigned, unsigned, unsigned) {}
 
     inline void UpdateDatastructureAfterMove(const KlMove &move, const unsigned startStep, const unsigned endStep) {
         if (move.toProc_ != move.fromProc_) {
@@ -568,7 +580,7 @@ struct KlHyperTotalCommCostFunction {
                     }
                 }
             }
-        }    // traget
+        }    // target
 
         const CostT commGain = graph_->VertexCommWeight(node) * commMultiplier_;
 
