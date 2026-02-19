@@ -28,15 +28,17 @@ template <typename GraphT,
           unsigned windowSize = 1,
           typename CostT = double>
 class KlImproverTest : public KlImprover<GraphT, CommCostFunctionT, MemoryConstraintT, windowSize, CostT> {
+    using Parent = KlImprover<GraphT, CommCostFunctionT, MemoryConstraintT, windowSize, CostT>;
     using VertexType = VertexIdxT<GraphT>;
     using KlMove = KlMoveStruct<CostT, VertexType>;
     using HeapDatastructure = MaxPairingHeap<VertexType, KlMove>;
     using ActiveSchedule = KlActiveSchedule<GraphT, CostT, MemoryConstraintT>;
     using KlGainUpdateInfo = KlUpdateInfo<VertexType>;
     using NodeSelectionContainer = AdaptiveAffinityTable<GraphT, CostT, ActiveSchedule, windowSize>;
+    using VertexWorkWeightT = osp::VWorkwT<GraphT>;
 
   public:
-    KlImproverTest() : KlImprover<GraphT, CommCostFunctionT, MemoryConstraintT, windowSize, CostT>() {
+    KlImproverTest() : Parent() {
         this->threadDataVec_.resize(1);
         this->threadFinishedVec_.assign(1, true);
     }
@@ -59,7 +61,12 @@ class KlImproverTest : public KlImprover<GraphT, CommCostFunctionT, MemoryConstr
 
     void ApplyMoveTest(KlMove move) { this->ApplyMove(move, this->threadDataVec_[0]); }
 
-    auto &GetMaxGainHeap() { return this->threadDataVec_[0].maxGainHeap_; }
+    /// Access the max-gain heap (only available for heap variant / total cost functions)
+    auto &GetMaxGainHeap() {
+        static_assert(!CommCostFunctionT::isMaxCommCostFunction_,
+                      "GetMaxGainHeap() is only available for heap-based (total/totalLambda) cost functions");
+        return this->HD(this->threadDataVec_[0]).maxGainHeap_;
+    }
 
     auto GetCurrentCost() { return this->threadDataVec_[0].activeScheduleData_.cost_; }
 
@@ -67,7 +74,10 @@ class KlImproverTest : public KlImprover<GraphT, CommCostFunctionT, MemoryConstr
 
     void ComputeViolationsTest() { this->activeSchedule_.ComputeViolations(this->threadDataVec_[0].activeScheduleData_); }
 
-    NodeSelectionContainer &InsertGainHeapTest(const std::vector<VertexType> &n) {
+    /// Initialize affinities and move-finding for the given nodes.
+    /// For heap variant: computes affinities and populates the heap.
+    /// For scan variant: computes affinities and stores the best move.
+    NodeSelectionContainer &InitMoveFindingTest(const std::vector<VertexType> &n) {
         this->threadDataVec_[0].rewardPenaltyStrat_.penalty_ = 0.0;
         this->threadDataVec_[0].rewardPenaltyStrat_.reward_ = 0.0;
 
@@ -76,12 +86,12 @@ class KlImproverTest : public KlImprover<GraphT, CommCostFunctionT, MemoryConstr
             this->threadDataVec_[0].affinityTable_.Insert(node);
         }
 
-        this->InsertGainHeap(this->threadDataVec_[0]);
+        this->ReinitializeMoveFinding(this->threadDataVec_[0]);
 
         return this->threadDataVec_[0].affinityTable_;
     }
 
-    NodeSelectionContainer &InsertGainHeapTestPenalty(const std::vector<VertexType> &n) {
+    NodeSelectionContainer &InitMoveFindingTestPenalty(const std::vector<VertexType> &n) {
         this->threadDataVec_[0].affinityTable_.Initialize(this->activeSchedule_, n.size());
         for (const auto &node : n) {
             this->threadDataVec_[0].affinityTable_.Insert(node);
@@ -89,12 +99,12 @@ class KlImproverTest : public KlImprover<GraphT, CommCostFunctionT, MemoryConstr
         this->threadDataVec_[0].rewardPenaltyStrat_.penalty_ = 5.5;
         this->threadDataVec_[0].rewardPenaltyStrat_.reward_ = 0.0;
 
-        this->InsertGainHeap(this->threadDataVec_[0]);
+        this->ReinitializeMoveFinding(this->threadDataVec_[0]);
 
         return this->threadDataVec_[0].affinityTable_;
     }
 
-    NodeSelectionContainer &InsertGainHeapTestPenaltyReward(const std::vector<VertexType> &n) {
+    NodeSelectionContainer &InitMoveFindingTestPenaltyReward(const std::vector<VertexType> &n) {
         this->threadDataVec_[0].affinityTable_.Initialize(this->activeSchedule_, n.size());
         for (const auto &node : n) {
             this->threadDataVec_[0].affinityTable_.Insert(node);
@@ -103,56 +113,53 @@ class KlImproverTest : public KlImprover<GraphT, CommCostFunctionT, MemoryConstr
         this->threadDataVec_[0].rewardPenaltyStrat_.InitRewardPenalty();
         this->threadDataVec_[0].rewardPenaltyStrat_.reward_ = 15.0;
 
-        this->InsertGainHeap(this->threadDataVec_[0]);
+        this->ReinitializeMoveFinding(this->threadDataVec_[0]);
 
         return this->threadDataVec_[0].affinityTable_;
     }
 
+    // Backward-compatible aliases for existing test code
+    NodeSelectionContainer &InsertGainHeapTest(const std::vector<VertexType> &n) { return InitMoveFindingTest(n); }
+
+    NodeSelectionContainer &InsertGainHeapTestPenalty(const std::vector<VertexType> &n) { return InitMoveFindingTestPenalty(n); }
+
+    NodeSelectionContainer &InsertGainHeapTestPenaltyReward(const std::vector<VertexType> &n) {
+        return InitMoveFindingTestPenaltyReward(n);
+    }
+
     void UpdateAffinityTableTest(KlMove bestMove, NodeSelectionContainer &nodeSelection) {
-        std::map<VertexType, KlGainUpdateInfo> recomputeMaxGain;
         std::vector<VertexType> newNodes;
+        std::vector<VertexType> unlockNodes;
 
         const auto prevWorkData = this->activeSchedule_.GetPreMoveWorkData(bestMove);
         this->ApplyMove(bestMove, this->threadDataVec_[0]);
 
         this->threadDataVec_[0].affinityTable_.Trim();
-        this->UpdateAffinities(bestMove, this->threadDataVec_[0], recomputeMaxGain, newNodes, prevWorkData);
+        this->PostMoveUpdate(bestMove, this->threadDataVec_[0], newNodes, unlockNodes, prevWorkData);
     }
 
     auto RunInnerIterationTest() {
-        std::map<VertexType, KlGainUpdateInfo> recomputeMaxGain;
-        std::vector<VertexType> newNodes;
+        auto &td = this->threadDataVec_[0];
 
-        this->PrintHeap(this->threadDataVec_[0].maxGainHeap_);
-
-        KlMove bestMove = this->GetBestMove(
-            this->threadDataVec_[0].affinityTable_,
-            this->threadDataVec_[0].lockManager_,
-            this->threadDataVec_[0].maxGainHeap_);    // locks best_move.node and removes it from node_selection
-
-#ifdef KL_DEBUG
-        std::cout << "Best move: " << bestMove.node << " gain: " << bestMove.gain << ", from: " << bestMove.from_step << "|"
-                  << bestMove.from_proc << " to: " << bestMove.to_step << "|" << bestMove.toProc << std::endl;
-#endif
+        // Get best move via dispatch
+        KlMove bestMove = this->GetBestMove(td);
 
         const auto prevWorkData = this->activeSchedule_.GetPreMoveWorkData(bestMove);
-        this->ApplyMove(bestMove, this->threadDataVec_[0]);
+        this->ApplyMove(bestMove, td);
 
-        this->threadDataVec_[0].affinityTable_.Trim();
-        this->UpdateAffinities(bestMove, this->threadDataVec_[0], recomputeMaxGain, newNodes, prevWorkData);
+        std::vector<VertexType> newNodes;
+        std::vector<VertexType> unlockNodes;
 
-#ifdef KL_DEBUG
-        std::cout << "New nodes: { ";
-        for (const auto v : newNodes) {
-            std::cout << v << " ";
+        td.affinityTable_.Trim();
+
+        // Unlock first (matches base loop ordering)
+        for (const auto v : unlockNodes) {
+            td.lockManager_.Unlock(v);
         }
-        std::cout << "}" << std::endl;
-#endif
 
-        this->UpdateMaxGain(bestMove, recomputeMaxGain, this->threadDataVec_[0]);
-        this->InsertNewNodesGainHeap(newNodes, this->threadDataVec_[0].affinityTable_, this->threadDataVec_[0]);
+        this->PostMoveUpdate(bestMove, td, newNodes, unlockNodes, prevWorkData);
 
-        return recomputeMaxGain;
+        return bestMove;
     }
 
     bool IsNodeLocked(VertexType node) const { return this->threadDataVec_[0].lockManager_.IsLocked(node); }
@@ -166,8 +173,7 @@ class KlImproverTest : public KlImprover<GraphT, CommCostFunctionT, MemoryConstr
     bool ScatterNodesSuperstepTest(unsigned step) { return this->ScatterNodesSuperstep(step, this->threadDataVec_[0]); }
 
     /// Apply a move to the schedule and update cost using a fresh cost computation
-    /// instead of relying on the gain_ field.  This allows manually constructed
-    /// moves (e.g. deliberately bad scatters) with correct cost tracking.
+    /// instead of relying on the gain_ field.
     void ApplyMoveWithFreshCost(KlMove move) {
         this->activeSchedule_.ApplyMove(move, this->threadDataVec_[0].activeScheduleData_);
         this->commCostF_.UpdateDatastructureAfterMove(move, this->threadDataVec_[0].startStep_, this->threadDataVec_[0].endStep_);
@@ -203,8 +209,7 @@ class KlImproverTest : public KlImprover<GraphT, CommCostFunctionT, MemoryConstr
         data.UpdateCost(static_cast<CostT>(-1.0 * this->instance_->SynchronisationCosts()));
     }
 
-    /// Revert to the best schedule found so far.  If a REMOVE_STEP sentinel
-    /// is encountered during reversal, the step is automatically re-inserted.
+    /// Revert to the best schedule found so far.
     void RevertToBestScheduleTest() {
         this->activeSchedule_.RevertToBestSchedule(this->commCostF_,
                                                    this->threadDataVec_[0].activeScheduleData_,
