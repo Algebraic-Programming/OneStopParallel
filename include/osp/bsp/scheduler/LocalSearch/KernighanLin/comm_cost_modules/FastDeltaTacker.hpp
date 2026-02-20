@@ -24,15 +24,18 @@ template <typename CommWeightT>
 struct FastDeltaTracker {
     std::vector<CommWeightT> denseVals_;      // Size: num_procs
     std::vector<unsigned> dirtyProcs_;        // List of modified indices
-    std::vector<unsigned> procDirtyIndex_;    // Map proc -> index in dirtyProcs_ (num_procs if not dirty)
+    std::vector<unsigned> procDirtyIndex_;    // Map proc -> index in dirtyProcs_ (numProcs_ if not dirty)
     unsigned numProcs_ = 0;
 
     void Initialize(unsigned nProcs) {
-        if (nProcs > numProcs_) {
+        if (nProcs != numProcs_) {
+            // Proc count changed: clear dirty state with old sentinel,
+            // then reset everything with the new sentinel.
+            Clear();
             numProcs_ = nProcs;
-            denseVals_.resize(numProcs_, 0);
+            denseVals_.assign(numProcs_, 0);
             dirtyProcs_.reserve(numProcs_);
-            procDirtyIndex_.resize(numProcs_, numProcs_);
+            procDirtyIndex_.assign(numProcs_, numProcs_);
         }
     }
 
