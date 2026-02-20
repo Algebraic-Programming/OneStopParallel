@@ -221,6 +221,8 @@ struct KlMaxBspCommCostFunction {
 
         std::vector<std::pair<unsigned, CommWeightT>> childCostBuffer_;
 
+        unsigned lastNumProcs_ = 0;
+
         void Init(unsigned nSteps, unsigned nProcs) {
             if (sendDeltas_.size() < nSteps) {
                 sendDeltas_.resize(nSteps);
@@ -229,10 +231,23 @@ struct KlMaxBspCommCostFunction {
                 activeSteps_.reserve(nSteps);
             }
 
+            // When the number of processors changes between uses (e.g. different
+            // test cases sharing this static thread_local), the FastDeltaTracker
+            // sentinel values (procDirtyIndex_[p] == old numProcs_) become stale
+            // and IsDirty() returns incorrect results. Force a full reset.
+            const bool procsChanged = (nProcs != lastNumProcs_);
+            lastNumProcs_ = nProcs;
+
             for (auto &tracker : sendDeltas_) {
+                if (procsChanged) {
+                    tracker = FastDeltaTracker<CommWeightT>{};
+                }
                 tracker.Initialize(nProcs);
             }
             for (auto &tracker : recvDeltas_) {
+                if (procsChanged) {
+                    tracker = FastDeltaTracker<CommWeightT>{};
+                }
                 tracker.Initialize(nProcs);
             }
 
