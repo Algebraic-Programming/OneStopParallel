@@ -21,7 +21,7 @@ limitations under the License.
  * @brief Comprehensive tests for KlMaxBspCommCostFunction.
  *
  * BSP max-cost formula:
- *   cost = Work[0] + Σ_{s=1}^{S-1} max(Work[s], MaxComm[s-1]) * g + (S-1) * L
+ *   cost = Work[0] + Σ_{s=1}^{S-1} max(Work[s], MaxComm[s-1] * g) + (S-1) * L
  *
  * where:
  *   Work[s]    = max over processors of (sum of VertexWorkWeight for nodes
@@ -76,8 +76,8 @@ static double IncrementalCost(KlImproverTestT &kl) { return kl.GetCommCostF().Co
 /// Validate incremental comm datastructures match a fresh computation.
 static bool ValidateCommDs(KlImproverTestT &kl, const std::string &context) {
     auto &costF = kl.GetCommCostF();
-    auto *activeSched = costF.active_schedule;
-    const auto *inst = costF.instance;
+    auto *activeSched = costF.activeSchedule_;
+    const auto *inst = costF.instance_;
     const auto &dsInc = costF.commDs_;
 
     BspSchedule<Graph> currentSchedule(*inst);
@@ -321,8 +321,8 @@ BOOST_AUTO_TEST_CASE(TwoStepsWithGMultiplier) {
     KlImproverTestT kl;
     kl.SetupSchedule(schedule);
 
-    // Comm[0]=5. cost = 10 + max(20, 5)*3 = 10 + 60 = 70
-    BOOST_CHECK_CLOSE(FreshCost(kl), 70.0, 1e-5);
+    // Comm[0]=5. cost = 10 + max(20, 5*3) = 10 + max(20, 15) = 30
+    BOOST_CHECK_CLOSE(FreshCost(kl), 30.0, 1e-5);
 }
 
 // Synchronisation costs (L=7).
@@ -346,8 +346,8 @@ BOOST_AUTO_TEST_CASE(TwoStepsWithSync) {
     KlImproverTestT kl;
     kl.SetupSchedule(schedule);
 
-    // Comm[0]=5. cost = 10 + max(20, 5)*2 + 1*7 = 57
-    BOOST_CHECK_CLOSE(FreshCost(kl), 57.0, 1e-5);
+    // Comm[0]=5. cost = 10 + max(20, 5*2) + 1*7 = 10 + 20 + 7 = 37
+    BOOST_CHECK_CLOSE(FreshCost(kl), 37.0, 1e-5);
 }
 
 // Three-step chain, alternating procs.
@@ -401,8 +401,8 @@ BOOST_AUTO_TEST_CASE(ThreeStepChainWithSync) {
     KlImproverTestT kl;
     kl.SetupSchedule(schedule);
 
-    // cost = 10 + max(20,5)*2 + max(15,10)*2 + 2*5 = 10 + 40 + 30 + 10 = 90
-    BOOST_CHECK_CLOSE(FreshCost(kl), 90.0, 1e-5);
+    // cost = 10 + max(20, 5*2) + max(15, 10*2) + 2*5 = 10 + 20 + 20 + 10 = 60
+    BOOST_CHECK_CLOSE(FreshCost(kl), 60.0, 1e-5);
 }
 
 // Fan-out to SAME destination proc → Eager counts comm ONCE (AddChild returns

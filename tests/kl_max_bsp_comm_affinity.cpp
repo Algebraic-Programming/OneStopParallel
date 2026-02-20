@@ -18,30 +18,37 @@ limitations under the License.
 
 /**
  * @file kl_max_bsp_comm_affinity_test.cpp
- * @brief Direct ComputeCommAffinity tests for KlMaxBspCommCostFunction under
+ * @brief Direct ComputeNodeAffinity tests for KlMaxBspCommCostFunction under
  *        Eager, Lazy, and Buffered communication policies.
  *
- * Each test calls ComputeCommAffinity with penalty=0, reward=0 (isolating the
- * comm-delta logic from the staleness component) and verifies every entry of
- * the affinity table against a brute-force recomputation of the MaxComm sum.
+ * Each test calls ComputeNodeAffinity with penalty=0, reward=0 (isolating the
+ * coupled work+comm delta logic from the staleness component) and verifies
+ * every entry of the affinity table against a brute-force recomputation of
+ * the full MaxBSP cost.
  *
- * The brute-force helper computes MaxComm from scratch for each hypothetical
- * candidate placement and compares the delta with what the affinity predicted.
+ * The brute-force helper computes the full schedule cost from scratch for each
+ * hypothetical candidate placement and compares the delta with what the
+ * affinity predicted.
  *
- * NOTE: These tests require the CalculateStepCostChange bug fix (stale
- * second_max fallback). Without the fix, tests with ≥3 processors will fail
- * because CalculateStepCostChange uses second_max from the unmodified state,
- * which can be stale when multiple (proc, send/recv) values at second_max
- * are also dirty and reduced at the same step.
+ * MaxBSP cost formula:
+ *   cost = Work[0] + Σ_{s=1}^{S-1} max(Work[s], MaxComm[s-1] * g) + (S-1) * L
+ *
+ * Because the max() couples work and comm, ComputeNodeAffinity evaluates both
+ * in a single pass (unlike BSP which separates them).
+ *
+ * NOTE: These tests require the ComputeNewMaxComm correctness fix. Without it,
+ * tests with ≥3 processors may fail because ComputeNewMaxComm uses
+ * reducedMaxInstances tracking which can be stale when multiple (proc,
+ * send/recv) values at the old max are also dirty and reduced at the same step.
  *
  * All suites are instantiated under all three comm policies (Eager, Lazy,
  * Buffered) via INSTANTIATE_ALL. The brute-force oracle uses policy-aware
  * MaxCommDatastructure, so it computes correct expected values for each
- * policy. If ComputeCommAffinity's delta placement does not match the
+ * policy. If ComputeNodeAffinity's delta placement does not match the
  * policy's send/recv step attribution, the tests will fail.
  *
  * Structure:
- *   Suite 1 – ComputeCommAffinity brute-force verification (all policies)
+ *   Suite 1 – ComputeNodeAffinity brute-force verification (all policies)
  *   Suite 2 – Staleness penalty/reward tests (all policies)
  *   Suite 3 – Smoke tests (all policies, redundant but kept)
  */
@@ -110,19 +117,40 @@ const char *PolicyName<BufferedCommCostPolicy>() {
 }
 
 // ============================================================================
-// Brute-force MaxComm sum computation
+// Brute-force MaxBSP cost computation (excluding sync, which cancels)
 //
 // Given a node assignment (procs, steps), computes:
-//   Σ_{s=0}^{numSteps-1} MaxComm(s)
+//   Work[0] + Σ_{s=1}^{numSteps-1} max(Work[s], MaxComm[s-1] * g)
 //
-// This uses a fresh MaxCommDatastructure with the specified policy.
+// Uses manually computed max-work per step and a fresh MaxCommDatastructure
+// with the specified policy.
 // ============================================================================
 
 template <typename Policy>
-static double ComputeMaxCommSum(const BspInstance<Graph> &inst,
-                                const std::vector<unsigned> &procs,
-                                const std::vector<unsigned> &steps,
-                                unsigned fixedNumSteps) {
+static double ComputeMaxBspCostNoSync(const BspInstance<Graph> &inst,
+                                      const std::vector<unsigned> &procs,
+                                      const std::vector<unsigned> &steps,
+                                      unsigned fixedNumSteps) {
+    const auto &dag = inst.GetComputationalDag();
+    const unsigned numProcs = inst.NumberOfProcessors();
+    const double g = inst.CommunicationCosts();
+
+    // Compute max work per step directly from assignment vectors
+    // (avoids dependency on KlActiveSchedule's step count)
+    std::vector<std::vector<double>> workPerStepProc(fixedNumSteps, std::vector<double>(numProcs, 0.0));
+    for (auto v : dag.Vertices()) {
+        if (steps[v] < fixedNumSteps) {
+            workPerStepProc[steps[v]][procs[v]] += static_cast<double>(dag.VertexWorkWeight(v));
+        }
+    }
+    std::vector<double> maxWork(fixedNumSteps, 0.0);
+    for (unsigned s = 0; s < fixedNumSteps; ++s) {
+        for (unsigned p = 0; p < numProcs; ++p) {
+            maxWork[s] = std::max(maxWork[s], workPerStepProc[s][p]);
+        }
+    }
+
+    // Build schedule for MaxComm computation
     BspSchedule<Graph> sched(inst);
     sched.SetAssignedProcessors(procs);
     sched.SetAssignedSupersteps(steps);
@@ -133,27 +161,31 @@ static double ComputeMaxCommSum(const BspInstance<Graph> &inst,
 
     MaxCommDatastructure<Graph, double, KlActiveScheduleT, Policy> ds;
     ds.Initialize(klSched);
-    unsigned maxStep = sched.NumberOfSupersteps();
-    if (maxStep > 0) {
-        ds.ComputeCommDatastructures(0, maxStep - 1);
+    unsigned actualSteps = sched.NumberOfSupersteps();
+    if (actualSteps > 0) {
+        ds.ComputeCommDatastructures(0, actualSteps - 1);
     }
 
-    double sum = 0;
-    for (unsigned s = 0; s < std::min(maxStep, fixedNumSteps); ++s) {
-        sum += static_cast<double>(ds.StepMaxComm(s));
+    // cost = Work[0] + Σ_{s=1}^{S-1} max(Work[s], MaxComm[s-1] * g)
+    double cost = maxWork[0];
+    for (unsigned s = 1; s < fixedNumSteps; ++s) {
+        double comm = (s - 1 < actualSteps) ? static_cast<double>(ds.StepMaxComm(s - 1)) * g : 0.0;
+        cost += std::max(maxWork[s], comm);
     }
-    return sum;
+    return cost;
 }
 
 // ============================================================================
 // VerifyAffinityBruteForce
 //
-// For a given node, calls ComputeCommAffinity (with penalty=0, reward=0 so
-// only the comm-delta component is active) and checks every affinity entry
+// For a given node, calls ComputeNodeAffinity (with penalty=0, reward=0 so
+// only the coupled work+comm delta is active) and checks every affinity entry
 // against a brute-force recomputation.
 //
 // Expected value for affinity[p][sIdx]:
-//   (maxCommSum_after_move - maxCommSum_before_move) * g
+//   fullCost_after_move - fullCost_before_move
+//
+// where fullCost excludes the sync term (constant across moves).
 //
 // Returns true if all entries match within tolerance.
 // ============================================================================
@@ -161,9 +193,9 @@ static double ComputeMaxCommSum(const BspInstance<Graph> &inst,
 template <typename Policy>
 static bool VerifyAffinityBruteForce(KlTestT<Policy> &kl, unsigned node, const std::string &context) {
     auto &costF = kl.GetCommCostF();
-    auto *activeSched = costF.active_schedule;
-    const auto *inst = costF.instance;
-    const auto &dag = *costF.graph;
+    auto *activeSched = costF.activeSchedule_;
+    const auto *inst = costF.instance_;
+    const auto &dag = *costF.graph_;
     const unsigned numProcs = inst->NumberOfProcessors();
     const unsigned numSteps = activeSched->NumSteps();
     const unsigned nodeStep = activeSched->AssignedSuperstep(node);
@@ -182,8 +214,8 @@ static bool VerifyAffinityBruteForce(KlTestT<Policy> &kl, unsigned node, const s
     // Create affinity table: [proc][window_idx], zero-initialised
     std::vector<std::vector<double>> affinity(numProcs, std::vector<double>(WR, 0.0));
 
-    // Call ComputeCommAffinity with zero penalty/reward (isolate comm deltas)
-    costF.ComputeCommAffinity(node, affinity, 0.0, 0.0, startStep, endStep);
+    // Call ComputeNodeAffinity with zero penalty/reward (isolate work+comm deltas)
+    costF.ComputeNodeAffinity(node, affinity, 0.0, 0.0, startStep, endStep);
 
     // Current assignment
     std::vector<unsigned> origProcs, origSteps;
@@ -192,8 +224,7 @@ static bool VerifyAffinityBruteForce(KlTestT<Policy> &kl, unsigned node, const s
         origSteps.push_back(activeSched->AssignedSuperstep(v));
     }
 
-    double oldCommSum = ComputeMaxCommSum<Policy>(*inst, origProcs, origSteps, numSteps);
-    double g = inst->CommunicationCosts();
+    double oldCost = ComputeMaxBspCostNoSync<Policy>(*inst, origProcs, origSteps, numSteps);
 
     bool allMatch = true;
     for (unsigned p = 0; p < numProcs; ++p) {
@@ -211,8 +242,8 @@ static bool VerifyAffinityBruteForce(KlTestT<Policy> &kl, unsigned node, const s
             newProcs[node] = p;
             newSteps[node] = sTo;
 
-            double newCommSum = ComputeMaxCommSum<Policy>(*inst, newProcs, newSteps, numSteps);
-            double expected = (newCommSum - oldCommSum) * g;
+            double newCost = ComputeMaxBspCostNoSync<Policy>(*inst, newProcs, newSteps, numSteps);
+            double expected = newCost - oldCost;
             double actual = affinity[p][sIdx];
 
             if (std::abs(expected - actual) > 1e-6) {
@@ -240,10 +271,11 @@ static bool VerifyAffinityBruteForce(KlTestT<Policy> &kl, unsigned node, const s
 }
 
 // ============================================================================
-// Suite 1: ComputeCommAffinity brute-force verification (all policies)
+// Suite 1: ComputeNodeAffinity brute-force verification (all policies)
 //
-// Exact brute-force comparison against fresh MaxComm recomputation for every
-// affinity table entry. Requires the CalculateStepCostChange bug fix.
+// Exact brute-force comparison against fresh MaxBSP cost recomputation for
+// every affinity table entry. The coupled max(Work, MaxComm*g) formula means
+// work and comm cannot be verified independently.
 // ============================================================================
 
 BOOST_AUTO_TEST_SUITE(AffinityBruteForce)
@@ -643,10 +675,11 @@ BOOST_AUTO_TEST_SUITE_END()    // AffinityBruteForce
 // ============================================================================
 // Suite 2: Staleness penalty/reward
 //
-// Tests that the staleness component of ComputeCommAffinity has the expected
+// Tests that the staleness component of ComputeNodeAffinity has the expected
 // relative behaviour: same-proc candidates are unaffected, cross-proc
 // candidates at violating positions are affected, and the magnitude scales
-// with penalty/reward values.
+// with penalty/reward values. The work+comm component cancels in the
+// difference (withStale - noStale), isolating the staleness term.
 // ============================================================================
 
 BOOST_AUTO_TEST_SUITE(StalenessTests)
@@ -681,8 +714,8 @@ void TestStalenessZeroForSameProc() {
     std::vector<std::vector<double>> withStale(numProcs, std::vector<double>(WR, 0.0));
     std::vector<std::vector<double>> noStale(numProcs, std::vector<double>(WR, 0.0));
 
-    kl.GetCommCostF().ComputeCommAffinity(1, withStale, 100.0, 100.0, 0, 1);
-    kl.GetCommCostF().ComputeCommAffinity(1, noStale, 0.0, 0.0, 0, 1);
+    kl.GetCommCostF().ComputeNodeAffinity(1, withStale, 100.0, 100.0, 0, 1);
+    kl.GetCommCostF().ComputeNodeAffinity(1, noStale, 0.0, 0.0, 0, 1);
 
     // For each window index, the staleness contribution on the PARENT'S proc
     // (P0, same proc as source) should be zero (no staleness on same proc).
@@ -725,8 +758,8 @@ void TestStalenessNonZeroCrossProc() {
     std::vector<std::vector<double>> withStale(numProcs, std::vector<double>(WR, 0.0));
     std::vector<std::vector<double>> noStale(numProcs, std::vector<double>(WR, 0.0));
 
-    kl.GetCommCostF().ComputeCommAffinity(1, withStale, 100.0, 100.0, 0, 1);
-    kl.GetCommCostF().ComputeCommAffinity(1, noStale, 0.0, 0.0, 0, 1);
+    kl.GetCommCostF().ComputeNodeAffinity(1, withStale, 100.0, 100.0, 0, 1);
+    kl.GetCommCostF().ComputeNodeAffinity(1, noStale, 0.0, 0.0, 0, 1);
 
     // v1's current proc is P1. The staleness contribution for (P1, S0) — moving
     // v1 to S0 while staying on P1 (cross-proc from parent v0@P0) — should be
@@ -766,9 +799,9 @@ void TestStalenessScalesWithMagnitude() {
     std::vector<std::vector<double>> aff2(numProcs, std::vector<double>(WR, 0.0));
     std::vector<std::vector<double>> noStale(numProcs, std::vector<double>(WR, 0.0));
 
-    kl.GetCommCostF().ComputeCommAffinity(1, aff1, 50.0, 50.0, 0, 1);
-    kl.GetCommCostF().ComputeCommAffinity(1, aff2, 100.0, 100.0, 0, 1);
-    kl.GetCommCostF().ComputeCommAffinity(1, noStale, 0.0, 0.0, 0, 1);
+    kl.GetCommCostF().ComputeNodeAffinity(1, aff1, 50.0, 50.0, 0, 1);
+    kl.GetCommCostF().ComputeNodeAffinity(1, aff2, 100.0, 100.0, 0, 1);
+    kl.GetCommCostF().ComputeNodeAffinity(1, noStale, 0.0, 0.0, 0, 1);
 
     // Staleness with magnitude 100 should be 2× staleness with magnitude 50.
     double stale1 = aff1[1][0] - noStale[1][0];
@@ -808,7 +841,7 @@ void TestStalenessZeroAtSelfMove() {
     constexpr unsigned WS = 1;
     std::vector<std::vector<double>> aff(2, std::vector<double>(WR, 0.0));
 
-    kl.GetCommCostF().ComputeCommAffinity(1, aff, 100.0, 100.0, 0, 1);
+    kl.GetCommCostF().ComputeNodeAffinity(1, aff, 100.0, 100.0, 0, 1);
 
     // Self-move: v1 at (P1, S1), window index = WS = 1.
     BOOST_CHECK_SMALL(aff[1][WS], 1e-6);
@@ -853,7 +886,7 @@ void TestSmokeSelfMoveZero() {
     constexpr unsigned WS = 1;
     std::vector<std::vector<double>> affinity(2, std::vector<double>(WR, 0.0));
 
-    kl.GetCommCostF().ComputeCommAffinity(1, affinity, 0.0, 0.0, 0, 1);
+    kl.GetCommCostF().ComputeNodeAffinity(1, affinity, 0.0, 0.0, 0, 1);
 
     // Self-move: v1 stays at (P1, S1). Window index = WS = 1.
     double selfAffinity = affinity[1][WS];
@@ -899,14 +932,14 @@ void TestSmokeLargerGraph() {
             std::fill(row.begin(), row.end(), 0.0);
         }
 
-        unsigned nodeStep = kl.GetCommCostF().active_schedule->AssignedSuperstep(v);
+        unsigned nodeStep = kl.GetCommCostF().activeSchedule_->AssignedSuperstep(v);
         unsigned startStep = nodeStep > 0 ? nodeStep - 1 : 0;
-        unsigned endStep = std::min(nodeStep + 1, kl.GetCommCostF().active_schedule->NumSteps() - 1);
+        unsigned endStep = std::min(nodeStep + 1, kl.GetCommCostF().activeSchedule_->NumSteps() - 1);
 
-        kl.GetCommCostF().ComputeCommAffinity(v, affinity, 50.0, 50.0, startStep, endStep);
+        kl.GetCommCostF().ComputeNodeAffinity(v, affinity, 50.0, 50.0, startStep, endStep);
 
         // Self-move affinity at current (proc, step) should be 0
-        unsigned selfProc = kl.GetCommCostF().active_schedule->AssignedProcessor(v);
+        unsigned selfProc = kl.GetCommCostF().activeSchedule_->AssignedProcessor(v);
         constexpr unsigned WS = 1;
         double selfAffinity = affinity[selfProc][WS];
         BOOST_CHECK_SMALL(selfAffinity, 1e-6);
@@ -944,7 +977,7 @@ void TestSmokeSameProcNoComm() {
     std::vector<std::vector<double>> affinity(2, std::vector<double>(WR, 0.0));
 
     // v1 at (P0, S1). Moving to (P0, S0) = same proc, no comm either way.
-    kl.GetCommCostF().ComputeCommAffinity(1, affinity, 0.0, 0.0, 0, 1);
+    kl.GetCommCostF().ComputeNodeAffinity(1, affinity, 0.0, 0.0, 0, 1);
 
     // Same proc candidates: affinity should be 0 (no comm change)
     BOOST_CHECK_SMALL(affinity[0][0], 1e-6);     // (P0, S0)
@@ -952,7 +985,9 @@ void TestSmokeSameProcNoComm() {
 }
 INSTANTIATE_ALL(TestSmokeSameProcNoComm)
 
-// Isolated node (no edges). Affinity must be 0 everywhere.
+// Isolated node (no edges). Brute-force verify (work component is non-trivial
+// in the coupled model even without edges, since moving to a different step
+// changes maxWork).
 template <typename Policy>
 void TestSmokeIsolated() {
     Graph dag;
@@ -972,19 +1007,8 @@ void TestSmokeIsolated() {
 
     KlTestT<Policy> kl;
     kl.SetupSchedule(schedule);
-    kl.GetCommCostF().ComputeSendReceiveDatastructures();
 
-    constexpr unsigned WR = 3;
-    std::vector<std::vector<double>> affinity(2, std::vector<double>(WR, 0.0));
-
-    kl.GetCommCostF().ComputeCommAffinity(0, affinity, 0.0, 0.0, 0, 1);
-
-    // No edges → all entries should be 0
-    for (unsigned p = 0; p < 2; ++p) {
-        for (unsigned i = 0; i < WR; ++i) {
-            BOOST_CHECK_SMALL(affinity[p][i], 1e-6);
-        }
-    }
+    BOOST_CHECK(VerifyAffinityBruteForce<Policy>(kl, 0, "SmokeIsolated v0"));
 }
 INSTANTIATE_ALL(TestSmokeIsolated)
 
