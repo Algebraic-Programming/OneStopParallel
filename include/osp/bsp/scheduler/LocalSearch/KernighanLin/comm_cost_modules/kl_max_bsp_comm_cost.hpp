@@ -360,66 +360,143 @@ struct KlMaxBspCommCostFunction {
         // =================================================================
         // Part 1: Dependency constraint penalties/rewards (staleness-aware)
         //
-        // Identical logic to BSP, but uses staleness parameter for the
-        // "different processor" offset instead of hardcoded 1.
+        // For each edge, there are TWO violation thresholds depending on
+        // whether the node moves to the same or a different processor
+        // than the neighbor:
+        //
+        //   same-proc threshold:  just precedence (gap = 0)
+        //   diff-proc threshold:  staleness offset (gap = staleness)
+        //
+        // For BSP (staleness=1) these thresholds differ by 1, so the
+        // original single-exemption trick works. For staleness >= 2 the
+        // two thresholds can span multiple positions, and we must handle
+        // the gap zone explicitly.
+        //
+        // Decomposition:
+        //   1. Apply penalty/reward to ALL procs for the diff-proc range
+        //   2. Apply correction to the neighbor's proc for the gap zone
+        //      between the same-proc and diff-proc boundaries.
+        //
+        // This yields the correct per-proc per-position prediction that
+        // matches UpdateViolations in kl_active_schedule.hpp.
         // =================================================================
+
+        // Clamp a signed index into the valid affinity table range
+        auto ClampIdx = [&](int val) -> unsigned {
+            return static_cast<unsigned>(std::max(static_cast<int>(nodeStartIdx), std::min(val, static_cast<int>(windowBound))));
+        };
+
+        // --- Children: node -> child ---
+        //
+        // Violation at candidate step s = nodeStep + idx - windowSize:
+        //   same-proc:  s > childStep             ⟺  idx > windowSize + gap
+        //   diff-proc:  s + staleness > childStep ⟺  idx > windowSize + gap - staleness
+        //
+        //   where gap = childStep - nodeStep (signed).
+        //
+        // NOT violated: penalty for positions that CREATE a new violation.
+        //   ALL procs get +penalty for [diffCutoff, windowBound)
+        //   childProc gets -penalty for [diffCutoff, sameCutoff)  (undo: childProc is clear there)
+        //
+        // VIOLATED: reward for positions that RESOLVE the existing violation.
+        //   ALL procs get -reward for [nodeStartIdx, diffCutoff)
+        //   childProc gets -reward for [diffCutoff, sameCutoff)  (extra: childProc resolves there too)
 
         for (const auto &target : instance_->GetComputationalDag().Children(node)) {
             const unsigned targetStep = activeSchedule_->AssignedSuperstep(target);
             const unsigned targetProc = activeSchedule_->AssignedProcessor(target);
 
-            if (targetStep < nodeStep + (targetProc != nodeProc ? staleness : 0u)) {
-                const unsigned diff = nodeStep - targetStep;
-                const unsigned bound = windowSize > diff ? windowSize - diff : 0;
-                unsigned idx = nodeStartIdx;
-                for (; idx < bound; idx++) {
+            const int gap = static_cast<int>(targetStep) - static_cast<int>(nodeStep);
+
+            // First idx that causes same-proc / diff-proc violation
+            const unsigned sameCutoff = ClampIdx(static_cast<int>(windowSize) + gap + 1);
+            const unsigned diffCutoff = ClampIdx(static_cast<int>(windowSize) + gap - static_cast<int>(staleness) + 1);
+
+            const unsigned currThreshold = (targetProc != nodeProc) ? staleness : 0u;
+            const bool currentlyViolated = (nodeStep + currThreshold > targetStep);
+
+            if (!currentlyViolated) {
+                // ALL procs get +penalty for diff-proc violation zone
+                for (unsigned idx = diffCutoff; idx < windowBound; idx++) {
+                    for (const unsigned p : procRange_->CompatibleProcessorsVertex(node)) {
+                        affinityTableNode[p][idx] += penalty;
+                    }
+                }
+                // childProc gets -penalty in the gap zone (same-proc is NOT violated there)
+                if (IsCompatible(node, targetProc)) {
+                    for (unsigned idx = diffCutoff; idx < sameCutoff; idx++) {
+                        affinityTableNode[targetProc][idx] -= penalty;
+                    }
+                }
+            } else {
+                // ALL procs get -reward for diff-proc resolution zone
+                for (unsigned idx = nodeStartIdx; idx < diffCutoff; idx++) {
                     for (const unsigned p : procRange_->CompatibleProcessorsVertex(node)) {
                         affinityTableNode[p][idx] -= reward;
                     }
                 }
-                if (windowSize >= diff && IsCompatible(node, targetProc)) {
-                    affinityTableNode[targetProc][idx] -= reward;
-                }
-            } else {
-                const unsigned diff = targetStep - nodeStep;
-                unsigned idx = windowSize + diff;
-                if (idx < windowBound && IsCompatible(node, targetProc)) {
-                    affinityTableNode[targetProc][idx] -= penalty;
-                }
-                for (; idx < windowBound; idx++) {
-                    for (const unsigned p : procRange_->CompatibleProcessorsVertex(node)) {
-                        affinityTableNode[p][idx] += penalty;
+                // childProc gets extra -reward in the gap zone (same-proc resolves there too)
+                if (IsCompatible(node, targetProc)) {
+                    for (unsigned idx = diffCutoff; idx < sameCutoff; idx++) {
+                        affinityTableNode[targetProc][idx] -= reward;
                     }
                 }
             }
         }
 
+        // --- Parents: parent -> node ---
+        //
+        // Violation at candidate step s = nodeStep + idx - windowSize:
+        //   same-proc:  parentStep > s              ⟺  idx < windowSize - gapP
+        //   diff-proc:  parentStep + staleness > s  ⟺  idx < windowSize - gapP + staleness
+        //
+        //   where gapP = nodeStep - parentStep (signed).
+        //
+        // NOT violated: penalty for positions that CREATE a new violation.
+        //   ALL procs get +penalty for [nodeStartIdx, diffCutoffP)
+        //   parentProc gets -penalty for [sameCutoffP, diffCutoffP)  (undo: parentProc is clear there)
+        //
+        // VIOLATED: reward for positions that RESOLVE the existing violation.
+        //   ALL procs get -reward for [diffCutoffP, windowBound)
+        //   parentProc gets -reward for [sameCutoffP, diffCutoffP)  (extra: parentProc resolves there too)
+
         for (const auto &source : instance_->GetComputationalDag().Parents(node)) {
             const unsigned sourceStep = activeSchedule_->AssignedSuperstep(source);
             const unsigned sourceProc = activeSchedule_->AssignedProcessor(source);
 
-            if (sourceStep + (sourceProc != nodeProc ? staleness : 0u) <= nodeStep) {
-                const unsigned diff = nodeStep - sourceStep;
-                const unsigned bound = windowSize >= diff ? windowSize - diff + 1 : 0;
-                unsigned idx = nodeStartIdx;
-                for (; idx < bound; idx++) {
+            const int gapP = static_cast<int>(nodeStep) - static_cast<int>(sourceStep);
+
+            // First idx that is CLEAR for same-proc / diff-proc
+            const unsigned sameCutoffP = ClampIdx(static_cast<int>(windowSize) - gapP);
+            const unsigned diffCutoffP = ClampIdx(static_cast<int>(windowSize) - gapP + static_cast<int>(staleness));
+
+            const unsigned currThreshold = (sourceProc != nodeProc) ? staleness : 0u;
+            const bool currentlyViolated = (sourceStep + currThreshold > nodeStep);
+
+            if (!currentlyViolated) {
+                // ALL procs get +penalty for diff-proc violation zone
+                for (unsigned idx = nodeStartIdx; idx < diffCutoffP; idx++) {
                     for (const unsigned p : procRange_->CompatibleProcessorsVertex(node)) {
                         affinityTableNode[p][idx] += penalty;
                     }
                 }
-                if (idx - 1 < bound && IsCompatible(node, sourceProc)) {
-                    affinityTableNode[sourceProc][idx - 1] -= penalty;
+                // parentProc gets -penalty in the gap zone (same-proc is NOT violated there)
+                if (IsCompatible(node, sourceProc)) {
+                    for (unsigned idx = sameCutoffP; idx < diffCutoffP; idx++) {
+                        affinityTableNode[sourceProc][idx] -= penalty;
+                    }
                 }
             } else {
-                const unsigned diff = sourceStep - nodeStep;
-                unsigned idx = std::min(windowSize + diff, windowBound);
-                if (idx < windowBound && IsCompatible(node, sourceProc)) {
-                    affinityTableNode[sourceProc][idx] -= reward;
-                }
-                idx++;
-                for (; idx < windowBound; idx++) {
+                // ALL procs get -reward for diff-proc resolution zone
+                for (unsigned idx = diffCutoffP; idx < windowBound; idx++) {
                     for (const unsigned p : procRange_->CompatibleProcessorsVertex(node)) {
                         affinityTableNode[p][idx] -= reward;
+                    }
+                }
+                // parentProc gets extra -reward in the gap zone (same-proc resolves there too)
+                if (IsCompatible(node, sourceProc)) {
+                    for (unsigned idx = sameCutoffP; idx < diffCutoffP; idx++) {
+                        affinityTableNode[sourceProc][idx] -= reward;
                     }
                 }
             }
