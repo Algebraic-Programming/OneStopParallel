@@ -73,8 +73,6 @@ class KlImproverMt : public KlImprover<GraphT, CommCostFunctionT, MemoryConstrai
         if (numSteps >= this->parameters_.threadMinRange_ + this->parameters_.threadRangeGap_) {
             const unsigned divisor = this->parameters_.threadMinRange_ + this->parameters_.threadRangeGap_;
             if (divisor > 0) {
-                // This calculation is based on the constraint that one thread's range is
-                // 'min_range' larger than the others, and all ranges are at least 'min_range'.
                 maxAllowedThreads = (numSteps + this->parameters_.threadRangeGap_ - this->parameters_.threadMinRange_) / divisor;
             } else {
                 maxAllowedThreads = numSteps;
@@ -125,8 +123,18 @@ class KlImproverMt : public KlImprover<GraphT, CommCostFunctionT, MemoryConstrai
         this->InitializeDatastructures(schedule);
         const CostT initialCost = this->activeSchedule_.GetCost();
 
+        // Track the global best across all parallel iterations.
+        // Each thread optimizes its local step range independently, so
+        // the stitched-together result may be worse than before.
+        //
+        // We use `schedule` itself as the best-state store: WriteSchedule
+        // only overwrites proc/step assignments while preserving the
+        // dynamic type (important for MaxBspSchedule::GetStaleness).
+        CostT bestCost = initialCost;
+        bool improved = false;
+
         for (size_t i = 0; i < this->parameters_.numParallelLoops_; ++i) {
-            SetThreadBoundaries(numThreads, schedule.NumberOfSupersteps(), i % 2 == 0);
+            SetThreadBoundaries(numThreads, this->activeSchedule_.NumSteps(), i % 2 == 0);
 
 #pragma omp parallel num_threads(numThreads)
             {
@@ -138,21 +146,35 @@ class KlImproverMt : public KlImprover<GraphT, CommCostFunctionT, MemoryConstrai
             }
 
             this->SynchronizeActiveSchedule(numThreads);
+            const CostT currentCost = this->activeSchedule_.GetCost();
+
+            if (currentCost < bestCost) {
+                // Improved: save to schedule (preserves dynamic type)
+                this->activeSchedule_.WriteSchedule(schedule);
+                bestCost = currentCost;
+                improved = true;
+            } else if (numThreads > 1 && currentCost > bestCost) {
+                // Regressed: revert to the best known schedule stored
+                // in `schedule`. Re-initialization is heavyweight but
+                // regression should be rare; correctness takes priority.
+                this->CleanupDatastructures();
+                this->threadDataVec_.resize(numThreads);
+                this->threadFinishedVec_.assign(numThreads, true);
+                this->InitializeDatastructures(schedule);
+            }
+
             if (numThreads > 1) {
-                this->activeSchedule_.SetCost(this->commCostF_.ComputeScheduleCost());
-                SetNumThreads(numThreads, schedule.NumberOfSupersteps());
+                SetNumThreads(numThreads, this->activeSchedule_.NumSteps());
                 this->threadFinishedVec_.resize(numThreads);
             }
         }
 
-        if (initialCost > this->activeSchedule_.GetCost()) {
-            this->activeSchedule_.WriteSchedule(schedule);
-            this->CleanupDatastructures();
-            return ReturnStatus::OSP_SUCCESS;
-        } else {
-            this->CleanupDatastructures();
-            return ReturnStatus::BEST_FOUND;
-        }
+        this->CleanupDatastructures();
+
+        // `schedule` already holds the best result (written by WriteSchedule
+        // on each improvement). If no improvement was made, it still
+        // contains the original input.
+        return improved ? ReturnStatus::OSP_SUCCESS : ReturnStatus::BEST_FOUND;
     }
 };
 
