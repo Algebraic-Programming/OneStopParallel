@@ -25,6 +25,7 @@ limitations under the License.
 // Cost function modules
 #include "comm_cost_modules/kl_bsp_comm_cost.hpp"
 #include "comm_cost_modules/kl_hyper_total_comm_cost.hpp"
+#include "comm_cost_modules/kl_max_bsp_comm_cost.hpp"
 #include "comm_cost_modules/kl_total_comm_cost.hpp"
 
 // Memory constraint modules
@@ -114,6 +115,29 @@ template <typename GraphT,
 using KlBspCommImproverLocalMemConstr
     = KlImprover<GraphT,
                  KlBspCommCostFunction<GraphT, DoubleCostT, MemoryConstraintT, CommPolicy, windowSize>,
+                 MemoryConstraintT,
+                 windowSize,
+                 DoubleCostT>;
+
+// --- MaxBSP comm cost / Eager|Lazy|Buffered (resolves to KlImproverScan) ---
+
+template <typename GraphT,
+          typename MemoryConstraintT = NoLocalSearchMemoryConstraint,
+          typename CommPolicy = EagerCommCostPolicy,
+          unsigned windowSize = 1>
+using KlMaxBspCommImprover = KlImprover<GraphT,
+                                        KlMaxBspCommCostFunction<GraphT, DoubleCostT, MemoryConstraintT, CommPolicy, windowSize>,
+                                        MemoryConstraintT,
+                                        windowSize,
+                                        DoubleCostT>;
+
+template <typename GraphT,
+          typename MemoryConstraintT = LsLocalMemoryConstraint<GraphT>,
+          typename CommPolicy = EagerCommCostPolicy,
+          unsigned windowSize = 1>
+using KlMaxBspCommImproverLocalMemConstr
+    = KlImprover<GraphT,
+                 KlMaxBspCommCostFunction<GraphT, DoubleCostT, MemoryConstraintT, CommPolicy, windowSize>,
                  MemoryConstraintT,
                  windowSize,
                  DoubleCostT>;

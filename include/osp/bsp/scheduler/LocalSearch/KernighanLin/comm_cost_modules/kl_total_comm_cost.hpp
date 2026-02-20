@@ -20,6 +20,7 @@ limitations under the License.
 
 #include "../kl_active_schedule.hpp"
 #include "../kl_improver_base.hpp"
+#include "../kl_work_affinity.hpp"
 
 namespace osp {
 
@@ -30,6 +31,7 @@ struct KlTotalCommCostFunction {
     using KlGainUpdateInfo = KlUpdateInfo<VertexType>;
 
     constexpr static bool isMaxCommCostFunction_ = false;
+    constexpr static bool coupledWorkComm_ = false;
 
     constexpr static unsigned windowRange_ = 2 * windowSize + 1;
     constexpr static bool useNodeCommunicationCosts_ = useNodeCommunicationCostsArg || not hasEdgeWeightsV<GraphT>;
@@ -349,6 +351,19 @@ struct KlTotalCommCostFunction {
                                 const CostT &commGain) {
         return pTargetCommCost > nodeTargetCommCost ? (pTargetCommCost - nodeTargetCommCost) * commGain
                                                     : (nodeTargetCommCost - pTargetCommCost) * commGain * -1.0;
+    }
+
+    /// Unified entry point called by the base class.
+    /// Additive cost: compute work affinities, then layer comm affinities on top.
+    template <typename AffinityTableT>
+    void ComputeNodeAffinity(VertexType node,
+                             AffinityTableT &affinityTableNode,
+                             const CostT &penalty,
+                             const CostT &reward,
+                             const unsigned startStep,
+                             const unsigned endStep) {
+        ComputeWorkAffinity<windowSize>(node, affinityTableNode, *activeSchedule_, *graph_, *procRange_, startStep, endStep);
+        ComputeCommAffinity(node, affinityTableNode, penalty, reward, startStep, endStep);
     }
 
     template <typename AffinityTableT>

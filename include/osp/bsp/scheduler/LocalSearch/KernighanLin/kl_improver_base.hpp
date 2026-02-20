@@ -309,10 +309,14 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
 
     // --- Shared affinity computation ---
 
+    /// Work-cost delta when placing a node on a DIFFERENT step.
+    /// Used by KlImproverHeap for incremental affinity updates.
     inline CostT ComputeDiffStepAffinity(const VertexWorkWeightT maxWork, const VertexWorkWeightT newWeight) const {
         return maxWork < newWeight ? static_cast<CostT>(newWeight) - static_cast<CostT>(maxWork) : 0.0;
     }
 
+    /// Work-cost delta when placing a node on the SAME step (after removal).
+    /// Used by KlImproverHeap for incremental affinity updates.
     inline CostT ComputeSameStepAffinity(const VertexWorkWeightT &maxWorkForStep,
                                          const VertexWorkWeightT &newWeight,
                                          const CostT &nodeProcAffinity) {
@@ -326,16 +330,13 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
     inline void ComputeNodeAffinities(VertexType node,
                                       std::vector<std::vector<CostT>> &affinityTableNode,
                                       ThreadSearchContext &threadData) {
-        ComputeWorkAffinity(node, affinityTableNode, threadData);
-        commCostF_.ComputeCommAffinity(node,
+        commCostF_.ComputeNodeAffinity(node,
                                        affinityTableNode,
                                        threadData.rewardPenaltyStrat_.penalty_,
                                        threadData.rewardPenaltyStrat_.reward_,
                                        threadData.startStep_,
                                        threadData.endStep_);
     }
-
-    void ComputeWorkAffinity(VertexType node, std::vector<std::vector<CostT>> &affinityTableNode, ThreadSearchContext &threadData);
 
     // --- ApplyMove ---
 
@@ -1006,46 +1007,6 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
 // =============================================================================
 
 template <typename Derived, typename GraphT, typename CommCostFunctionT, typename MemoryConstraintT, unsigned windowSize, typename CostT>
-void KlImproverBase<Derived, GraphT, CommCostFunctionT, MemoryConstraintT, windowSize, CostT>::ComputeWorkAffinity(
-    VertexType node, std::vector<std::vector<CostT>> &affinityTableNode, ThreadSearchContext &threadData) {
-    const unsigned nodeStep = activeSchedule_.AssignedSuperstep(node);
-    const VertexWorkWeightT vertexWeight = graph_->VertexWorkWeight(node);
-
-    unsigned step = (nodeStep > windowSize) ? (nodeStep - windowSize) : 0;
-    for (unsigned idx = threadData.StartIdx(nodeStep); idx < threadData.EndIdx(nodeStep); ++idx, ++step) {
-        if (idx == windowSize) {
-            continue;
-        }
-
-        const CostT maxWorkForStep = static_cast<CostT>(activeSchedule_.GetStepMaxWork(step));
-
-        for (const unsigned proc : procRange_.CompatibleProcessorsVertex(node)) {
-            const VertexWorkWeightT newWeight = vertexWeight + activeSchedule_.GetStepProcessorWork(step, proc);
-            const CostT workDiff = static_cast<CostT>(newWeight) - maxWorkForStep;
-            affinityTableNode[proc][idx] = std::max(0.0, workDiff);
-        }
-    }
-
-    const unsigned nodeProc = activeSchedule_.AssignedProcessor(node);
-    const VertexWorkWeightT maxWorkForStep = activeSchedule_.GetStepMaxWork(nodeStep);
-    const bool isSoleMaxProcessor = (activeSchedule_.GetStepMaxWorkProcessorCount()[nodeStep] == 1)
-                                    && (maxWorkForStep == activeSchedule_.GetStepProcessorWork(nodeStep, nodeProc));
-
-    const CostT nodeProcAffinity
-        = isSoleMaxProcessor ? std::min(vertexWeight, maxWorkForStep - activeSchedule_.GetStepSecondMaxWork(nodeStep)) : 0.0;
-    affinityTableNode[nodeProc][windowSize] = nodeProcAffinity;
-
-    for (const unsigned proc : procRange_.CompatibleProcessorsVertex(node)) {
-        if (proc == nodeProc) {
-            continue;
-        }
-
-        const VertexWorkWeightT newWeight = vertexWeight + activeSchedule_.GetStepProcessorWork(nodeStep, proc);
-        affinityTableNode[proc][windowSize] = ComputeSameStepAffinity(maxWorkForStep, newWeight, nodeProcAffinity);
-    }
-}
-
-template <typename Derived, typename GraphT, typename CommCostFunctionT, typename MemoryConstraintT, unsigned windowSize, typename CostT>
 void KlImproverBase<Derived, GraphT, CommCostFunctionT, MemoryConstraintT, windowSize, CostT>::SetParameters(
     VertexIdxT<GraphT> numNodes) {
     const unsigned logNumNodes = (numNodes > 1) ? static_cast<unsigned>(std::log(numNodes)) : 1;
@@ -1180,9 +1141,15 @@ void KlImproverBase<Derived, GraphT, CommCostFunctionT, MemoryConstraintT, windo
         // Capture comm costs BEFORE the swap loop moves data around.
         // removedStep may carry comm data (lazy/buffered placement), and
         // removedStep-1 will absorb it during FixupSendRecv.
-        const CostT removedStepMaxComm = static_cast<CostT>(commCostF_.StepMaxComm(threadData.stepToRemove_));
-        const CostT prevStepMaxComm
-            = (threadData.stepToRemove_ > 0) ? static_cast<CostT>(commCostF_.StepMaxComm(threadData.stepToRemove_ - 1)) : CostT(0);
+        // (Only needed for additive cost models.)
+        CostT removedStepMaxComm = 0;
+        CostT prevStepMaxComm = 0;
+        if constexpr (!CommCostFunctionT::coupledWorkComm_) {
+            removedStepMaxComm = static_cast<CostT>(commCostF_.StepMaxComm(threadData.stepToRemove_));
+            prevStepMaxComm = (threadData.stepToRemove_ > 0)
+                                  ? static_cast<CostT>(commCostF_.StepMaxComm(threadData.stepToRemove_ - 1))
+                                  : CostT(0);
+        }
 
         for (unsigned i = threadData.stepToRemove_; i < threadData.endStep_; i++) {
             commCostF_.SwapCommSteps(i, i + 1);
@@ -1191,18 +1158,6 @@ void KlImproverBase<Derived, GraphT, CommCostFunctionT, MemoryConstraintT, windo
         commCostF_.UpdateLambdaAfterStepRemoval(threadData.stepToRemove_);
         commCostF_.FixupSendRecvAfterStepRemoval(threadData.stepToRemove_, oldEndStep);
 
-        // Compute the comm delta from the merge.
-        // FixupSendRecv merged the removed step's comm into removedStep-1 and
-        // called ArrangeSuperstepCommData, updating the cache. The cost lost
-        // the removed step's comm (now at oldEndStep, out of range) and gained
-        // the increase at removedStep-1 from the merge.
-        const CostT commCostMultiplier = static_cast<CostT>(instance_->CommunicationCosts());
-        CostT commDelta = -removedStepMaxComm * commCostMultiplier;
-        if (threadData.stepToRemove_ > 0) {
-            const CostT newPrevStepMaxComm = static_cast<CostT>(commCostF_.StepMaxComm(threadData.stepToRemove_ - 1));
-            commDelta += (newPrevStepMaxComm - prevStepMaxComm) * commCostMultiplier;
-        }
-
         const CostT syncCost = static_cast<CostT>(instance_->SynchronisationCosts());
         threadData.activeScheduleData_.appliedMoves_.push_back(KlMove::MakeRemoveStep(threadData.stepToRemove_, syncCost));
 
@@ -1210,7 +1165,23 @@ void KlImproverBase<Derived, GraphT, CommCostFunctionT, MemoryConstraintT, windo
             activeSchedule_.UpdateViolationsAfterStepRemoval(threadData.stepToRemove_, threadData.activeScheduleData_);
         }
 
-        threadData.activeScheduleData_.UpdateCost(static_cast<CostT>(-1.0 * syncCost) + commDelta);
+        if constexpr (CommCostFunctionT::coupledWorkComm_) {
+            // MaxBSP: coupled cost model prevents analytical delta.
+            // Full recomputation. O(numSteps), at most once per outer iteration.
+            activeSchedule_.GetVectorSchedule().numberOfSupersteps_ = threadData.NumSteps();
+            const CostT newCost = commCostF_.template ComputeScheduleCost<false>();
+            const CostT delta = newCost - threadData.activeScheduleData_.cost_;
+            threadData.activeScheduleData_.UpdateCost(delta);
+        } else {
+            // BSP/Total: analytical comm delta from the merge.
+            const CostT commCostMultiplier = static_cast<CostT>(instance_->CommunicationCosts());
+            CostT commDelta = -removedStepMaxComm * commCostMultiplier;
+            if (threadData.stepToRemove_ > 0) {
+                const CostT newPrevStepMaxComm = static_cast<CostT>(commCostF_.StepMaxComm(threadData.stepToRemove_ - 1));
+                commDelta += (newPrevStepMaxComm - prevStepMaxComm) * commCostMultiplier;
+            }
+            threadData.activeScheduleData_.UpdateCost(static_cast<CostT>(-1.0 * syncCost) + commDelta);
+        }
         DebugCostCheck(threadData, "SelectActiveNodes_after_StepRemoval_UpdateCost");
 
         if constexpr (enablePreresolvingViolations_) {
