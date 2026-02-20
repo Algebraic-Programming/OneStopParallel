@@ -15,7 +15,7 @@ limitations under the License.
 
 @author Toni Boehnlein, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
 */
-// #define KL_DEBUG_COST_CHECK
+#define KL_DEBUG_COST_CHECK
 #pragma once
 
 #include <algorithm>
@@ -1136,49 +1136,79 @@ template <typename Derived, typename GraphT, typename CommCostFunctionT, typenam
 void KlImproverBase<Derived, GraphT, CommCostFunctionT, MemoryConstraintT, windowSize, CostT>::SelectActiveNodes(
     ThreadSearchContext &threadData) {
     if (SelectNodesCheckRemoveSuperstep(threadData.stepToRemove_, threadData)) {
-        activeSchedule_.SwapEmptyStepFwd(threadData.stepToRemove_, threadData.endStep_);
-        const unsigned oldEndStep = threadData.endStep_;
-        // Capture comm costs BEFORE the swap loop moves data around.
-        // removedStep may carry comm data (lazy/buffered placement), and
-        // removedStep-1 will absorb it during FixupSendRecv.
-        // (Only needed for additive cost models.)
-        CostT removedStepMaxComm = 0;
-        CostT prevStepMaxComm = 0;
-        if constexpr (!CommCostFunctionT::coupledWorkComm_) {
-            removedStepMaxComm = static_cast<CostT>(commCostF_.StepMaxComm(threadData.stepToRemove_));
-            prevStepMaxComm = (threadData.stepToRemove_ > 0)
-                                  ? static_cast<CostT>(commCostF_.StepMaxComm(threadData.stepToRemove_ - 1))
-                                  : CostT(0);
+        const unsigned r = threadData.stepToRemove_;
+
+        // MaxBSP: capture work[r+1] BEFORE SwapEmptyStepFwd rearranges work data.
+        // The removed step is empty (work[r]=0). Only two cost terms are affected:
+        //   term at s=r  (removed)  and  term at s=r+1 (merged with r-1's comm).
+        CostT maxBspWorkNext = 0;
+        bool maxBspHasNext = false;
+        if constexpr (CommCostFunctionT::coupledWorkComm_) {
+            maxBspHasNext = (r < threadData.endStep_);
+            if (maxBspHasNext) {
+                maxBspWorkNext = static_cast<CostT>(activeSchedule_.GetStepMaxWork(r + 1));
+            }
         }
 
-        for (unsigned i = threadData.stepToRemove_; i < threadData.endStep_; i++) {
+        activeSchedule_.SwapEmptyStepFwd(r, threadData.endStep_);
+        const unsigned oldEndStep = threadData.endStep_;
+
+        // Capture comm costs BEFORE the comm swap loop.
+        // SwapEmptyStepFwd only moves work data; comm indices are still original.
+        CostT oldCommR_1 = 0;    // comm[r-1] — used by both BSP and MaxBSP
+        CostT oldCommR = 0;      // comm[r]   — BSP: removedStepMaxComm; MaxBSP: paired with step r+1
+        if (r > 0) {
+            oldCommR_1 = static_cast<CostT>(commCostF_.StepMaxComm(r - 1));
+        }
+        oldCommR = static_cast<CostT>(commCostF_.StepMaxComm(r));
+
+        for (unsigned i = r; i < threadData.endStep_; i++) {
             commCostF_.SwapCommSteps(i, i + 1);
         }
         threadData.endStep_--;
-        commCostF_.UpdateLambdaAfterStepRemoval(threadData.stepToRemove_);
-        commCostF_.FixupSendRecvAfterStepRemoval(threadData.stepToRemove_, oldEndStep);
+        commCostF_.UpdateLambdaAfterStepRemoval(r);
+        commCostF_.FixupSendRecvAfterStepRemoval(r, oldEndStep);
 
         const CostT syncCost = static_cast<CostT>(instance_->SynchronisationCosts());
-        threadData.activeScheduleData_.appliedMoves_.push_back(KlMove::MakeRemoveStep(threadData.stepToRemove_, syncCost));
+        threadData.activeScheduleData_.appliedMoves_.push_back(KlMove::MakeRemoveStep(r, syncCost));
 
         if (activeSchedule_.GetStaleness() > 1) {
-            activeSchedule_.UpdateViolationsAfterStepRemoval(threadData.stepToRemove_, threadData.activeScheduleData_);
+            activeSchedule_.UpdateViolationsAfterStepRemoval(r, threadData.activeScheduleData_);
         }
 
         if constexpr (CommCostFunctionT::coupledWorkComm_) {
-            // MaxBSP: coupled cost model prevents analytical delta.
-            // Full recomputation. O(numSteps), at most once per outer iteration.
-            activeSchedule_.GetVectorSchedule().numberOfSupersteps_ = threadData.NumSteps();
-            const CostT newCost = commCostF_.template ComputeScheduleCost<false>();
-            const CostT delta = newCost - threadData.activeScheduleData_.cost_;
-            threadData.activeScheduleData_.UpdateCost(delta);
+            // MaxBSP analytical delta.
+            // cost = work[0] + Σ_{s≥1} max(work[s], comm[s-1]·g) + (S-1)·L
+            // Removing empty step r touches only terms at s=r and s=r+1.
+            const CostT g = static_cast<CostT>(instance_->CommunicationCosts());
+
+            // Old term at s=r: max(0, comm[r-1]·g) = comm[r-1]·g  (or 0 if r=0)
+            const CostT oldRemovedTerm = (r > 0) ? oldCommR_1 * g : CostT(0);
+
+            // Old term at s=r+1: max(work[r+1], comm[r]·g)  (or 0 if r+1 out of range)
+            const CostT oldNextTerm = maxBspHasNext ? std::max(maxBspWorkNext, oldCommR * g) : CostT(0);
+
+            // New merged term: step r+1 takes r's slot, paired with merged comm at r-1
+            CostT newMergedTerm = CostT(0);
+            if (maxBspHasNext) {
+                if (r == 0) {
+                    // New step 0 is pure work (no paired comm from below)
+                    newMergedTerm = maxBspWorkNext;
+                } else {
+                    // comm[r-1] now holds merged comm after FixupSendRecv
+                    const CostT newCommR_1 = static_cast<CostT>(commCostF_.StepMaxComm(r - 1));
+                    newMergedTerm = std::max(maxBspWorkNext, newCommR_1 * g);
+                }
+            }
+
+            threadData.activeScheduleData_.UpdateCost(newMergedTerm - oldRemovedTerm - oldNextTerm - syncCost);
         } else {
             // BSP/Total: analytical comm delta from the merge.
             const CostT commCostMultiplier = static_cast<CostT>(instance_->CommunicationCosts());
-            CostT commDelta = -removedStepMaxComm * commCostMultiplier;
-            if (threadData.stepToRemove_ > 0) {
-                const CostT newPrevStepMaxComm = static_cast<CostT>(commCostF_.StepMaxComm(threadData.stepToRemove_ - 1));
-                commDelta += (newPrevStepMaxComm - prevStepMaxComm) * commCostMultiplier;
+            CostT commDelta = -oldCommR * commCostMultiplier;
+            if (r > 0) {
+                const CostT newCommR_1 = static_cast<CostT>(commCostF_.StepMaxComm(r - 1));
+                commDelta += (newCommR_1 - oldCommR_1) * commCostMultiplier;
             }
             threadData.activeScheduleData_.UpdateCost(static_cast<CostT>(-1.0 * syncCost) + commDelta);
         }

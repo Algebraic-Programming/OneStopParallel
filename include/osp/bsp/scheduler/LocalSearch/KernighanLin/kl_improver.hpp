@@ -17,7 +17,7 @@ limitations under the License.
 */
 
 #pragma once
-
+#define KL_DEBUG_COST_CHECK
 // Variant implementations (both pull in kl_improver_base.hpp)
 #include "kl_improver_heap.hpp"
 #include "kl_improver_scan.hpp"
