@@ -190,6 +190,8 @@ endif()
 
 if(Boost_graph_FOUND)
     set(OSP_DEPENDS_ON_BOOST_GRAPH ON)
+    set_target_properties(Boost::graph PROPERTIES
+    INTERFACE_SYSTEM_INCLUDE_DIRECTORIES $<TARGET_PROPERTY:Boost::graph,INTERFACE_INCLUDE_DIRECTORIES>)
     target_link_libraries(OneStopParallel INTERFACE Boost::graph)
 else()
     set(OSP_DEPENDS_ON_BOOST_GRAPH OFF)
@@ -226,7 +228,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Library")
     message(STATUS "CMAKE_BUILD_TYPE is Library, so BUILD_TESTS is forced to OFF.")
 endif()
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    set(BUILD_TESTS OFF)
+    set(BUILD_TESTS ON)
     message(STATUS "CMAKE_BUILD_TYPE is Release, so BUILD_TESTS is forced to OFF.")
 endif()
 

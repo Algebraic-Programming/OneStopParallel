@@ -1,6 +1,9 @@
 # Create an empty list for the tests
 set( tests_list )
 
+set_target_properties(Boost::unit_test_framework PROPERTIES
+  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES $<TARGET_PROPERTY:Boost::unit_test_framework,INTERFACE_INCLUDE_DIRECTORIES>)
+
 # Function to create a test
 macro( _add_test name )
   # cmake-format: off
