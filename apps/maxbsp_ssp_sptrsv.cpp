@@ -21,6 +21,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <iterator>
 #include <map>
 #include <set>
 #include <sstream>
@@ -43,12 +44,15 @@ namespace {
 
 constexpr double EPSILON = 1e-12;
 constexpr unsigned kDefaultStaleness = 2U;
+constexpr int defaultSynchronisationCosts = 500;
+
+constexpr int preMeasureIterations = 2;
 
 enum class Algorithm {
     VarianceSsp,
     GrowLocalSsp,
     GrowLocal,
-    EigenSerial
+    Serial
 };
 
 struct Args {
@@ -65,9 +69,10 @@ struct CsvRow {
     unsigned processors;
     double scheduleTimeSeconds;
     unsigned supersteps;
-    double scheduleSyncCosts;
+    int SyncCosts;
     unsigned staleness;
     double runtimeSeconds;
+    bool correctness;
 };
 
 struct SummaryKey {
@@ -93,9 +98,10 @@ struct SummaryKey {
 struct SummaryAgg {
     double scheduleTimeSeconds = 0.0;
     unsigned supersteps = 0U;
-    double scheduleSyncCosts = 0.0;
+    int SyncCosts = 0;
     double sumLogRuntime = 0.0;
     std::size_t samples = 0U;
+    bool correctness = false;
 };
 
 std::string CsvEscape(const std::string &s) {
@@ -167,9 +173,9 @@ bool ParseArgs(int argc, char *argv[], Args &args) {
         } else if (flag == "--growlocal") {
             args.algorithms.insert(Algorithm::GrowLocal);
         } else if (flag == "--eigen-serial") {
-            args.algorithms.insert(Algorithm::EigenSerial);
+            args.algorithms.insert(Algorithm::Serial);
         } else if (flag == "--all") {
-            args.algorithms = {Algorithm::VarianceSsp, Algorithm::GrowLocalSsp, Algorithm::GrowLocal, Algorithm::EigenSerial};
+            args.algorithms = {Algorithm::VarianceSsp, Algorithm::GrowLocalSsp, Algorithm::GrowLocal, Algorithm::Serial};
         } else if (flag == "--help" || flag == "-h") {
             PrintUsage(argv[0]);
             return false;
@@ -201,7 +207,11 @@ bool ParseArgs(int argc, char *argv[], Args &args) {
 
 std::vector<std::filesystem::path> CollectInputGraphs(const std::string &inputPath) {
     std::vector<std::filesystem::path> inputs;
-    const std::filesystem::path p(inputPath);
+    std::filesystem::path p(inputPath);
+
+    while (std::filesystem::exists(p) && std::filesystem::is_symlink(p)) {
+        p = std::filesystem::read_symlink(p);
+    }
 
     if (!std::filesystem::exists(p)) {
         throw std::runtime_error("Input path does not exist: " + inputPath);
@@ -211,16 +221,18 @@ std::vector<std::filesystem::path> CollectInputGraphs(const std::string &inputPa
         if (p.extension() == ".mtx") {
             inputs.push_back(p);
         }
-        return inputs;
-    }
-
-    if (std::filesystem::is_directory(p)) {
+    } else if (std::filesystem::is_directory(p)) {
         for (const auto &entry : std::filesystem::recursive_directory_iterator(p)) {
-            if (!entry.is_regular_file()) {
+            auto entryPath = entry.path();
+            while (std::filesystem::exists(entryPath) && std::filesystem::is_symlink(entryPath)) {
+                entryPath = std::filesystem::read_symlink(entryPath);
+            }
+
+            if (!std::filesystem::is_regular_file(entryPath)) {
                 continue;
             }
-            if (entry.path().extension() == ".mtx") {
-                inputs.push_back(entry.path());
+            if (entryPath.extension() == ".mtx") {
+                inputs.push_back(entryPath);
             }
         }
     }
@@ -230,17 +242,17 @@ std::vector<std::filesystem::path> CollectInputGraphs(const std::string &inputPa
 }
 
 void EnsureCsvHeader(std::ofstream &csv) {
-    csv << "Graph,Algorithm,Processors,ScheduleTimeSeconds,ScheduleSupersteps,ScheduleSynchronizationCosts,Staleness,RuntimeSeconds\n";
+    csv << "Graph,Algorithm,Processors,ScheduleTimeSeconds,ScheduleSupersteps,SynchronizationCosts,Staleness,RuntimeSeconds,Correctness\n";
 }
 
 void EnsureSummaryCsvHeader(std::ofstream &csv) {
-    csv << "Graph,Algorithm,Processors,ScheduleTimeSeconds,ScheduleSupersteps,ScheduleSynchronizationCosts,Staleness,"
-           "RuntimeSamples,RuntimeGeometricMeanSeconds\n";
+    csv << "Graph,Algorithm,Processors,ScheduleTimeSeconds,ScheduleSupersteps,SynchronizationCosts,Staleness,"
+           "RuntimeSamples,RuntimeGeometricMeanSeconds,Correctness\n";
 }
 
 void WriteCsvRow(std::ofstream &csv, const CsvRow &row) {
     csv << CsvEscape(row.graph) << "," << row.algorithm << "," << row.processors << "," << row.scheduleTimeSeconds << ","
-    << row.supersteps << "," << row.scheduleSyncCosts << "," << row.staleness << "," << row.runtimeSeconds << "\n";
+    << row.supersteps << "," << row.SyncCosts << "," << row.staleness << "," << row.runtimeSeconds << "," << row.correctness << "\n";
 }
 
 std::string BuildSummaryCsvPath(const std::string &detailPath) {
@@ -272,12 +284,8 @@ std::string BuildTimestampedCsvPath(const std::string &basePath, const std::stri
     return out.string();
 }
 
-template <typename ScheduleT>
-double ComputeScheduleSyncCosts(const BspInstance<SparseMatrixImp<int32_t>> &instance, const ScheduleT &schedule) {
-    if (schedule.NumberOfSupersteps() == 0U) {
-        return 0.0;
-    }
-    return static_cast<double>(schedule.NumberOfSupersteps() - 1U) * static_cast<double>(instance.SynchronisationCosts());
+int ComputeSyncCosts(const BspInstance<SparseMatrixImp<int32_t>> &instance) {
+    return instance.GetArchitecture().SynchronisationCosts();
 }
 
 }    // namespace
@@ -326,6 +334,7 @@ int main(int argc, char *argv[]) {
 
     std::vector<CsvRow> bufferedRows;
     bufferedRows.reserve(graphFiles.size() * args.algorithms.size() * static_cast<std::size_t>(args.iterations));
+    typename std::vector<CsvRow>::difference_type writtenEntries = 0U;
 
     for (const auto &graphPath : graphFiles) {
         const std::string graphName = graphPath.filename().string();
@@ -342,7 +351,7 @@ int main(int argc, char *argv[]) {
         graph.SetCsr(&lCsr);
         graph.SetCsc(&lCsc);
 
-        BspArchitecture<SparseMatrixImp<int32_t>> architecture(args.processors, 1, 500);
+        BspArchitecture<SparseMatrixImp<int32_t>> architecture(args.processors, 1, defaultSynchronisationCosts);
         BspInstance<SparseMatrixImp<int32_t>> instance(graph, architecture);
 
         Sptrsv<int32_t> sptrsv(instance);
@@ -367,9 +376,10 @@ int main(int argc, char *argv[]) {
 
             sptrsv.SetupCsrNoPermutation(schedule);
             const unsigned supersteps = schedule.NumberOfSupersteps();
-            const double syncCosts = ComputeScheduleSyncCosts(instance, schedule);
+            const int syncCosts = ComputeSyncCosts(instance);
 
-            for (int iter = 0; iter < args.iterations; ++iter) {
+            bool correct = false;
+            for (int iter = 0; iter < args.iterations + preMeasureIterations; ++iter) {
                 std::vector<double> x(n, 0.0);
                 std::vector<double> b(n, 1.0);
                 sptrsv.x_ = x.data();
@@ -382,17 +392,26 @@ int main(int argc, char *argv[]) {
 
                 if (iter == 0) {
                     const double diff = LInftyNormalisedDiff(x, serialRefX);
-                    std::cout << "  variance_ssp first-run max relative diff vs serial: " << diff << std::endl;
+                    correct = (diff < EPSILON);
+                    std::cout << "  Variance_SSP first-run max relative diff vs serial: " << diff << std::endl;
                 }
 
-                bufferedRows.push_back(CsvRow{graphName,
-                                              "variance_ssp",
-                                              args.processors,
-                                              scheduleTime,
-                                              supersteps,
-                                              syncCosts,
-                                              kDefaultStaleness,
-                                              runtime});
+                if (iter >= preMeasureIterations) {
+                    bufferedRows.emplace_back(CsvRow{graphName,
+                                                     "Variance_SSP",
+                                                     args.processors,
+                                                     scheduleTime,
+                                                     supersteps,
+                                                     syncCosts,
+                                                     kDefaultStaleness,
+                                                     runtime,
+                                                     correct});
+                }
+            }
+
+            for (auto it = std::next(bufferedRows.cbegin(), writtenEntries); it != bufferedRows.cend(); ++it) {
+                WriteCsvRow(csv, *it);
+                ++writtenEntries;
             }
         }
 
@@ -407,9 +426,10 @@ int main(int argc, char *argv[]) {
 
             sptrsv.SetupCsrNoPermutation(schedule);
             const unsigned supersteps = schedule.NumberOfSupersteps();
-            const double syncCosts = ComputeScheduleSyncCosts(instance, schedule);
+            const int syncCosts = ComputeSyncCosts(instance);
 
-            for (int iter = 0; iter < args.iterations; ++iter) {
+            bool correct = false;
+            for (int iter = 0; iter < args.iterations + preMeasureIterations; ++iter) {
                 std::vector<double> x(n, 0.0);
                 std::vector<double> b(n, 1.0);
                 sptrsv.x_ = x.data();
@@ -422,17 +442,26 @@ int main(int argc, char *argv[]) {
 
                 if (iter == 0) {
                     const double diff = LInftyNormalisedDiff(x, serialRefX);
-                    std::cout << "  growlocal_ssp first-run max relative diff vs serial: " << diff << std::endl;
+                    correct = (diff < EPSILON);
+                    std::cout << "  Growlocal_SSP first-run max relative diff vs serial: " << diff << std::endl;
                 }
 
-                bufferedRows.push_back(CsvRow{graphName,
-                                              "growlocal_ssp",
-                                              args.processors,
-                                              scheduleTime,
-                                              supersteps,
-                                              syncCosts,
-                                              kDefaultStaleness,
-                                              runtime});
+                if (iter >= preMeasureIterations) {
+                    bufferedRows.emplace_back(CsvRow{graphName,
+                                                     "Growlocal_SSP",
+                                                     args.processors,
+                                                     scheduleTime,
+                                                     supersteps,
+                                                     syncCosts,
+                                                     kDefaultStaleness,
+                                                     runtime,
+                                                     correct});
+                }
+            }
+
+            for (auto it = std::next(bufferedRows.cbegin(), writtenEntries); it != bufferedRows.cend(); ++it) {
+                WriteCsvRow(csv, *it);
+                ++writtenEntries;
             }
         }
 
@@ -447,9 +476,10 @@ int main(int argc, char *argv[]) {
 
             sptrsv.SetupCsrNoPermutation(schedule);
             const unsigned supersteps = schedule.NumberOfSupersteps();
-            const double syncCosts = ComputeScheduleSyncCosts(instance, schedule);
+            const int syncCosts = ComputeSyncCosts(instance);
 
-            for (int iter = 0; iter < args.iterations; ++iter) {
+            bool correct;
+            for (int iter = 0; iter < args.iterations + preMeasureIterations; ++iter) {
                 std::vector<double> x(n, 0.0);
                 std::vector<double> b(n, 1.0);
                 sptrsv.x_ = x.data();
@@ -462,16 +492,31 @@ int main(int argc, char *argv[]) {
 
                 if (iter == 0) {
                     const double diff = LInftyNormalisedDiff(x, serialRefX);
-                    std::cout << "  growlocal first-run max relative diff vs serial: " << diff << std::endl;
+                    correct = (diff < EPSILON);
+                    std::cout << "  Growlocal first-run max relative diff vs serial: " << diff << std::endl;
                 }
 
-                bufferedRows.push_back(CsvRow{
-                    graphName, "growlocal", args.processors, scheduleTime, supersteps, syncCosts, 1U, runtime});
+                if (iter >= preMeasureIterations) {
+                    bufferedRows.emplace_back(CsvRow{graphName,
+                                                     "Growlocal",
+                                                     args.processors,
+                                                     scheduleTime,
+                                                     supersteps,
+                                                     syncCosts,
+                                                     1U,
+                                                     runtime,
+                                                     correct});
+                }
+            }
+
+            for (auto it = std::next(bufferedRows.cbegin(), writtenEntries); it != bufferedRows.cend(); ++it) {
+                WriteCsvRow(csv, *it);
+                ++writtenEntries;
             }
         }
 
-        if (args.algorithms.count(Algorithm::EigenSerial) > 0U) {
-            for (int iter = 0; iter < args.iterations; ++iter) {
+        if (args.algorithms.count(Algorithm::Serial) > 0U) {
+            for (int iter = 0; iter < args.iterations + preMeasureIterations; ++iter) {
                 std::vector<double> x(n, 0.0);
                 std::vector<double> b(n, 1.0);
                 sptrsv.x_ = x.data();
@@ -482,13 +527,24 @@ int main(int argc, char *argv[]) {
                 const auto e = std::chrono::high_resolution_clock::now();
                 const double runtime = std::chrono::duration<double>(e - s).count();
 
-                bufferedRows.push_back(CsvRow{graphName, "eigen_serial", 1U, 0.0, 1U, 0.0, 0U, runtime});
+                if (iter >= preMeasureIterations) {
+                    bufferedRows.emplace_back(CsvRow{graphName,
+                                                     "Serial",
+                                                     1U,
+                                                     0.0,
+                                                     1U,
+                                                     0,
+                                                     1U,
+                                                     runtime,
+                                                     true});
+                }
+            }
+
+            for (auto it = std::next(bufferedRows.cbegin(), writtenEntries); it != bufferedRows.cend(); ++it) {
+                WriteCsvRow(csv, *it);
+                ++writtenEntries;
             }
         }
-    }
-
-    for (const CsvRow &row : bufferedRows) {
-        WriteCsvRow(csv, row);
     }
 
     std::map<SummaryKey, SummaryAgg> summary;
@@ -499,7 +555,8 @@ int main(int argc, char *argv[]) {
         if (agg.samples == 0U) {
             agg.scheduleTimeSeconds = row.scheduleTimeSeconds;
             agg.supersteps = row.supersteps;
-            agg.scheduleSyncCosts = row.scheduleSyncCosts;
+            agg.SyncCosts = row.SyncCosts;
+            agg.correctness = row.correctness;
         }
         agg.sumLogRuntime += std::log(std::max(row.runtimeSeconds, kMinRuntime));
         ++agg.samples;
@@ -508,8 +565,8 @@ int main(int argc, char *argv[]) {
     for (const auto &[key, agg] : summary) {
         const double geomean = std::exp(agg.sumLogRuntime / static_cast<double>(agg.samples));
         summaryCsv << CsvEscape(key.graph) << "," << key.algorithm << "," << key.processors << "," << agg.scheduleTimeSeconds
-               << "," << agg.supersteps << "," << agg.scheduleSyncCosts << "," << key.staleness
-                   << "," << agg.samples << "," << geomean << "\n";
+               << "," << agg.supersteps << "," << agg.SyncCosts << "," << key.staleness
+                   << "," << agg.samples << "," << geomean << "," << agg.correctness << "\n";
     }
 
     std::cout << "Benchmark complete. CSV written to: " << detailCsvPath << std::endl;
