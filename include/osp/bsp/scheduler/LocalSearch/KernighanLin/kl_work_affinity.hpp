@@ -26,14 +26,15 @@ limitations under the License.
 
 namespace osp {
 
-/// Standalone work affinity computation, callable by any cost function.
-///
-/// Computes the work-cost change of moving @p node from its current
-/// (proc, step) to every candidate (proc, step) in the window, and
-/// writes the result into @p affinityTableNode[proc][idx].
-///
-/// This is shared by all additive cost models (BSP, Total, HyperTotal).
-/// Coupled cost models (MaxBSP) compute work inline and do not call this.
+/*
+ * Standalone work affinity computation, callable by any cost function.
+ * Computes the work-cost change of moving @p node from its current
+ * (proc, step) to every candidate (proc, step) in the window, and
+ * writes the result into @p affinityTableNode[proc][idx].
+ *
+ * This is shared by all additive cost models (BSP, Total, HyperTotal).
+ * Coupled cost models (MaxBSP) compute work inline and do not call this.
+ */
 template <unsigned windowSize, typename GraphT, typename CostT, typename MemoryConstraintT, typename AffinityTableT>
 void ComputeWorkAffinity(VertexIdxT<GraphT> node,
                          AffinityTableT &affinityTableNode,

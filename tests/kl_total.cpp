@@ -25,8 +25,8 @@ limitations under the License.
 #include "osp/bsp/model/cost/TotalCommunicationCost.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/GreedyBspScheduler.hpp"
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_improver.hpp"
+#include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_improver_mt.hpp"
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_improver_test.hpp"
-#include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_include_mt.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 #include "test_graphs.hpp"
 
@@ -958,7 +958,7 @@ BOOST_AUTO_TEST_CASE(kl_total_comm_large_test_graphs) {
 }
 
 // BOOST_AUTO_TEST_CASE(kl_total_comm_large_test_graphs_mt) {
-//     std::vector<std::string> filenames_graph = large_spaa_graphs();
+//     std::vector<std::string> filenames_graph = LargeSpaaGraphs();
 //     using graph = ComputationalDagEdgeIdxVectorImplDefIntT;
 
 //     // Getting root git directory
@@ -992,7 +992,7 @@ BOOST_AUTO_TEST_CASE(kl_total_comm_large_test_graphs) {
 //             BOOST_CHECK(false);
 //         }
 
-//         add_mem_weights(instance.GetComputationalDag());
+//         AddMemWeights(instance.GetComputationalDag());
 
 //         BspSchedule<graph> schedule(instance);
 //         const auto result = test_scheduler.ComputeSchedule(schedule);
@@ -1007,6 +1007,10 @@ BOOST_AUTO_TEST_CASE(kl_total_comm_large_test_graphs) {
 //         BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
 //         BOOST_CHECK_EQUAL(&schedule.GetInstance(), &instance);
 //         BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
+
+//         using MtImprover = KlImproverMt<graph,
+//                                 KlMaxBspCommCostFunction<graph, double, NoLocalSearchMemoryConstraint, EagerCommCostPolicy, 1>,
+//                                 NoLocalSearchMemoryConstraint, 1, double>;
 
 //         KlTotalCommImprover_mt<graph,NoLocalSearchMemoryConstraint,1,true> kl;
 

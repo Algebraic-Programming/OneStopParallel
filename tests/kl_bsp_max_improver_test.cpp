@@ -38,7 +38,7 @@ limitations under the License.
 ///   Test 18:     Cost monotonicity verification
 ///   Large suite: LargeSpaaGraphs() × {Eager, Lazy, Buffered, Window2}
 ///               (uses GreedyVarianceSspScheduler for initial MaxBspSchedule)
-///   MT suite:    Multi-threaded KlImproverMt tests (MT-1 to MT-5)
+///   MT suite:    Multi-threaded KlSyncParallelImprover tests (MT-1 to MT-5)
 ///               Verifies correctness, no-regression, and large-graph support
 ///
 /// NOTE: With staleness=2 and WindowSize=1, superstep gaps are wide
@@ -85,7 +85,7 @@ using MaxBspImprover = KlImprover<Graph, MaxCommCostF<CommPolicy, WindowSize>, N
 
 template <typename CommPolicy, unsigned WindowSize = 1>
 using MaxBspImproverMt
-    = KlImproverMt<Graph, MaxCommCostF<CommPolicy, WindowSize>, NoLocalSearchMemoryConstraint, WindowSize, CostT>;
+    = KlSyncParallelImprover<Graph, MaxCommCostF<CommPolicy, WindowSize>, NoLocalSearchMemoryConstraint, WindowSize, CostT>;
 
 // ============================================================================
 //  Helper: verify staleness constraints in a schedule
@@ -1367,12 +1367,19 @@ BOOST_AUTO_TEST_CASE(kl_max_bsp_comm_large_test_graphs_window2) {
 }
 
 // ============================================================================
-// SUITE: Multi-threaded KlImproverMt tests
+// SUITE: Multi-threaded KlSyncParallelImprover tests
 //
-// Verifies the MT wrapper produces valid results:
+// Verifies the synchronized parallel wrapper produces valid results:
 //   - Precedence and staleness constraints are respected
 //   - Cost does not regress (the regression guard works)
 //   - Compatible with all comm-cost policies
+//
+// NOTE: MaxBSP/BSP cost functions are NOT thread-safe for true
+// multi-threaded sync parallel use (shared commDs_ data races).
+// These tests use SetMaxNumThreads(2) which may race on BSP/MaxBSP.
+// The regression guard + constraint checks catch incorrect results.
+// For production use, BSP/MaxBSP should use numThreads=1 or the
+// async parallel improver.
 // ============================================================================
 
 // ============================================================================
@@ -1639,11 +1646,11 @@ BOOST_AUTO_TEST_CASE(kl_max_bsp_comm_large_test_graphs_mt_eager) {
                   << ", cost=" << initialCost << std::endl;
 
         using MtImprover
-            = KlImproverMt<graph,
-                           KlMaxBspCommCostFunction<graph, double, NoLocalSearchMemoryConstraint, EagerCommCostPolicy, 1>,
-                           NoLocalSearchMemoryConstraint,
-                           1,
-                           double>;
+            = KlSyncParallelImprover<graph,
+                                     KlMaxBspCommCostFunction<graph, double, NoLocalSearchMemoryConstraint, EagerCommCostPolicy, 1>,
+                                     NoLocalSearchMemoryConstraint,
+                                     1,
+                                     double>;
         MtImprover kl;
         kl.SetMaxNumThreads(4);
 

@@ -41,7 +41,7 @@ limitations under the License.
 #include "osp/bsp/scheduler/ImprovementScheduler.hpp"
 #include "osp/bsp/scheduler/LocalSearch/HillClimbing/hill_climbing.hpp"
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_improver.hpp"
-#include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_include_mt.hpp"
+#include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_improver_mt.hpp"
 #include "osp/bsp/scheduler/MultilevelCoarseAndSchedule.hpp"
 #include "osp/bsp/scheduler/Scheduler.hpp"
 #include "osp/bsp/scheduler/Serial.hpp"

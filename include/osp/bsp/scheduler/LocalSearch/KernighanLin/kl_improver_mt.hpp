@@ -18,164 +18,147 @@ limitations under the License.
 
 #pragma once
 
-#include <omp.h>
+// Parallel implementations
+#include "kl_improver_sync_parallel.hpp"
 
-#include "kl_improver.hpp"
+// Cost function modules (already pulled in by kl_improver.hpp, but
+// explicit for readability)
+#include "comm_cost_modules/kl_bsp_comm_cost.hpp"
+#include "comm_cost_modules/kl_hyper_total_comm_cost.hpp"
+#include "comm_cost_modules/kl_max_bsp_comm_cost.hpp"
+#include "comm_cost_modules/kl_total_comm_cost.hpp"
+
+// Memory constraint modules
+#include "osp/bsp/scheduler/LocalSearch/LocalSearchMemoryConstraintModules.hpp"
 
 namespace osp {
 
+// =============================================================================
+// Synchronized parallel KL improver aliases
+//
+// Thread-safety of the underlying cost functions:
+//
+//   SAFE for multi-threaded use (threadRangeGap >= windowSize recommended):
+//     - KlTotalCommCostFunction:      UpdateDatastructureAfterMove is no-op.
+//                                     No shared mutable comm state.
+//     - KlHyperTotalCommCostFunction: Lambda map mutations scoped to
+//                                     [startStep, endStep]. Safe if gap
+//                                     prevents cross-range neighbor reads.
+//
+//   UNSAFE for multi-threaded use (use numThreads=1 only):
+//     - KlBspCommCostFunction:        ComputeNodeAffinity reads commDs_
+//                                     (lambda map, step max) for nodes
+//                                     outside the thread's step range.
+//                                     Concurrent mutation causes data races.
+//     - KlMaxBspCommCostFunction:     Same issue as KlBspCommCostFunction.
+//
+// For BSP/MaxBSP parallel optimization, the future async improver
+// gives each worker its own schedule copy, avoiding shared-state races.
+// =============================================================================
+
+using DoubleCostT = double;
+
+// ---------------------------------------------------------------------------
+// Total comm cost — SAFE for sync parallel
+// ---------------------------------------------------------------------------
+
 template <typename GraphT,
-          typename CommCostFunctionT,
           typename MemoryConstraintT = NoLocalSearchMemoryConstraint,
           unsigned windowSize = 1,
-          typename CostT = double>
-class KlImproverMt : public KlImprover<GraphT, CommCostFunctionT, MemoryConstraintT, windowSize, CostT> {
-  protected:
-    unsigned maxNumThreads_ = std::numeric_limits<unsigned>::max();
+          bool useNodeCommunicationCostsArg = true>
+using KlTotalCommImproverMt
+    = KlSyncParallelImprover<GraphT,
+                             KlTotalCommCostFunction<GraphT, DoubleCostT, MemoryConstraintT, windowSize, useNodeCommunicationCostsArg>,
+                             MemoryConstraintT,
+                             windowSize,
+                             DoubleCostT>;
 
-    void SetThreadBoundaries(const unsigned numThreads, const unsigned numSteps, bool lastThreadLargeRange) {
-        if (numThreads == 1) {
-            this->SetStartStep(0, this->threadDataVec_[0]);
-            this->threadDataVec_[0].endStep_ = (numSteps > 0) ? numSteps - 1 : 0;
-            this->threadDataVec_[0].originalEndStep_ = this->threadDataVec_[0].endStep_;
-            return;
-        } else {
-            const unsigned totalGapSize = (numThreads - 1) * this->parameters_.threadRangeGap_;
-            const unsigned bonus = this->parameters_.threadMinRange_;
-            const unsigned stepsToDistribute = numSteps - totalGapSize - bonus;
-            const unsigned baseRange = stepsToDistribute / numThreads;
-            const unsigned remainder = stepsToDistribute % numThreads;
-            const unsigned largeRangeThreadIdx = lastThreadLargeRange ? numThreads - 1 : 0;
+template <typename GraphT,
+          typename MemoryConstraintT = LsLocalMemoryConstraint<GraphT>,
+          unsigned windowSize = 1,
+          bool useNodeCommunicationCostsArg = true>
+using KlTotalCommImproverLocalMemConstrMt
+    = KlSyncParallelImprover<GraphT,
+                             KlTotalCommCostFunction<GraphT, DoubleCostT, MemoryConstraintT, windowSize, useNodeCommunicationCostsArg>,
+                             MemoryConstraintT,
+                             windowSize,
+                             DoubleCostT>;
 
-            unsigned currentStartStep = 0;
-            for (unsigned i = 0; i < numThreads; ++i) {
-                this->threadFinishedVec_[i] = false;
-                this->SetStartStep(currentStartStep, this->threadDataVec_[i]);
-                unsigned currentRange = baseRange + (i < remainder ? 1 : 0);
-                if (i == largeRangeThreadIdx) {
-                    currentRange += bonus;
-                }
+// ---------------------------------------------------------------------------
+// Total lambda comm cost / hypergraph-aware — SAFE for sync parallel
+// ---------------------------------------------------------------------------
 
-                const unsigned endStep = currentStartStep + currentRange - 1;
-                this->threadDataVec_[i].endStep_ = endStep;
-                this->threadDataVec_[i].originalEndStep_ = this->threadDataVec_[i].endStep_;
-                currentStartStep = endStep + 1 + this->parameters_.threadRangeGap_;
-#ifdef KL_DEBUG_1
-                std::cout << "thread " << i << ": start_step=" << this->threadDataVec_[i].startStep_
-                          << ", end_step=" << this->threadDataVec_[i].endStep_ << std::endl;
-#endif
-            }
-        }
-    }
+template <typename GraphT, typename MemoryConstraintT = NoLocalSearchMemoryConstraint, unsigned windowSize = 1>
+using KlTotalLambdaCommImproverMt
+    = KlSyncParallelImprover<GraphT,
+                             KlHyperTotalCommCostFunction<GraphT, DoubleCostT, MemoryConstraintT, windowSize>,
+                             MemoryConstraintT,
+                             windowSize,
+                             DoubleCostT>;
 
-    void SetNumThreads(unsigned &numThreads, const unsigned numSteps) {
-        unsigned maxAllowedThreads = 0;
-        if (numSteps >= this->parameters_.threadMinRange_ + this->parameters_.threadRangeGap_) {
-            const unsigned divisor = this->parameters_.threadMinRange_ + this->parameters_.threadRangeGap_;
-            if (divisor > 0) {
-                maxAllowedThreads = (numSteps + this->parameters_.threadRangeGap_ - this->parameters_.threadMinRange_) / divisor;
-            } else {
-                maxAllowedThreads = numSteps;
-            }
-        } else if (numSteps >= this->parameters_.threadMinRange_) {
-            maxAllowedThreads = 1;
-        }
+template <typename GraphT, typename MemoryConstraintT = LsLocalMemoryConstraint<GraphT>, unsigned windowSize = 1>
+using KlTotalLambdaCommImproverLocalMemConstrMt
+    = KlSyncParallelImprover<GraphT,
+                             KlHyperTotalCommCostFunction<GraphT, DoubleCostT, MemoryConstraintT, windowSize>,
+                             MemoryConstraintT,
+                             windowSize,
+                             DoubleCostT>;
 
-        if (numThreads > maxAllowedThreads) {
-            numThreads = maxAllowedThreads;
-        }
+// ---------------------------------------------------------------------------
+// BSP comm cost — NOT SAFE for sync parallel (shared commDs_ races)
+//
+// Provided for single-threaded use (SetMaxNumThreads(1)) and for
+// future async parallel where each worker has its own schedule copy.
+// ---------------------------------------------------------------------------
 
-        if (numThreads == 0) {
-            numThreads = 1;
-        }
-#ifdef KL_DEBUG_1
-        std::cout << "num threads: " << numThreads << " number of supersteps: " << numSteps
-                  << ", max allowed threads: " << maxAllowedThreads << std::endl;
-#endif
-    }
+template <typename GraphT,
+          typename MemoryConstraintT = NoLocalSearchMemoryConstraint,
+          typename CommPolicy = EagerCommCostPolicy,
+          unsigned windowSize = 1>
+using KlBspCommImproverMt
+    = KlSyncParallelImprover<GraphT,
+                             KlBspCommCostFunction<GraphT, DoubleCostT, MemoryConstraintT, CommPolicy, windowSize>,
+                             MemoryConstraintT,
+                             windowSize,
+                             DoubleCostT>;
 
-  public:
-    KlImproverMt() : KlImprover<GraphT, CommCostFunctionT, MemoryConstraintT, windowSize, CostT>() {}
+template <typename GraphT,
+          typename MemoryConstraintT = LsLocalMemoryConstraint<GraphT>,
+          typename CommPolicy = EagerCommCostPolicy,
+          unsigned windowSize = 1>
+using KlBspCommImproverLocalMemConstrMt
+    = KlSyncParallelImprover<GraphT,
+                             KlBspCommCostFunction<GraphT, DoubleCostT, MemoryConstraintT, CommPolicy, windowSize>,
+                             MemoryConstraintT,
+                             windowSize,
+                             DoubleCostT>;
 
-    explicit KlImproverMt(unsigned seed) : KlImprover<GraphT, CommCostFunctionT, MemoryConstraintT, windowSize, CostT>(seed) {}
+// ---------------------------------------------------------------------------
+// MaxBSP comm cost — NOT SAFE for sync parallel (shared commDs_ races)
+//
+// Same constraints as BSP above.
+// ---------------------------------------------------------------------------
 
-    virtual ~KlImproverMt() = default;
+template <typename GraphT,
+          typename MemoryConstraintT = NoLocalSearchMemoryConstraint,
+          typename CommPolicy = EagerCommCostPolicy,
+          unsigned windowSize = 1>
+using KlMaxBspCommImproverMt
+    = KlSyncParallelImprover<GraphT,
+                             KlMaxBspCommCostFunction<GraphT, DoubleCostT, MemoryConstraintT, CommPolicy, windowSize>,
+                             MemoryConstraintT,
+                             windowSize,
+                             DoubleCostT>;
 
-    void SetMaxNumThreads(const unsigned numThreads) { maxNumThreads_ = numThreads; }
-
-    virtual ReturnStatus ImproveSchedule(BspSchedule<GraphT> &schedule) override {
-        if (schedule.GetInstance().NumberOfProcessors() < 2) {
-            return ReturnStatus::BEST_FOUND;
-        }
-
-        unsigned numThreads = std::min(maxNumThreads_, static_cast<unsigned>(omp_get_max_threads()));
-        SetNumThreads(numThreads, schedule.NumberOfSupersteps());
-
-        this->threadDataVec_.resize(numThreads);
-        this->threadFinishedVec_.assign(numThreads, true);
-
-        if (numThreads == 1) {
-            this->parameters_.numParallelLoops_
-                = 1;    // no parallelization with one thread. Affects parameters.max_out_iteration calculation in set_parameters()
-        }
-
-        this->SetParameters(schedule.GetInstance().NumberOfVertices());
-        this->InitializeDatastructures(schedule);
-        const CostT initialCost = this->activeSchedule_.GetCost();
-
-        // Track the global best across all parallel iterations.
-        // Each thread optimizes its local step range independently, so
-        // the stitched-together result may be worse than before.
-        //
-        // We use `schedule` itself as the best-state store: WriteSchedule
-        // only overwrites proc/step assignments while preserving the
-        // dynamic type (important for MaxBspSchedule::GetStaleness).
-        CostT bestCost = initialCost;
-        bool improved = false;
-
-        for (size_t i = 0; i < this->parameters_.numParallelLoops_; ++i) {
-            SetThreadBoundaries(numThreads, this->activeSchedule_.NumSteps(), i % 2 == 0);
-
-#pragma omp parallel num_threads(numThreads)
-            {
-                const size_t threadId = static_cast<size_t>(omp_get_thread_num());
-                auto &threadData = this->threadDataVec_[threadId];
-                threadData.activeScheduleData_.InitializeCost(this->activeSchedule_.GetCost());
-                threadData.selectionStrategy_.Setup(threadData.startStep_, threadData.endStep_);
-                this->RunLocalSearch(threadData);
-            }
-
-            this->SynchronizeActiveSchedule(numThreads);
-            const CostT currentCost = this->activeSchedule_.GetCost();
-
-            if (currentCost < bestCost) {
-                // Improved: save to schedule (preserves dynamic type)
-                this->activeSchedule_.WriteSchedule(schedule);
-                bestCost = currentCost;
-                improved = true;
-            } else if (numThreads > 1 && currentCost > bestCost) {
-                // Regressed: revert to the best known schedule stored
-                // in `schedule`. Re-initialization is heavyweight but
-                // regression should be rare; correctness takes priority.
-                this->CleanupDatastructures();
-                this->threadDataVec_.resize(numThreads);
-                this->threadFinishedVec_.assign(numThreads, true);
-                this->InitializeDatastructures(schedule);
-            }
-
-            if (numThreads > 1) {
-                SetNumThreads(numThreads, this->activeSchedule_.NumSteps());
-                this->threadFinishedVec_.resize(numThreads);
-            }
-        }
-
-        this->CleanupDatastructures();
-
-        // `schedule` already holds the best result (written by WriteSchedule
-        // on each improvement). If no improvement was made, it still
-        // contains the original input.
-        return improved ? ReturnStatus::OSP_SUCCESS : ReturnStatus::BEST_FOUND;
-    }
-};
+template <typename GraphT,
+          typename MemoryConstraintT = LsLocalMemoryConstraint<GraphT>,
+          typename CommPolicy = EagerCommCostPolicy,
+          unsigned windowSize = 1>
+using KlMaxBspCommImproverLocalMemConstrMt
+    = KlSyncParallelImprover<GraphT,
+                             KlMaxBspCommCostFunction<GraphT, DoubleCostT, MemoryConstraintT, CommPolicy, windowSize>,
+                             MemoryConstraintT,
+                             windowSize,
+                             DoubleCostT>;
 
 }    // namespace osp

@@ -31,7 +31,7 @@
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin/comm_cost_modules/kl_bsp_comm_cost.hpp"
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin/comm_cost_modules/max_comm_datastructure.hpp"
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_active_schedule.hpp"
-#include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_include.hpp"
+#include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_improver.hpp"
 #include "osp/bsp/scheduler/LocalSearch/KernighanLin/kl_util.hpp"
 #include "osp/graph_implementations/adj_list_impl/computational_dag_edge_idx_vector_impl.hpp"
 
