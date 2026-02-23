@@ -578,11 +578,32 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
             std::unordered_set<VertexType> localLock;
             unsigned numIter = 0;
             const unsigned minIter = numViolations / 4;
+
+            // Shuffled vector for O(1) sequential access without replacement.
+            // Stale entries (resolved by earlier moves) are skipped via the
+            // authoritative currentViolations set.  New violations created by
+            // ApplyMove are appended so they become reachable without a rebuild.
+            using EdgeType = typename std::decay_t<decltype(currentViolations)>::value_type;
+            std::vector<EdgeType> violationVec(currentViolations.begin(), currentViolations.end());
+            std::shuffle(violationVec.begin(), violationVec.end(), gen_);
+            size_t vecIdx = 0;
+
             while (not currentViolations.empty()) {
-                std::uniform_int_distribution<size_t> dis(0, currentViolations.size() - 1);
-                auto it = currentViolations.begin();
-                std::advance(it, dis(gen_));
-                const auto &nextEdge = *it;
+                // Rebuild lazily when the vector is exhausted
+                if (vecIdx >= violationVec.size()) {
+                    violationVec.assign(currentViolations.begin(), currentViolations.end());
+                    std::shuffle(violationVec.begin(), violationVec.end(), gen_);
+                    vecIdx = 0;
+                    if (violationVec.empty()) {
+                        break;
+                    }
+                }
+
+                // Skip stale entries that were resolved by earlier moves
+                const auto &nextEdge = violationVec[vecIdx++];
+                if (currentViolations.find(nextEdge) == currentViolations.end()) {
+                    continue;
+                }
                 const VertexType sourceV = Source(nextEdge, *graph_);
                 const VertexType targetV = Target(nextEdge, *graph_);
                 const bool sourceLocked = localLock.find(sourceV) != localLock.end();
@@ -631,6 +652,8 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
                     for (const auto &vertexEdgePair : threadData.activeScheduleData_.newViolations_) {
                         const auto &vertex = vertexEdgePair.first;
                         threadData.affinityTable_.Insert(vertex);
+                        // Append new violation edges so the scan can reach them
+                        violationVec.push_back(vertexEdgePair.second);
                     }
                 }
 

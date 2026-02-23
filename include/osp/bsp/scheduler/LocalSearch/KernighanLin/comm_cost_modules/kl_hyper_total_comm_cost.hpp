@@ -53,7 +53,7 @@ struct KlHyperTotalCommCostFunction {
 
     inline CostT GetMaxCommWeightMultiplied() { return maxCommWeight_ * commMultiplier_; }
 
-    const std::string Name() const { return "total_comm_cost"; }
+    const std::string Name() const { return "hyper_total_comm_cost"; }
 
     inline bool IsCompatible(VertexType node, unsigned proc) { return activeSchedule_->GetInstance().IsCompatible(node, proc); }
 
