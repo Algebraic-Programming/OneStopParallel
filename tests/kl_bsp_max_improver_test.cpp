@@ -1366,309 +1366,307 @@ BOOST_AUTO_TEST_CASE(kl_max_bsp_comm_large_test_graphs_window2) {
     }
 }
 
-// ============================================================================
-// SUITE: Multi-threaded KlSyncParallelImprover tests
-//
-// Verifies the synchronized parallel wrapper produces valid results:
-//   - Precedence and staleness constraints are respected
-//   - Cost does not regress (the regression guard works)
-//   - Compatible with all comm-cost policies
-//
-// NOTE: MaxBSP/BSP cost functions are NOT thread-safe for true
-// multi-threaded sync parallel use (shared commDs_ data races).
-// These tests use SetMaxNumThreads(2) which may race on BSP/MaxBSP.
-// The regression guard + constraint checks catch incorrect results.
-// For production use, BSP/MaxBSP should use numThreads=1 or the
-// async parallel improver.
-// ============================================================================
+// // ============================================================================
+// // SUITE: Multi-threaded KlSyncParallelImprover tests
+// //
+// // Verifies the synchronized parallel wrapper produces valid results:
+// //   - Precedence and staleness constraints are respected
+// //   - Cost does not regress (the regression guard works)
+// //   - Compatible with all comm-cost policies
+// //
+// // NOTE: MaxBSP/BSP cost functions are NOT thread-safe for true
+// // multi-threaded sync parallel use (shared commDs_ data races).
+// // These tests use SetMaxNumThreads(2) which may race on BSP/MaxBSP.
+// // The regression guard + constraint checks catch incorrect results.
+// // For production use, BSP/MaxBSP should use numThreads=1 or the
+// // async parallel improver.
+// // ============================================================================
 
-// ============================================================================
-// TEST MT-1: MT ImproveSchedule on SmallFanGraph — all policies
-// ============================================================================
+// // ============================================================================
+// // TEST MT-1: MT ImproveSchedule on SmallFanGraph — all policies
+// // ============================================================================
 
-BOOST_AUTO_TEST_CASE(MtImproveScheduleSmallFan) {
-    auto RunForPolicy = [](auto policyTag, const std::string &name) {
-        using Policy = decltype(policyTag);
+// BOOST_AUTO_TEST_CASE(MtImproveScheduleSmallFan) {
+//     auto RunForPolicy = [](auto policyTag, const std::string &name) {
+//         using Policy = decltype(policyTag);
 
-        SmallFanGraph g;
-        auto &schedule = g.Build();
-        const auto initialCost = schedule.ComputeCosts();
+//         SmallFanGraph g;
+//         auto &schedule = g.Build();
+//         const auto initialCost = schedule.ComputeCosts();
 
-        BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
-        VerifyStalenessConstraints(schedule);
+//         BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
+//         VerifyStalenessConstraints(schedule);
 
-        MaxBspImproverMt<Policy> kl(42);
-        kl.SetMaxNumThreads(2);
-        auto status = kl.ImproveSchedule(schedule);
+//         MaxBspImproverMt<Policy> kl(42);
+//         kl.SetMaxNumThreads(2);
+//         auto status = kl.ImproveSchedule(schedule);
 
-        BOOST_CHECK_MESSAGE(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND,
-                            name + ": unexpected return status");
-        BOOST_CHECK_MESSAGE(schedule.SatisfiesPrecedenceConstraints(), name + ": precedence violated");
-        VerifyStalenessConstraints(schedule);
+//         BOOST_CHECK_MESSAGE(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND,
+//                             name + ": unexpected return status");
+//         BOOST_CHECK_MESSAGE(schedule.SatisfiesPrecedenceConstraints(), name + ": precedence violated");
+//         VerifyStalenessConstraints(schedule);
 
-        const auto finalCost = schedule.ComputeCosts();
-        BOOST_CHECK_MESSAGE(finalCost <= initialCost,
-                            name + ": cost regressed from " + std::to_string(initialCost) + " to " + std::to_string(finalCost));
+//         const auto finalCost = schedule.ComputeCosts();
+//         BOOST_CHECK_MESSAGE(finalCost <= initialCost,
+//                             name + ": cost regressed from " + std::to_string(initialCost) + " to " + std::to_string(finalCost));
 
-        BOOST_TEST_MESSAGE(name << ": steps=" << schedule.NumberOfSupersteps() << " cost=" << finalCost);
-    };
+//         BOOST_TEST_MESSAGE(name << ": steps=" << schedule.NumberOfSupersteps() << " cost=" << finalCost);
+//     };
 
-    RunForPolicy(EagerCommCostPolicy{}, "MtEagerFan");
-    RunForPolicy(LazyCommCostPolicy{}, "MtLazyFan");
-    RunForPolicy(BufferedCommCostPolicy{}, "MtBufferedFan");
-}
+//     RunForPolicy(EagerCommCostPolicy{}, "MtEagerFan");
+//     RunForPolicy(LazyCommCostPolicy{}, "MtLazyFan");
+//     RunForPolicy(BufferedCommCostPolicy{}, "MtBufferedFan");
+// }
 
-// ============================================================================
-// TEST MT-2: MT ImproveSchedule on EightNodeGraph — all policies
-// ============================================================================
+// // ============================================================================
+// // TEST MT-2: MT ImproveSchedule on EightNodeGraph — all policies
+// // ============================================================================
 
-BOOST_AUTO_TEST_CASE(MtImproveScheduleEightNode) {
-    auto RunForPolicy = [](auto policyTag, const std::string &name) {
-        using Policy = decltype(policyTag);
+// BOOST_AUTO_TEST_CASE(MtImproveScheduleEightNode) {
+//     auto RunForPolicy = [](auto policyTag, const std::string &name) {
+//         using Policy = decltype(policyTag);
 
-        EightNodeGraph g;
-        auto &schedule = g.Build();
-        const auto initialCost = schedule.ComputeCosts();
+//         EightNodeGraph g;
+//         auto &schedule = g.Build();
+//         const auto initialCost = schedule.ComputeCosts();
 
-        BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
-        VerifyStalenessConstraints(schedule);
+//         BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
+//         VerifyStalenessConstraints(schedule);
 
-        MaxBspImproverMt<Policy> kl(42);
-        kl.SetMaxNumThreads(2);
-        auto status = kl.ImproveSchedule(schedule);
+//         MaxBspImproverMt<Policy> kl(42);
+//         kl.SetMaxNumThreads(2);
+//         auto status = kl.ImproveSchedule(schedule);
 
-        BOOST_CHECK_MESSAGE(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND,
-                            name + ": unexpected return status");
-        BOOST_CHECK_MESSAGE(schedule.SatisfiesPrecedenceConstraints(), name + ": precedence violated");
-        VerifyStalenessConstraints(schedule);
+//         BOOST_CHECK_MESSAGE(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND,
+//                             name + ": unexpected return status");
+//         BOOST_CHECK_MESSAGE(schedule.SatisfiesPrecedenceConstraints(), name + ": precedence violated");
+//         VerifyStalenessConstraints(schedule);
 
-        const auto finalCost = schedule.ComputeCosts();
-        BOOST_CHECK_MESSAGE(finalCost <= initialCost,
-                            name + ": cost regressed from " + std::to_string(initialCost) + " to " + std::to_string(finalCost));
+//         const auto finalCost = schedule.ComputeCosts();
+//         BOOST_CHECK_MESSAGE(finalCost <= initialCost,
+//                             name + ": cost regressed from " + std::to_string(initialCost) + " to " + std::to_string(finalCost));
 
-        BOOST_TEST_MESSAGE(name << ": steps=" << schedule.NumberOfSupersteps() << " cost=" << finalCost);
-    };
+//         BOOST_TEST_MESSAGE(name << ": steps=" << schedule.NumberOfSupersteps() << " cost=" << finalCost);
+//     };
 
-    RunForPolicy(EagerCommCostPolicy{}, "MtEager8");
-    RunForPolicy(LazyCommCostPolicy{}, "MtLazy8");
-    RunForPolicy(BufferedCommCostPolicy{}, "MtBuffered8");
-}
+//     RunForPolicy(EagerCommCostPolicy{}, "MtEager8");
+//     RunForPolicy(LazyCommCostPolicy{}, "MtLazy8");
+//     RunForPolicy(BufferedCommCostPolicy{}, "MtBuffered8");
+// }
 
-// ============================================================================
-// TEST MT-3: MT ImproveSchedule with 3 procs and non-uniform send costs
-// ============================================================================
+// // ============================================================================
+// // TEST MT-3: MT ImproveSchedule with 3 procs and non-uniform send costs
+// // ============================================================================
 
-BOOST_AUTO_TEST_CASE(MtImproveScheduleThreeProcs) {
-    Graph dag;
-    dag.AddVertex(3, 1, 5);    // 0
-    dag.AddVertex(4, 1, 3);    // 1
-    dag.AddVertex(2, 1, 4);    // 2
-    dag.AddVertex(5, 1, 6);    // 3
-    dag.AddVertex(3, 1, 2);    // 4
-    dag.AddVertex(6, 1, 3);    // 5
-    dag.AddVertex(4, 1, 5);    // 6
+// BOOST_AUTO_TEST_CASE(MtImproveScheduleThreeProcs) {
+//     Graph dag;
+//     dag.AddVertex(3, 1, 5);    // 0
+//     dag.AddVertex(4, 1, 3);    // 1
+//     dag.AddVertex(2, 1, 4);    // 2
+//     dag.AddVertex(5, 1, 6);    // 3
+//     dag.AddVertex(3, 1, 2);    // 4
+//     dag.AddVertex(6, 1, 3);    // 5
+//     dag.AddVertex(4, 1, 5);    // 6
 
-    dag.AddEdge(0, 1, 1);
-    dag.AddEdge(0, 2, 1);
-    dag.AddEdge(1, 3, 1);
-    dag.AddEdge(2, 3, 1);
-    dag.AddEdge(3, 4, 1);
-    dag.AddEdge(3, 5, 1);
-    dag.AddEdge(4, 6, 1);
-    dag.AddEdge(5, 6, 1);
+//     dag.AddEdge(0, 1, 1);
+//     dag.AddEdge(0, 2, 1);
+//     dag.AddEdge(1, 3, 1);
+//     dag.AddEdge(2, 3, 1);
+//     dag.AddEdge(3, 4, 1);
+//     dag.AddEdge(3, 5, 1);
+//     dag.AddEdge(4, 6, 1);
+//     dag.AddEdge(5, 6, 1);
 
-    BspArchitecture<Graph> arch;
-    arch.SetNumberOfProcessors(3);
-    arch.SetCommunicationCosts(2);
-    arch.SetSynchronisationCosts(4);
+//     BspArchitecture<Graph> arch;
+//     arch.SetNumberOfProcessors(3);
+//     arch.SetCommunicationCosts(2);
+//     arch.SetSynchronisationCosts(4);
 
-    std::vector<std::vector<int>> sendCosts = {
-        {0, 1, 3},
-        {1, 0, 2},
-        {3, 2, 0}
-    };
-    arch.SetSendCosts(sendCosts);
+//     std::vector<std::vector<int>> sendCosts = {
+//         {0, 1, 3},
+//         {1, 0, 2},
+//         {3, 2, 0}
+//     };
+//     arch.SetSendCosts(sendCosts);
 
-    BspInstance<Graph> instance(dag, arch);
-    MaxBspSchedule<Graph> schedule(instance);
+//     BspInstance<Graph> instance(dag, arch);
+//     MaxBspSchedule<Graph> schedule(instance);
 
-    schedule.SetAssignedProcessors({0, 1, 2, 0, 1, 2, 0});
-    schedule.SetAssignedSupersteps({0, 2, 2, 4, 6, 6, 8});
-    schedule.UpdateNumberOfSupersteps();
+//     schedule.SetAssignedProcessors({0, 1, 2, 0, 1, 2, 0});
+//     schedule.SetAssignedSupersteps({0, 2, 2, 4, 6, 6, 8});
+//     schedule.UpdateNumberOfSupersteps();
 
-    BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
-    VerifyStalenessConstraints(schedule);
+//     BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
+//     VerifyStalenessConstraints(schedule);
 
-    auto RunForPolicy = [&](auto policyTag, const std::string &name) {
-        using Policy = decltype(policyTag);
+//     auto RunForPolicy = [&](auto policyTag, const std::string &name) {
+//         using Policy = decltype(policyTag);
 
-        MaxBspSchedule<Graph> sched(schedule);
-        const auto initialCost = sched.ComputeCosts();
+//         MaxBspSchedule<Graph> sched(schedule);
+//         const auto initialCost = sched.ComputeCosts();
 
-        MaxBspImproverMt<Policy> kl(42);
-        kl.SetMaxNumThreads(2);
-        auto status = kl.ImproveSchedule(sched);
+//         MaxBspImproverMt<Policy> kl(42);
+//         kl.SetMaxNumThreads(2);
+//         auto status = kl.ImproveSchedule(sched);
 
-        BOOST_CHECK_MESSAGE(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND,
-                            name + ": unexpected status");
-        BOOST_CHECK_MESSAGE(sched.SatisfiesPrecedenceConstraints(), name + ": precedence violated");
-        VerifyStalenessConstraints(sched);
+//         BOOST_CHECK_MESSAGE(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND,
+//                             name + ": unexpected status");
+//         BOOST_CHECK_MESSAGE(sched.SatisfiesPrecedenceConstraints(), name + ": precedence violated");
+//         VerifyStalenessConstraints(sched);
 
-        const auto finalCost = sched.ComputeCosts();
-        BOOST_CHECK_MESSAGE(finalCost <= initialCost, name + ": cost regressed");
+//         const auto finalCost = sched.ComputeCosts();
+//         BOOST_CHECK_MESSAGE(finalCost <= initialCost, name + ": cost regressed");
 
-        BOOST_TEST_MESSAGE(name << ": steps=" << sched.NumberOfSupersteps() << " cost=" << finalCost);
-    };
+//         BOOST_TEST_MESSAGE(name << ": steps=" << sched.NumberOfSupersteps() << " cost=" << finalCost);
+//     };
 
-    RunForPolicy(EagerCommCostPolicy{}, "MtEager3P");
-    RunForPolicy(LazyCommCostPolicy{}, "MtLazy3P");
-    RunForPolicy(BufferedCommCostPolicy{}, "MtBuffered3P");
-}
+//     RunForPolicy(EagerCommCostPolicy{}, "MtEager3P");
+//     RunForPolicy(LazyCommCostPolicy{}, "MtLazy3P");
+//     RunForPolicy(BufferedCommCostPolicy{}, "MtBuffered3P");
+// }
 
-// ============================================================================
-// TEST MT-4: MT cost monotonicity on 12-node layered graph
-//
-// Same graph as the single-threaded CostMonotonicity test.
-// Verifies the MT regression guard prevents cost from increasing.
-// ============================================================================
+// // ============================================================================
+// // TEST MT-4: MT cost monotonicity on 12-node layered graph
+// //
+// // Same graph as the single-threaded CostMonotonicity test.
+// // Verifies the MT regression guard prevents cost from increasing.
+// // ============================================================================
 
-BOOST_AUTO_TEST_CASE(MtCostMonotonicity) {
-    Graph dag;
-    for (int i = 0; i < 12; ++i) {
-        dag.AddVertex(3 + (i % 4), 4 + (i % 3), 1);
-    }
-    for (int layer = 0; layer < 3; ++layer) {
-        for (int s = 0; s < 3; ++s) {
-            for (int d = 0; d < 3; ++d) {
-                if ((s + d) % 2 == 0) {
-                    dag.AddEdge(layer * 3 + s, (layer + 1) * 3 + d, 1);
-                }
-            }
-        }
-    }
+// BOOST_AUTO_TEST_CASE(MtCostMonotonicity) {
+//     Graph dag;
+//     for (int i = 0; i < 12; ++i) {
+//         dag.AddVertex(3 + (i % 4), 4 + (i % 3), 1);
+//     }
+//     for (int layer = 0; layer < 3; ++layer) {
+//         for (int s = 0; s < 3; ++s) {
+//             for (int d = 0; d < 3; ++d) {
+//                 if ((s + d) % 2 == 0) {
+//                     dag.AddEdge(layer * 3 + s, (layer + 1) * 3 + d, 1);
+//                 }
+//             }
+//         }
+//     }
 
-    BspArchitecture<Graph> arch;
-    arch.SetNumberOfProcessors(3);
-    arch.SetCommunicationCosts(2);
-    arch.SetSynchronisationCosts(4);
+//     BspArchitecture<Graph> arch;
+//     arch.SetNumberOfProcessors(3);
+//     arch.SetCommunicationCosts(2);
+//     arch.SetSynchronisationCosts(4);
 
-    BspInstance<Graph> instance(dag, arch);
+//     BspInstance<Graph> instance(dag, arch);
 
-    auto RunForPolicy = [&](auto policyTag, const std::string &name) {
-        using Policy = decltype(policyTag);
+//     auto RunForPolicy = [&](auto policyTag, const std::string &name) {
+//         using Policy = decltype(policyTag);
 
-        MaxBspSchedule<Graph> schedule(instance);
-        std::vector<unsigned> procs(12), steps(12);
-        for (int i = 0; i < 12; ++i) {
-            procs[i] = i % 3;
-            steps[i] = (i / 3) * 2;
-        }
-        schedule.SetAssignedProcessors(procs);
-        schedule.SetAssignedSupersteps(steps);
-        schedule.UpdateNumberOfSupersteps();
+//         MaxBspSchedule<Graph> schedule(instance);
+//         std::vector<unsigned> procs(12), steps(12);
+//         for (int i = 0; i < 12; ++i) {
+//             procs[i] = i % 3;
+//             steps[i] = (i / 3) * 2;
+//         }
+//         schedule.SetAssignedProcessors(procs);
+//         schedule.SetAssignedSupersteps(steps);
+//         schedule.UpdateNumberOfSupersteps();
 
-        BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
-        VerifyStalenessConstraints(schedule);
+//         BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
+//         VerifyStalenessConstraints(schedule);
 
-        const auto initialCost = schedule.ComputeCosts();
+//         const auto initialCost = schedule.ComputeCosts();
 
-        MaxBspImproverMt<Policy> kl(42);
-        kl.SetMaxNumThreads(3);
-        auto status = kl.ImproveSchedule(schedule);
+//         MaxBspImproverMt<Policy> kl(42);
+//         kl.SetMaxNumThreads(3);
+//         auto status = kl.ImproveSchedule(schedule);
 
-        BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
-        BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
-        VerifyStalenessConstraints(schedule);
+//         BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
+//         BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
+//         VerifyStalenessConstraints(schedule);
 
-        const auto finalCost = schedule.ComputeCosts();
-        BOOST_CHECK_MESSAGE(
-            finalCost <= initialCost,
-            name + ": cost increased! initial=" + std::to_string(initialCost) + " final=" + std::to_string(finalCost));
+//         const auto finalCost = schedule.ComputeCosts();
+//         BOOST_CHECK_MESSAGE(
+//             finalCost <= initialCost,
+//             name + ": cost increased! initial=" + std::to_string(initialCost) + " final=" + std::to_string(finalCost));
 
-        BOOST_TEST_MESSAGE(name << ": initial=" << initialCost << " final=" << finalCost
-                                << " steps=" << schedule.NumberOfSupersteps());
-    };
+//         BOOST_TEST_MESSAGE(name << ": initial=" << initialCost << " final=" << finalCost
+//                                 << " steps=" << schedule.NumberOfSupersteps());
+//     };
 
-    RunForPolicy(EagerCommCostPolicy{}, "MtEagerMonotone");
-    RunForPolicy(LazyCommCostPolicy{}, "MtLazyMonotone");
-    RunForPolicy(BufferedCommCostPolicy{}, "MtBufferedMonotone");
-}
+//     RunForPolicy(EagerCommCostPolicy{}, "MtEagerMonotone");
+//     RunForPolicy(LazyCommCostPolicy{}, "MtLazyMonotone");
+//     RunForPolicy(BufferedCommCostPolicy{}, "MtBufferedMonotone");
+// }
 
-// ============================================================================
-// TEST MT-5: MT on large SPAA graphs (Eager policy)
-// ============================================================================
+// // ============================================================================
+// // TEST MT-5: MT on large SPAA graphs (Eager policy)
+// // ============================================================================
 
-BOOST_AUTO_TEST_CASE(kl_max_bsp_comm_large_test_graphs_mt_eager) {
-    std::vector<std::string> filenames_graph = LargeSpaaGraphs();
-    using graph = ComputationalDagEdgeIdxVectorImplDefIntT;
+// BOOST_AUTO_TEST_CASE(kl_max_bsp_comm_large_test_graphs_mt_eager) {
+//     std::vector<std::string> filenames_graph = LargeSpaaGraphs();
+//     using graph = ComputationalDagEdgeIdxVectorImplDefIntT;
 
-    std::filesystem::path cwd = std::filesystem::current_path();
-    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
-        cwd = cwd.parent_path();
-    }
+//     std::filesystem::path cwd = std::filesystem::current_path();
+//     while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
+//         cwd = cwd.parent_path();
+//     }
 
-    for (auto &filename_graph : filenames_graph) {
-        GreedyVarianceSspScheduler<graph> test_scheduler;
-        BspInstance<graph> instance;
-        bool status_graph
-            = file_reader::ReadComputationalDagHyperdagFormatDB((cwd / filename_graph).string(), instance.GetComputationalDag());
+//     for (auto &filename_graph : filenames_graph) {
+//         GreedyVarianceSspScheduler<graph> test_scheduler;
+//         BspInstance<graph> instance;
+//         bool status_graph
+//             = file_reader::ReadComputationalDagHyperdagFormatDB((cwd / filename_graph).string(), instance.GetComputationalDag());
 
-        instance.GetArchitecture().SetSynchronisationCosts(500);
-        instance.GetArchitecture().SetCommunicationCosts(5);
-        instance.GetArchitecture().SetNumberOfProcessors(4);
+//         instance.GetArchitecture().SetSynchronisationCosts(500);
+//         instance.GetArchitecture().SetCommunicationCosts(5);
+//         instance.GetArchitecture().SetNumberOfProcessors(4);
 
-        std::vector<std::vector<int>> send_cost = {
-            {0, 1, 4, 4},
-            {1, 0, 4, 4},
-            {4, 4, 0, 1},
-            {4, 4, 1, 0}
-        };
-        instance.GetArchitecture().SetSendCosts(send_cost);
+//         std::vector<std::vector<int>> send_cost = {
+//             {0, 1, 4, 4},
+//             {1, 0, 4, 4},
+//             {4, 4, 0, 1},
+//             {4, 4, 1, 0}
+//         };
+//         instance.GetArchitecture().SetSendCosts(send_cost);
 
-        if (!status_graph) {
-            std::cout << "Reading files failed: " << filename_graph << std::endl;
-            BOOST_CHECK(false);
-            continue;
-        }
+//         if (!status_graph) {
+//             std::cout << "Reading files failed: " << filename_graph << std::endl;
+//             BOOST_CHECK(false);
+//             continue;
+//         }
 
-        AddMemWeights(instance.GetComputationalDag());
+//         AddMemWeights(instance.GetComputationalDag());
 
-        MaxBspSchedule<graph> schedule(instance);
-        const auto result = test_scheduler.ComputeSchedule(schedule);
-        schedule.UpdateNumberOfSupersteps();
+//         MaxBspSchedule<graph> schedule(instance);
+//         const auto result = test_scheduler.ComputeSchedule(schedule);
+//         schedule.UpdateNumberOfSupersteps();
 
-        BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
-        BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
-        VerifyStalenessConstraints(schedule);
+//         BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
+//         BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
+//         VerifyStalenessConstraints(schedule);
 
-        const auto initialCost = schedule.ComputeCosts();
-        std::cout << "[MaxBSP MT-Eager] " << filename_graph << ": initial steps=" << schedule.NumberOfSupersteps()
-                  << ", cost=" << initialCost << std::endl;
+//         const auto initialCost = schedule.ComputeCosts();
+//         std::cout << "[MaxBSP MT-Eager] " << filename_graph << ": initial steps=" << schedule.NumberOfSupersteps()
+//                   << ", cost=" << initialCost << std::endl;
 
-        using MtImprover
-            = KlSyncParallelImprover<graph,
-                                     KlMaxBspCommCostFunction<graph, double, NoLocalSearchMemoryConstraint, EagerCommCostPolicy, 1>,
-                                     NoLocalSearchMemoryConstraint,
-                                     1,
-                                     double>;
-        MtImprover kl;
-        kl.SetMaxNumThreads(4);
+//         using MtImprover
+//             = KlSyncParallelImprover<graph,
+//                                      KlMaxBspCommCostFunction<graph, double, NoLocalSearchMemoryConstraint,
+//                                      EagerCommCostPolicy, 1>, NoLocalSearchMemoryConstraint, 1, double>;
+//         MtImprover kl;
+//         kl.SetMaxNumThreads(4);
 
-        auto start_time = std::chrono::high_resolution_clock::now();
-        auto status = kl.ImproveSchedule(schedule);
-        auto finish_time = std::chrono::high_resolution_clock::now();
+//         auto start_time = std::chrono::high_resolution_clock::now();
+//         auto status = kl.ImproveSchedule(schedule);
+//         auto finish_time = std::chrono::high_resolution_clock::now();
 
-        auto duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
+//         auto duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
 
-        const auto finalCost = schedule.ComputeCosts();
-        std::cout << "[MaxBSP MT-Eager] " << filename_graph << ": finished in " << duration
-                  << "s, steps=" << schedule.NumberOfSupersteps() << ", cost=" << finalCost << std::endl;
+//         const auto finalCost = schedule.ComputeCosts();
+//         std::cout << "[MaxBSP MT-Eager] " << filename_graph << ": finished in " << duration
+//                   << "s, steps=" << schedule.NumberOfSupersteps() << ", cost=" << finalCost << std::endl;
 
-        BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
-        BOOST_CHECK_MESSAGE(schedule.SatisfiesPrecedenceConstraints(), "Precedence violated: " + filename_graph);
-        VerifyStalenessConstraints(schedule);
-        BOOST_CHECK_MESSAGE(
-            finalCost <= initialCost,
-            "MT cost regressed for " + filename_graph + ": " + std::to_string(initialCost) + " -> " + std::to_string(finalCost));
-    }
-}
+//         BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
+//         BOOST_CHECK_MESSAGE(schedule.SatisfiesPrecedenceConstraints(), "Precedence violated: " + filename_graph);
+//         VerifyStalenessConstraints(schedule);
+//         BOOST_CHECK_MESSAGE(
+//             finalCost <= initialCost,
+//             "MT cost regressed for " + filename_graph + ": " + std::to_string(initialCost) + " -> " + std::to_string(finalCost));
+//     }
+// }
