@@ -45,6 +45,18 @@ struct GenericLambdaVectorContainer {
     /**
      * @brief Range adapter for iterating over non-zero/non-empty processor entries.
      */
+    /**
+     * @brief Proxy returned by iterator dereference. Holds proc index by value
+     * and the entry by const reference, avoiding copies of ValueType (which may
+     * be std::vector<unsigned> for Lazy/Buffered policies).
+     *
+     * Supports structured bindings: `for (const auto [proc, val] : range)`
+     */
+    struct ProcEntryRef {
+        unsigned proc;
+        const ValueType &value;
+    };
+
     class LambdaVectorRange {
       private:
         const std::vector<ValueType> &vec_;
@@ -52,10 +64,7 @@ struct GenericLambdaVectorContainer {
       public:
         class LambdaVectorIterator {
             using iterator_category = std::input_iterator_tag;
-            using value_type = std::pair<unsigned, ValueType>;
             using difference_type = std::ptrdiff_t;
-            using pointer = value_type *;
-            using reference = value_type &;
 
           private:
             const std::vector<ValueType> &vec_;
@@ -78,7 +87,7 @@ struct GenericLambdaVectorContainer {
                 return *this;
             }
 
-            value_type operator*() const { return std::make_pair(index_, vec_[index_]); }
+            ProcEntryRef operator*() const { return ProcEntryRef{index_, vec_[index_]}; }
 
             bool operator==(const LambdaVectorIterator &other) const { return index_ == other.index_; }
 

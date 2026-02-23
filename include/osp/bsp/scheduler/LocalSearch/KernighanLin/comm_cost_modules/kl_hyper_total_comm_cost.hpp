@@ -66,12 +66,6 @@ struct KlHyperTotalCommCostFunction {
         nodeLambdaMap_.Initialize(graph_->NumVertices(), instance_->NumberOfProcessors());
     }
 
-    struct EmptyStruct {};
-
-    using PreMoveCommDataT = EmptyStruct;
-
-    inline EmptyStruct GetPreMoveCommData(const KlMove &) { return EmptyStruct(); }
-
     CostT ComputeScheduleCost() {
         CostT workCosts = 0;
         for (unsigned step = 0; step < activeSchedule_->NumSteps(); step++) {

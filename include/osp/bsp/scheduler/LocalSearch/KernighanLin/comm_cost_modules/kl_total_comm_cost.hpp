@@ -64,12 +64,6 @@ struct KlTotalCommCostFunction {
         commMultiplier_ = 1.0 / instance_->NumberOfProcessors();
     }
 
-    struct EmptyStruct {};
-
-    using PreMoveCommDataT = EmptyStruct;
-
-    inline EmptyStruct GetPreMoveCommData(const KlMove &) { return EmptyStruct(); }
-
     CostT ComputeScheduleCostTest() { return ComputeScheduleCost(); }
 
     void UpdateDatastructureAfterMove(const KlMove &, const unsigned, const unsigned) {}

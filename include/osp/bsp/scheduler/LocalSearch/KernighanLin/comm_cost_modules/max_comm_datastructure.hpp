@@ -21,7 +21,6 @@ limitations under the License.
 #include <algorithm>
 #include <iostream>
 #include <type_traits>
-#include <unordered_map>
 #include <vector>
 
 #include "comm_cost_policies.hpp"
@@ -30,30 +29,6 @@ limitations under the License.
 #include "osp/bsp/model/BspInstance.hpp"
 
 namespace osp {
-
-template <typename CommWeightT>
-struct PreMoveCommData {
-    struct StepInfo {
-        CommWeightT maxComm_;
-        CommWeightT secondMaxComm_;
-        unsigned maxCommCount_;
-    };
-
-    std::unordered_map<unsigned, StepInfo> stepData_;
-
-    PreMoveCommData() = default;
-
-    void AddStep(unsigned step, CommWeightT max, CommWeightT second, unsigned count) { stepData_[step] = {max, second, count}; }
-
-    bool GetStep(unsigned step, StepInfo &info) const {
-        auto it = stepData_.find(step);
-        if (it != stepData_.end()) {
-            info = it->second;
-            return true;
-        }
-        return false;
-    }
-};
 
 template <typename GraphT, typename CostT, typename KlActiveScheduleT, typename CommPolicy = EagerCommCostPolicy>
 struct MaxCommDatastructure {
@@ -191,26 +166,6 @@ struct MaxCommDatastructure {
     }
 
     void RecomputeMaxSendReceive(unsigned step) { ArrangeSuperstepCommData(step); }
-
-    inline PreMoveCommData<CommWeightT> GetPreMoveCommData(const KlMove &move) {
-        PreMoveCommData<CommWeightT> data;
-        std::unordered_set<unsigned> affectedSteps;
-
-        affectedSteps.insert(move.fromStep_);
-        affectedSteps.insert(move.toStep_);
-
-        const auto &graph = instance_->GetComputationalDag();
-
-        for (const auto &parent : graph.Parents(move.node_)) {
-            affectedSteps.insert(activeSchedule_->AssignedSuperstep(parent));
-        }
-
-        for (unsigned step : affectedSteps) {
-            data.AddStep(step, StepMaxComm(step), StepSecondMaxComm(step), StepMaxCommCount(step));
-        }
-
-        return data;
-    }
 
     void UpdateDatastructureAfterMove(const KlMove &move, unsigned, unsigned) {
         const auto &graph = instance_->GetComputationalDag();

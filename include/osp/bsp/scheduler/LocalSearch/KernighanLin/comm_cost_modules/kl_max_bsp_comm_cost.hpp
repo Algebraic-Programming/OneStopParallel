@@ -97,10 +97,6 @@ struct KlMaxBspCommCostFunction {
     // CRITICAL: g only multiplies comm, not the entire max.
     // =========================================================================
 
-    using PreMoveCommDataT = PreMoveCommData<CommWeightT>;
-
-    inline PreMoveCommDataT GetPreMoveCommData(const KlMove &move) { return commDs_.GetPreMoveCommData(move); }
-
     void ComputeSendReceiveDatastructures() { commDs_.ComputeCommDatastructures(0, activeSchedule_->NumSteps() - 1); }
 
     template <bool computeDatastructures = true>
