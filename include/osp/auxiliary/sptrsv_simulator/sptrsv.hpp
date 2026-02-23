@@ -502,10 +502,12 @@ class Sptrsv {
         {
             const std::size_t proc = static_cast<std::size_t>(omp_get_thread_num());
             for (unsigned step = 0; step < numSupersteps_; ++step) {
-                // Enforce staleness window before starting this superstep.
-                barrier.Wait(proc, staleness - 1U);
                 // Process nodes assigned to this (step, proc) pair.
                 const size_t boundsStrSize = boundsArrayL_[step][proc].size();
+                // Enforce staleness window before starting this superstep.
+                if (boundsStrSize > 0U) {
+                    barrier.Wait(proc, staleness - 1U);
+                }
                 for (size_t index = 0; index < boundsStrSize; index += 2) {
                     EigenIdxType lowerB = boundsArrayL_[step][proc][index];
                     const EigenIdxType upperB = boundsArrayL_[step][proc][index + 1];
