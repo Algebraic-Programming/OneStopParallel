@@ -49,8 +49,6 @@ struct GenericLambdaVectorContainer {
      * @brief Proxy returned by iterator dereference. Holds proc index by value
      * and the entry by const reference, avoiding copies of ValueType (which may
      * be std::vector<unsigned> for Lazy/Buffered policies).
-     *
-     * Supports structured bindings: `for (const auto [proc, val] : range)`
      */
     struct ProcEntryRef {
         unsigned proc;

@@ -23,6 +23,7 @@ limitations under the License.
 #include <type_traits>
 #include <vector>
 
+#include "FastDeltaTacker.hpp"
 #include "comm_cost_policies.hpp"
 #include "generic_lambda_container.hpp"
 #include "lambda_container.hpp"
@@ -79,6 +80,71 @@ struct MaxCommDatastructure {
     /// the min(child_steps)-1 steps where communication is actually placed, which
     /// may differ from the node positions used by the higher-level changedSteps set.
     inline const std::vector<unsigned> &GetLastAffectedCommSteps() const { return affectedStepsList_; }
+
+    /// Compute the absolute new max comm at a step given sparse send/recv deltas.
+    ///
+    /// Shared by BSP (which subtracts StepMaxComm to get the delta) and
+    /// MaxBSP (which needs the absolute value for the coupled formula).
+    ///
+    /// Three-case fast path:
+    ///   1. Some dirty entry meets or exceeds old max → return dirty max
+    ///   2. Not all old max-holders were reduced    → old max survives
+    ///   3. All max-holders reduced                 → scan non-dirty entries
+    CommWeightT ComputeNewMaxComm(unsigned step,
+                                  const FastDeltaTracker<CommWeightT> &deltaSend,
+                                  const FastDeltaTracker<CommWeightT> &deltaRecv) const {
+        const CommWeightT oldMax = stepMaxCommCache_[step];
+        const unsigned oldMaxCount = stepMaxCommCountCache_[step];
+
+        CommWeightT newGlobalMax = 0;
+        unsigned reducedMaxInstances = 0;
+
+        for (unsigned proc : deltaSend.dirtyProcs_) {
+            const CommWeightT delta = deltaSend.Get(proc);
+            const CommWeightT currentVal = stepProcSend_[step][proc];
+            const CommWeightT newVal = currentVal + delta;
+
+            if (newVal > newGlobalMax) {
+                newGlobalMax = newVal;
+            }
+            if (delta < 0 && currentVal == oldMax) {
+                reducedMaxInstances++;
+            }
+        }
+
+        for (unsigned proc : deltaRecv.dirtyProcs_) {
+            const CommWeightT delta = deltaRecv.Get(proc);
+            const CommWeightT currentVal = stepProcReceive_[step][proc];
+            const CommWeightT newVal = currentVal + delta;
+
+            if (newVal > newGlobalMax) {
+                newGlobalMax = newVal;
+            }
+            if (delta < 0 && currentVal == oldMax) {
+                reducedMaxInstances++;
+            }
+        }
+
+        if (newGlobalMax >= oldMax) {
+            return newGlobalMax;
+        }
+
+        if (reducedMaxInstances < oldMaxCount) {
+            return oldMax;
+        }
+
+        CommWeightT maxNonDirty = 0;
+        const unsigned numProcs = instance_->NumberOfProcessors();
+        for (unsigned p = 0; p < numProcs; ++p) {
+            if (!deltaSend.IsDirty(p)) {
+                maxNonDirty = std::max(maxNonDirty, stepProcSend_[step][p]);
+            }
+            if (!deltaRecv.IsDirty(p)) {
+                maxNonDirty = std::max(maxNonDirty, stepProcReceive_[step][p]);
+            }
+        }
+        return std::max(newGlobalMax, maxNonDirty);
+    }
 
     inline void Initialize(KlActiveScheduleT &klSched) {
         activeSchedule_ = &klSched;
