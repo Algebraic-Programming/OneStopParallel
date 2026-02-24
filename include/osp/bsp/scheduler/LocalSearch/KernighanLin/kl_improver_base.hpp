@@ -493,7 +493,10 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
 
         for (const auto &keyValuePair : threadData.activeScheduleData_.newViolations_) {
             const auto &key = keyValuePair.first;
-            quickMovesStack.push_back(key);
+            const unsigned keyStep = activeSchedule_.AssignedSuperstep(key);
+            if (keyStep >= threadData.startStep_ && keyStep <= threadData.endStep_) {
+                quickMovesStack.push_back(key);
+            }
         }
 
         while (quickMovesStack.size() > 0) {
@@ -529,7 +532,10 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
                         abort = true;
                         break;
                     }
-                    quickMovesStack.push_back(key);
+                    const unsigned keyStep = activeSchedule_.AssignedSuperstep(key);
+                    if (keyStep >= threadData.startStep_ && keyStep <= threadData.endStep_) {
+                        quickMovesStack.push_back(key);
+                    }
                 }
 
                 if (abort) {
@@ -606,8 +612,15 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
                 }
                 const VertexType sourceV = Source(nextEdge, *graph_);
                 const VertexType targetV = Target(nextEdge, *graph_);
-                const bool sourceLocked = localLock.find(sourceV) != localLock.end();
-                const bool targetLocked = localLock.find(targetV) != localLock.end();
+
+                // Thread safety: treat out-of-range vertices as locked (unmovable).
+                const unsigned sourceStep = activeSchedule_.AssignedSuperstep(sourceV);
+                const unsigned targetStep = activeSchedule_.AssignedSuperstep(targetV);
+                const bool sourceOutOfRange = sourceStep < threadData.startStep_ || sourceStep > threadData.endStep_;
+                const bool targetOutOfRange = targetStep < threadData.startStep_ || targetStep > threadData.endStep_;
+
+                const bool sourceLocked = sourceOutOfRange || localLock.find(sourceV) != localLock.end();
+                const bool targetLocked = targetOutOfRange || localLock.find(targetV) != localLock.end();
 
                 if (sourceLocked && targetLocked) {
 #ifdef KL_DEBUG_1
@@ -651,7 +664,10 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
                 if (threadData.activeScheduleData_.newViolations_.size() > 0) {
                     for (const auto &vertexEdgePair : threadData.activeScheduleData_.newViolations_) {
                         const auto &vertex = vertexEdgePair.first;
-                        threadData.affinityTable_.Insert(vertex);
+                        const unsigned vertexStep = activeSchedule_.AssignedSuperstep(vertex);
+                        if (vertexStep >= threadData.startStep_ && vertexStep <= threadData.endStep_) {
+                            threadData.affinityTable_.Insert(vertex);
+                        }
                         // Append new violation edges so the scan can reach them
                         violationVec.push_back(vertexEdgePair.second);
                     }
@@ -708,9 +724,15 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
                 const auto targetV = Target(e, *graph_);
 
                 if (node == sourceV && threadData.lockManager_.IsLocked(targetV)) {
-                    unlockNodes.push_back(targetV);
+                    const unsigned targetStep = activeSchedule_.AssignedSuperstep(targetV);
+                    if (targetStep >= threadData.startStep_ && targetStep <= threadData.endStep_) {
+                        unlockNodes.push_back(targetV);
+                    }
                 } else if (node == targetV && threadData.lockManager_.IsLocked(sourceV)) {
-                    unlockNodes.push_back(sourceV);
+                    const unsigned sourceStep = activeSchedule_.AssignedSuperstep(sourceV);
+                    if (sourceStep >= threadData.startStep_ && sourceStep <= threadData.endStep_) {
+                        unlockNodes.push_back(sourceV);
+                    }
                 }
             }
 #ifdef KL_DEBUG
