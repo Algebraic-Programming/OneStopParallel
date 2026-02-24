@@ -128,6 +128,8 @@ void ComputeCommAffinityDeltas(VertexIdxT<GraphT> node,
                                unsigned windowBound,
                                unsigned numSteps,
                                unsigned windowSize,
+                               unsigned startStep,
+                               unsigned endStep,
                                EvaluatorFn &&evaluatorFn) {
     static thread_local CommDeltaScratchData<CommWeightT> scratch;
     scratch.Init(numSteps, instance.NumberOfProcessors());
@@ -137,12 +139,14 @@ void ComputeCommAffinityDeltas(VertexIdxT<GraphT> node,
     const auto &currentVecSchedule = activeSchedule.GetVectorSchedule();
 
     // --- Delta accumulation helpers ---
+    // THREAD SAFETY: Only accumulate deltas for steps within [startStep, endStep].
+    // Steps outside the thread's range may be concurrently modified by other threads.
 
     auto AddDelta = [&](bool isRecv, unsigned step, unsigned proc, CommWeightT val) {
         if (val == 0) {
             return;
         }
-        if (step < numSteps) {
+        if (step >= startStep && step <= endStep && step < numSteps) {
             scratch.MarkActive(step);
             if (isRecv) {
                 scratch.recvDeltas_[step].Add(proc, val);
@@ -190,9 +194,15 @@ void ComputeCommAffinityDeltas(VertexIdxT<GraphT> node,
     }
 
     // Phase 1 Incoming: parents stop sending to node on nodeProc
+    // THREAD SAFETY: Skip parents outside [startStep, endStep] — their lambda
+    // entries may be concurrently modified by other threads.
     for (const auto &u : graph.Parents(node)) {
-        const unsigned uProc = activeSchedule.AssignedProcessor(u);
         const unsigned uStep = currentVecSchedule.AssignedSuperstep(u);
+        if (uStep < startStep || uStep > endStep) {
+            continue;
+        }
+
+        const unsigned uProc = activeSchedule.AssignedProcessor(u);
         const CommWeightT commWU = graph.VertexCommWeight(u);
 
         if (uProc != nodeProc) {
@@ -244,14 +254,19 @@ void ComputeCommAffinityDeltas(VertexIdxT<GraphT> node,
 
     for (const unsigned pTo : procRange.CompatibleProcessorsVertex(node)) {
         // --- Precompute Phase 2A: parent effective vals ---
+        // THREAD SAFETY: Skip parents outside [startStep, endStep].
         parentAddInfos.clear();
         for (const auto &u : graph.Parents(node)) {
+            const unsigned uStep = currentVecSchedule.AssignedSuperstep(u);
+            if (uStep < startStep || uStep > endStep) {
+                continue;
+            }
+
             const unsigned uProc = activeSchedule.AssignedProcessor(u);
             if (uProc == pTo) {
                 continue;
             }
 
-            const unsigned uStep = currentVecSchedule.AssignedSuperstep(u);
             const CommWeightT commWU = graph.VertexCommWeight(u);
             const CommWeightT cost = commWU * instance.SendCosts(uProc, pTo);
             if (cost <= 0) {

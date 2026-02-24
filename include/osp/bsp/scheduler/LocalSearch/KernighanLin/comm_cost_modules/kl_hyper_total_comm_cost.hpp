@@ -120,9 +120,13 @@ struct KlHyperTotalCommCostFunction {
 
     void UpdateLambdaAfterStepRemoval(unsigned) {}
 
+    void UpdateLambdaAfterStepRemoval(unsigned, unsigned) {}
+
     void FixupSendRecvAfterStepRemoval(unsigned, unsigned) {}
 
     void UpdateLambdaAfterStepInsertion(unsigned) {}
+
+    void UpdateLambdaAfterStepInsertion(unsigned, unsigned) {}
 
     void FixupSendRecvAfterStepInsertion(unsigned, unsigned, unsigned) {}
 

@@ -20,6 +20,7 @@ limitations under the License.
 
 #include <algorithm>
 #include <iostream>
+#include <limits>
 #include <type_traits>
 #include <vector>
 
@@ -49,6 +50,39 @@ struct MaxCommDatastructure {
     std::vector<unsigned> stepMaxCommCountCache_;
 
     CommWeightT maxCommWeight_ = 0;
+
+    // =========================================================================
+    // StepRangeProxy — duck-typed proxy passed to CommPolicy functions
+    // instead of `*this` so that writes to steps outside [startStep, endStep]
+    // are silently discarded (sent to a throw-away sink).
+    //
+    // This is the key mechanism for thread-safety: each thread only writes
+    // to its own step range, even when CommPolicy functions internally
+    // compute steps outside that range (e.g. Lazy/Buffered recv at
+    // min(childSteps)-1 which may cross thread boundaries).
+    // =========================================================================
+
+    struct StepRangeProxy {
+        MaxCommDatastructure &real_;
+        unsigned startStep_, endStep_;
+        CommWeightT sink_ = 0;
+
+        inline CommWeightT &StepProcSend(unsigned step, unsigned proc) {
+            if (step >= startStep_ && step <= endStep_) {
+                return real_.stepProcSend_[step][proc];
+            }
+            sink_ = 0;
+            return sink_;
+        }
+
+        inline CommWeightT &StepProcReceive(unsigned step, unsigned proc) {
+            if (step >= startStep_ && step <= endStep_) {
+                return real_.stepProcReceive_[step][proc];
+            }
+            sink_ = 0;
+            return sink_;
+        }
+    };
 
     // Select the appropriate container type based on the policy's ValueType
     using ContainerType = typename std::conditional<std::is_same<typename CommPolicy::ValueType, unsigned>::value,
@@ -233,7 +267,7 @@ struct MaxCommDatastructure {
 
     void RecomputeMaxSendReceive(unsigned step) { ArrangeSuperstepCommData(step); }
 
-    void UpdateDatastructureAfterMove(const KlMove &move, unsigned, unsigned) {
+    void UpdateDatastructureAfterMove(const KlMove &move, unsigned startStep, unsigned endStep) {
         const auto &graph = instance_->GetComputationalDag();
 
         // Prepare Scratchpad (Avoids Allocations) ---
@@ -244,12 +278,16 @@ struct MaxCommDatastructure {
         }
         affectedStepsList_.clear();
 
+        // MarkStep: only mark steps within [startStep, endStep]
         auto MarkStep = [&](unsigned step) {
-            if (step < stepIsAffected_.size() && !stepIsAffected_[step]) {
+            if (step >= startStep && step <= endStep && step < stepIsAffected_.size() && !stepIsAffected_[step]) {
                 stepIsAffected_[step] = true;
                 affectedStepsList_.push_back(step);
             }
         };
+
+        // Proxy: silently discards writes to steps outside [startStep, endStep]
+        StepRangeProxy proxy{*this, startStep, endStep};
 
         const VertexType node = move.node_;
         const unsigned fromStep = move.fromStep_;
@@ -259,6 +297,10 @@ struct MaxCommDatastructure {
         const CommWeightT commWNode = graph.VertexCommWeight(node);
 
         // Handle Node Movement (Outgoing Edges: Node -> Children)
+        //
+        // The node is in our step range, but children may be outside.
+        // Comm steps determined by the policy may fall outside our range.
+        // The StepRangeProxy silently discards those writes.
 
         if (fromStep != toStep) {
             // Case 1: Node changes Step
@@ -267,7 +309,7 @@ struct MaxCommDatastructure {
                 if (proc != fromProc) {
                     const CommWeightT cost = commWNode * instance_->SendCosts(fromProc, proc);
                     if (cost > 0) {
-                        CommPolicy::RemoveOutgoingComm(*this, cost, fromStep, fromProc, proc, val, MarkStep);
+                        CommPolicy::RemoveOutgoingComm(proxy, cost, fromStep, fromProc, proc, val, MarkStep);
                     }
                 }
 
@@ -275,7 +317,7 @@ struct MaxCommDatastructure {
                 if (proc != toProc) {
                     const CommWeightT cost = commWNode * instance_->SendCosts(toProc, proc);
                     if (cost > 0) {
-                        CommPolicy::AddOutgoingComm(*this, cost, toStep, toProc, proc, val, MarkStep);
+                        CommPolicy::AddOutgoingComm(proxy, cost, toStep, toProc, proc, val, MarkStep);
                     }
                 }
             }
@@ -288,7 +330,7 @@ struct MaxCommDatastructure {
                 if (proc != fromProc) {
                     const CommWeightT cost = commWNode * instance_->SendCosts(fromProc, proc);
                     if (cost > 0) {
-                        CommPolicy::RemoveOutgoingComm(*this, cost, fromStep, fromProc, proc, val, MarkStep);
+                        CommPolicy::RemoveOutgoingComm(proxy, cost, fromStep, fromProc, proc, val, MarkStep);
                     }
                 }
 
@@ -296,16 +338,26 @@ struct MaxCommDatastructure {
                 if (proc != toProc) {
                     const CommWeightT cost = commWNode * instance_->SendCosts(toProc, proc);
                     if (cost > 0) {
-                        CommPolicy::AddOutgoingComm(*this, cost, fromStep, toProc, proc, val, MarkStep);
+                        CommPolicy::AddOutgoingComm(proxy, cost, fromStep, toProc, proc, val, MarkStep);
                     }
                 }
             }
         }
 
         // Update Parents' Outgoing Communication (Parents → Node)
+        //
+        // THREAD SAFETY: Skip parents whose step is outside [startStep, endStep].
+        // Their lambda entries belong to another thread's domain and must not be
+        // modified. Stale entries are corrected during post-synchronization rebuild.
 
         for (const auto &parent : graph.Parents(node)) {
             const unsigned parentStep = activeSchedule_->AssignedSuperstep(parent);
+
+            // Skip parents outside our step range (thread safety)
+            if (parentStep < startStep || parentStep > endStep) {
+                continue;
+            }
+
             // Fast boundary check
             if (parentStep >= stepProcSend_.size()) {
                 continue;
@@ -323,7 +375,7 @@ struct MaxCommDatastructure {
                     const CommWeightT cost = commWParent * instance_->SendCosts(parentProc, fromProc);
                     if (cost > 0) {
                         CommPolicy::UnattributeCommunication(
-                            *this, cost, parentStep, parentProc, fromProc, fromStep, val, MarkStep);
+                            proxy, cost, parentStep, parentProc, fromProc, fromStep, val, MarkStep);
                     }
                 }
             }
@@ -336,7 +388,7 @@ struct MaxCommDatastructure {
                 if (toProc != parentProc) {
                     const CommWeightT cost = commWParent * instance_->SendCosts(parentProc, toProc);
                     if (cost > 0) {
-                        CommPolicy::AttributeCommunication(*this, cost, parentStep, parentProc, toProc, toStep, valTo, MarkStep);
+                        CommPolicy::AttributeCommunication(proxy, cost, parentStep, parentProc, toProc, toStep, valTo, MarkStep);
                     }
                 }
             }
@@ -349,20 +401,30 @@ struct MaxCommDatastructure {
     }
 
     /// After a step removal (bubble empty step forward from removedStep to endStep),
-    /// all nodes that were at step S > removedStep are now at step S-1.
+    /// all nodes that were at step S > removedStep (within the thread's range) are now at step S-1.
     /// Update lambda entries to match the new step numbering.
     /// Only needed for policies that store step values (Lazy, Buffered).
-    void UpdateLambdaAfterStepRemoval(unsigned removedStep) {
+    ///
+    /// THREAD SAFETY: Only decrements entries in (removedStep, endStep].
+    /// Entries referencing steps outside this range belong to other threads.
+    void UpdateLambdaAfterStepRemoval(unsigned removedStep, unsigned endStep) {
         if constexpr (std::is_same_v<typename CommPolicy::ValueType, std::vector<unsigned>>) {
             for (auto &nodeEntries : nodeLambdaMap_.nodeLambdaVec_) {
                 for (auto &procEntry : nodeEntries) {
                     for (auto &step : procEntry) {
-                        if (step > removedStep) {
+                        if (step > removedStep && step <= endStep) {
                             step--;
                         }
                     }
                 }
             }
+        }
+    }
+
+    /// Overload for single-threaded mode (backward compatible)
+    void UpdateLambdaAfterStepRemoval(unsigned removedStep) {
+        if constexpr (std::is_same_v<typename CommPolicy::ValueType, std::vector<unsigned>>) {
+            UpdateLambdaAfterStepRemoval(removedStep, std::numeric_limits<unsigned>::max());
         }
     }
 
@@ -393,18 +455,28 @@ struct MaxCommDatastructure {
     }
 
     /// After a step insertion (reverting a removal), increment all lambda entries
-    /// >= insertedStep to match the new step numbering.
-    void UpdateLambdaAfterStepInsertion(unsigned insertedStep) {
+    /// in [insertedStep, endStep) to match the new step numbering.
+    ///
+    /// THREAD SAFETY: Only increments entries in [insertedStep, endStep].
+    /// Entries referencing steps outside this range belong to other threads.
+    void UpdateLambdaAfterStepInsertion(unsigned insertedStep, unsigned endStep) {
         if constexpr (std::is_same_v<typename CommPolicy::ValueType, std::vector<unsigned>>) {
             for (auto &nodeEntries : nodeLambdaMap_.nodeLambdaVec_) {
                 for (auto &procEntry : nodeEntries) {
                     for (auto &step : procEntry) {
-                        if (step >= insertedStep) {
+                        if (step >= insertedStep && step <= endStep) {
                             step++;
                         }
                     }
                 }
             }
+        }
+    }
+
+    /// Overload for single-threaded mode (backward compatible)
+    void UpdateLambdaAfterStepInsertion(unsigned insertedStep) {
+        if constexpr (std::is_same_v<typename CommPolicy::ValueType, std::vector<unsigned>>) {
+            UpdateLambdaAfterStepInsertion(insertedStep, std::numeric_limits<unsigned>::max());
         }
     }
 

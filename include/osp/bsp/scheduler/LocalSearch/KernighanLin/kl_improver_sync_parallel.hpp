@@ -37,16 +37,17 @@ namespace osp {
 ///   - UpdateDatastructureAfterMove must only mutate comm data for
 ///     steps within [startStep, endStep].
 ///
-/// Cost functions that satisfy these requirements:
-///   - KlTotalCommCostFunction     (UpdateDatastructureAfterMove is no-op)
-///   - KlHyperTotalCommCostFunction(mutations scoped to thread range)
+/// All four cost functions satisfy these requirements:
+///   - KlTotalCommCostFunction      (UpdateDatastructureAfterMove is no-op)
+///   - KlHyperTotalCommCostFunction (mutations scoped to thread range)
+///   - KlBspCommCostFunction        (comm deltas and updates scoped via
+///                                    StepRangeProxy; parents/children outside
+///                                    thread range are skipped)
+///   - KlMaxBspCommCostFunction     (same scoping mechanism as BSP)
 ///
-/// Cost functions that DO NOT satisfy these requirements:
-///   - KlBspCommCostFunction       (reads commDs_ for steps outside range)
-///   - KlMaxBspCommCostFunction    (reads commDs_ for steps outside range)
-///
-/// For BSP/MaxBSP, use numThreads=1 (single-threaded mode) or the
-/// future async improver which uses separate schedule copies per worker.
+/// After each parallel round, SynchronizeActiveSchedule recomputes
+/// the full schedule cost from scratch, correcting any cross-boundary
+/// approximations from the scoped per-thread cost model.
 ///
 template <typename GraphT,
           typename CommCostFunctionT,

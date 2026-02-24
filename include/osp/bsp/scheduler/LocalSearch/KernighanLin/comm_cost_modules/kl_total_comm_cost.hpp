@@ -72,11 +72,15 @@ struct KlTotalCommCostFunction {
 
     void UpdateLambdaAfterStepRemoval(unsigned) {}
 
+    void UpdateLambdaAfterStepRemoval(unsigned, unsigned) {}
+
     void FixupSendRecvAfterStepRemoval(unsigned, unsigned) {}
 
     auto StepMaxComm(unsigned) const { return 0; }
 
     void UpdateLambdaAfterStepInsertion(unsigned) {}
+
+    void UpdateLambdaAfterStepInsertion(unsigned, unsigned) {}
 
     void FixupSendRecvAfterStepInsertion(unsigned, unsigned, unsigned) {}
 
