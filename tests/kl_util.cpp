@@ -415,6 +415,8 @@ BOOST_AUTO_TEST_CASE(ActiveScheduleRevertMovesTest) {
 
         void UpdateLambdaAfterStepInsertion(unsigned, unsigned) {}
 
+        void UpdateLambdaAfterStepInsertion(unsigned, unsigned, unsigned) {}
+
         void SwapCommSteps(unsigned, unsigned) {}
     } commDs;
 
@@ -461,6 +463,8 @@ BOOST_AUTO_TEST_CASE(ActiveScheduleRevertToBestScheduleTest) {
         void UpdateLambdaAfterStepInsertion(unsigned) {}
 
         void UpdateLambdaAfterStepInsertion(unsigned, unsigned) {}
+
+        void UpdateLambdaAfterStepInsertion(unsigned, unsigned, unsigned) {}
 
         void SwapCommSteps(unsigned, unsigned) {}
     } commDs;
@@ -564,6 +568,8 @@ BOOST_AUTO_TEST_CASE(RevertRemoveStepSentinelRestoresEndStep) {
 
         void UpdateLambdaAfterStepInsertion(unsigned, unsigned) {}
 
+        void UpdateLambdaAfterStepInsertion(unsigned, unsigned, unsigned) {}
+
         void SwapCommSteps(unsigned, unsigned) {}
     } commDs;
 
@@ -614,6 +620,8 @@ BOOST_AUTO_TEST_CASE(RevertPastRemoveStepSentinelRestoresStep) {
 
         void UpdateLambdaAfterStepInsertion(unsigned, unsigned) {}
 
+        void UpdateLambdaAfterStepInsertion(unsigned, unsigned, unsigned) {}
+
         void SwapCommSteps(unsigned, unsigned) {}
     } commDs;
 
@@ -662,6 +670,8 @@ BOOST_AUTO_TEST_CASE(RevertRemoveStepSentinelCallsSwapCommSteps) {
         void FixupSendRecvAfterStepInsertion(unsigned insertedStep, unsigned startStep, unsigned endStep) {}
 
         void UpdateLambdaAfterStepInsertion(unsigned, unsigned) {}
+
+        void UpdateLambdaAfterStepInsertion(unsigned, unsigned, unsigned) {}
 
         void UpdateLambdaAfterStepInsertion(unsigned) {}
 
@@ -719,6 +729,8 @@ BOOST_AUTO_TEST_CASE(RevertScheduleToBoundWithSentinel) {
         void UpdateLambdaAfterStepInsertion(unsigned) {}
 
         void UpdateLambdaAfterStepInsertion(unsigned, unsigned) {}
+
+        void UpdateLambdaAfterStepInsertion(unsigned, unsigned, unsigned) {}
 
         void SwapCommSteps(unsigned, unsigned) {}
     } commDs;

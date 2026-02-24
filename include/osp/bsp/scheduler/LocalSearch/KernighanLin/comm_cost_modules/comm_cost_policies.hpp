@@ -36,9 +36,10 @@ struct EagerCommCostPolicy {
                                               const unsigned vStep,
                                               const ValueType &val,
                                               MarkStepFn &&markStep) {
-        ds.StepProcReceive(uStep, vProc) += cost;
-        ds.StepProcSend(uStep, uProc) += cost;
-        markStep(uStep);
+        if (markStep(uStep)) {
+            ds.StepProcReceive(uStep, vProc) += cost;
+            ds.StepProcSend(uStep, uProc) += cost;
+        }
     }
 
     template <typename DS, typename CommWeightT, typename MarkStepFn>
@@ -50,9 +51,10 @@ struct EagerCommCostPolicy {
                                                 const unsigned vStep,
                                                 const ValueType &val,
                                                 MarkStepFn &&markStep) {
-        ds.StepProcReceive(uStep, vProc) -= cost;
-        ds.StepProcSend(uStep, uProc) -= cost;
-        markStep(uStep);
+        if (markStep(uStep)) {
+            ds.StepProcReceive(uStep, vProc) -= cost;
+            ds.StepProcSend(uStep, uProc) -= cost;
+        }
     }
 
     /// Remove outgoing communication when a parent node moves (val unchanged).
@@ -65,9 +67,10 @@ struct EagerCommCostPolicy {
                                           unsigned childProc,
                                           const ValueType &val,
                                           MarkStepFn &&markStep) {
-        ds.StepProcSend(parentStep, parentProc) -= cost;
-        ds.StepProcReceive(parentStep, childProc) -= cost;
-        markStep(parentStep);
+        if (markStep(parentStep)) {
+            ds.StepProcSend(parentStep, parentProc) -= cost;
+            ds.StepProcReceive(parentStep, childProc) -= cost;
+        }
     }
 
     /// Add outgoing communication when a parent node moves (val unchanged).
@@ -79,9 +82,10 @@ struct EagerCommCostPolicy {
                                        unsigned childProc,
                                        const ValueType &val,
                                        MarkStepFn &&markStep) {
-        ds.StepProcSend(parentStep, parentProc) += cost;
-        ds.StepProcReceive(parentStep, childProc) += cost;
-        markStep(parentStep);
+        if (markStep(parentStep)) {
+            ds.StepProcSend(parentStep, parentProc) += cost;
+            ds.StepProcReceive(parentStep, childProc) += cost;
+        }
     }
 
     static inline bool AddChild(ValueType &val, unsigned step) {
@@ -180,14 +184,16 @@ struct LazyCommCostPolicy {
 
             if (vStep < prevMin) {
                 if (prevMin != std::numeric_limits<unsigned>::max() && prevMin > 0) {
-                    ds.StepProcReceive(prevMin - 1, vProc) -= cost;
-                    ds.StepProcSend(prevMin - 1, uProc) -= cost;
-                    markStep(prevMin - 1);
+                    if (markStep(prevMin - 1)) {
+                        ds.StepProcReceive(prevMin - 1, vProc) -= cost;
+                        ds.StepProcSend(prevMin - 1, uProc) -= cost;
+                    }
                 }
                 if (vStep > 0) {
-                    ds.StepProcReceive(vStep - 1, vProc) += cost;
-                    ds.StepProcSend(vStep - 1, uProc) += cost;
-                    markStep(vStep - 1);
+                    if (markStep(vStep - 1)) {
+                        ds.StepProcReceive(vStep - 1, vProc) += cost;
+                        ds.StepProcSend(vStep - 1, uProc) += cost;
+                    }
                 }
             }
         }
@@ -207,9 +213,10 @@ struct LazyCommCostPolicy {
         if (val.empty()) {
             // Removed the last child.
             if (vStep > 0) {
-                ds.StepProcReceive(vStep - 1, vProc) -= cost;
-                ds.StepProcSend(vStep - 1, uProc) -= cost;
-                markStep(vStep - 1);
+                if (markStep(vStep - 1)) {
+                    ds.StepProcReceive(vStep - 1, vProc) -= cost;
+                    ds.StepProcSend(vStep - 1, uProc) -= cost;
+                }
             }
         } else {
             // Check if v_step was the unique minimum.
@@ -221,14 +228,16 @@ struct LazyCommCostPolicy {
             if (vStep < newMin) {
                 // v_step was the unique minimum.
                 if (vStep > 0) {
-                    ds.StepProcReceive(vStep - 1, vProc) -= cost;
-                    ds.StepProcSend(vStep - 1, uProc) -= cost;
-                    markStep(vStep - 1);
+                    if (markStep(vStep - 1)) {
+                        ds.StepProcReceive(vStep - 1, vProc) -= cost;
+                        ds.StepProcSend(vStep - 1, uProc) -= cost;
+                    }
                 }
                 if (newMin > 0) {
-                    ds.StepProcReceive(newMin - 1, vProc) += cost;
-                    ds.StepProcSend(newMin - 1, uProc) += cost;
-                    markStep(newMin - 1);
+                    if (markStep(newMin - 1)) {
+                        ds.StepProcReceive(newMin - 1, vProc) += cost;
+                        ds.StepProcSend(newMin - 1, uProc) += cost;
+                    }
                 }
             }
         }
@@ -252,9 +261,10 @@ struct LazyCommCostPolicy {
             minS = std::min(minS, s);
         }
         if (minS > 0) {
-            ds.StepProcSend(minS - 1, parentProc) -= cost;
-            ds.StepProcReceive(minS - 1, childProc) -= cost;
-            markStep(minS - 1);
+            if (markStep(minS - 1)) {
+                ds.StepProcSend(minS - 1, parentProc) -= cost;
+                ds.StepProcReceive(minS - 1, childProc) -= cost;
+            }
         }
     }
 
@@ -274,9 +284,10 @@ struct LazyCommCostPolicy {
             minS = std::min(minS, s);
         }
         if (minS > 0) {
-            ds.StepProcSend(minS - 1, parentProc) += cost;
-            ds.StepProcReceive(minS - 1, childProc) += cost;
-            markStep(minS - 1);
+            if (markStep(minS - 1)) {
+                ds.StepProcSend(minS - 1, parentProc) += cost;
+                ds.StepProcReceive(minS - 1, childProc) += cost;
+            }
         }
     }
 
@@ -454,12 +465,14 @@ struct BufferedCommCostPolicy {
 
             if (vStep < prevMin) {
                 if (prevMin != std::numeric_limits<unsigned>::max() && prevMin > 0) {
-                    ds.StepProcReceive(prevMin - 1, vProc) -= cost;
-                    markStep(prevMin - 1);
+                    if (markStep(prevMin - 1)) {
+                        ds.StepProcReceive(prevMin - 1, vProc) -= cost;
+                    }
                 }
                 if (vStep > 0) {
-                    ds.StepProcReceive(vStep - 1, vProc) += cost;
-                    markStep(vStep - 1);
+                    if (markStep(vStep - 1)) {
+                        ds.StepProcReceive(vStep - 1, vProc) += cost;
+                    }
                 }
             }
         }
@@ -467,8 +480,9 @@ struct BufferedCommCostPolicy {
         // Send side logic (u_step)
         // If this is the FIRST child on this proc, add send cost.
         if (val.size() == 1) {
-            ds.StepProcSend(uStep, uProc) += cost;
-            markStep(uStep);
+            if (markStep(uStep)) {
+                ds.StepProcSend(uStep, uProc) += cost;
+            }
         }
     }
 
@@ -485,11 +499,13 @@ struct BufferedCommCostPolicy {
 
         if (val.empty()) {
             // Removed last child.
-            ds.StepProcSend(uStep, uProc) -= cost;    // Send side
-            markStep(uStep);
+            if (markStep(uStep)) {
+                ds.StepProcSend(uStep, uProc) -= cost;    // Send side
+            }
             if (vStep > 0) {
-                ds.StepProcReceive(vStep - 1, vProc) -= cost;    // Recv side
-                markStep(vStep - 1);
+                if (markStep(vStep - 1)) {
+                    ds.StepProcReceive(vStep - 1, vProc) -= cost;    // Recv side
+                }
             }
         } else {
             // Check if v_step was unique minimum for Recv side.
@@ -500,12 +516,14 @@ struct BufferedCommCostPolicy {
 
             if (vStep < newMin) {
                 if (vStep > 0) {
-                    ds.StepProcReceive(vStep - 1, vProc) -= cost;
-                    markStep(vStep - 1);
+                    if (markStep(vStep - 1)) {
+                        ds.StepProcReceive(vStep - 1, vProc) -= cost;
+                    }
                 }
                 if (newMin > 0) {
-                    ds.StepProcReceive(newMin - 1, vProc) += cost;
-                    markStep(newMin - 1);
+                    if (markStep(newMin - 1)) {
+                        ds.StepProcReceive(newMin - 1, vProc) += cost;
+                    }
                 }
             }
             // Send side remains (val not empty).
@@ -525,15 +543,17 @@ struct BufferedCommCostPolicy {
         if (val.empty()) {
             return;
         }
-        ds.StepProcSend(parentStep, parentProc) -= cost;
-        markStep(parentStep);
+        if (markStep(parentStep)) {
+            ds.StepProcSend(parentStep, parentProc) -= cost;
+        }
         unsigned minS = std::numeric_limits<unsigned>::max();
         for (unsigned s : val) {
             minS = std::min(minS, s);
         }
         if (minS > 0) {
-            ds.StepProcReceive(minS - 1, childProc) -= cost;
-            markStep(minS - 1);
+            if (markStep(minS - 1)) {
+                ds.StepProcReceive(minS - 1, childProc) -= cost;
+            }
         }
     }
 
@@ -548,15 +568,17 @@ struct BufferedCommCostPolicy {
         if (val.empty()) {
             return;
         }
-        ds.StepProcSend(parentStep, parentProc) += cost;
-        markStep(parentStep);
+        if (markStep(parentStep)) {
+            ds.StepProcSend(parentStep, parentProc) += cost;
+        }
         unsigned minS = std::numeric_limits<unsigned>::max();
         for (unsigned s : val) {
             minS = std::min(minS, s);
         }
         if (minS > 0) {
-            ds.StepProcReceive(minS - 1, childProc) += cost;
-            markStep(minS - 1);
+            if (markStep(minS - 1)) {
+                ds.StepProcReceive(minS - 1, childProc) += cost;
+            }
         }
     }
 

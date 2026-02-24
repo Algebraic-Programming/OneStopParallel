@@ -1189,7 +1189,7 @@ void KlImproverBase<Derived, GraphT, CommCostFunctionT, MemoryConstraintT, windo
             commCostF_.SwapCommSteps(i, i + 1);
         }
         threadData.endStep_--;
-        commCostF_.UpdateLambdaAfterStepRemoval(r, oldEndStep);
+        commCostF_.UpdateLambdaAfterStepRemoval(r, threadData.startStep_, oldEndStep);
         commCostF_.FixupSendRecvAfterStepRemoval(r, oldEndStep);
 
         const CostT syncCost = static_cast<CostT>(instance_->SynchronisationCosts());

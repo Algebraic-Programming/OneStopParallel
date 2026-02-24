@@ -180,8 +180,8 @@ struct KlMaxBspCommCostFunction {
     // Step removal / insertion (lambda renumbering + send/recv fixup)
     // =========================================================================
 
-    void UpdateLambdaAfterStepRemoval(unsigned removedStep, unsigned endStep) {
-        commDs_.UpdateLambdaAfterStepRemoval(removedStep, endStep);
+    void UpdateLambdaAfterStepRemoval(unsigned removedStep, unsigned startStep, unsigned endStep) {
+        commDs_.UpdateLambdaAfterStepRemoval(removedStep, startStep, endStep);
     }
 
     void UpdateLambdaAfterStepRemoval(unsigned removedStep) { commDs_.UpdateLambdaAfterStepRemoval(removedStep); }
@@ -190,8 +190,8 @@ struct KlMaxBspCommCostFunction {
         commDs_.FixupSendRecvAfterStepRemoval(removedStep, oldEndStep);
     }
 
-    void UpdateLambdaAfterStepInsertion(unsigned insertedStep, unsigned endStep) {
-        commDs_.UpdateLambdaAfterStepInsertion(insertedStep, endStep);
+    void UpdateLambdaAfterStepInsertion(unsigned insertedStep, unsigned startStep, unsigned endStep) {
+        commDs_.UpdateLambdaAfterStepInsertion(insertedStep, startStep, endStep);
     }
 
     void UpdateLambdaAfterStepInsertion(unsigned insertedStep) { commDs_.UpdateLambdaAfterStepInsertion(insertedStep); }
