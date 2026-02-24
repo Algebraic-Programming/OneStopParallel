@@ -65,6 +65,7 @@ class KlSyncParallelImprover : public KlImprover<GraphT, CommCostFunctionT, Memo
             this->threadDataVec_[0].originalEndStep_ = this->threadDataVec_[0].endStep_;
             return;
         } else {
+            this->parameters_.threadRangeGap_ = std::max(this->parameters_.threadRangeGap_, this->activeSchedule_.GetStaleness());
             const unsigned totalGapSize = (numThreads - 1) * this->parameters_.threadRangeGap_;
             const unsigned bonus = this->parameters_.threadMinRange_;
             const unsigned stepsToDistribute = numSteps - totalGapSize - bonus;
@@ -177,6 +178,9 @@ class KlSyncParallelImprover : public KlImprover<GraphT, CommCostFunctionT, Memo
                     threadData.activeScheduleData_.InitializeCost(this->activeSchedule_.GetCost());
                     threadData.selectionStrategy_.Setup(threadData.startStep_, threadData.endStep_);
 
+                    std::cout << "Thread " << t << " processing steps " << threadData.startStep_ << " to " << threadData.endStep_
+                              << std::endl;
+
                     workers.emplace_back([this, &threadData]() { this->RunLocalSearch(threadData); });
                 }
 
@@ -197,10 +201,8 @@ class KlSyncParallelImprover : public KlImprover<GraphT, CommCostFunctionT, Memo
                 // Regressed: revert to the best known schedule stored
                 // in `schedule`. Re-initialization is heavyweight but
                 // regression should be rare; correctness takes priority.
-                this->CleanupDatastructures();
-                this->threadDataVec_.resize(numThreads);
-                this->threadFinishedVec_.assign(numThreads, true);
-                this->InitializeDatastructures(schedule);
+                this->activeSchedule_.Initialize(schedule);
+                this->commCostF_.Initialize(this->activeSchedule_, this->procRange_);
             }
 
             if (numThreads > 1) {

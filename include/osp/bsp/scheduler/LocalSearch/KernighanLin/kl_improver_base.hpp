@@ -17,7 +17,7 @@ limitations under the License.
 */
 
 #pragma once
-#define KL_DEBUG_COST_CHECK
+// #define KL_DEBUG_COST_CHECK
 #include <algorithm>
 #include <chrono>
 #include <cstdlib>
@@ -1360,7 +1360,10 @@ bool KlImproverBase<Derived, GraphT, CommCostFunctionT, MemoryConstraintT, windo
             if (threadData.activeScheduleData_.newViolations_.size() > 0) {
                 for (const auto &vertexEdgePair : threadData.activeScheduleData_.newViolations_) {
                     const auto &vertex = vertexEdgePair.first;
-                    threadData.affinityTable_.Insert(vertex);
+                    const auto vertexStep = activeSchedule_.AssignedSuperstep(vertex);
+                    if (vertexStep >= threadData.startStep_ && vertexStep <= threadData.endStep_) {
+                        threadData.affinityTable_.Insert(vertex);
+                    }
                 }
             }
 

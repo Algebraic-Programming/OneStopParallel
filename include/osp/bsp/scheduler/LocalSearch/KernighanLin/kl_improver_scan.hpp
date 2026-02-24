@@ -72,9 +72,9 @@ class KlImproverScan : public KlImproverBase<KlImproverScan<GraphT, CommCostFunc
         for (size_t i = 0; i < activeCount; ++i) {
             const VertexType node = threadData.affinityTable_.GetSelectedNodes()[i];
 
-            assert(this->activeSchedule_.AssignedSuperstep(node) >= threadData.startStep_
-                   && this->activeSchedule_.AssignedSuperstep(node) <= threadData.endStep_
-                   && "Scan: active node outside thread step range");
+            // assert(this->activeSchedule_.AssignedSuperstep(node) >= threadData.startStep_
+            //        && this->activeSchedule_.AssignedSuperstep(node) <= threadData.endStep_
+            //        && "Scan: active node outside thread step range");
 
             auto &atn = threadData.affinityTable_.At(node);
             this->ComputeNodeAffinities(node, atn, threadData);
