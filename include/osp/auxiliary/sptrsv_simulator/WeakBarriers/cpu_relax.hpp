@@ -18,21 +18,19 @@ limitations under the License.
 
 #pragma once
 
-#include <thread>
-
-#if defined(__x86_64__) || defined(_M_X64)
-#    include <immintrin.h>
-#endif
-
 namespace osp {
 
 // Portable cpu_relax definition
 #if defined(__x86_64__) || defined(_M_X64)
+#    include <immintrin.h>
 inline void cpu_relax() { _mm_pause(); }
 #elif defined(__aarch64__)
+inline void cpu_relax() { asm volatile("isb" ::: "memory"); }
+#elif defined(__arm__)
 inline void cpu_relax() { asm volatile("yield" ::: "memory"); }
 #else
-inline void cpu_relax() { std::this_thread::yield(); }
+#include <atomic>
+inline void cpu_relax() { std::atomic_signal_fence(std::memory_order_acquire); }
 #endif
 
 }    // end namespace osp

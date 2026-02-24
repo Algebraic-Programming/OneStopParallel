@@ -78,13 +78,9 @@ inline void FlatCheckpointCounterBarrier::Wait(const std::size_t threadId, const
     const std::size_t minVal = std::max(localCachedCntrs[threadId], diff) - diff;
 
     for (std::size_t ind = 0U; ind < cntrs_.size(); ++ind) {
-        std::size_t loopCntr = 0U;
         while ((localCachedCntrs[ind] < minVal)
                && ((localCachedCntrs[ind] = cntrs_[ind].cntr_.load(std::memory_order_acquire)) < minVal)) {
-            ++loopCntr;
-            if (loopCntr % 128U == 0U) {
-                cpu_relax();
-            }
+            cpu_relax();
         }
     }
 }
