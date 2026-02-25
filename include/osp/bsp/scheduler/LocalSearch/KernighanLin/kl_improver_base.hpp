@@ -1303,6 +1303,19 @@ bool KlImproverBase<Derived, GraphT, CommCostFunctionT, MemoryConstraintT, windo
 
     for (stepToRemove = threadData.stepSelectionCounter_; stepToRemove <= threadData.endStep_; stepToRemove++) {
         assert(stepToRemove >= threadData.startStep_ && stepToRemove <= threadData.endStep_);
+
+        // In MT mode, skip boundary steps — they buffer against gap zones.
+        // Removing a boundary step scatters nodes toward the frozen gap,
+        // easily creating cross-boundary violations that can't be resolved.
+        // Exception: the globally first/last step has no adjacent thread.
+        // Use originalEndStep_ because endStep_ shrinks during step removal.
+        if (stepToRemove == threadData.startStep_ && threadData.startStep_ != 0) {
+            continue;
+        }
+        if (stepToRemove == threadData.originalEndStep_ && threadData.originalEndStep_ != activeSchedule_.NumSteps() - 1) {
+            continue;
+        }
+
 #ifdef KL_DEBUG
         std::cout << "Checking to remove step " << stepToRemove << "/" << threadData.endStep_ << std::endl;
 #endif
