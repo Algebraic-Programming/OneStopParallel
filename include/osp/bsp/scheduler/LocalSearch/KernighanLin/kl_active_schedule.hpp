@@ -575,25 +575,6 @@ void KlActiveSchedule<GraphT, CostT, MemoryConstraintT>::ComputeViolations(Threa
 template <typename GraphT, typename CostT, typename MemoryConstraintT>
 void KlActiveSchedule<GraphT, CostT, MemoryConstraintT>::UpdateViolationsAfterStepRemoval(unsigned removedStep,
                                                                                           ThreadDataT &threadData) {
-    // After SwapEmptyStepFwd(removedStep, ...) bubbles the empty step forward,
-    // all nodes formerly at steps removedStep+1.. shift down by 1.  Nodes at
-    // steps 0..removedStep-1 are untouched.
-    //
-    // Only cross-processor edges that cross from the unshifted region into the
-    // shifted region lose 1 from their gap.  For staleness <= 2 the only
-    // boundary that can drop below the staleness threshold is:
-    //
-    //   parent at step removedStep-1  -->  child now at step removedStep
-    //                                      (formerly at removedStep+1)
-    //   gap went from 2 to 1 -- violates staleness == 2
-    //
-    // We iterate only the nodes in the affected superstep (removedStep after
-    // the swap) and check their incoming edges from the step above.
-    //
-    // TODO: for staleness > 2, parents at steps removedStep-2 down to
-    //       removedStep-(staleness-1) could also create new violations.
-    //       Extend the check to cover those additional steps.
-
     if (staleness_ <= 1 || removedStep == 0) {
         return;
     }

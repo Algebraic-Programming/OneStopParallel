@@ -82,9 +82,6 @@ struct KlUpdateInfo {
         : node_(n), fullUpdate_(full), updateEntireToStep_(false), updateEntireFromStep_(false) {}
 };
 
-// =============================================================================
-// BASE CLASS — shared logic (~90% of code)
-// =============================================================================
 template <typename Derived,
           typename GraphT,
           typename CommCostFunctionT,
@@ -118,8 +115,6 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
     Derived &derived() { return static_cast<Derived &>(*this); }
 
     const Derived &derived() const { return static_cast<const Derived &>(*this); }
-
-    // --- ThreadSearchContext (shared, no heap or reverse index) ---
 
     struct ThreadSearchContext {
         unsigned threadId_ = 0;
@@ -157,8 +152,6 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
         }
     };
 
-    // --- Shared members ---
-
     bool computeWithTimeLimit_ = false;
 
     BspSchedule<GraphT> *inputSchedule_;
@@ -174,8 +167,6 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
     CommCostFunctionT commCostF_;
     std::vector<ThreadSearchContext> threadDataVec_;
     std::vector<bool> threadFinishedVec_;
-
-    // --- Shared utility methods ---
 
     inline unsigned RelStepIdx(const unsigned nodeStep, const unsigned moveStep) const {
         return (moveStep >= nodeStep) ? ((moveStep - nodeStep) + windowSize) : (windowSize - (nodeStep - moveStep));
@@ -200,8 +191,6 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
         threadData.unlockEdgeBacktrackCounter_ = threadData.unlockEdgeBacktrackCounterReset_;
         threadData.maxNoViolationsRemovedBacktrack_ = parameters_.maxNoViolationsRemovedBacktrackReset_;
     }
-
-    // --- Shared helper: collect new neighbor nodes ---
 
     void CollectNewNodes(const KlMove &bestMove, ThreadSearchContext &threadData, std::vector<VertexType> &newNodes) {
         const auto &dag = *graph_;
@@ -230,8 +219,6 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
             }
         }
     }
-
-    // --- ComputeBestMove ---
 
     inline void ProcessOtherStepsBestMove(const unsigned idx,
                                           const unsigned nodeStep,
@@ -307,16 +294,10 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
         return KlMove(node, maxGain, nodeProc, nodeStep, maxProc, nodeStep + maxStep - windowSize);
     }
 
-    // --- Shared affinity computation ---
-
-    /// Work-cost delta when placing a node on a DIFFERENT step.
-    /// Used by KlImproverHeap for incremental affinity updates.
     inline CostT ComputeDiffStepAffinity(const VertexWorkWeightT maxWork, const VertexWorkWeightT newWeight) const {
         return maxWork < newWeight ? static_cast<CostT>(newWeight) - static_cast<CostT>(maxWork) : 0.0;
     }
 
-    /// Work-cost delta when placing a node on the SAME step (after removal).
-    /// Used by KlImproverHeap for incremental affinity updates.
     inline CostT ComputeSameStepAffinity(const VertexWorkWeightT &maxWorkForStep,
                                          const VertexWorkWeightT &newWeight,
                                          const CostT &nodeProcAffinity) {
@@ -337,8 +318,6 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
                                        threadData.startStep_,
                                        threadData.endStep_);
     }
-
-    // --- ApplyMove ---
 
     inline CostT ApplyMove(KlMove move, ThreadSearchContext &threadData) {
 #ifdef KL_DEBUG_COST_CHECK
@@ -422,8 +401,6 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
         return changeInCost;
     }
 
-    // --- Violation handling ---
-
     enum class ViolationAction { Continue, Break, Proceed };
 
     ViolationAction HandleViolationBacktracking(unsigned &violationRemovedCount,
@@ -471,8 +448,6 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
 #endif
         return ViolationAction::Break;
     }
-
-    // --- QuickMoves ---
 
     void RunQuickMoves(unsigned &innerIter,
                        ThreadSearchContext &threadData,
@@ -567,10 +542,8 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
 
         threadData.affinityTable_.Trim();
         threadData.rewardPenaltyStrat_.InitRewardPenalty(1.0);
-        derived().ReinitializeMoveFinding(threadData);    // DISPATCH
+        derived().ReinitializeMoveFinding(threadData);
     }
-
-    // --- ResolveViolations ---
 
     void ResolveViolations(ThreadSearchContext &threadData) {
         auto &currentViolations = threadData.activeScheduleData_.currentViolations_;
@@ -585,10 +558,6 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
             unsigned numIter = 0;
             const unsigned minIter = numViolations / 4;
 
-            // Shuffled vector for O(1) sequential access without replacement.
-            // Stale entries (resolved by earlier moves) are skipped via the
-            // authoritative currentViolations set.  New violations created by
-            // ApplyMove are appended so they become reachable without a rebuild.
             using EdgeType = typename std::decay_t<decltype(currentViolations)>::value_type;
             std::vector<EdgeType> violationVec(currentViolations.begin(), currentViolations.end());
             std::shuffle(violationVec.begin(), violationVec.end(), gen_);
@@ -605,7 +574,6 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
                     }
                 }
 
-                // Skip stale entries that were resolved by earlier moves
                 const auto &nextEdge = violationVec[vecIdx++];
                 if (currentViolations.find(nextEdge) == currentViolations.end()) {
                     continue;
@@ -689,8 +657,6 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
         }
     }
 
-    // --- DebugCostCheck ---
-
     inline void DebugCostCheck([[maybe_unused]] const ThreadSearchContext &threadData,
                                [[maybe_unused]] const char *label = "unknown") {
 #ifdef KL_DEBUG_COST_CHECK
@@ -713,8 +679,6 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
         }
 #endif
     }
-
-    // --- BlockedEdgeStrategy ---
 
     inline bool BlockedEdgeStrategy(VertexType node, std::vector<VertexType> &unlockNodes, ThreadSearchContext &threadData) {
         if (threadData.unlockEdgeBacktrackCounter_ > 1) {
@@ -749,8 +713,6 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
         }
     }
 
-    // --- AdjustLocalSearchParameters ---
-
     inline void AdjustLocalSearchParameters(unsigned outerIter, unsigned noImpCounter, ThreadSearchContext &threadData) {
         if (noImpCounter >= threadData.noImprovementIterationsReducePenalty_
             && threadData.rewardPenaltyStrat_.initialPenalty_ > 1.0) {
@@ -784,8 +746,6 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
         }
     }
 
-    // --- Other shared methods ---
-
     bool IsLocalSearchBlocked(ThreadSearchContext &threadData);
     bool OtherThreadsFinished(const unsigned threadId);
     void SetParameters(VertexIdxT<GraphT> numNodes);
@@ -799,8 +759,6 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
     bool SelectNodesCheckRemoveSuperstep(unsigned &step, ThreadSearchContext &threadData);
     bool ScatterNodesSuperstep(unsigned step, ThreadSearchContext &threadData);
     void SynchronizeActiveSchedule(const unsigned numThreads);
-
-    // --- The inner loop — shared skeleton with 3 dispatch points ---
 
     void RunLocalSearch(ThreadSearchContext &threadData) {
 #ifdef KL_DEBUG_1
@@ -831,7 +789,6 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
             threadData.rewardPenaltyStrat_.InitRewardPenalty(
                 static_cast<double>(threadData.activeScheduleData_.currentViolations_.size()) + 1.0);
 
-            // DISPATCH: initialize move-finding (heap or scan)
             derived().ReinitializeMoveFinding(threadData);
 
             unsigned innerIter = 0;
@@ -858,7 +815,6 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
             DebugCostCheck(threadData, "before_inner_loop");
 
             while (innerIter < threadData.maxInnerIterations_) {
-                // DISPATCH: get best move
                 KlMove bestMove = derived().GetBestMove(threadData);
                 if (bestMove.gain_ <= std::numeric_limits<CostT>::lowest()) {
                     break;
@@ -890,7 +846,7 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
                     if (iterInitalFeasible && threadData.activeScheduleData_.newViolations_.size() > 0) {
                         RunQuickMoves(innerIter, threadData, changeInCost, bestMove.node_);
                         DebugCostCheck(threadData, "after_RunQuickMoves");
-                        continue;    // ReinitializeMoveFinding already called inside
+                        continue;
                     }
                 }
 
@@ -898,7 +854,7 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
                     const auto violationAction = HandleViolationBacktracking(
                         violationRemovedCount, resetCounter, innerIter, iterInitalFeasible, threadData);
                     if (violationAction == ViolationAction::Continue) {
-                        continue;    // ReinitializeMoveFinding already called inside
+                        continue;
                     } else if (violationAction == ViolationAction::Break) {
                         break;
                     }
@@ -912,9 +868,6 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
 
                 threadData.affinityTable_.Trim();
 
-                // DISPATCH: post-move update (affinity updates + heap/scan maintenance)
-                // Note: unlockNodes are still LOCKED here, so UpdateNodeCommAffinity
-                // skips them (important: avoids duplicate insertion into heap).
                 derived().PostMoveUpdate(bestMove, threadData, newNodes, unlockNodes, prevWorkData);
 
                 newNodes.clear();
@@ -1047,10 +1000,6 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
     virtual std::string GetScheduleName() const { return "kl_improver_" + commCostF_.Name(); }
 };
 
-// =============================================================================
-// OUT-OF-LINE DEFINITIONS — Base
-// =============================================================================
-
 template <typename Derived, typename GraphT, typename CommCostFunctionT, typename MemoryConstraintT, unsigned windowSize, typename CostT>
 void KlImproverBase<Derived, GraphT, CommCostFunctionT, MemoryConstraintT, windowSize, CostT>::SetParameters(
     VertexIdxT<GraphT> numNodes) {
@@ -1131,7 +1080,6 @@ void KlImproverBase<Derived, GraphT, CommCostFunctionT, MemoryConstraintT, windo
     threadData.averageGain_ = 0.0;
     threadData.affinityTable_.ResetNodeSelection();
     threadData.lockManager_.Clear();
-    // Variant-specific state (heap, scan best) is reset via ReinitializeMoveFinding
 }
 
 template <typename Derived, typename GraphT, typename CommCostFunctionT, typename MemoryConstraintT, unsigned windowSize, typename CostT>
@@ -1161,7 +1109,6 @@ void KlImproverBase<Derived, GraphT, CommCostFunctionT, MemoryConstraintT, windo
         }
     }
 
-    // Initialize variant-specific per-thread data
     derived().InitializeVariantData();
 }
 
@@ -1183,9 +1130,6 @@ void KlImproverBase<Derived, GraphT, CommCostFunctionT, MemoryConstraintT, windo
     if (SelectNodesCheckRemoveSuperstep(threadData.stepToRemove_, threadData)) {
         const unsigned r = threadData.stepToRemove_;
 
-        // MaxBSP: capture work[r+1] BEFORE SwapEmptyStepFwd rearranges work data.
-        // The removed step is empty (work[r]=0). Only two cost terms are affected:
-        //   term at s=r  (removed)  and  term at s=r+1 (merged with r-1's comm).
         CostT maxBspWorkNext = 0;
         bool maxBspHasNext = false;
         if constexpr (CommCostFunctionT::coupledWorkComm_) {
@@ -1304,11 +1248,6 @@ bool KlImproverBase<Derived, GraphT, CommCostFunctionT, MemoryConstraintT, windo
     for (stepToRemove = threadData.stepSelectionCounter_; stepToRemove <= threadData.endStep_; stepToRemove++) {
         assert(stepToRemove >= threadData.startStep_ && stepToRemove <= threadData.endStep_);
 
-        // In MT mode, skip boundary steps — they buffer against gap zones.
-        // Removing a boundary step scatters nodes toward the frozen gap,
-        // easily creating cross-boundary violations that can't be resolved.
-        // Exception: the globally first/last step has no adjacent thread.
-        // Use originalEndStep_ because endStep_ shrinks during step removal.
         if (stepToRemove == threadData.startStep_ && threadData.startStep_ != 0) {
             continue;
         }
@@ -1411,21 +1350,10 @@ void KlImproverBase<Derived, GraphT, CommCostFunctionT, MemoryConstraintT, windo
         return;
     }
 
-    // Compact the schedule by closing gaps created by step removals.
-    //
-    // Layout before compaction (example with 2 threads, gap=2, T0 removed 2 steps):
-    //   T0 active: [0..6]  empty: [7,8]  gap: [9,10]  T1 active: [11..18]  empty: [19,20]
-    //
-    // We must preserve: T0 content | gap steps | T1 content | gap steps | T2 content ...
-    // The gap steps contain frozen nodes whose relative position between
-    // thread ranges is essential for staleness feasibility.
-
     unsigned writeCursor = threadDataVec_[0].endStep_ + 1;
     for (unsigned i = 1; i < numThreads; ++i) {
         auto &thread = threadDataVec_[i];
 
-        // 1. Place the gap steps between thread i-1 and thread i.
-        //    Gap occupies [prevThread.originalEndStep_+1 .. thread.startStep_-1].
         const unsigned gapStart = threadDataVec_[i - 1].originalEndStep_ + 1;
         const unsigned gapEnd = thread.startStep_;    // exclusive
         for (unsigned g = gapStart; g < gapEnd; ++g) {
@@ -1435,7 +1363,6 @@ void KlImproverBase<Derived, GraphT, CommCostFunctionT, MemoryConstraintT, windo
             writeCursor++;
         }
 
-        // 2. Place thread i's active steps.
         if (thread.startStep_ <= thread.endStep_) {
             for (unsigned j = thread.startStep_; j <= thread.endStep_; ++j) {
                 if (j != writeCursor) {

@@ -21,9 +21,6 @@ limitations under the License.
 
 namespace osp {
 
-// =============================================================================
-// HEAP VARIANT — for total / totalLambda cost functions
-// =============================================================================
 template <typename GraphT,
           typename CommCostFunctionT,
           typename MemoryConstraintT = NoLocalSearchMemoryConstraint,
@@ -48,8 +45,6 @@ class KlImproverHeap : public KlImproverBase<KlImproverHeap<GraphT, CommCostFunc
     using typename Base::VertexType;
     using typename Base::VertexWorkWeightT;
 
-    // --- Per-thread heap data ---
-
     struct HeapThreadData {
         HeapDatastructure maxGainHeap_;
     };
@@ -58,14 +53,10 @@ class KlImproverHeap : public KlImproverBase<KlImproverHeap<GraphT, CommCostFunc
 
     HeapThreadData &HD(ThreadSearchContext &td) { return heapData_[td.threadId_]; }
 
-    // --- Heap-specific helpers ---
-
     inline void RecomputeNodeMaxGain(VertexType node, NodeSelectionContainerT &affinityTable, ThreadSearchContext &threadData) {
         const auto bestMove = this->template ComputeBestMove<true>(node, affinityTable[node], threadData);
         HD(threadData).maxGainHeap_.Update(node, bestMove);
     }
-
-    // --- Incremental work affinity update methods ---
 
     void UpdateWorkAffinitySameStepOnMoveStep(VertexType node,
                                               const KlMove &move,
@@ -138,8 +129,6 @@ class KlImproverHeap : public KlImproverBase<KlImproverHeap<GraphT, CommCostFunc
 
     void PrintHeap(HeapDatastructure &maxGainHeap) const;
 
-    // --- DISPATCH IMPLEMENTATIONS ---
-
     void ReinitializeMoveFinding(ThreadSearchContext &threadData) {
         auto &hd = HD(threadData);
         hd.maxGainHeap_.Clear();
@@ -161,7 +150,6 @@ class KlImproverHeap : public KlImproverBase<KlImproverHeap<GraphT, CommCostFunc
             return invalid;
         }
 
-        // Tie-breaking: random among top equal-gain nodes
         const unsigned localMax = 50;
         std::vector<VertexType> topGainNodes = hd.maxGainHeap_.GetTopKeys(localMax);
 
@@ -187,8 +175,6 @@ class KlImproverHeap : public KlImproverBase<KlImproverHeap<GraphT, CommCostFunc
                         const PreMoveWorkData<VertexWorkWeightT> &prevWorkData) {
         std::map<VertexType, KlGainUpdateInfo> recomputeMaxGain;
 
-        // Incremental affinity updates
-        // Note: unlockNodes are still LOCKED here, so UpdateNodeCommAffinity skips them.
         UpdateNodeWorkAffinity(threadData.affinityTable_, bestMove, prevWorkData, recomputeMaxGain);
         this->commCostF_.UpdateNodeCommAffinity(bestMove,
                                                 threadData,
@@ -199,16 +185,13 @@ class KlImproverHeap : public KlImproverBase<KlImproverHeap<GraphT, CommCostFunc
 
         this->DebugCostCheck(threadData);
 
-        // Heap updates for recomputed existing nodes
         UpdateMaxGain(bestMove, recomputeMaxGain, threadData);
 
-        // Now unlock and merge — after UpdateNodeCommAffinity has run
         for (const auto v : unlockNodes) {
             threadData.lockManager_.Unlock(v);
         }
         newNodes.insert(newNodes.end(), unlockNodes.begin(), unlockNodes.end());
 
-        // Insert all new nodes into heap
         auto &hd = HD(threadData);
         for (const auto &node : newNodes) {
             threadData.affinityTable_.Insert(node);
@@ -223,10 +206,6 @@ class KlImproverHeap : public KlImproverBase<KlImproverHeap<GraphT, CommCostFunc
 
     void InitializeVariantData() { heapData_.resize(this->threadDataVec_.size()); }
 };
-
-// =============================================================================
-// OUT-OF-LINE DEFINITIONS — Heap variant
-// =============================================================================
 
 template <typename GraphT, typename CommCostFunctionT, typename MemoryConstraintT, unsigned windowSize, typename CostT>
 void KlImproverHeap<GraphT, CommCostFunctionT, MemoryConstraintT, windowSize, CostT>::UpdateNodeWorkAffinity(

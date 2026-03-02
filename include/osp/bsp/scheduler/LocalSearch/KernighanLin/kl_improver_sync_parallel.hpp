@@ -70,14 +70,6 @@ class KlSyncParallelImprover : public KlImprover<GraphT, CommCostFunctionT, Memo
   protected:
     unsigned maxNumThreads_ = std::numeric_limits<unsigned>::max();
 
-    // --- Persistent worker pool ---
-    //
-    // Workers are spawned once (up to the peak thread count) and reused
-    // across parallel loop iterations.  Each round, the main thread sets
-    // numActiveThreads_ and increments roundId_, then waits for all
-    // workers to finish.  Workers with threadId >= numActiveThreads_
-    // skip the work phase and immediately signal completion.
-    //
     std::vector<std::thread> workers_;
     std::mutex poolMtx_;
     std::condition_variable startCv_;    // main -> workers: "start round"
@@ -161,7 +153,8 @@ class KlSyncParallelImprover : public KlImprover<GraphT, CommCostFunctionT, Memo
             return;
         } else {
             // Enforce minimum gap = staleness to guarantee cross-thread feasibility
-            this->parameters_.threadRangeGap_ = std::max(this->parameters_.threadRangeGap_, this->activeSchedule_.GetStaleness());
+            this->parameters_.threadRangeGap_
+                = std::max(this->parameters_.threadRangeGap_, this->activeSchedule_.GetStaleness() + 1);
             const unsigned totalGapSize = (numThreads - 1) * this->parameters_.threadRangeGap_;
             const unsigned bonus = this->parameters_.threadMinRange_;
             const unsigned stepsToDistribute = numSteps - totalGapSize - bonus;
@@ -250,13 +243,6 @@ class KlSyncParallelImprover : public KlImprover<GraphT, CommCostFunctionT, Memo
         this->InitializeDatastructures(schedule);
         const CostT initialCost = this->activeSchedule_.GetCost();
 
-        // Track the global best across all parallel iterations.
-        // Each thread optimizes its local step range independently, so
-        // the stitched-together result may be worse than before.
-        //
-        // We use `schedule` itself as the best-state store: WriteSchedule
-        // only overwrites proc/step assignments while preserving the
-        // dynamic type (important for MaxBspSchedule::GetStaleness).
         CostT bestCost = initialCost;
         bool improved = false;
 
@@ -288,14 +274,10 @@ class KlSyncParallelImprover : public KlImprover<GraphT, CommCostFunctionT, Memo
             const CostT currentCost = this->activeSchedule_.GetCost();
 
             if (currentCost < bestCost) {
-                // Improved: save to schedule (preserves dynamic type)
                 this->activeSchedule_.WriteSchedule(schedule);
                 bestCost = currentCost;
                 improved = true;
             } else if (numThreads > 1 && currentCost > bestCost) {
-                // Regressed: revert to the best known schedule stored
-                // in `schedule`. Re-initialization is heavyweight but
-                // regression should be rare; correctness takes priority.
                 this->activeSchedule_.Initialize(schedule);
                 this->commCostF_.Initialize(this->activeSchedule_, this->procRange_);
             }

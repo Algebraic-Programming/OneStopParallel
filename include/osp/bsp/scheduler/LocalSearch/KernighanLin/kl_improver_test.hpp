@@ -74,9 +74,6 @@ class KlImproverTest : public KlImprover<GraphT, CommCostFunctionT, MemoryConstr
 
     void ComputeViolationsTest() { this->activeSchedule_.ComputeViolations(this->threadDataVec_[0].activeScheduleData_); }
 
-    /// Initialize affinities and move-finding for the given nodes.
-    /// For heap variant: computes affinities and populates the heap.
-    /// For scan variant: computes affinities and stores the best move.
     NodeSelectionContainer &InitMoveFindingTest(const std::vector<VertexType> &n) {
         this->threadDataVec_[0].rewardPenaltyStrat_.penalty_ = 0.0;
         this->threadDataVec_[0].rewardPenaltyStrat_.reward_ = 0.0;
@@ -118,7 +115,6 @@ class KlImproverTest : public KlImprover<GraphT, CommCostFunctionT, MemoryConstr
         return this->threadDataVec_[0].affinityTable_;
     }
 
-    // Backward-compatible aliases for existing test code
     NodeSelectionContainer &InsertGainHeapTest(const std::vector<VertexType> &n) { return InitMoveFindingTest(n); }
 
     NodeSelectionContainer &InsertGainHeapTestPenalty(const std::vector<VertexType> &n) { return InitMoveFindingTestPenalty(n); }
@@ -152,7 +148,6 @@ class KlImproverTest : public KlImprover<GraphT, CommCostFunctionT, MemoryConstr
 
         td.affinityTable_.Trim();
 
-        // PostMoveUpdate handles unlock internally
         this->PostMoveUpdate(bestMove, td, newNodes, unlockNodes, prevWorkData);
 
         return bestMove;
@@ -162,14 +157,10 @@ class KlImproverTest : public KlImprover<GraphT, CommCostFunctionT, MemoryConstr
 
     void GetActiveScheduleTest(BspSchedule<GraphT> &schedule) { this->activeSchedule_.WriteSchedule(schedule); }
 
-    // Step removal/rollback testing
-
     bool CheckRemoveSuperstepTest(unsigned step) { return this->CheckRemoveSuperstep(step); }
 
     bool ScatterNodesSuperstepTest(unsigned step) { return this->ScatterNodesSuperstep(step, this->threadDataVec_[0]); }
 
-    /// Apply a move to the schedule and update cost using a fresh cost computation
-    /// instead of relying on the gain_ field.
     void ApplyMoveWithFreshCost(KlMove move) {
         this->activeSchedule_.ApplyMove(move, this->threadDataVec_[0].activeScheduleData_);
         this->commCostF_.UpdateDatastructureAfterMove(move, this->threadDataVec_[0].startStep_, this->threadDataVec_[0].endStep_);
@@ -178,8 +169,6 @@ class KlImproverTest : public KlImprover<GraphT, CommCostFunctionT, MemoryConstr
         this->threadDataVec_[0].activeScheduleData_.UpdateCost(changeInCost);
     }
 
-    /// Bubble the empty step at position @p step forward to endStep and
-    /// decrement endStep.
     void SwapEmptyStepFwdTest(unsigned step) {
         unsigned oldEndStep = this->threadDataVec_[0].endStep_;
         this->activeSchedule_.SwapEmptyStepFwd(step, oldEndStep);
@@ -191,21 +180,17 @@ class KlImproverTest : public KlImprover<GraphT, CommCostFunctionT, MemoryConstr
         this->commCostF_.FixupSendRecvAfterStepRemoval(step, oldEndStep);
     }
 
-    /// Push a REMOVE_STEP sentinel into appliedMoves_ after the step has
-    /// been physically removed via SwapEmptyStepFwdTest.
     void PushRemoveStepSentinel(unsigned stepToRemove) {
         auto &data = this->threadDataVec_[0].activeScheduleData_;
         CostT syncCost = static_cast<CostT>(this->instance_->SynchronisationCosts());
         data.appliedMoves_.push_back(KlMove::MakeRemoveStep(stepToRemove, syncCost));
     }
 
-    /// Record the sync-cost saving after step removal.
     void UpdateCostAfterRemoval() {
         auto &data = this->threadDataVec_[0].activeScheduleData_;
         data.UpdateCost(static_cast<CostT>(-1.0 * this->instance_->SynchronisationCosts()));
     }
 
-    /// Revert to the best schedule found so far.
     void RevertToBestScheduleTest() {
         this->activeSchedule_.RevertToBestSchedule(this->commCostF_,
                                                    this->threadDataVec_[0].activeScheduleData_,

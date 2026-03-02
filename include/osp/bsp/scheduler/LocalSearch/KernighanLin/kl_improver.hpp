@@ -33,13 +33,6 @@ limitations under the License.
 
 namespace osp {
 
-// =============================================================================
-// FACTORY — compile-time variant selection based on cost function
-//
-//   isMaxCommCostFunction_ == true  (BSP max-comm):     KlImproverScan
-//   isMaxCommCostFunction_ == false (total/totalLambda): KlImproverHeap
-// =============================================================================
-
 template <typename GraphT,
           typename CommCostFunctionT,
           typename MemoryConstraintT = NoLocalSearchMemoryConstraint,
@@ -49,13 +42,7 @@ using KlImprover = std::conditional_t<CommCostFunctionT::isMaxCommCostFunction_,
                                       KlImproverScan<GraphT, CommCostFunctionT, MemoryConstraintT, windowSize, CostT>,
                                       KlImproverHeap<GraphT, CommCostFunctionT, MemoryConstraintT, windowSize, CostT>>;
 
-// =============================================================================
-// Convenience aliases  (previously in kl_include.hpp)
-// =============================================================================
-
 using DoubleCostT = double;
-
-// --- Total comm cost (resolves to KlImproverHeap) ---
 
 template <typename GraphT,
           typename MemoryConstraintT = NoLocalSearchMemoryConstraint,
@@ -79,8 +66,6 @@ using KlTotalCommImproverLocalMemConstr
                  windowSize,
                  DoubleCostT>;
 
-// --- Total lambda comm cost / hypergraph-aware (resolves to KlImproverHeap) ---
-
 template <typename GraphT, typename MemoryConstraintT = NoLocalSearchMemoryConstraint, unsigned windowSize = 1>
 using KlTotalLambdaCommImprover = KlImprover<GraphT,
                                              KlHyperTotalCommCostFunction<GraphT, DoubleCostT, MemoryConstraintT, windowSize>,
@@ -95,8 +80,6 @@ using KlTotalLambdaCommImproverLocalMemConstr
                  MemoryConstraintT,
                  windowSize,
                  DoubleCostT>;
-
-// --- BSP comm cost / Eager|Lazy|Buffered (resolves to KlImproverScan) ---
 
 template <typename GraphT,
           typename MemoryConstraintT = NoLocalSearchMemoryConstraint,
@@ -118,8 +101,6 @@ using KlBspCommImproverLocalMemConstr
                  MemoryConstraintT,
                  windowSize,
                  DoubleCostT>;
-
-// --- MaxBSP comm cost / Eager|Lazy|Buffered (resolves to KlImproverScan) ---
 
 template <typename GraphT,
           typename MemoryConstraintT = NoLocalSearchMemoryConstraint,

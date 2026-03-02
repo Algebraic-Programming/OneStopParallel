@@ -33,34 +33,7 @@ limitations under the License.
 
 namespace osp {
 
-// =============================================================================
-// Synchronized parallel KL improver aliases
-//
-// Thread-safety of the underlying cost functions:
-//
-//   SAFE for multi-threaded use (threadRangeGap >= windowSize recommended):
-//     - KlTotalCommCostFunction:      UpdateDatastructureAfterMove is no-op.
-//                                     No shared mutable comm state.
-//     - KlHyperTotalCommCostFunction: Lambda map mutations scoped to
-//                                     [startStep, endStep]. Safe if gap
-//                                     prevents cross-range neighbor reads.
-//
-//   UNSAFE for multi-threaded use (use numThreads=1 only):
-//     - KlBspCommCostFunction:        ComputeNodeAffinity reads commDs_
-//                                     (lambda map, step max) for nodes
-//                                     outside the thread's step range.
-//                                     Concurrent mutation causes data races.
-//     - KlMaxBspCommCostFunction:     Same issue as KlBspCommCostFunction.
-//
-// For BSP/MaxBSP parallel optimization, the future async improver
-// gives each worker its own schedule copy, avoiding shared-state races.
-// =============================================================================
-
 using DoubleCostT = double;
-
-// ---------------------------------------------------------------------------
-// Total comm cost — SAFE for sync parallel
-// ---------------------------------------------------------------------------
 
 template <typename GraphT,
           typename MemoryConstraintT = NoLocalSearchMemoryConstraint,
@@ -84,10 +57,6 @@ using KlTotalCommImproverLocalMemConstrMt
                              windowSize,
                              DoubleCostT>;
 
-// ---------------------------------------------------------------------------
-// Total lambda comm cost / hypergraph-aware — SAFE for sync parallel
-// ---------------------------------------------------------------------------
-
 template <typename GraphT, typename MemoryConstraintT = NoLocalSearchMemoryConstraint, unsigned windowSize = 1>
 using KlTotalLambdaCommImproverMt
     = KlSyncParallelImprover<GraphT,
@@ -103,13 +72,6 @@ using KlTotalLambdaCommImproverLocalMemConstrMt
                              MemoryConstraintT,
                              windowSize,
                              DoubleCostT>;
-
-// ---------------------------------------------------------------------------
-// BSP comm cost — NOT SAFE for sync parallel (shared commDs_ races)
-//
-// Provided for single-threaded use (SetMaxNumThreads(1)) and for
-// future async parallel where each worker has its own schedule copy.
-// ---------------------------------------------------------------------------
 
 template <typename GraphT,
           typename MemoryConstraintT = NoLocalSearchMemoryConstraint,
@@ -132,12 +94,6 @@ using KlBspCommImproverLocalMemConstrMt
                              MemoryConstraintT,
                              windowSize,
                              DoubleCostT>;
-
-// ---------------------------------------------------------------------------
-// MaxBSP comm cost — NOT SAFE for sync parallel (shared commDs_ races)
-//
-// Same constraints as BSP above.
-// ---------------------------------------------------------------------------
 
 template <typename GraphT,
           typename MemoryConstraintT = NoLocalSearchMemoryConstraint,

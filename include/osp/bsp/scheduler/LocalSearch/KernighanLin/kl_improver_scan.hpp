@@ -23,9 +23,6 @@ limitations under the License.
 
 namespace osp {
 
-// =============================================================================
-// SCAN VARIANT — for BSP max-comm cost functions
-// =============================================================================
 template <typename GraphT,
           typename CommCostFunctionT,
           typename MemoryConstraintT = NoLocalSearchMemoryConstraint,
@@ -47,8 +44,6 @@ class KlImproverScan : public KlImproverBase<KlImproverScan<GraphT, CommCostFunc
     using typename Base::VertexType;
     using typename Base::VertexWorkWeightT;
 
-    // --- Per-thread scan data ---
-
     static constexpr size_t kMaxTieBreakCandidates = 50;
 
     struct ScanThreadData {
@@ -58,8 +53,6 @@ class KlImproverScan : public KlImproverBase<KlImproverScan<GraphT, CommCostFunc
     std::vector<ScanThreadData> scanData_;
 
     ScanThreadData &SD(ThreadSearchContext &td) { return scanData_[td.threadId_]; }
-
-    // --- Core: recompute all unlocked active nodes, collect top moves ---
 
     void ComputeAllAffinitiesAndFindBest(ThreadSearchContext &threadData) {
         auto &sd = SD(threadData);
@@ -91,8 +84,6 @@ class KlImproverScan : public KlImproverBase<KlImproverScan<GraphT, CommCostFunc
         }
     }
 
-    // --- DISPATCH IMPLEMENTATIONS ---
-
     void ReinitializeMoveFinding(ThreadSearchContext &threadData) { ComputeAllAffinitiesAndFindBest(threadData); }
 
     KlMove GetBestMove(ThreadSearchContext &threadData) {
@@ -104,7 +95,6 @@ class KlImproverScan : public KlImproverBase<KlImproverScan<GraphT, CommCostFunc
             return invalid;
         }
 
-        // Uniform random selection among equal-gain candidates
         std::uniform_int_distribution<size_t> dis(0, sd.topMoves_.size() - 1);
         KlMove move = sd.topMoves_[dis(this->gen_)];
 
@@ -119,10 +109,8 @@ class KlImproverScan : public KlImproverBase<KlImproverScan<GraphT, CommCostFunc
                         std::vector<VertexType> &newNodes,
                         std::vector<VertexType> &unlockNodes,
                         [[maybe_unused]] const PreMoveWorkData<VertexWorkWeightT> &prevWorkData) {
-        // Collect new neighbor nodes (unlockNodes still locked → skipped)
         this->CollectNewNodes(bestMove, threadData, newNodes);
 
-        // Now unlock and merge
         for (const auto v : unlockNodes) {
             threadData.lockManager_.Unlock(v);
         }
@@ -132,7 +120,6 @@ class KlImproverScan : public KlImproverBase<KlImproverScan<GraphT, CommCostFunc
             threadData.affinityTable_.Insert(node);
         }
 
-        // Recompute ALL and find next best — correct by construction
         ComputeAllAffinitiesAndFindBest(threadData);
     }
 
