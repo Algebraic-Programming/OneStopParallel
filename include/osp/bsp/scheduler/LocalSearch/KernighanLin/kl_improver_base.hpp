@@ -1411,9 +1411,31 @@ void KlImproverBase<Derived, GraphT, CommCostFunctionT, MemoryConstraintT, windo
         return;
     }
 
+    // Compact the schedule by closing gaps created by step removals.
+    //
+    // Layout before compaction (example with 2 threads, gap=2, T0 removed 2 steps):
+    //   T0 active: [0..6]  empty: [7,8]  gap: [9,10]  T1 active: [11..18]  empty: [19,20]
+    //
+    // We must preserve: T0 content | gap steps | T1 content | gap steps | T2 content ...
+    // The gap steps contain frozen nodes whose relative position between
+    // thread ranges is essential for staleness feasibility.
+
     unsigned writeCursor = threadDataVec_[0].endStep_ + 1;
     for (unsigned i = 1; i < numThreads; ++i) {
         auto &thread = threadDataVec_[i];
+
+        // 1. Place the gap steps between thread i-1 and thread i.
+        //    Gap occupies [prevThread.originalEndStep_+1 .. thread.startStep_-1].
+        const unsigned gapStart = threadDataVec_[i - 1].originalEndStep_ + 1;
+        const unsigned gapEnd = thread.startStep_;    // exclusive
+        for (unsigned g = gapStart; g < gapEnd; ++g) {
+            if (g != writeCursor) {
+                activeSchedule_.SwapSteps(g, writeCursor);
+            }
+            writeCursor++;
+        }
+
+        // 2. Place thread i's active steps.
         if (thread.startStep_ <= thread.endStep_) {
             for (unsigned j = thread.startStep_; j <= thread.endStep_; ++j) {
                 if (j != writeCursor) {
