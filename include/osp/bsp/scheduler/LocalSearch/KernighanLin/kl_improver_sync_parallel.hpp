@@ -18,6 +18,8 @@ limitations under the License.
 
 #pragma once
 
+#include <condition_variable>
+#include <mutex>
 #include <thread>
 #include <vector>
 
@@ -49,6 +51,16 @@ namespace osp {
 /// the full schedule cost from scratch, correcting any cross-boundary
 /// approximations from the scoped per-thread cost model.
 ///
+/// Thread gap safety:
+///   SetThreadBoundaries enforces threadRangeGap_ >= staleness.
+///   This guarantees cross-thread edges always have gap > staleness
+///   (since moves are clamped to [startStep_, endStep_]).
+///   Thread-to-gap violations are detected locally (gap nodes are
+///   immutable), so each thread's feasibility tracking is reliable.
+///   Combined with boundary step removal protection in
+///   SelectNodesCheckRemoveSuperstep, this eliminates the need for
+///   a post-sync feasibility check.
+///
 template <typename GraphT,
           typename CommCostFunctionT,
           typename MemoryConstraintT = NoLocalSearchMemoryConstraint,
@@ -58,6 +70,89 @@ class KlSyncParallelImprover : public KlImprover<GraphT, CommCostFunctionT, Memo
   protected:
     unsigned maxNumThreads_ = std::numeric_limits<unsigned>::max();
 
+    // --- Persistent worker pool ---
+    //
+    // Workers are spawned once (up to the peak thread count) and reused
+    // across parallel loop iterations.  Each round, the main thread sets
+    // numActiveThreads_ and increments roundId_, then waits for all
+    // workers to finish.  Workers with threadId >= numActiveThreads_
+    // skip the work phase and immediately signal completion.
+    //
+    std::vector<std::thread> workers_;
+    std::mutex poolMtx_;
+    std::condition_variable startCv_;    // main -> workers: "start round"
+    std::condition_variable doneCv_;     // workers -> main: "round complete"
+    unsigned numActiveThreads_ = 0;      // how many workers should run this round
+    unsigned pendingWorkers_ = 0;        // workers that haven't finished yet
+    unsigned roundId_ = 0;               // incremented each dispatch
+    unsigned poolSize_ = 0;              // total live worker threads
+    bool shutdown_ = false;
+
+    void WorkerLoop(unsigned threadId) {
+        unsigned lastRound = 0;
+        while (true) {
+            {
+                std::unique_lock<std::mutex> lock(poolMtx_);
+                startCv_.wait(lock, [&] { return roundId_ > lastRound || shutdown_; });
+                if (shutdown_) {
+                    return;
+                }
+                lastRound = roundId_;
+            }
+
+            // Only workers within the active range do real work
+            if (threadId < numActiveThreads_) {
+                this->RunLocalSearch(this->threadDataVec_[threadId]);
+            }
+
+            {
+                std::lock_guard<std::mutex> lock(poolMtx_);
+                pendingWorkers_--;
+                if (pendingWorkers_ == 0) {
+                    doneCv_.notify_one();
+                }
+            }
+        }
+    }
+
+    void EnsurePoolSize(unsigned numThreads) {
+        if (numThreads <= poolSize_) {
+            return;
+        }
+
+        for (unsigned t = poolSize_; t < numThreads; ++t) {
+            workers_.emplace_back([this, t]() { this->WorkerLoop(t); });
+        }
+        poolSize_ = numThreads;
+    }
+
+    void DispatchAndWait(unsigned numThreads) {
+        EnsurePoolSize(numThreads);
+
+        std::unique_lock<std::mutex> lock(poolMtx_);
+        numActiveThreads_ = numThreads;
+        pendingWorkers_ = poolSize_;
+        roundId_++;
+        startCv_.notify_all();
+
+        doneCv_.wait(lock, [&] { return pendingWorkers_ == 0; });
+    }
+
+    void ShutdownPool() {
+        {
+            std::lock_guard<std::mutex> lock(poolMtx_);
+            shutdown_ = true;
+            startCv_.notify_all();
+        }
+        for (auto &w : workers_) {
+            w.join();
+        }
+        workers_.clear();
+        poolSize_ = 0;
+        shutdown_ = false;
+        roundId_ = 0;
+    }
+
     void SetThreadBoundaries(const unsigned numThreads, const unsigned numSteps, bool lastThreadLargeRange) {
         if (numThreads == 1) {
             this->SetStartStep(0, this->threadDataVec_[0]);
@@ -65,6 +160,7 @@ class KlSyncParallelImprover : public KlImprover<GraphT, CommCostFunctionT, Memo
             this->threadDataVec_[0].originalEndStep_ = this->threadDataVec_[0].endStep_;
             return;
         } else {
+            // Enforce minimum gap = staleness to guarantee cross-thread feasibility
             this->parameters_.threadRangeGap_ = std::max(this->parameters_.threadRangeGap_, this->activeSchedule_.GetStaleness());
             const unsigned totalGapSize = (numThreads - 1) * this->parameters_.threadRangeGap_;
             const unsigned bonus = this->parameters_.threadMinRange_;
@@ -126,7 +222,11 @@ class KlSyncParallelImprover : public KlImprover<GraphT, CommCostFunctionT, Memo
     explicit KlSyncParallelImprover(unsigned seed)
         : KlImprover<GraphT, CommCostFunctionT, MemoryConstraintT, windowSize, CostT>(seed) {}
 
-    virtual ~KlSyncParallelImprover() = default;
+    virtual ~KlSyncParallelImprover() {
+        if (poolSize_ > 0) {
+            ShutdownPool();
+        }
+    }
 
     void SetMaxNumThreads(const unsigned numThreads) { maxNumThreads_ = numThreads; }
 
@@ -170,23 +270,18 @@ class KlSyncParallelImprover : public KlImprover<GraphT, CommCostFunctionT, Memo
                 threadData.selectionStrategy_.Setup(threadData.startStep_, threadData.endStep_);
                 this->RunLocalSearch(threadData);
             } else {
-                std::vector<std::thread> workers;
-                workers.reserve(numThreads);
-
+                // Prepare all thread data before dispatch
                 for (unsigned t = 0; t < numThreads; ++t) {
                     auto &threadData = this->threadDataVec_[t];
                     threadData.activeScheduleData_.InitializeCost(this->activeSchedule_.GetCost());
                     threadData.selectionStrategy_.Setup(threadData.startStep_, threadData.endStep_);
-
+#ifdef KL_DEBUG_1
                     std::cout << "Thread " << t << " processing steps " << threadData.startStep_ << " to " << threadData.endStep_
                               << std::endl;
-
-                    workers.emplace_back([this, &threadData]() { this->RunLocalSearch(threadData); });
+#endif
                 }
 
-                for (auto &w : workers) {
-                    w.join();
-                }
+                DispatchAndWait(numThreads);
             }
 
             this->SynchronizeActiveSchedule(numThreads);
@@ -209,6 +304,10 @@ class KlSyncParallelImprover : public KlImprover<GraphT, CommCostFunctionT, Memo
                 SetNumThreads(numThreads, this->activeSchedule_.NumSteps());
                 this->threadFinishedVec_.resize(numThreads);
             }
+        }
+
+        if (poolSize_ > 0) {
+            ShutdownPool();
         }
 
         this->CleanupDatastructures();

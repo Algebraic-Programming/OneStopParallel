@@ -1373,7 +1373,7 @@ bool KlImproverBase<Derived, GraphT, CommCostFunctionT, MemoryConstraintT, windo
             if (threadData.activeScheduleData_.newViolations_.size() > 0) {
                 for (const auto &vertexEdgePair : threadData.activeScheduleData_.newViolations_) {
                     const auto &vertex = vertexEdgePair.first;
-                    const auto vertexStep = activeSchedule_.AssignedSuperstep(vertex);
+                    const unsigned vertexStep = activeSchedule_.AssignedSuperstep(vertex);
                     if (vertexStep >= threadData.startStep_ && vertexStep <= threadData.endStep_) {
                         threadData.affinityTable_.Insert(vertex);
                     }
