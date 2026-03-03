@@ -444,7 +444,7 @@ struct MaxCommDatastructure {
                 ArrangeSuperstepCommData(oldEndStep);
                 return;
             }
-            const unsigned numProcs = stepProcSend_[0].size();
+            const unsigned numProcs = static_cast<unsigned>(stepProcSend_[0].size());
             for (unsigned p = 0; p < numProcs; p++) {
                 stepProcSend_[removedStep - 1][p] += stepProcSend_[oldEndStep][p];
                 stepProcReceive_[removedStep - 1][p] += stepProcReceive_[oldEndStep][p];
@@ -516,7 +516,7 @@ struct MaxCommDatastructure {
                 ComputeCommDatastructures(startStep, endStep);
                 return;
             }
-            const unsigned numProcs = stepProcSend_[0].size();
+            const unsigned numProcs = static_cast<unsigned>(stepProcSend_[0].size());
             for (unsigned p = 0; p < numProcs; p++) {
                 stepProcSend_[insertedStep - 1][p] -= stepProcSend_[insertedStep][p];
                 stepProcReceive_[insertedStep - 1][p] -= stepProcReceive_[insertedStep][p];

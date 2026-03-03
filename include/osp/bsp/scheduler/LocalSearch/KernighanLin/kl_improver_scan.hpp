@@ -78,7 +78,7 @@ class KlImproverScan : public KlImproverBase<KlImproverScan<GraphT, CommCostFunc
                 bestGain = bestMove.gain_;
                 sd.topMoves_.clear();
                 sd.topMoves_.push_back(bestMove);
-            } else if (bestMove.gain_ == bestGain && sd.topMoves_.size() < kMaxTieBreakCandidates) {
+            } else if (std::abs(bestMove.gain_ - bestGain) < 1e-9 && sd.topMoves_.size() < kMaxTieBreakCandidates) {
                 sd.topMoves_.push_back(bestMove);
             }
         }

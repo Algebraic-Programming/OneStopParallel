@@ -152,9 +152,10 @@ class KlSyncParallelImprover : public KlImprover<GraphT, CommCostFunctionT, Memo
             this->threadDataVec_[0].originalEndStep_ = this->threadDataVec_[0].endStep_;
             return;
         } else {
-            // Enforce minimum gap = staleness to guarantee cross-thread feasibility
-            this->parameters_.threadRangeGap_
-                = std::max(this->parameters_.threadRangeGap_, this->activeSchedule_.GetStaleness() + 1);
+            // Enforce minimum gap = staleness to guarantee cross-thread feasibility.
+            // SynchronizeActiveSchedule preserves padding between content and gap
+            // so that compaction does not collapse the staleness distance.
+            this->parameters_.threadRangeGap_ = std::max(this->parameters_.threadRangeGap_, this->activeSchedule_.GetStaleness());
             const unsigned totalGapSize = (numThreads - 1) * this->parameters_.threadRangeGap_;
             const unsigned bonus = this->parameters_.threadMinRange_;
             const unsigned stepsToDistribute = numSteps - totalGapSize - bonus;

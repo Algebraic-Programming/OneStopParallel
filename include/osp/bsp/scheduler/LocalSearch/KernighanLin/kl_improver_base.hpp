@@ -557,8 +557,6 @@ class KlImproverBase : public ImprovementScheduler<GraphT> {
             std::unordered_set<VertexType> localLock;
             unsigned numIter = 0;
             const unsigned minIter = numViolations / 4;
-
-            using EdgeType = typename std::decay_t<decltype(currentViolations)>::value_type;
             std::vector<EdgeType> violationVec(currentViolations.begin(), currentViolations.end());
             std::shuffle(violationVec.begin(), violationVec.end(), gen_);
             size_t vecIdx = 0;
@@ -1350,11 +1348,37 @@ void KlImproverBase<Derived, GraphT, CommCostFunctionT, MemoryConstraintT, windo
         return;
     }
 
+    // Compact the schedule by closing inter-thread gaps from step removals,
+    // while preserving enough empty steps between content and gap zones
+    // to maintain staleness feasibility.
+    //
+    // When a thread removes k steps, SwapEmptyStepFwd pushes empty steps
+    // to [endStep_+1 .. originalEndStep_].  These buffer the distance
+    // from the thread's last content node to the first gap step.
+    // Compacting all of them away would collapse the distance to 1,
+    // violating staleness.  We keep min(removedSteps, staleness - 1)
+    // empty steps as padding.
+    //
+    // Right-side padding (gap -> next thread) is not needed because
+    // SwapEmptyStepFwd only shifts content toward startStep_, leaving
+    // the next thread's startStep_ boundary intact.
+
+    const unsigned staleness = activeSchedule_.GetStaleness();
+    const unsigned neededPadding = (staleness > 1) ? (staleness - 1) : 0;
+
     unsigned writeCursor = threadDataVec_[0].endStep_ + 1;
     for (unsigned i = 1; i < numThreads; ++i) {
+        auto &prevThread = threadDataVec_[i - 1];
         auto &thread = threadDataVec_[i];
 
-        const unsigned gapStart = threadDataVec_[i - 1].originalEndStep_ + 1;
+        // Preserve distance buffer: keep up to (staleness - 1) empty
+        // steps between previous thread's content and the gap zone.
+        const unsigned removedSteps = prevThread.originalEndStep_ - prevThread.endStep_;
+        const unsigned padding = std::min(removedSteps, neededPadding);
+        writeCursor += padding;
+
+        // Place gap steps (frozen nodes between thread ranges)
+        const unsigned gapStart = prevThread.originalEndStep_ + 1;
         const unsigned gapEnd = thread.startStep_;    // exclusive
         for (unsigned g = gapStart; g < gapEnd; ++g) {
             if (g != writeCursor) {
