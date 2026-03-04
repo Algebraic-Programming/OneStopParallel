@@ -765,11 +765,11 @@ BOOST_AUTO_TEST_CASE(MediumWideDagAllPolicies) {
     dag.AddVertex(6, 4, 1);    // v7
 
     // Source → all middle
-    for (int i = 1; i <= 6; ++i) {
+    for (unsigned i = 1; i <= 6; ++i) {
         dag.AddEdge(0, i, 1);
     }
     // All middle → sink
-    for (int i = 1; i <= 6; ++i) {
+    for (unsigned i = 1; i <= 6; ++i) {
         dag.AddEdge(i, 7, 1);
     }
     // Lateral edges: chain through middle layer (same step, tests same-step moves)
@@ -835,9 +835,9 @@ BOOST_AUTO_TEST_CASE(MediumPipelineFiveLayers) {
     }
 
     // Edges: each layer connects to next layer (full bipartite)
-    for (int layer = 0; layer < 4; ++layer) {
-        for (int src = 0; src < 2; ++src) {
-            for (int dst = 0; dst < 2; ++dst) {
+    for (unsigned layer = 0; layer < 4; ++layer) {
+        for (unsigned src = 0; src < 2; ++src) {
+            for (unsigned dst = 0; dst < 2; ++dst) {
                 dag.AddEdge(layer * 2 + src, (layer + 1) * 2 + dst, 1);
             }
         }
@@ -895,8 +895,8 @@ BOOST_AUTO_TEST_CASE(RandomLayeredDag30Nodes) {
 
     // Create nodes with random weights
     for (unsigned i = 0; i < kTotalNodes; ++i) {
-        unsigned work = 2 + (rng() % 10);
-        unsigned comm = 2 + (rng() % 8);
+        int work = static_cast<int>(2 + (rng() % 10));
+        int comm = static_cast<int>(2 + (rng() % 8));
         dag.AddVertex(work, comm, 1);
     }
 
@@ -1044,13 +1044,13 @@ BOOST_AUTO_TEST_CASE(NonUniformSendCostsFourProcs) {
 BOOST_AUTO_TEST_CASE(CostMonotonicity) {
     Graph dag;
     // 12-node layered graph
-    for (int i = 0; i < 12; ++i) {
-        dag.AddVertex(3 + (i % 4), 4 + (i % 3), 1);
+    for (unsigned i = 0; i < 12; ++i) {
+        dag.AddVertex(static_cast<int>(3 + (i % 4)), static_cast<int>(4 + (i % 3)), 1);
     }
     // Layer 0 (0-2) → Layer 1 (3-5) → Layer 2 (6-8) → Layer 3 (9-11)
-    for (int layer = 0; layer < 3; ++layer) {
-        for (int s = 0; s < 3; ++s) {
-            for (int d = 0; d < 3; ++d) {
+    for (unsigned layer = 0; layer < 3; ++layer) {
+        for (unsigned s = 0; s < 3; ++s) {
+            for (unsigned d = 0; d < 3; ++d) {
                 if ((s + d) % 2 == 0) {    // sparse connectivity
                     dag.AddEdge(layer * 3 + s, (layer + 1) * 3 + d, 1);
                 }
@@ -1072,7 +1072,7 @@ BOOST_AUTO_TEST_CASE(CostMonotonicity) {
 
         MaxBspSchedule<Graph> schedule(instance);
         std::vector<unsigned> procs(12), steps(12);
-        for (int i = 0; i < 12; ++i) {
+        for (unsigned i = 0; i < 12; ++i) {
             procs[i] = i % 3;
             steps[i] = (i / 3) * 2;
         }
