@@ -44,21 +44,18 @@ struct MaxCommDatastructure {
     std::vector<std::vector<CommWeightT>> stepProcSend_;
     std::vector<std::vector<CommWeightT>> stepProcReceive_;
 
-    // Caches for fast cost calculation (Global Max/Second Max per step)
     std::vector<CommWeightT> stepMaxCommCache_;
     std::vector<CommWeightT> stepSecondMaxCommCache_;
     std::vector<unsigned> stepMaxCommCountCache_;
 
     CommWeightT maxCommWeight_ = 0;
 
-    // Select the appropriate container type based on the policy's ValueType
     using ContainerType = typename std::conditional<std::is_same<typename CommPolicy::ValueType, unsigned>::value,
                                                     LambdaVectorContainer<VertexType>,
                                                     GenericLambdaVectorContainer<VertexType, typename CommPolicy::ValueType>>::type;
 
     ContainerType nodeLambdaMap_;
 
-    // Optimization: Scratchpad for update_datastructure_after_move to avoid allocations
     std::vector<unsigned> affectedStepsList_;
     std::vector<bool> stepIsAffected_;
 
@@ -76,21 +73,8 @@ struct MaxCommDatastructure {
 
     inline unsigned StepMaxCommCount(unsigned step) const { return stepMaxCommCountCache_[step]; }
 
-    /// Returns the list of steps where send/recv arrays were modified by the last
-    /// UpdateDatastructureAfterMove call.  For Lazy/Buffered policies these include
-    /// the min(child_steps)-1 steps where communication is actually placed, which
-    /// may differ from the node positions used by the higher-level changedSteps set.
     inline const std::vector<unsigned> &GetLastAffectedCommSteps() const { return affectedStepsList_; }
 
-    /// Compute the absolute new max comm at a step given sparse send/recv deltas.
-    ///
-    /// Shared by BSP (which subtracts StepMaxComm to get the delta) and
-    /// MaxBSP (which needs the absolute value for the coupled formula).
-    ///
-    /// Three-case fast path:
-    ///   1. Some dirty entry meets or exceeds old max → return dirty max
-    ///   2. Not all old max-holders were reduced    → old max survives
-    ///   3. All max-holders reduced                 → scan non-dirty entries
     CommWeightT ComputeNewMaxComm(unsigned step,
                                   const FastDeltaTracker<CommWeightT> &deltaSend,
                                   const FastDeltaTracker<CommWeightT> &deltaRecv) const {
@@ -237,7 +221,6 @@ struct MaxCommDatastructure {
     void UpdateDatastructureAfterMove(const KlMove &move, unsigned startStep, unsigned endStep) {
         const auto &graph = instance_->GetComputationalDag();
 
-        // Prepare Scratchpad (Avoids Allocations) ---
         for (unsigned step : affectedStepsList_) {
             if (step < stepIsAffected_.size()) {
                 stepIsAffected_[step] = false;
@@ -245,8 +228,6 @@ struct MaxCommDatastructure {
         }
         affectedStepsList_.clear();
 
-        // MarkStep: returns true (and records the step) if within [startStep, endStep],
-        // false otherwise. Policy functions check return value before writing.
         auto MarkStep = [&](unsigned step) -> bool {
             if (step >= startStep && step <= endStep && step < stepIsAffected_.size()) {
                 if (!stepIsAffected_[step]) {
@@ -265,16 +246,8 @@ struct MaxCommDatastructure {
         const unsigned toProc = move.toProc_;
         const CommWeightT commWNode = graph.VertexCommWeight(node);
 
-        // Handle Node Movement (Outgoing Edges: Node -> Children)
-        //
-        // The node is in our step range, but children may be outside.
-        // Comm steps determined by the policy may fall outside our range.
-        // MarkStep returns false for those, so the policy skips the writes.
-
         if (fromStep != toStep) {
-            // Case 1: Node changes Step
             for (const auto [proc, val] : nodeLambdaMap_.IterateProcEntries(node)) {
-                // A. Remove Old (Sender: fromProc, Receiver: proc)
                 if (proc != fromProc) {
                     const CommWeightT cost = commWNode * instance_->SendCosts(fromProc, proc);
                     if (cost > 0) {
@@ -282,7 +255,6 @@ struct MaxCommDatastructure {
                     }
                 }
 
-                // B. Add New (Sender: toProc, Receiver: proc)
                 if (proc != toProc) {
                     const CommWeightT cost = commWNode * instance_->SendCosts(toProc, proc);
                     if (cost > 0) {
@@ -292,8 +264,6 @@ struct MaxCommDatastructure {
             }
 
         } else if (fromProc != toProc) {
-            // Case 2: Node stays in same Step, but changes Processor
-
             for (const auto [proc, val] : nodeLambdaMap_.IterateProcEntries(node)) {
                 // Remove Old (Sender: fromProc, Receiver: proc)
                 if (proc != fromProc) {
@@ -312,12 +282,6 @@ struct MaxCommDatastructure {
                 }
             }
         }
-
-        // Update Parents' Outgoing Communication (Parents → Node)
-        //
-        // THREAD SAFETY: Skip parents whose step is outside [startStep, endStep].
-        // Their lambda entries belong to another thread's domain and must not be
-        // modified. Stale entries are corrected during post-synchronization rebuild.
 
         for (const auto &parent : graph.Parents(node)) {
             const unsigned parentStep = activeSchedule_->AssignedSuperstep(parent);
@@ -338,7 +302,6 @@ struct MaxCommDatastructure {
             auto &val = nodeLambdaMap_.GetProcEntry(parent, fromProc);
             const bool removedFromProc = CommPolicy::RemoveChild(val, fromStep);
 
-            // 1. Handle Removal from fromProc
             if (removedFromProc) {
                 if (fromProc != parentProc) {
                     const CommWeightT cost = commWParent * instance_->SendCosts(parentProc, fromProc);
@@ -352,7 +315,6 @@ struct MaxCommDatastructure {
             auto &valTo = nodeLambdaMap_.GetProcEntry(parent, toProc);
             const bool addedToProc = CommPolicy::AddChild(valTo, toStep);
 
-            // 2. Handle Addition to toProc
             if (addedToProc) {
                 if (toProc != parentProc) {
                     const CommWeightT cost = commWParent * instance_->SendCosts(parentProc, toProc);
@@ -363,38 +325,23 @@ struct MaxCommDatastructure {
             }
         }
 
-        // Re-arrange Affected Steps
         for (unsigned step : affectedStepsList_) {
             ArrangeSuperstepCommData(step);
         }
     }
 
-    /// After a step removal (bubble empty step forward from removedStep to endStep),
-    /// all nodes that were at step S > removedStep (within the thread's range) are now at step S-1.
-    /// Update lambda entries to match the new step numbering.
-    /// Only needed for policies that store step values (Lazy, Buffered).
-    ///
-    /// Uses the (already updated) SetSchedule to iterate only affected nodes,
-    /// yielding O(shifted_nodes × parents) instead of O(|V| × P × entries).
-    ///
-    /// THREAD SAFETY: Only modifies lambda entries of parents within [startStep, endStep].
-    /// Parents outside this range are skipped — their stale entries are corrected at sync.
     void UpdateLambdaAfterStepRemoval(unsigned removedStep, unsigned startStep, unsigned endStep) {
         if constexpr (std::is_same_v<typename CommPolicy::ValueType, std::vector<unsigned>>) {
+            const auto &psv = activeSchedule_->GetSetSchedule().GetProcessorStepVertices();
+            endStep = std::min(endStep, static_cast<unsigned>(psv.size() - 1));
+
             if (endStep <= removedStep) {
                 return;    // Nothing shifted
             }
 
             const auto &graph = instance_->GetComputationalDag();
-            const auto &psv = activeSchedule_->GetSetSchedule().GetProcessorStepVertices();
             const unsigned numProcs = instance_->NumberOfProcessors();
 
-            // After SwapEmptyStepFwd(removedStep, endStep):
-            //   psv[newStep] contains nodes now at newStep that were at newStep+1 (old).
-            //   Lambda entries still hold old value (newStep+1), need to become newStep.
-            //
-            // Iterate HIGH to LOW to avoid double-processing when two children of the
-            // same parent on the same proc are in consecutive shifted steps.
             for (unsigned newStep = endStep - 1;; newStep--) {
                 const unsigned oldStep = newStep + 1;
                 for (unsigned p = 0; p < numProcs; p++) {
@@ -421,24 +368,15 @@ struct MaxCommDatastructure {
         }
     }
 
-    /// Overload for single-threaded mode (backward compatible, no parent filtering)
     void UpdateLambdaAfterStepRemoval(unsigned removedStep) {
         if constexpr (std::is_same_v<typename CommPolicy::ValueType, std::vector<unsigned>>) {
             UpdateLambdaAfterStepRemoval(removedStep, 0, std::numeric_limits<unsigned>::max());
         }
     }
 
-    /// After step removal, the SwapSteps loop bubbled the removed step's data to
-    /// oldEndStep. For Lazy/Buffered, that empty step can carry comm data (from
-    /// min(child_steps)-1 attribution). Merge it into removedStep-1 (the new
-    /// correct position) but KEEP oldEndStep as a backup so that insertion can
-    /// reverse this merge in O(P).
-    /// Call AFTER the SwapSteps loop and AFTER UpdateLambdaAfterStepRemoval.
     void FixupSendRecvAfterStepRemoval(unsigned removedStep, unsigned oldEndStep) {
         if constexpr (std::is_same_v<typename CommPolicy::ValueType, std::vector<unsigned>>) {
             if (removedStep == 0) {
-                // No position -1 to merge into. Clear backup — data is lost.
-                // Insertion at step 0 will need a full recompute (extremely rare).
                 std::fill(stepProcSend_[oldEndStep].begin(), stepProcSend_[oldEndStep].end(), 0);
                 std::fill(stepProcReceive_[oldEndStep].begin(), stepProcReceive_[oldEndStep].end(), 0);
                 ArrangeSuperstepCommData(oldEndStep);
@@ -454,26 +392,14 @@ struct MaxCommDatastructure {
         }
     }
 
-    /// After a step insertion (reverting a removal), increment lambda entries
-    /// to match the new step numbering.
-    /// Only needed for policies that store step values (Lazy, Buffered).
-    ///
-    /// Uses the (already updated) SetSchedule to iterate only affected nodes.
-    ///
-    /// THREAD SAFETY: Only modifies lambda entries of parents within [startStep, endStep].
     void UpdateLambdaAfterStepInsertion(unsigned insertedStep, unsigned startStep, unsigned endStep) {
         if constexpr (std::is_same_v<typename CommPolicy::ValueType, std::vector<unsigned>>) {
-            const auto &graph = instance_->GetComputationalDag();
             const auto &psv = activeSchedule_->GetSetSchedule().GetProcessorStepVertices();
+            endStep = std::min(endStep, static_cast<unsigned>(psv.size() - 1));
+
+            const auto &graph = instance_->GetComputationalDag();
             const unsigned numProcs = instance_->NumberOfProcessors();
 
-            // After SwapEmptyStepBwd(endStep, insertedStep):
-            //   psv[newStep] contains nodes now at newStep that were at newStep-1 (old).
-            //   Lambda entries still hold old value (newStep-1), need to become newStep.
-            //
-            // Iterate HIGH to LOW: process higher steps first so that when two children
-            // of the same parent on the same proc are in consecutive shifted steps,
-            // we don't accidentally re-increment a freshly-incremented entry.
             for (unsigned newStep = endStep; newStep > insertedStep; newStep--) {
                 const unsigned oldStep = newStep - 1;
                 for (unsigned p = 0; p < numProcs; p++) {
@@ -481,7 +407,7 @@ struct MaxCommDatastructure {
                         for (const auto &parent : graph.Parents(node)) {
                             const unsigned parentStep = activeSchedule_->AssignedSuperstep(parent);
                             if (parentStep < startStep || parentStep > endStep) {
-                                continue;    // Thread safety: skip parents in other threads' ranges
+                                continue;
                             }
                             auto &val = nodeLambdaMap_.GetProcEntry(parent, p);
                             for (auto &entry : val) {
@@ -497,22 +423,15 @@ struct MaxCommDatastructure {
         }
     }
 
-    /// Overload for single-threaded mode (backward compatible, no parent filtering)
     void UpdateLambdaAfterStepInsertion(unsigned insertedStep) {
         if constexpr (std::is_same_v<typename CommPolicy::ValueType, std::vector<unsigned>>) {
             UpdateLambdaAfterStepInsertion(insertedStep, 0, std::numeric_limits<unsigned>::max());
         }
     }
 
-    /// After step insertion, the SwapSteps loop brought the backup data from
-    /// beyond endStep back to position insertedStep. Position insertedStep-1
-    /// still has the merged data (original + backup from removal). Subtract
-    /// the backup to un-merge, restoring both positions to their correct state.
-    /// Call AFTER the SwapSteps loop and AFTER UpdateLambdaAfterStepInsertion.
     void FixupSendRecvAfterStepInsertion(unsigned insertedStep, unsigned startStep, unsigned endStep) {
         if constexpr (std::is_same_v<typename CommPolicy::ValueType, std::vector<unsigned>>) {
             if (insertedStep == 0) {
-                // Backup was lost during removal (cleared). Full recompute needed.
                 ComputeCommDatastructures(startStep, endStep);
                 return;
             }

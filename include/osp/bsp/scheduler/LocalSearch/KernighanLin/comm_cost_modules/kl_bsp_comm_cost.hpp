@@ -116,27 +116,12 @@ struct KlBspCommCostFunction {
 
     auto StepMaxComm(unsigned step) const { return commDs_.StepMaxComm(step); }
 
-    /// Returns the steps where send/recv arrays changed during the last move.
-    /// For Lazy/Buffered, these include the min(child_steps)-1 comm steps.
     const std::vector<unsigned> &GetLastAffectedCommSteps() const { return commDs_.GetLastAffectedCommSteps(); }
 
-    /// Check if any comm step that node's gain depends on is in changedSteps.
-    ///
-    /// For Lazy/Buffered, CalculateDeltaRemove/Add produce deltas at positions
-    /// v-1 where v is ANY step value in a lambda entry (not just the minimum).
-    /// For example, CalculateDeltaRemove with val=[19,30,45] and nodeStep=19
-    /// produces deltas at step 18 (min-1) AND step 29 (nextMin-1).
-    ///
-    /// So the complete dependency set is: {v-1 : v ∈ lambda[N or parent][q]}.
-    /// We check if any of these fall in changedSteps.
     bool NodeCommDependsOnChangedSteps(VertexType node, const std::unordered_set<unsigned> &changedSteps) {
-        // For Eager (ValueType=unsigned, just a count): comm is always at node
-        // steps, fully covered by window and parent-position checks.
         if constexpr (std::is_same_v<typename CommPolicy::ValueType, unsigned>) {
             return false;
         } else {
-            // For Lazy/Buffered (ValueType=vector<unsigned>): check if any
-            // step value v in any lambda entry has (v-1) in changedSteps.
             auto checkLambda = [&](VertexType n) -> bool {
                 for (const auto [proc, val] : commDs_.nodeLambdaMap_.IterateProcEntries(n)) {
                     for (unsigned v : val) {
@@ -148,12 +133,9 @@ struct KlBspCommCostFunction {
                 return false;
             };
 
-            // Check node's own outgoing comm steps
             if (checkLambda(node)) {
                 return true;
             }
-
-            // Check all parents' comm steps
             const auto &graph = instance_->GetComputationalDag();
             for (const auto &parent : graph.Parents(node)) {
                 if (checkLambda(parent)) {
@@ -168,7 +150,6 @@ struct KlBspCommCostFunction {
         commDs_.UpdateLambdaAfterStepRemoval(removedStep, startStep, endStep);
     }
 
-    /// Overload for backward compatibility (single-threaded)
     void UpdateLambdaAfterStepRemoval(unsigned removedStep) { commDs_.UpdateLambdaAfterStepRemoval(removedStep); }
 
     void FixupSendRecvAfterStepRemoval(unsigned removedStep, unsigned oldEndStep) {
@@ -179,15 +160,12 @@ struct KlBspCommCostFunction {
         commDs_.UpdateLambdaAfterStepInsertion(insertedStep, startStep, endStep);
     }
 
-    /// Overload for backward compatibility (single-threaded)
     void UpdateLambdaAfterStepInsertion(unsigned insertedStep) { commDs_.UpdateLambdaAfterStepInsertion(insertedStep); }
 
     void FixupSendRecvAfterStepInsertion(unsigned insertedStep, unsigned startStep, unsigned endStep) {
         commDs_.FixupSendRecvAfterStepInsertion(insertedStep, startStep, endStep);
     }
 
-    /// Unified entry point called by the base class.
-    /// Additive cost: compute work affinities, then layer comm affinities on top.
     template <typename AffinityTableT>
     void ComputeNodeAffinity(VertexType node,
                              AffinityTableT &affinityTableNode,
@@ -210,8 +188,6 @@ struct KlBspCommCostFunction {
         const unsigned nodeProc = activeSchedule_->AssignedProcessor(node);
         const unsigned windowBound = EndIdx(nodeStep, endStep);
         const unsigned nodeStartIdx = StartIdx(nodeStep, startStep);
-
-        // ========== Violation handling (staleness = 1) ==========
 
         for (const auto &target : instance_->GetComputationalDag().Children(node)) {
             const unsigned targetStep = activeSchedule_->AssignedSuperstep(target);
@@ -274,13 +250,7 @@ struct KlBspCommCostFunction {
             }
         }
 
-        // ========== Comm delta computation (shared scaffold + BSP evaluator) ==========
-        //
-        // BSP cost = Σ maxComm[step] * g per step (additive, decoupled from work).
-        // The evaluator sums the per-step max-comm deltas and scales by g.
-
         const CostT g = instance_->CommunicationCosts();
-
         auto bspEvaluator
             = [&](unsigned /*pTo*/, unsigned /*sToIdx*/, unsigned /*sTo*/, CommDeltaScratchData<CommWeightT> &scratch) -> CostT {
             CostT totalChange = 0;

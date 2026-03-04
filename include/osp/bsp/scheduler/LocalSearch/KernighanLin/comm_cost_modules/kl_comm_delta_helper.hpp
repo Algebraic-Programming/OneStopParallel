@@ -25,13 +25,6 @@ limitations under the License.
 
 namespace osp {
 
-// =========================================================================
-// CommDeltaScratchData — thread-local scratchpad for incremental
-// per-step, per-processor send/recv delta tracking.
-//
-// Shared by KlBspCommCostFunction and KlMaxBspCommCostFunction.
-// =========================================================================
-
 template <typename CommWeightT>
 struct CommDeltaScratchData {
     std::vector<FastDeltaTracker<CommWeightT>> sendDeltas_;
@@ -50,13 +43,11 @@ struct CommDeltaScratchData {
             stepIsActive_.resize(nSteps, false);
             activeSteps_.reserve(nSteps);
 
-            // Initialize only the newly-added trackers
             for (size_t i = oldSize; i < nSteps; ++i) {
                 sendDeltas_[i].Initialize(nProcs);
                 recvDeltas_[i].Initialize(nProcs);
             }
 
-            // If nProcs also changed, reinitialize existing trackers
             if (nProcs != lastNumProcs_) {
                 for (size_t i = 0; i < oldSize; ++i) {
                     sendDeltas_[i].Initialize(nProcs);
@@ -73,8 +64,6 @@ struct CommDeltaScratchData {
             }
             lastNumProcs_ = nProcs;
         }
-        // Common case (nSteps/nProcs unchanged): O(1) — trackers
-        // are already clean after the previous ClearAll().
     }
 
     void ClearAll() {
@@ -93,17 +82,6 @@ struct CommDeltaScratchData {
         }
     }
 };
-
-// =========================================================================
-// ComputeCommAffinityDeltas — shared scaffold for BSP & MaxBSP
-//
-// Handles Phase 1 (removal of node from current position) and Phase 2
-// (per-candidate apply → evaluate → revert). The actual cost evaluation
-// is delegated to `evaluatorFn(pTo, sToIdx, sTo, scratch) -> CostT`.
-//
-// BSP passes an evaluator that sums per-step ΔmaxComm × g.
-// MaxBSP passes an evaluator that computes coupled max(work, comm×g).
-// =========================================================================
 
 template <typename GraphT,
           typename CostT,
@@ -138,10 +116,6 @@ void ComputeCommAffinityDeltas(VertexIdxT<GraphT> node,
     const CommWeightT commWNode = graph.VertexCommWeight(node);
     const auto &currentVecSchedule = activeSchedule.GetVectorSchedule();
 
-    // --- Delta accumulation helpers ---
-    // THREAD SAFETY: Only accumulate deltas for steps within [startStep, endStep].
-    // Steps outside the thread's range may be concurrently modified by other threads.
-
     auto AddDelta = [&](bool isRecv, unsigned step, unsigned proc, CommWeightT val) {
         if (val == 0) {
             return;
@@ -171,10 +145,6 @@ void ComputeCommAffinityDeltas(VertexIdxT<GraphT> node,
     DeltaAdapterT deltaAdapter{AddDelta};
     NegDeltaAdapterT negDeltaAdapter{AddDelta};
 
-    // ========== Phase 1: Remove Node from Current State ==========
-    // (Invariant for all candidates)
-
-    // Phase 1 Outgoing: node stops sending to children
     auto nodeLambdaEntries = commDs.nodeLambdaMap_.IterateProcEntries(node);
 
     for (const auto [proc, val] : nodeLambdaEntries) {
@@ -193,9 +163,6 @@ void ComputeCommAffinityDeltas(VertexIdxT<GraphT> node,
         }
     }
 
-    // Phase 1 Incoming: parents stop sending to node on nodeProc
-    // THREAD SAFETY: Skip parents outside [startStep, endStep] — their lambda
-    // entries may be concurrently modified by other threads.
     for (const auto &u : graph.Parents(node)) {
         const unsigned uStep = currentVecSchedule.AssignedSuperstep(u);
         if (uStep < startStep || uStep > endStep) {
@@ -216,10 +183,6 @@ void ComputeCommAffinityDeltas(VertexIdxT<GraphT> node,
         }
     }
 
-    // ========== Phase 2: Add Node to Each Candidate ==========
-
-    // Helper: compute effective val after conceptually removing one instance of nodeStep.
-    // Used for Phase 2A when pTo == nodeProc.
     auto ComputeEffectiveVal = [&](const typename CommPolicy::ValueType &val) -> typename CommPolicy::ValueType {
         if constexpr (std::is_same_v<typename CommPolicy::ValueType, unsigned>) {
             return val > 0 ? val - 1 : 0;
@@ -233,7 +196,6 @@ void ComputeCommAffinityDeltas(VertexIdxT<GraphT> node,
         }
     };
 
-    // Per-parent precomputed data for Phase 2A incoming additions
     struct ParentAddInfo {
         unsigned uProc;
         unsigned uStep;
@@ -241,7 +203,6 @@ void ComputeCommAffinityDeltas(VertexIdxT<GraphT> node,
         typename CommPolicy::ValueType effectiveVal;
     };
 
-    // Per-dest-proc precomputed data for Phase 2B outgoing
     struct OutgoingInfo {
         unsigned vProc;
         CommWeightT cost;
@@ -253,8 +214,6 @@ void ComputeCommAffinityDeltas(VertexIdxT<GraphT> node,
     static thread_local std::vector<OutgoingInfo> outgoingInfos;
 
     for (const unsigned pTo : procRange.CompatibleProcessorsVertex(node)) {
-        // --- Precompute Phase 2A: parent effective vals ---
-        // THREAD SAFETY: Skip parents outside [startStep, endStep].
         parentAddInfos.clear();
         for (const auto &u : graph.Parents(node)) {
             const unsigned uStep = currentVecSchedule.AssignedSuperstep(u);
@@ -283,7 +242,6 @@ void ComputeCommAffinityDeltas(VertexIdxT<GraphT> node,
             parentAddInfos.push_back({uProc, uStep, cost, std::move(effectiveVal)});
         }
 
-        // --- Precompute Phase 2B: outgoing (node -> children) ---
         outgoingInfos.clear();
         for (const auto [vProc, val] : commDs.nodeLambdaMap_.IterateProcEntries(node)) {
             if (vProc != pTo && CommPolicy::HasEntry(val)) {
@@ -302,16 +260,13 @@ void ComputeCommAffinityDeltas(VertexIdxT<GraphT> node,
             }
         }
 
-        // --- Iterate Window (sTo) ---
         for (unsigned sToIdx = nodeStartIdx; sToIdx < windowBound; ++sToIdx) {
             unsigned sTo = nodeStep + sToIdx - windowSize;
 
-            // Apply Phase 2A: incoming deltas (policy-aware, sTo-dependent)
             for (const auto &info : parentAddInfos) {
                 CommPolicy::CalculateDeltaAdd(info.effectiveVal, sTo, info.uStep, info.uProc, pTo, info.cost, deltaAdapter);
             }
 
-            // Apply Phase 2B: outgoing deltas (policy-aware)
             for (const auto &info : outgoingInfos) {
                 if constexpr (CommPolicy::outgoing_recv_at_parent_step) {
                     AddDelta(true, sTo, info.vProc, info.cost);
@@ -329,10 +284,8 @@ void ComputeCommAffinityDeltas(VertexIdxT<GraphT> node,
                 }
             }
 
-            // --- Evaluate cost change via model-specific callback ---
             affinityTableNode[pTo][sToIdx] += evaluatorFn(pTo, sToIdx, sTo, scratch);
 
-            // Revert Phase 2B: outgoing deltas
             for (const auto &info : outgoingInfos) {
                 if constexpr (CommPolicy::outgoing_recv_at_parent_step) {
                     AddDelta(true, sTo, info.vProc, -info.cost);
@@ -350,7 +303,6 @@ void ComputeCommAffinityDeltas(VertexIdxT<GraphT> node,
                 }
             }
 
-            // Revert Phase 2A: incoming deltas
             for (const auto &info : parentAddInfos) {
                 CommPolicy::CalculateDeltaAdd(info.effectiveVal, sTo, info.uStep, info.uProc, pTo, info.cost, negDeltaAdapter);
             }

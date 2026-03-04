@@ -351,8 +351,6 @@ struct KlTotalCommCostFunction {
                                                     : (nodeTargetCommCost - pTargetCommCost) * commGain * -1.0;
     }
 
-    /// Unified entry point called by the base class.
-    /// Additive cost: compute work affinities, then layer comm affinities on top.
     template <typename AffinityTableT>
     void ComputeNodeAffinity(VertexType node,
                              AffinityTableT &affinityTableNode,

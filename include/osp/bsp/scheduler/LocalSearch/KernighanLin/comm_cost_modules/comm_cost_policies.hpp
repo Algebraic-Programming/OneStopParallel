@@ -104,8 +104,6 @@ struct EagerCommCostPolicy {
 
     static inline bool IsSingleEntry(const ValueType &val) { return val == 1; }
 
-    // For outgoing comm (parent→children on proc), where is send/recv attributed?
-    // Eager: both at parent step.
     static constexpr bool outgoing_send_at_parent_step = true;
     static constexpr bool outgoing_recv_at_parent_step = true;
 
@@ -208,8 +206,6 @@ struct LazyCommCostPolicy {
                                                 const unsigned vStep,
                                                 const ValueType &val,
                                                 MarkStepFn &&markStep) {
-        // val is state AFTER removal.
-
         if (val.empty()) {
             // Removed the last child.
             if (vStep > 0) {
@@ -424,7 +420,6 @@ struct LazyCommCostPolicy {
     template <typename DeltaTracker, typename CommWeightT>
     static inline void CalculateDeltaOutgoing(
         const ValueType &val, unsigned nodeStep, unsigned nodeProc, unsigned childProc, CommWeightT cost, DeltaTracker &dt) {
-        // Lazy places ALL comm at min(val)-1, not at each child step.
         if (!val.empty()) {
             unsigned minS = std::numeric_limits<unsigned>::max();
             for (unsigned s : val) {
@@ -495,8 +490,6 @@ struct BufferedCommCostPolicy {
                                                 const unsigned vStep,
                                                 const ValueType &val,
                                                 MarkStepFn &&markStep) {
-        // val is state AFTER removal.
-
         if (val.empty()) {
             // Removed last child.
             if (markStep(uStep)) {
