@@ -256,11 +256,6 @@ struct TestSetup {
     BOOST_AUTO_TEST_CASE(FuncName##_Lazy) { FuncName<LazyCommCostPolicy>(); }         \
     BOOST_AUTO_TEST_CASE(FuncName##_Buffered) { FuncName<BufferedCommCostPolicy>(); }
 
-// Only Lazy/Buffered (Eager is known-correct for incremental updates)
-#define INSTANTIATE_LAZY_BUFFERED(FuncName)                                           \
-    BOOST_AUTO_TEST_CASE(FuncName##_Lazy) { FuncName<LazyCommCostPolicy>(); }         \
-    BOOST_AUTO_TEST_CASE(FuncName##_Buffered) { FuncName<BufferedCommCostPolicy>(); }
-
 // ============================================================================
 // TEST 1: GAP 1 — Simultaneous step+proc change for parent node
 //
