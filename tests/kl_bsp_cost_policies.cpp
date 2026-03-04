@@ -251,16 +251,6 @@ struct TestSetup {
     BOOST_AUTO_TEST_CASE(FuncName##_Lazy) { FuncName<LazyCommCostPolicy>(); }         \
     BOOST_AUTO_TEST_CASE(FuncName##_Buffered) { FuncName<BufferedCommCostPolicy>(); }
 
-// Incremental updates (UpdateDatastructureAfterMove) are only validated for
-// Eager at this time.  Lazy/Buffered have known divergence issues in the
-// incremental path and are tested separately with hand-verified exact values.
-#define INSTANTIATE_EAGER_ONLY(FuncName)                                        \
-    BOOST_AUTO_TEST_CASE(FuncName##_Eager) { FuncName<EagerCommCostPolicy>(); }
-
-#define INSTANTIATE_EAGER_LAZY(FuncName)                                        \
-    BOOST_AUTO_TEST_CASE(FuncName##_Eager) { FuncName<EagerCommCostPolicy>(); } \
-    BOOST_AUTO_TEST_CASE(FuncName##_Lazy) { FuncName<LazyCommCostPolicy>(); }
-
 // ============================================================================
 // SUITE 1: ArrangeSuperstepCommData (max / second-max / count cache logic)
 // ============================================================================
