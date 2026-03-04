@@ -18,15 +18,11 @@ limitations under the License.
 
 #pragma once
 
-// Parallel implementations
-#include "kl_improver_sync_parallel.hpp"
-
-// Cost function modules (already pulled in by kl_improver.hpp, but
-// explicit for readability)
 #include "comm_cost_modules/kl_bsp_comm_cost.hpp"
 #include "comm_cost_modules/kl_hyper_total_comm_cost.hpp"
 #include "comm_cost_modules/kl_max_bsp_comm_cost.hpp"
 #include "comm_cost_modules/kl_total_comm_cost.hpp"
+#include "kl_improver_sync_parallel.hpp"
 
 // Memory constraint modules
 #include "osp/bsp/scheduler/LocalSearch/LocalSearchMemoryConstraintModules.hpp"

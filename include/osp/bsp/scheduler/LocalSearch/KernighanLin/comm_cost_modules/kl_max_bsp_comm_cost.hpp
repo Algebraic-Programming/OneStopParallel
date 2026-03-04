@@ -281,7 +281,7 @@ struct KlMaxBspCommCostFunction {
         const CostT secondMaxWorkAtFrom = static_cast<CostT>(activeSchedule_->GetStepSecondMaxWork(nodeStep));
         const bool isSoleMaxProc
             = (activeSchedule_->GetStepMaxWorkProcessorCount()[nodeStep] == 1)
-              && (maxWorkAtFrom == static_cast<CostT>(activeSchedule_->GetStepProcessorWork(nodeStep, nodeProc)));
+              && (maxWorkAtFrom <= static_cast<CostT>(activeSchedule_->GetStepProcessorWork(nodeStep, nodeProc)));
 
         const CostT workRemoval = isSoleMaxProc ? std::min(static_cast<CostT>(nodeWeight), maxWorkAtFrom - secondMaxWorkAtFrom)
                                                 : CostT(0);

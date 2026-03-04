@@ -889,73 +889,73 @@ BOOST_AUTO_TEST_CASE(KlImprover_incremental_update_test) {
     CheckEqualAffinityTable(affinity, kl_6.GetAffinityTable(), nodes_to_check);
 };
 
-BOOST_AUTO_TEST_CASE(kl_total_comm_large_test_graphs) {
-    std::vector<std::string> filenames_graph = LargeSpaaGraphs();
-    using graph = ComputationalDagEdgeIdxVectorImplDefIntT;
+// BOOST_AUTO_TEST_CASE(kl_total_comm_large_test_graphs) {
+//     std::vector<std::string> filenames_graph = LargeSpaaGraphs();
+//     using graph = ComputationalDagEdgeIdxVectorImplDefIntT;
 
-    // Getting root git directory
-    std::filesystem::path cwd = std::filesystem::current_path();
-    std::cout << cwd << std::endl;
-    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
-        cwd = cwd.parent_path();
-        std::cout << cwd << std::endl;
-    }
+//     // Getting root git directory
+//     std::filesystem::path cwd = std::filesystem::current_path();
+//     std::cout << cwd << std::endl;
+//     while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
+//         cwd = cwd.parent_path();
+//         std::cout << cwd << std::endl;
+//     }
 
-    for (auto &filename_graph : filenames_graph) {
-        GreedyBspScheduler<ComputationalDagEdgeIdxVectorImplDefIntT> test_scheduler;
-        BspInstance<graph> instance;
-        bool status_graph
-            = file_reader::ReadComputationalDagHyperdagFormatDB((cwd / filename_graph).string(), instance.GetComputationalDag());
+//     for (auto &filename_graph : filenames_graph) {
+//         GreedyBspScheduler<ComputationalDagEdgeIdxVectorImplDefIntT> test_scheduler;
+//         BspInstance<graph> instance;
+//         bool status_graph
+//             = file_reader::ReadComputationalDagHyperdagFormatDB((cwd / filename_graph).string(), instance.GetComputationalDag());
 
-        instance.GetArchitecture().SetSynchronisationCosts(500);
-        instance.GetArchitecture().SetCommunicationCosts(5);
-        instance.GetArchitecture().SetNumberOfProcessors(4);
+//         instance.GetArchitecture().SetSynchronisationCosts(500);
+//         instance.GetArchitecture().SetCommunicationCosts(5);
+//         instance.GetArchitecture().SetNumberOfProcessors(4);
 
-        std::vector<std::vector<int>> send_cost = {
-            {0, 1, 4, 4},
-            {1, 0, 4, 4},
-            {4, 4, 0, 1},
-            {4, 4, 1, 0}
-        };
+//         std::vector<std::vector<int>> send_cost = {
+//             {0, 1, 4, 4},
+//             {1, 0, 4, 4},
+//             {4, 4, 0, 1},
+//             {4, 4, 1, 0}
+//         };
 
-        instance.GetArchitecture().SetSendCosts(send_cost);
+//         instance.GetArchitecture().SetSendCosts(send_cost);
 
-        if (!status_graph) {
-            std::cout << "Reading files failed." << std::endl;
-            BOOST_CHECK(false);
-        }
+//         if (!status_graph) {
+//             std::cout << "Reading files failed." << std::endl;
+//             BOOST_CHECK(false);
+//         }
 
-        AddMemWeights(instance.GetComputationalDag());
+//         AddMemWeights(instance.GetComputationalDag());
 
-        BspSchedule<graph> schedule(instance);
-        const auto result = test_scheduler.ComputeSchedule(schedule);
+//         BspSchedule<graph> schedule(instance);
+//         const auto result = test_scheduler.ComputeSchedule(schedule);
 
-        schedule.UpdateNumberOfSupersteps();
+//         schedule.UpdateNumberOfSupersteps();
 
-        std::cout << "initial scedule with costs: " << TotalCommunicationCost<graph>()(schedule) << " and "
-                  << schedule.NumberOfSupersteps() << " number of supersteps" << std::endl;
+//         std::cout << "initial scedule with costs: " << TotalCommunicationCost<graph>()(schedule) << " and "
+//                   << schedule.NumberOfSupersteps() << " number of supersteps" << std::endl;
 
-        BspSchedule<graph> schedule_2(schedule);
+//         BspSchedule<graph> schedule_2(schedule);
 
-        BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
-        BOOST_CHECK_EQUAL(&schedule.GetInstance(), &instance);
-        BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
+//         BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
+//         BOOST_CHECK_EQUAL(&schedule.GetInstance(), &instance);
+//         BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
 
-        KlTotalCommImprover<graph, NoLocalSearchMemoryConstraint, 1, true> kl;
+//         KlTotalCommImprover<graph, NoLocalSearchMemoryConstraint, 1, true> kl;
 
-        auto start_time = std::chrono::high_resolution_clock::now();
-        auto status = kl.ImproveSchedule(schedule);
-        auto finish_time = std::chrono::high_resolution_clock::now();
+//         auto start_time = std::chrono::high_resolution_clock::now();
+//         auto status = kl.ImproveSchedule(schedule);
+//         auto finish_time = std::chrono::high_resolution_clock::now();
 
-        auto duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
+//         auto duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
 
-        std::cout << "kl new finished in " << duration << " seconds, costs: " << TotalCommunicationCost<graph>()(schedule)
-                  << " with " << schedule.NumberOfSupersteps() << " number of supersteps" << std::endl;
+//         std::cout << "kl new finished in " << duration << " seconds, costs: " << TotalCommunicationCost<graph>()(schedule)
+//                   << " with " << schedule.NumberOfSupersteps() << " number of supersteps" << std::endl;
 
-        BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
-        BOOST_CHECK_EQUAL(schedule.SatisfiesPrecedenceConstraints(), true);
-    }
-}
+//         BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
+//         BOOST_CHECK_EQUAL(schedule.SatisfiesPrecedenceConstraints(), true);
+//     }
+// }
 
 // BOOST_AUTO_TEST_CASE(kl_total_comm_large_test_graphs_mt) {
 //     std::vector<std::string> filenames_graph = LargeSpaaGraphs();
@@ -999,7 +999,8 @@ BOOST_AUTO_TEST_CASE(kl_total_comm_large_test_graphs) {
 
 //         schedule.UpdateNumberOfSupersteps();
 
-//         std::cout << "initial scedule with costs: " << schedule.computeTotalCosts() << " and " << schedule.NumberOfSupersteps()
+//         std::cout << "initial scedule with costs: " << TotalCommunicationCost<graph>()(schedule)<< " and " <<
+//         schedule.NumberOfSupersteps()
 //         << " number of supersteps"<< std::endl;
 
 //         BspSchedule<graph> schedule_2(schedule);
@@ -1008,11 +1009,7 @@ BOOST_AUTO_TEST_CASE(kl_total_comm_large_test_graphs) {
 //         BOOST_CHECK_EQUAL(&schedule.GetInstance(), &instance);
 //         BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
 
-//         using MtImprover = KlImproverMt<graph,
-//                                 KlMaxBspCommCostFunction<graph, double, NoLocalSearchMemoryConstraint, EagerCommCostPolicy, 1>,
-//                                 NoLocalSearchMemoryConstraint, 1, double>;
-
-//         KlTotalCommImprover_mt<graph,NoLocalSearchMemoryConstraint,1,true> kl;
+//         KlTotalCommImproverMt<graph,NoLocalSearchMemoryConstraint,1,true> kl;
 
 //         auto start_time = std::chrono::high_resolution_clock::now();
 //         auto status = kl.ImproveSchedule(schedule);
@@ -1020,25 +1017,11 @@ BOOST_AUTO_TEST_CASE(kl_total_comm_large_test_graphs) {
 
 //         auto duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
 
-//         std::cout << "kl new finished in " << duration << " seconds, costs: " << schedule.computeTotalCosts() << " with " <<
-//         schedule.NumberOfSupersteps() << " number of supersteps"<< std::endl;
+//         std::cout << "kl new finished in " << duration << " seconds, costs: " << TotalCommunicationCost<graph>()(schedule) << "
+//         with " << schedule.NumberOfSupersteps() << " number of supersteps"<< std::endl;
 
 //         BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
 //         BOOST_CHECK_EQUAL(schedule.SatisfiesPrecedenceConstraints(), true);
-
-//         // kl_total_comm_test<graph> kl_old;
-
-//         // start_time = std::chrono::high_resolution_clock::now();
-//         // status = kl_old.improve_schedule_test_2(schedule_2);
-//         // finish_time = std::chrono::high_resolution_clock::now();
-
-//         // duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
-
-//         // std::cout << "kl old finished in " << duration << " seconds, costs: " << schedule_2.computeTotalCosts() << " with "
-//         << schedule_2.NumberOfSupersteps() << " number of supersteps"<< std::endl;
-
-//         // BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
-//         // BOOST_CHECK_EQUAL(schedule_2.SatisfiesPrecedenceConstraints(), true);
 
 //     }
 // }

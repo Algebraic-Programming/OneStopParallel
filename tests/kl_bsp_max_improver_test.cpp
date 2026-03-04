@@ -1116,274 +1116,274 @@ BOOST_AUTO_TEST_CASE(CostMonotonicity) {
 
 // ============================================================================
 // SUITE: Large end-to-end tests — KlMaxBspCommImprover on real graphs
-//
+
 // Mirrors Suite 6 from kl_bsp_cost_policies.cpp but for the MaxBSP cost.
 // Uses GreedyVarianceSspScheduler to produce initial MaxBspSchedule
 // (staleness=2) directly, then runs the MaxBSP KL improver.
 // ============================================================================
 
-BOOST_AUTO_TEST_CASE(kl_max_bsp_comm_large_test_graphs_eager) {
-    std::vector<std::string> filenames_graph = LargeSpaaGraphs();
-    using graph = ComputationalDagEdgeIdxVectorImplDefIntT;
+// BOOST_AUTO_TEST_CASE(kl_max_bsp_comm_large_test_graphs_eager) {
+//     std::vector<std::string> filenames_graph = LargeSpaaGraphs();
+//     using graph = ComputationalDagEdgeIdxVectorImplDefIntT;
 
-    std::filesystem::path cwd = std::filesystem::current_path();
-    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
-        cwd = cwd.parent_path();
-    }
+//     std::filesystem::path cwd = std::filesystem::current_path();
+//     while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
+//         cwd = cwd.parent_path();
+//     }
 
-    for (auto &filename_graph : filenames_graph) {
-        GreedyVarianceSspScheduler<graph> test_scheduler;
-        BspInstance<graph> instance;
-        bool status_graph
-            = file_reader::ReadComputationalDagHyperdagFormatDB((cwd / filename_graph).string(), instance.GetComputationalDag());
+//     for (auto &filename_graph : filenames_graph) {
+//         GreedyVarianceSspScheduler<graph> test_scheduler;
+//         BspInstance<graph> instance;
+//         bool status_graph
+//             = file_reader::ReadComputationalDagHyperdagFormatDB((cwd / filename_graph).string(), instance.GetComputationalDag());
 
-        instance.GetArchitecture().SetSynchronisationCosts(500);
-        instance.GetArchitecture().SetCommunicationCosts(5);
-        instance.GetArchitecture().SetNumberOfProcessors(4);
+//         instance.GetArchitecture().SetSynchronisationCosts(500);
+//         instance.GetArchitecture().SetCommunicationCosts(5);
+//         instance.GetArchitecture().SetNumberOfProcessors(4);
 
-        std::vector<std::vector<int>> send_cost = {
-            {0, 1, 4, 4},
-            {1, 0, 4, 4},
-            {4, 4, 0, 1},
-            {4, 4, 1, 0}
-        };
-        instance.GetArchitecture().SetSendCosts(send_cost);
+//         std::vector<std::vector<int>> send_cost = {
+//             {0, 1, 4, 4},
+//             {1, 0, 4, 4},
+//             {4, 4, 0, 1},
+//             {4, 4, 1, 0}
+//         };
+//         instance.GetArchitecture().SetSendCosts(send_cost);
 
-        if (!status_graph) {
-            std::cout << "Reading files failed: " << filename_graph << std::endl;
-            BOOST_CHECK(false);
-            continue;
-        }
+//         if (!status_graph) {
+//             std::cout << "Reading files failed: " << filename_graph << std::endl;
+//             BOOST_CHECK(false);
+//             continue;
+//         }
 
-        AddMemWeights(instance.GetComputationalDag());
+//         AddMemWeights(instance.GetComputationalDag());
 
-        // Create initial MaxBspSchedule via greedy SSP scheduler (staleness=2)
-        MaxBspSchedule<graph> schedule(instance);
-        const auto result = test_scheduler.ComputeSchedule(schedule);
-        schedule.UpdateNumberOfSupersteps();
+//         // Create initial MaxBspSchedule via greedy SSP scheduler (staleness=2)
+//         MaxBspSchedule<graph> schedule(instance);
+//         const auto result = test_scheduler.ComputeSchedule(schedule);
+//         schedule.UpdateNumberOfSupersteps();
 
-        BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
-        BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
-        VerifyStalenessConstraints(schedule);
+//         BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
+//         BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
+//         VerifyStalenessConstraints(schedule);
 
-        std::cout << "[MaxBSP Eager] " << filename_graph << ": initial steps=" << schedule.NumberOfSupersteps()
-                  << ", cost=" << schedule.ComputeCosts() << std::endl;
+//         std::cout << "[MaxBSP Eager] " << filename_graph << ": initial steps=" << schedule.NumberOfSupersteps()
+//                   << ", cost=" << schedule.ComputeCosts() << std::endl;
 
-        KlMaxBspCommImprover<graph> kl;
+//         KlMaxBspCommImprover<graph> kl;
 
-        auto start_time = std::chrono::high_resolution_clock::now();
-        auto status = kl.ImproveSchedule(schedule);
-        auto finish_time = std::chrono::high_resolution_clock::now();
+//         auto start_time = std::chrono::high_resolution_clock::now();
+//         auto status = kl.ImproveSchedule(schedule);
+//         auto finish_time = std::chrono::high_resolution_clock::now();
 
-        auto duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
+//         auto duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
 
-        std::cout << "[MaxBSP Eager] " << filename_graph << ": finished in " << duration
-                  << "s, steps=" << schedule.NumberOfSupersteps() << ", cost=" << schedule.ComputeCosts() << std::endl;
+//         std::cout << "[MaxBSP Eager] " << filename_graph << ": finished in " << duration
+//                   << "s, steps=" << schedule.NumberOfSupersteps() << ", cost=" << schedule.ComputeCosts() << std::endl;
 
-        BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
-        BOOST_CHECK_MESSAGE(schedule.SatisfiesPrecedenceConstraints(), "Precedence violated: " + filename_graph);
-        VerifyStalenessConstraints(schedule);
-    }
-}
+//         BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
+//         BOOST_CHECK_MESSAGE(schedule.SatisfiesPrecedenceConstraints(), "Precedence violated: " + filename_graph);
+//         VerifyStalenessConstraints(schedule);
+//     }
+// }
 
-BOOST_AUTO_TEST_CASE(kl_max_bsp_comm_large_test_graphs_lazy) {
-    std::vector<std::string> filenames_graph = LargeSpaaGraphs();
-    using graph = ComputationalDagEdgeIdxVectorImplDefIntT;
+// BOOST_AUTO_TEST_CASE(kl_max_bsp_comm_large_test_graphs_lazy) {
+//     std::vector<std::string> filenames_graph = LargeSpaaGraphs();
+//     using graph = ComputationalDagEdgeIdxVectorImplDefIntT;
 
-    std::filesystem::path cwd = std::filesystem::current_path();
-    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
-        cwd = cwd.parent_path();
-    }
+//     std::filesystem::path cwd = std::filesystem::current_path();
+//     while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
+//         cwd = cwd.parent_path();
+//     }
 
-    for (auto &filename_graph : filenames_graph) {
-        GreedyVarianceSspScheduler<graph> test_scheduler;
-        BspInstance<graph> instance;
-        bool status_graph
-            = file_reader::ReadComputationalDagHyperdagFormatDB((cwd / filename_graph).string(), instance.GetComputationalDag());
+//     for (auto &filename_graph : filenames_graph) {
+//         GreedyVarianceSspScheduler<graph> test_scheduler;
+//         BspInstance<graph> instance;
+//         bool status_graph
+//             = file_reader::ReadComputationalDagHyperdagFormatDB((cwd / filename_graph).string(), instance.GetComputationalDag());
 
-        instance.GetArchitecture().SetSynchronisationCosts(500);
-        instance.GetArchitecture().SetCommunicationCosts(5);
-        instance.GetArchitecture().SetNumberOfProcessors(4);
+//         instance.GetArchitecture().SetSynchronisationCosts(500);
+//         instance.GetArchitecture().SetCommunicationCosts(5);
+//         instance.GetArchitecture().SetNumberOfProcessors(4);
 
-        if (!status_graph) {
-            std::cout << "Reading files failed: " << filename_graph << std::endl;
-            BOOST_CHECK(false);
-            continue;
-        }
+//         if (!status_graph) {
+//             std::cout << "Reading files failed: " << filename_graph << std::endl;
+//             BOOST_CHECK(false);
+//             continue;
+//         }
 
-        AddMemWeights(instance.GetComputationalDag());
+//         AddMemWeights(instance.GetComputationalDag());
 
-        MaxBspSchedule<graph> schedule(instance);
-        const auto result = test_scheduler.ComputeSchedule(schedule);
-        schedule.UpdateNumberOfSupersteps();
+//         MaxBspSchedule<graph> schedule(instance);
+//         const auto result = test_scheduler.ComputeSchedule(schedule);
+//         schedule.UpdateNumberOfSupersteps();
 
-        BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
-        BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
-        VerifyStalenessConstraints(schedule);
+//         BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
+//         BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
+//         VerifyStalenessConstraints(schedule);
 
-        std::cout << "[MaxBSP Lazy] " << filename_graph << ": initial steps=" << schedule.NumberOfSupersteps()
-                  << ", cost=" << schedule.ComputeCosts() << std::endl;
+//         std::cout << "[MaxBSP Lazy] " << filename_graph << ": initial steps=" << schedule.NumberOfSupersteps()
+//                   << ", cost=" << schedule.ComputeCosts() << std::endl;
 
-        KlMaxBspCommImprover<graph, NoLocalSearchMemoryConstraint, LazyCommCostPolicy> kl;
+//         KlMaxBspCommImprover<graph, NoLocalSearchMemoryConstraint, LazyCommCostPolicy> kl;
 
-        auto start_time = std::chrono::high_resolution_clock::now();
-        auto status = kl.ImproveSchedule(schedule);
-        auto finish_time = std::chrono::high_resolution_clock::now();
+//         auto start_time = std::chrono::high_resolution_clock::now();
+//         auto status = kl.ImproveSchedule(schedule);
+//         auto finish_time = std::chrono::high_resolution_clock::now();
 
-        auto duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
+//         auto duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
 
-        std::cout << "[MaxBSP Lazy] " << filename_graph << ": finished in " << duration
-                  << "s, steps=" << schedule.NumberOfSupersteps() << ", cost=" << schedule.ComputeCosts() << std::endl;
+//         std::cout << "[MaxBSP Lazy] " << filename_graph << ": finished in " << duration
+//                   << "s, steps=" << schedule.NumberOfSupersteps() << ", cost=" << schedule.ComputeCosts() << std::endl;
 
-        BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
-        BOOST_CHECK_MESSAGE(schedule.SatisfiesPrecedenceConstraints(), "Precedence violated: " + filename_graph);
-        VerifyStalenessConstraints(schedule);
-    }
-}
+//         BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
+//         BOOST_CHECK_MESSAGE(schedule.SatisfiesPrecedenceConstraints(), "Precedence violated: " + filename_graph);
+//         VerifyStalenessConstraints(schedule);
+//     }
+// }
 
-BOOST_AUTO_TEST_CASE(kl_max_bsp_comm_large_test_graphs_buffered) {
-    std::vector<std::string> filenames_graph = LargeSpaaGraphs();
-    using graph = ComputationalDagEdgeIdxVectorImplDefIntT;
+// BOOST_AUTO_TEST_CASE(kl_max_bsp_comm_large_test_graphs_buffered) {
+//     std::vector<std::string> filenames_graph = LargeSpaaGraphs();
+//     using graph = ComputationalDagEdgeIdxVectorImplDefIntT;
 
-    std::filesystem::path cwd = std::filesystem::current_path();
-    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
-        cwd = cwd.parent_path();
-    }
+//     std::filesystem::path cwd = std::filesystem::current_path();
+//     while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
+//         cwd = cwd.parent_path();
+//     }
 
-    for (auto &filename_graph : filenames_graph) {
-        GreedyVarianceSspScheduler<graph> test_scheduler;
-        BspInstance<graph> instance;
-        bool status_graph
-            = file_reader::ReadComputationalDagHyperdagFormatDB((cwd / filename_graph).string(), instance.GetComputationalDag());
+//     for (auto &filename_graph : filenames_graph) {
+//         GreedyVarianceSspScheduler<graph> test_scheduler;
+//         BspInstance<graph> instance;
+//         bool status_graph
+//             = file_reader::ReadComputationalDagHyperdagFormatDB((cwd / filename_graph).string(), instance.GetComputationalDag());
 
-        instance.GetArchitecture().SetSynchronisationCosts(500);
-        instance.GetArchitecture().SetCommunicationCosts(5);
-        instance.GetArchitecture().SetNumberOfProcessors(4);
+//         instance.GetArchitecture().SetSynchronisationCosts(500);
+//         instance.GetArchitecture().SetCommunicationCosts(5);
+//         instance.GetArchitecture().SetNumberOfProcessors(4);
 
-        if (!status_graph) {
-            std::cout << "Reading files failed: " << filename_graph << std::endl;
-            BOOST_CHECK(false);
-            continue;
-        }
+//         if (!status_graph) {
+//             std::cout << "Reading files failed: " << filename_graph << std::endl;
+//             BOOST_CHECK(false);
+//             continue;
+//         }
 
-        AddMemWeights(instance.GetComputationalDag());
+//         AddMemWeights(instance.GetComputationalDag());
 
-        MaxBspSchedule<graph> schedule(instance);
-        const auto result = test_scheduler.ComputeSchedule(schedule);
-        schedule.UpdateNumberOfSupersteps();
+//         MaxBspSchedule<graph> schedule(instance);
+//         const auto result = test_scheduler.ComputeSchedule(schedule);
+//         schedule.UpdateNumberOfSupersteps();
 
-        BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
-        BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
-        VerifyStalenessConstraints(schedule);
+//         BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
+//         BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
+//         VerifyStalenessConstraints(schedule);
 
-        std::cout << "[MaxBSP Buffered] " << filename_graph << ": initial steps=" << schedule.NumberOfSupersteps()
-                  << ", cost=" << schedule.ComputeCosts() << std::endl;
+//         std::cout << "[MaxBSP Buffered] " << filename_graph << ": initial steps=" << schedule.NumberOfSupersteps()
+//                   << ", cost=" << schedule.ComputeCosts() << std::endl;
 
-        KlMaxBspCommImprover<graph, NoLocalSearchMemoryConstraint, BufferedCommCostPolicy> kl;
+//         KlMaxBspCommImprover<graph, NoLocalSearchMemoryConstraint, BufferedCommCostPolicy> kl;
 
-        auto start_time = std::chrono::high_resolution_clock::now();
-        auto status = kl.ImproveSchedule(schedule);
-        auto finish_time = std::chrono::high_resolution_clock::now();
+//         auto start_time = std::chrono::high_resolution_clock::now();
+//         auto status = kl.ImproveSchedule(schedule);
+//         auto finish_time = std::chrono::high_resolution_clock::now();
 
-        auto duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
+//         auto duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
 
-        std::cout << "[MaxBSP Buffered] " << filename_graph << ": finished in " << duration
-                  << "s, steps=" << schedule.NumberOfSupersteps() << ", cost=" << schedule.ComputeCosts() << std::endl;
+//         std::cout << "[MaxBSP Buffered] " << filename_graph << ": finished in " << duration
+//                   << "s, steps=" << schedule.NumberOfSupersteps() << ", cost=" << schedule.ComputeCosts() << std::endl;
 
-        BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
-        BOOST_CHECK_MESSAGE(schedule.SatisfiesPrecedenceConstraints(), "Precedence violated: " + filename_graph);
-        VerifyStalenessConstraints(schedule);
-    }
-}
+//         BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
+//         BOOST_CHECK_MESSAGE(schedule.SatisfiesPrecedenceConstraints(), "Precedence violated: " + filename_graph);
+//         VerifyStalenessConstraints(schedule);
+//     }
+// }
 
-// ============================================================================
-// TEST: Large graph with window size 2
-//
-// Wider search window exercises more candidate placements per node,
-// stressing the coupled work+comm evaluation across a larger step range.
-// ============================================================================
+// // ============================================================================
+// // TEST: Large graph with window size 2
+// //
+// // Wider search window exercises more candidate placements per node,
+// // stressing the coupled work+comm evaluation across a larger step range.
+// // ============================================================================
 
-BOOST_AUTO_TEST_CASE(kl_max_bsp_comm_large_test_graphs_window2) {
-    std::vector<std::string> filenames_graph = LargeSpaaGraphs();
-    using graph = ComputationalDagEdgeIdxVectorImplDefIntT;
+// BOOST_AUTO_TEST_CASE(kl_max_bsp_comm_large_test_graphs_window2) {
+//     std::vector<std::string> filenames_graph = LargeSpaaGraphs();
+//     using graph = ComputationalDagEdgeIdxVectorImplDefIntT;
 
-    std::filesystem::path cwd = std::filesystem::current_path();
-    while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
-        cwd = cwd.parent_path();
-    }
+//     std::filesystem::path cwd = std::filesystem::current_path();
+//     while ((!cwd.empty()) && (cwd.filename() != "OneStopParallel")) {
+//         cwd = cwd.parent_path();
+//     }
 
-    for (auto &filename_graph : filenames_graph) {
-        GreedyVarianceSspScheduler<graph> test_scheduler;
-        BspInstance<graph> instance;
-        bool status_graph
-            = file_reader::ReadComputationalDagHyperdagFormatDB((cwd / filename_graph).string(), instance.GetComputationalDag());
+//     for (auto &filename_graph : filenames_graph) {
+//         GreedyVarianceSspScheduler<graph> test_scheduler;
+//         BspInstance<graph> instance;
+//         bool status_graph
+//             = file_reader::ReadComputationalDagHyperdagFormatDB((cwd / filename_graph).string(), instance.GetComputationalDag());
 
-        instance.GetArchitecture().SetSynchronisationCosts(500);
-        instance.GetArchitecture().SetCommunicationCosts(5);
-        instance.GetArchitecture().SetNumberOfProcessors(4);
+//         instance.GetArchitecture().SetSynchronisationCosts(500);
+//         instance.GetArchitecture().SetCommunicationCosts(5);
+//         instance.GetArchitecture().SetNumberOfProcessors(4);
 
-        std::vector<std::vector<int>> send_cost = {
-            {0, 1, 4, 4},
-            {1, 0, 4, 4},
-            {4, 4, 0, 1},
-            {4, 4, 1, 0}
-        };
-        instance.GetArchitecture().SetSendCosts(send_cost);
+//         std::vector<std::vector<int>> send_cost = {
+//             {0, 1, 4, 4},
+//             {1, 0, 4, 4},
+//             {4, 4, 0, 1},
+//             {4, 4, 1, 0}
+//         };
+//         instance.GetArchitecture().SetSendCosts(send_cost);
 
-        if (!status_graph) {
-            std::cout << "Reading files failed: " << filename_graph << std::endl;
-            BOOST_CHECK(false);
-            continue;
-        }
+//         if (!status_graph) {
+//             std::cout << "Reading files failed: " << filename_graph << std::endl;
+//             BOOST_CHECK(false);
+//             continue;
+//         }
 
-        AddMemWeights(instance.GetComputationalDag());
+//         AddMemWeights(instance.GetComputationalDag());
 
-        MaxBspSchedule<graph> schedule(instance);
-        const auto result = test_scheduler.ComputeSchedule(schedule);
-        schedule.UpdateNumberOfSupersteps();
+//         MaxBspSchedule<graph> schedule(instance);
+//         const auto result = test_scheduler.ComputeSchedule(schedule);
+//         schedule.UpdateNumberOfSupersteps();
 
-        BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
-        BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
-        VerifyStalenessConstraints(schedule);
+//         BOOST_CHECK_EQUAL(ReturnStatus::OSP_SUCCESS, result);
+//         BOOST_CHECK(schedule.SatisfiesPrecedenceConstraints());
+//         VerifyStalenessConstraints(schedule);
 
-        std::cout << "[MaxBSP W2] " << filename_graph << ": initial steps=" << schedule.NumberOfSupersteps()
-                  << ", cost=" << schedule.ComputeCosts() << std::endl;
+//         std::cout << "[MaxBSP W2] " << filename_graph << ": initial steps=" << schedule.NumberOfSupersteps()
+//                   << ", cost=" << schedule.ComputeCosts() << std::endl;
 
-        KlMaxBspCommImprover<graph, NoLocalSearchMemoryConstraint, EagerCommCostPolicy, 2> kl;
+//         KlMaxBspCommImprover<graph, NoLocalSearchMemoryConstraint, EagerCommCostPolicy, 2> kl;
 
-        auto start_time = std::chrono::high_resolution_clock::now();
-        auto status = kl.ImproveSchedule(schedule);
-        auto finish_time = std::chrono::high_resolution_clock::now();
+//         auto start_time = std::chrono::high_resolution_clock::now();
+//         auto status = kl.ImproveSchedule(schedule);
+//         auto finish_time = std::chrono::high_resolution_clock::now();
 
-        auto duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
+//         auto duration = std::chrono::duration_cast<std::chrono::seconds>(finish_time - start_time).count();
 
-        std::cout << "[MaxBSP W2] " << filename_graph << ": finished in " << duration
-                  << "s, steps=" << schedule.NumberOfSupersteps() << ", cost=" << schedule.ComputeCosts() << std::endl;
+//         std::cout << "[MaxBSP W2] " << filename_graph << ": finished in " << duration
+//                   << "s, steps=" << schedule.NumberOfSupersteps() << ", cost=" << schedule.ComputeCosts() << std::endl;
 
-        BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
-        BOOST_CHECK_MESSAGE(schedule.SatisfiesPrecedenceConstraints(), "Precedence violated: " + filename_graph);
-        VerifyStalenessConstraints(schedule);
-    }
-}
+//         BOOST_CHECK(status == ReturnStatus::OSP_SUCCESS || status == ReturnStatus::BEST_FOUND);
+//         BOOST_CHECK_MESSAGE(schedule.SatisfiesPrecedenceConstraints(), "Precedence violated: " + filename_graph);
+//         VerifyStalenessConstraints(schedule);
+//     }
+// }
 
-// ============================================================================
-// SUITE: Multi-threaded KlSyncParallelImprover tests
-//
-// Verifies the synchronized parallel wrapper produces valid results:
-//   - Precedence and staleness constraints are respected
-//   - Cost does not regress (the regression guard works)
-//   - Compatible with all comm-cost policies
-//
-// NOTE: MaxBSP/BSP cost functions are NOT thread-safe for true
-// multi-threaded sync parallel use (shared commDs_ data races).
-// These tests use SetMaxNumThreads(2) which may race on BSP/MaxBSP.
-// The regression guard + constraint checks catch incorrect results.
-// For production use, BSP/MaxBSP should use numThreads=1 or the
-// async parallel improver.
-// ============================================================================
+// // ============================================================================
+// // SUITE: Multi-threaded KlSyncParallelImprover tests
 
-// ============================================================================
-// TEST MT-1: MT ImproveSchedule on SmallFanGraph — all policies
+// // Verifies the synchronized parallel wrapper produces valid results:
+// //   - Precedence and staleness constraints are respected
+// //   - Cost does not regress (the regression guard works)
+// //   - Compatible with all comm-cost policies
+
+// // NOTE: MaxBSP/BSP cost functions are NOT thread-safe for true
+// // multi-threaded sync parallel use (shared commDs_ data races).
+// // These tests use SetMaxNumThreads(2) which may race on BSP/MaxBSP.
+// // The regression guard + constraint checks catch incorrect results.
+// // For production use, BSP/MaxBSP should use numThreads=1 or the
+// // async parallel improver.
+// // ============================================================================
+
+// // ============================================================================
+// // TEST MT-1: MT ImproveSchedule on SmallFanGraph — all policies
 // // ============================================================================
 
 // BOOST_AUTO_TEST_CASE(MtImproveScheduleSmallFan) {

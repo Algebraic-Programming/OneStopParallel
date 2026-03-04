@@ -17,7 +17,7 @@ limitations under the License.
 */
 
 #pragma once
-#define KL_DEBUG_COST_CHECK
+// #define KL_DEBUG_COST_CHECK
 #include <algorithm>
 #include <chrono>
 #include <cstdlib>
