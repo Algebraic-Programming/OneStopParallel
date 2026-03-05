@@ -19,7 +19,8 @@ limitations under the License.
 #pragma once
 
 #include "../kl_active_schedule.hpp"
-#include "../kl_improver.hpp"
+#include "../kl_improver_base.hpp"
+#include "../kl_work_affinity.hpp"
 
 namespace osp {
 
@@ -30,6 +31,7 @@ struct KlTotalCommCostFunction {
     using KlGainUpdateInfo = KlUpdateInfo<VertexType>;
 
     constexpr static bool isMaxCommCostFunction_ = false;
+    constexpr static bool coupledWorkComm_ = false;
 
     constexpr static unsigned windowRange_ = 2 * windowSize + 1;
     constexpr static bool useNodeCommunicationCosts_ = useNodeCommunicationCostsArg || not hasEdgeWeightsV<GraphT>;
@@ -50,7 +52,7 @@ struct KlTotalCommCostFunction {
 
     inline CostT GetMaxCommWeightMultiplied() { return maxCommWeight_ * commMultiplier_; }
 
-    const std::string Name() const { return "toal_comm_cost"; }
+    const std::string Name() const { return "total_comm_cost"; }
 
     inline bool IsCompatible(VertexType node, unsigned proc) { return activeSchedule_->GetInstance().IsCompatible(node, proc); }
 
@@ -62,15 +64,25 @@ struct KlTotalCommCostFunction {
         commMultiplier_ = 1.0 / instance_->NumberOfProcessors();
     }
 
-    struct EmptyStruct {};
-
-    using PreMoveCommDataT = EmptyStruct;
-
-    inline EmptyStruct GetPreMoveCommData(const KlMove &) { return EmptyStruct(); }
-
     CostT ComputeScheduleCostTest() { return ComputeScheduleCost(); }
 
     void UpdateDatastructureAfterMove(const KlMove &, const unsigned, const unsigned) {}
+
+    void SwapCommSteps(unsigned, unsigned) {}
+
+    void UpdateLambdaAfterStepRemoval(unsigned) {}
+
+    void UpdateLambdaAfterStepRemoval(unsigned, unsigned, unsigned) {}
+
+    void FixupSendRecvAfterStepRemoval(unsigned, unsigned) {}
+
+    auto StepMaxComm(unsigned) const { return 0; }
+
+    void UpdateLambdaAfterStepInsertion(unsigned) {}
+
+    void UpdateLambdaAfterStepInsertion(unsigned, unsigned, unsigned) {}
+
+    void FixupSendRecvAfterStepInsertion(unsigned, unsigned, unsigned) {}
 
     CostT ComputeScheduleCost() {
         CostT workCosts = 0;
@@ -340,6 +352,17 @@ struct KlTotalCommCostFunction {
     }
 
     template <typename AffinityTableT>
+    void ComputeNodeAffinity(VertexType node,
+                             AffinityTableT &affinityTableNode,
+                             const CostT &penalty,
+                             const CostT &reward,
+                             const unsigned startStep,
+                             const unsigned endStep) {
+        ComputeWorkAffinity<windowSize>(node, affinityTableNode, *activeSchedule_, *graph_, *procRange_, startStep, endStep);
+        ComputeCommAffinity(node, affinityTableNode, penalty, reward, startStep, endStep);
+    }
+
+    template <typename AffinityTableT>
     void ComputeCommAffinity(VertexType node,
                              AffinityTableT &affinityTableNode,
                              const CostT &penalty,
@@ -395,7 +418,7 @@ struct KlTotalCommCostFunction {
                 }
             }
 
-        }    // traget
+        }    // target
 
         for (const auto &source : instance_->GetComputationalDag().Parents(node)) {
             const unsigned sourceStep = activeSchedule_->AssignedSuperstep(source);

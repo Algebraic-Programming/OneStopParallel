@@ -24,7 +24,6 @@ limitations under the License.
 
 #include "../kl_active_schedule.hpp"
 #include "../kl_improver_base.hpp"
-#include "../kl_work_affinity.hpp"
 #include "comm_cost_policies.hpp"
 #include "kl_comm_delta_helper.hpp"
 #include "max_comm_datastructure.hpp"
@@ -32,15 +31,17 @@ limitations under the License.
 namespace osp {
 
 template <typename GraphT, typename CostT, typename MemoryConstraintT, typename CommPolicy = EagerCommCostPolicy, unsigned windowSize = 1>
-struct KlBspCommCostFunction {
+struct KlMaxBspCommCostFunction {
     using VertexType = VertexIdxT<GraphT>;
     using KlMove = KlMoveStruct<CostT, VertexType>;
     using KlGainUpdateInfo = KlUpdateInfo<VertexType>;
     using CommWeightT = VCommwT<GraphT>;
+    using VertexWorkWeightT = VWorkwT<GraphT>;
 
     constexpr static unsigned windowRange_ = 2 * windowSize + 1;
     constexpr static bool isMaxCommCostFunction_ = true;
-    constexpr static bool coupledWorkComm_ = false;
+
+    constexpr static bool coupledWorkComm_ = true;
 
     KlActiveSchedule<GraphT, CostT, MemoryConstraintT> *activeSchedule_;
     CompatibleProcessorRange<GraphT> *procRange_;
@@ -55,7 +56,7 @@ struct KlBspCommCostFunction {
 
     inline CostT GetMaxCommWeightMultiplied() { return commDs_.maxCommWeight_; }
 
-    inline const std::string Name() const { return "bsp_comm"; }
+    inline const std::string Name() const { return "max_bsp_comm"; }
 
     inline bool IsCompatible(VertexType node, unsigned proc) { return activeSchedule_->GetInstance().IsCompatible(node, proc); }
 
@@ -73,7 +74,6 @@ struct KlBspCommCostFunction {
         instance_ = &sched.GetInstance();
         graph_ = &instance_->GetComputationalDag();
 
-        const unsigned numSteps = activeSchedule_->NumSteps();
         commDs_.Initialize(*activeSchedule_);
     }
 
@@ -85,14 +85,19 @@ struct KlBspCommCostFunction {
             ComputeSendReceiveDatastructures();
         }
 
-        CostT totalCost = 0;
-        for (unsigned step = 0; step < activeSchedule_->NumSteps(); step++) {
-            totalCost += activeSchedule_->GetStepMaxWork(step);
-            totalCost += commDs_.StepMaxComm(step) * instance_->CommunicationCosts();
+        const unsigned numSteps = activeSchedule_->NumSteps();
+        const CostT g = static_cast<CostT>(instance_->CommunicationCosts());
+
+        CostT totalCost = static_cast<CostT>(activeSchedule_->GetStepMaxWork(0));
+
+        for (unsigned step = 1; step < numSteps; step++) {
+            const CostT work = static_cast<CostT>(activeSchedule_->GetStepMaxWork(step));
+            const CostT comm = static_cast<CostT>(commDs_.StepMaxComm(step - 1)) * g;
+            totalCost += std::max(work, comm);
         }
 
-        if (activeSchedule_->NumSteps() > 1) {
-            totalCost += static_cast<CostT>(activeSchedule_->NumSteps() - 1) * instance_->SynchronisationCosts();
+        if (numSteps > 1) {
+            totalCost += static_cast<CostT>(numSteps - 1) * instance_->SynchronisationCosts();
         }
 
         return totalCost;
@@ -107,7 +112,6 @@ struct KlBspCommCostFunction {
         moveCounter_++;
         if (!commDs_.ValidateCommDs(moveCounter_, move)) {
             std::cout << "[KL_DEBUG_VALIDATE_COMM_DS] *** DIVERGENCE at move #" << moveCounter_ << " — ABORTING ***" << std::endl;
-            // std::abort();
         }
 #endif
     }
@@ -136,6 +140,7 @@ struct KlBspCommCostFunction {
             if (checkLambda(node)) {
                 return true;
             }
+
             const auto &graph = instance_->GetComputationalDag();
             for (const auto &parent : graph.Parents(node)) {
                 if (checkLambda(parent)) {
@@ -166,6 +171,12 @@ struct KlBspCommCostFunction {
         commDs_.FixupSendRecvAfterStepInsertion(insertedStep, startStep, endStep);
     }
 
+    void PrepareStepRemoval(unsigned /*removedStep*/) {}
+
+    CostT ComputeStepRemovalCostDelta(unsigned /*removedStep*/, CostT currentCost) {
+        return ComputeScheduleCost<false>() - currentCost;
+    }
+
     template <typename AffinityTableT>
     void ComputeNodeAffinity(VertexType node,
                              AffinityTableT &affinityTableNode,
@@ -173,47 +184,54 @@ struct KlBspCommCostFunction {
                              const CostT &reward,
                              const unsigned startStep,
                              const unsigned endStep) {
-        ComputeWorkAffinity<windowSize>(node, affinityTableNode, *activeSchedule_, *graph_, *procRange_, startStep, endStep);
-        ComputeCommAffinity(node, affinityTableNode, penalty, reward, startStep, endStep);
-    }
+        // Initialize affinity table to zero
+        for (auto &procVec : affinityTableNode) {
+            std::fill(procVec.begin(), procVec.end(), CostT(0));
+        }
 
-    template <typename AffinityTableT>
-    void ComputeCommAffinity(VertexType node,
-                             AffinityTableT &affinityTableNode,
-                             const CostT &penalty,
-                             const CostT &reward,
-                             const unsigned startStep,
-                             const unsigned endStep) {
         const unsigned nodeStep = activeSchedule_->AssignedSuperstep(node);
         const unsigned nodeProc = activeSchedule_->AssignedProcessor(node);
         const unsigned windowBound = EndIdx(nodeStep, endStep);
         const unsigned nodeStartIdx = StartIdx(nodeStep, startStep);
+        const unsigned numSteps = activeSchedule_->NumSteps();
+        const unsigned staleness = activeSchedule_->GetStaleness();
+
+        auto ClampIdx = [&](int val) -> unsigned {
+            return static_cast<unsigned>(std::max(static_cast<int>(nodeStartIdx), std::min(val, static_cast<int>(windowBound))));
+        };
 
         for (const auto &target : instance_->GetComputationalDag().Children(node)) {
             const unsigned targetStep = activeSchedule_->AssignedSuperstep(target);
             const unsigned targetProc = activeSchedule_->AssignedProcessor(target);
 
-            if (targetStep < nodeStep + (targetProc != nodeProc)) {
-                const unsigned diff = nodeStep - targetStep;
-                const unsigned bound = windowSize > diff ? windowSize - diff : 0;
-                unsigned idx = nodeStartIdx;
-                for (; idx < bound; idx++) {
+            const int gap = static_cast<int>(targetStep) - static_cast<int>(nodeStep);
+
+            const unsigned sameCutoff = ClampIdx(static_cast<int>(windowSize) + gap + 1);
+            const unsigned diffCutoff = ClampIdx(static_cast<int>(windowSize) + gap - static_cast<int>(staleness) + 1);
+
+            const unsigned currThreshold = (targetProc != nodeProc) ? staleness : 0u;
+            const bool currentlyViolated = (nodeStep + currThreshold > targetStep);
+
+            if (!currentlyViolated) {
+                for (unsigned idx = diffCutoff; idx < windowBound; idx++) {
+                    for (const unsigned p : procRange_->CompatibleProcessorsVertex(node)) {
+                        affinityTableNode[p][idx] += penalty;
+                    }
+                }
+                if (IsCompatible(node, targetProc)) {
+                    for (unsigned idx = diffCutoff; idx < sameCutoff; idx++) {
+                        affinityTableNode[targetProc][idx] -= penalty;
+                    }
+                }
+            } else {
+                for (unsigned idx = nodeStartIdx; idx < diffCutoff; idx++) {
                     for (const unsigned p : procRange_->CompatibleProcessorsVertex(node)) {
                         affinityTableNode[p][idx] -= reward;
                     }
                 }
-                if (windowSize >= diff && IsCompatible(node, targetProc)) {
-                    affinityTableNode[targetProc][idx] -= reward;
-                }
-            } else {
-                const unsigned diff = targetStep - nodeStep;
-                unsigned idx = windowSize + diff;
-                if (idx < windowBound && IsCompatible(node, targetProc)) {
-                    affinityTableNode[targetProc][idx] -= penalty;
-                }
-                for (; idx < windowBound; idx++) {
-                    for (const unsigned p : procRange_->CompatibleProcessorsVertex(node)) {
-                        affinityTableNode[p][idx] += penalty;
+                if (IsCompatible(node, targetProc)) {
+                    for (unsigned idx = diffCutoff; idx < sameCutoff; idx++) {
+                        affinityTableNode[targetProc][idx] -= reward;
                     }
                 }
             }
@@ -223,44 +241,151 @@ struct KlBspCommCostFunction {
             const unsigned sourceStep = activeSchedule_->AssignedSuperstep(source);
             const unsigned sourceProc = activeSchedule_->AssignedProcessor(source);
 
-            if (sourceStep < nodeStep + (sourceProc == nodeProc)) {
-                const unsigned diff = nodeStep - sourceStep;
-                const unsigned bound = windowSize >= diff ? windowSize - diff + 1 : 0;
-                unsigned idx = nodeStartIdx;
-                for (; idx < bound; idx++) {
+            const int gapP = static_cast<int>(nodeStep) - static_cast<int>(sourceStep);
+
+            const unsigned sameCutoffP = ClampIdx(static_cast<int>(windowSize) - gapP);
+            const unsigned diffCutoffP = ClampIdx(static_cast<int>(windowSize) - gapP + static_cast<int>(staleness));
+
+            const unsigned currThreshold = (sourceProc != nodeProc) ? staleness : 0u;
+            const bool currentlyViolated = (sourceStep + currThreshold > nodeStep);
+
+            if (!currentlyViolated) {
+                for (unsigned idx = nodeStartIdx; idx < diffCutoffP; idx++) {
                     for (const unsigned p : procRange_->CompatibleProcessorsVertex(node)) {
                         affinityTableNode[p][idx] += penalty;
                     }
                 }
-                if (idx - 1 < bound && IsCompatible(node, sourceProc)) {
-                    affinityTableNode[sourceProc][idx - 1] -= penalty;
+
+                if (IsCompatible(node, sourceProc)) {
+                    for (unsigned idx = sameCutoffP; idx < diffCutoffP; idx++) {
+                        affinityTableNode[sourceProc][idx] -= penalty;
+                    }
                 }
             } else {
-                const unsigned diff = sourceStep - nodeStep;
-                unsigned idx = std::min(windowSize + diff, windowBound);
-                if (idx < windowBound && IsCompatible(node, sourceProc)) {
-                    affinityTableNode[sourceProc][idx] -= reward;
-                }
-                idx++;
-                for (; idx < windowBound; idx++) {
+                for (unsigned idx = diffCutoffP; idx < windowBound; idx++) {
                     for (const unsigned p : procRange_->CompatibleProcessorsVertex(node)) {
                         affinityTableNode[p][idx] -= reward;
+                    }
+                }
+
+                if (IsCompatible(node, sourceProc)) {
+                    for (unsigned idx = sameCutoffP; idx < diffCutoffP; idx++) {
+                        affinityTableNode[sourceProc][idx] -= reward;
                     }
                 }
             }
         }
 
-        const CostT g = instance_->CommunicationCosts();
-        auto bspEvaluator
-            = [&](unsigned /*pTo*/, unsigned /*sToIdx*/, unsigned /*sTo*/, CommDeltaScratchData<CommWeightT> &scratch) -> CostT {
-            CostT totalChange = 0;
-            for (unsigned step : scratch.activeSteps_) {
-                if (!scratch.sendDeltas_[step].dirtyProcs_.empty() || !scratch.recvDeltas_[step].dirtyProcs_.empty()) {
-                    totalChange += commDs_.ComputeNewMaxComm(step, scratch.sendDeltas_[step], scratch.recvDeltas_[step])
-                                   - commDs_.StepMaxComm(step);
+        const VertexWorkWeightT nodeWeight = graph_->VertexWorkWeight(node);
+        const CostT maxWorkAtFrom = static_cast<CostT>(activeSchedule_->GetStepMaxWork(nodeStep));
+        const CostT secondMaxWorkAtFrom = static_cast<CostT>(activeSchedule_->GetStepSecondMaxWork(nodeStep));
+        const bool isSoleMaxProc
+            = (activeSchedule_->GetStepMaxWorkProcessorCount()[nodeStep] == 1)
+              && (maxWorkAtFrom <= static_cast<CostT>(activeSchedule_->GetStepProcessorWork(nodeStep, nodeProc)));
+
+        const CostT workRemoval = isSoleMaxProc ? std::min(static_cast<CostT>(nodeWeight), maxWorkAtFrom - secondMaxWorkAtFrom)
+                                                : CostT(0);
+        const CostT maxWorkAfterRemoval = maxWorkAtFrom - workRemoval;
+        const CostT g = static_cast<CostT>(instance_->CommunicationCosts());
+
+        auto maxBspEvaluator
+            = [&](unsigned pTo, unsigned /*sToIdx*/, unsigned sTo, CommDeltaScratchData<CommWeightT> &scratch) -> CostT {
+            CostT workAdd;
+            if (sTo == nodeStep) {
+                if (pTo == nodeProc) {
+                    workAdd = std::max(CostT(0),
+                                       static_cast<CostT>(activeSchedule_->GetStepProcessorWork(sTo, pTo)) - maxWorkAfterRemoval);
+                } else {
+                    workAdd = std::max(CostT(0),
+                                       static_cast<CostT>(activeSchedule_->GetStepProcessorWork(sTo, pTo))
+                                           + static_cast<CostT>(nodeWeight) - maxWorkAfterRemoval);
                 }
+            } else {
+                const CostT maxWorkAtTo = static_cast<CostT>(activeSchedule_->GetStepMaxWork(sTo));
+                workAdd = std::max(CostT(0),
+                                   static_cast<CostT>(activeSchedule_->GetStepProcessorWork(sTo, pTo))
+                                       + static_cast<CostT>(nodeWeight) - maxWorkAtTo);
             }
-            return totalChange * g;
+
+            CostT totalChange = 0;
+            bool fromCovered = false;
+            bool toCovered = false;
+
+            for (unsigned cs : scratch.activeSteps_) {
+                if (scratch.sendDeltas_[cs].dirtyProcs_.empty() && scratch.recvDeltas_[cs].dirtyProcs_.empty()) {
+                    continue;
+                }
+
+                const unsigned ws = cs + 1;
+
+                if (ws >= numSteps) {
+                    continue;
+                }
+
+                CostT wd = 0;
+                if (ws == nodeStep) {
+                    wd -= workRemoval;
+                    fromCovered = true;
+                }
+                if (ws == sTo) {
+                    wd += workAdd;
+                    toCovered = true;
+                }
+
+                const CommWeightT newMaxComm = commDs_.ComputeNewMaxComm(cs, scratch.sendDeltas_[cs], scratch.recvDeltas_[cs]);
+                const CostT oldWork = static_cast<CostT>(activeSchedule_->GetStepMaxWork(ws));
+                const CostT oldMaxComm = static_cast<CostT>(commDs_.StepMaxComm(cs));
+
+                const CostT oldContrib = std::max(oldWork, oldMaxComm * g);
+                const CostT newContrib = std::max(oldWork + wd, static_cast<CostT>(newMaxComm) * g);
+
+                totalChange += newContrib - oldContrib;
+            }
+
+            if (!fromCovered && nodeStep > 0) {
+                const unsigned cs = nodeStep - 1;
+                const CostT oldWork = maxWorkAtFrom;
+                const CostT oldComm = static_cast<CostT>(commDs_.StepMaxComm(cs)) * g;
+                CostT newWork = oldWork - workRemoval;
+
+                if (sTo == nodeStep && !toCovered) {
+                    newWork += workAdd;
+                    toCovered = true;
+                }
+
+                totalChange += std::max(newWork, oldComm) - std::max(oldWork, oldComm);
+                fromCovered = true;
+            }
+
+            if (!fromCovered && nodeStep == 0) {
+                CostT newWork = maxWorkAtFrom - workRemoval;
+
+                if (sTo == 0 && !toCovered) {
+                    newWork += workAdd;
+                    toCovered = true;
+                }
+
+                totalChange += newWork - maxWorkAtFrom;
+                fromCovered = true;
+            }
+
+            if (!toCovered && sTo > 0) {
+                const unsigned cs = sTo - 1;
+                const CostT oldWork = static_cast<CostT>(activeSchedule_->GetStepMaxWork(sTo));
+                const CostT oldComm = static_cast<CostT>(commDs_.StepMaxComm(cs)) * g;
+                const CostT newWork = oldWork + workAdd;
+
+                totalChange += std::max(newWork, oldComm) - std::max(oldWork, oldComm);
+                toCovered = true;
+            }
+
+            if (!toCovered && sTo == 0) {
+                const CostT oldWork = static_cast<CostT>(activeSchedule_->GetStepMaxWork(0));
+                totalChange += (oldWork + workAdd) - oldWork;
+                toCovered = true;
+            }
+
+            return totalChange;
         };
 
         ComputeCommAffinityDeltas<GraphT, CostT, CommWeightT, CommPolicy>(node,
@@ -274,11 +399,11 @@ struct KlBspCommCostFunction {
                                                                           nodeProc,
                                                                           nodeStartIdx,
                                                                           windowBound,
-                                                                          activeSchedule_->NumSteps(),
+                                                                          numSteps,
                                                                           windowSize,
                                                                           startStep,
                                                                           endStep,
-                                                                          bspEvaluator);
+                                                                          maxBspEvaluator);
     }
 };
 
