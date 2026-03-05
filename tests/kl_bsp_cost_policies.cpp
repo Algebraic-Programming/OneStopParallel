@@ -25,7 +25,7 @@ limitations under the License.
  * ---------
  *   Suite 1  ArrangeSuperstepCommData  (policy-independent cache logic)
  *   Suite 2  ComputeCommDatastructures (initial state, exact placement per policy)
- *   Suite 3  Incremental update scenarios run under ALL THREE policies
+ *   Suite 3  Incremental update scenarios run under all three policies
  *            (linear chain, fan-out, cross-step, complex graph, grid, butterfly, ladder)
  *   Suite 4  Edge cases under all three policies
  *            (child-at-step-0, min-step-shift, single-edge, diamond, fan-in,
