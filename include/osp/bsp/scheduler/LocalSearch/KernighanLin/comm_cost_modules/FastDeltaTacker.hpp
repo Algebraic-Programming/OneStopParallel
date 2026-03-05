@@ -20,6 +20,17 @@ limitations under the License.
 
 #include <vector>
 
+/**
+ * @brief Efficient sparse tracker for accumulating delta values across processors.
+ *
+ * FastDeltaTracker is used in local search algorithms (like Kernighan-Lin) to efficiently
+ * track incremental changes (deltas) to metrics such as communication costs for each processor.
+ * Instead of iterating over all processors to find or reset changes, it maintains a dense array
+ * for O(1) lookups and updates, alongside a sparse list (`dirtyProcs_`) of only the modified
+ * (non-zero) processors. This allows for fast O(1) additions, removals, and O(|dirty_procs|) clearing.
+ *
+ * @tparam CommWeightT The numerical type used for the communication weights/deltas.
+ */
 template <typename CommWeightT>
 struct FastDeltaTracker {
     std::vector<CommWeightT> denseVals_;      // Size: num_procs

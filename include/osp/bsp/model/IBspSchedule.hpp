@@ -97,6 +97,10 @@ class IBspSchedule {
     /**
      * @brief Get the staleness of the schedule.
      *
+     * The staleness determines the minimum number of supersteps that must elapse between the
+     * assignment of a node to a processor and the assignment of one of its dependent neighbors
+     * to a different processor. For a standard BSP schedule, the staleness is 1.
+     *
      * @return The staleness of the schedule.
      */
     virtual unsigned GetStaleness() const { return 1; }

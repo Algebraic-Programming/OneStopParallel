@@ -23,6 +23,21 @@ limitations under the License.
 
 namespace osp {
 
+/**
+ * @class KlImproverScan
+ * @brief An exhaustive, scan-based approach for finding the best Kernighan-Lin (KL) moves.
+ *
+ * This class implements a move-finding strategy that recomputes the gain for all active nodes
+ * after each move. Unlike priority queue based approaches that try to incrementally update
+ * affected nodes, `KlImproverScan` exhaustively scans the entire active set (`affinityTable_`)
+ * during each move selection phase to find the move(s) with the highest gain.
+ *
+ * This approach makes sense and is often preferred for more complex communication cost
+ * functions like BSP and Max BSP. In these models, a single move can trigger cascading cost
+ * updates for a very large number of nodes (compared to simpler models like total communication
+ * cost), making incremental priority queue updates highly inefficient due to the sheer volume
+ * of affected elements.
+ */
 template <typename GraphT,
           typename CommCostFunctionT,
           typename MemoryConstraintT = NoLocalSearchMemoryConstraint,
