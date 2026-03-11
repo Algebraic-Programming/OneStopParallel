@@ -529,6 +529,48 @@ class Sptrsv {
         }
     }
 
+    // SSP Usolve with configurable staleness.
+    // Uses FlatCheckpointCounterBarrier created internally.
+    template <unsigned staleness = 2U>
+    void SspUsolveStaleness() {
+        const unsigned nthreads = instance_->NumberOfProcessors();
+        FlatCheckpointCounterBarrier barrier(nthreads);
+
+        auto *csc = instance_->GetComputationalDag().GetCSC();
+        const auto *outer = csc->outerIndexPtr();
+        const auto *inner = csc->innerIndexPtr();
+        const auto *vals = csc->valuePtr();
+
+        #pragma omp parallel num_threads(nthreads)
+        {
+            const std::size_t proc = static_cast<std::size_t>(omp_get_thread_num());
+            unsigned step = numSupersteps_;
+            do {
+                step--;
+                const size_t boundsStrSize = boundsArrayU_[step][proc].size();
+                if (boundsStrSize > 0U) {
+                    barrier.Wait(proc, staleness - 1U);
+                }
+
+                for (size_t index = 0; index < boundsStrSize; index += 2) {
+                    EigenIdxType node = boundsArrayU_[step][proc][index] + 1;
+                    const EigenIdxType lowerB = boundsArrayU_[step][proc][index + 1];
+
+                    do {
+                        node--;
+                        x_[node] = b_[node];
+                        for (EigenIdxType i = outer[node] + 1; i < outer[node + 1]; ++i) {
+                            x_[node] -= vals[i] * x_[inner[i]];
+                        }
+                        x_[node] /= vals[outer[node]];
+                    } while (node != lowerB);
+                }
+
+                barrier.Arrive(proc);
+            } while (step != 0);
+        }
+    }
+
     virtual ~Sptrsv() = default;
 };
 
