@@ -529,6 +529,47 @@ class Sptrsv {
         }
     }
 
+    // SSP Lsolve in-place with staleness=2 (allowing at most one superstep of lag).
+    // Uses FlatCheckpointCounterBarrier created internally.
+    template <unsigned staleness = 2U>
+    void SspLsolveStalenessInPlace() {
+        const unsigned nthreads = instance_->NumberOfProcessors();
+        FlatCheckpointCounterBarrier barrier(nthreads);
+
+        auto *csr = instance_->GetComputationalDag().GetCSR();
+        const auto *outer = csr->outerIndexPtr();
+        const auto *inner = csr->innerIndexPtr();
+        const auto *vals = csr->valuePtr();
+
+        #pragma omp parallel num_threads(nthreads)
+        {
+            const std::size_t proc = static_cast<std::size_t>(omp_get_thread_num());
+            for (unsigned step = 0; step < numSupersteps_; ++step) {
+                // Process nodes assigned to this (step, proc) pair.
+                const size_t boundsStrSize = boundsArrayL_[step][proc].size();
+                // Enforce staleness window before starting this superstep.
+                if (boundsStrSize > 0U) {
+                    barrier.Wait(proc, staleness - 1U);
+                }
+                for (size_t index = 0; index < boundsStrSize; index += 2) {
+                    EigenIdxType lowerB = boundsArrayL_[step][proc][index];
+                    const EigenIdxType upperB = boundsArrayL_[step][proc][index + 1];
+                    for (EigenIdxType node = lowerB; node <= upperB; ++node) {
+                        // Perform lower-triangular solve for this node
+                        for (EigenIdxType i = outer[node]; i < outer[node + 1] - 1; ++i) {
+                            // Subtract contributions from previously solved nodes
+                            x_[node] -= vals[i] * x_[inner[i]];
+                        }
+                        // Divide by diagonal element to complete solve for this node
+                        x_[node] /= vals[outer[node + 1] - 1];
+                    }
+                }
+                // Signal completion of this superstep.
+                barrier.Arrive(proc);
+            }
+        }
+    }
+
     // SSP Usolve with configurable staleness.
     // Uses FlatCheckpointCounterBarrier created internally.
     template <unsigned staleness = 2U>

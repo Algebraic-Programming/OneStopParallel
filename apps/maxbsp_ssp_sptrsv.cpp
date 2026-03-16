@@ -1,6 +1,6 @@
 /*
  * maxbsp_ssp_sptrsv.cpp
- * Benchmark for SpTRSV (Lsolve + Usolve) using:
+ * Benchmark for SpTRSV using:
  *   - variance_ssp
  *   - growlocal_ssp
  *   - growlocal
@@ -13,7 +13,6 @@
 
 #include <Eigen/Sparse>
 #include <algorithm>
-#include <cctype>
 #include <chrono>
 #include <cstdlib>
 #include <cmath>
@@ -61,7 +60,6 @@ struct Args {
     std::string outputCsv = "sptrsv_benchmark.csv";
     int iterations = 100;
     unsigned processors = 16U;
-    bool runUsolve = true;
     std::set<Algorithm> algorithms;
 };
 
@@ -137,29 +135,12 @@ double LInftyNormalisedDiff(const std::vector<double> &v, const std::vector<doub
 void PrintUsage(const char *prog) {
     std::cout << "Usage:\n"
               << "  " << prog
-              << " --input <file_or_directory> [--output <csv>] [--iterations <n>] [--processors <p>] [--run-usolve <0|1>]\n"
+              << " --input <file_or_directory> [--output <csv>] [--iterations <n>] [--processors <p>]\n"
               << "      [--variance-ssp] [--growlocal-ssp] [--growlocal] [--eigen-serial] [--all]\n\n"
               << "Examples:\n"
               << "  " << prog << " --input ../data/mtx_tests/ErdosRenyi_2k_14k_A.mtx --all\n"
               << "  " << prog
-              << " --input ../data/mtx_tests --output bench.csv --iterations 100 --processors 16 --run-usolve 0 --variance-ssp --growlocal-ssp --growlocal\n";
-}
-
-bool ParseBoolValue(const std::string &value, bool &parsed) {
-    std::string normalised = value;
-    std::transform(normalised.begin(), normalised.end(), normalised.begin(), [](unsigned char c) {
-        return static_cast<char>(std::tolower(c));
-    });
-
-    if (normalised == "1" || normalised == "true" || normalised == "yes" || normalised == "on") {
-        parsed = true;
-        return true;
-    }
-    if (normalised == "0" || normalised == "false" || normalised == "no" || normalised == "off") {
-        parsed = false;
-        return true;
-    }
-    return false;
+              << " --input ../data/mtx_tests --output bench.csv --iterations 100 --processors 16 --variance-ssp --growlocal-ssp --growlocal\n";
 }
 
 bool ParseArgs(int argc, char *argv[], Args &args) {
@@ -170,8 +151,8 @@ bool ParseArgs(int argc, char *argv[], Args &args) {
     for (int i = 1; i < argc; ++i) {
         const std::string flag = argv[i];
 
-        const bool needsValue = (flag == "--input" || flag == "--output" || flag == "--iterations"
-                                 || flag == "--processors" || flag == "--run-usolve");
+        const bool needsValue
+            = (flag == "--input" || flag == "--output" || flag == "--iterations" || flag == "--processors");
         if (needsValue && i + 1 >= argc) {
             std::cerr << "Missing value for " << flag << "\n";
             return false;
@@ -185,13 +166,6 @@ bool ParseArgs(int argc, char *argv[], Args &args) {
             args.iterations = std::stoi(argv[++i]);
         } else if (flag == "--processors") {
             args.processors = static_cast<unsigned>(std::stoul(argv[++i]));
-        } else if (flag == "--run-usolve") {
-            bool parsed = false;
-            if (!ParseBoolValue(argv[++i], parsed)) {
-                std::cerr << "Invalid value for --run-usolve. Use 0/1, false/true, no/yes, or off/on.\n";
-                return false;
-            }
-            args.runUsolve = parsed;
         } else if (flag == "--variance-ssp") {
             args.algorithms.insert(Algorithm::VarianceSsp);
         } else if (flag == "--growlocal-ssp") {
@@ -355,12 +329,11 @@ int main(int argc, char *argv[]) {
     EnsureSummaryCsvHeader(summaryCsv);
 
     std::cout << "Running benchmark on " << graphFiles.size() << " graph(s), iterations=" << args.iterations
-              << ", processors=" << args.processors << ", run-usolve=" << (args.runUsolve ? "1" : "0") << std::endl;
+              << ", processors=" << args.processors << std::endl;
     std::cout << "Experiment id timestamp: " << experimentStart << std::endl;
 
     std::vector<CsvRow> bufferedRows;
-    bufferedRows.reserve((args.runUsolve ? 2U : 1U) * graphFiles.size() * args.algorithms.size()
-                        * static_cast<std::size_t>(args.iterations));
+    bufferedRows.reserve(graphFiles.size() * args.algorithms.size() * static_cast<std::size_t>(args.iterations));
     typename std::vector<CsvRow>::difference_type writtenEntries = 0U;
 
     for (const auto &graphPath : graphFiles) {
@@ -384,20 +357,9 @@ int main(int argc, char *argv[]) {
         Sptrsv<int32_t> sptrsv(instance);
         const std::size_t n = static_cast<std::size_t>(lCsr.cols());
 
-        std::vector<double> serialRefXL(n, 0.0);
-        std::vector<double> serialBL(n, 1.0);
-        sptrsv.x_ = serialRefXL.data();
-        sptrsv.b_ = serialBL.data();
-        sptrsv.LsolveSerial();
-
-        std::vector<double> serialRefXU;
-        if (args.runUsolve) {
-            std::vector<double> serialBU(n, 1.0);
-            serialRefXU.assign(n, 0.0);
-            sptrsv.x_ = serialRefXU.data();
-            sptrsv.b_ = serialBU.data();
-            sptrsv.UsolveSerial();
-        }
+        std::vector<double> serialRefX(n, 1.0);
+        sptrsv.x_ = serialRefX.data();
+        sptrsv.LsolveSerialInPlace();
 
         std::cout << "Graph: " << graphName << " (" << lCsr.rows() << "x" << lCsr.cols() << ", nnz=" << lCsr.nonZeros() << ")\n";
 
@@ -414,23 +376,20 @@ int main(int argc, char *argv[]) {
             const unsigned supersteps = schedule.NumberOfSupersteps();
             const int syncCosts = ComputeSyncCosts(instance);
 
-            bool correctL = false;
-            bool correctU = false;
+            bool correct = false;
             for (int iter = 0; iter < args.iterations + preMeasureIterations; ++iter) {
-                std::vector<double> xL(n, 0.0);
-                std::vector<double> bL(n, 1.0);
-                sptrsv.x_ = xL.data();
-                sptrsv.b_ = bL.data();
+                std::vector<double> x(n, 1.0);
+                sptrsv.x_ = x.data();
 
-                const auto sL = std::chrono::high_resolution_clock::now();
-                sptrsv.SspLsolveStaleness<kDefaultStaleness>();
-                const auto eL = std::chrono::high_resolution_clock::now();
-                const double runtimeL = std::chrono::duration<double>(eL - sL).count();
+                const auto s = std::chrono::high_resolution_clock::now();
+                sptrsv.SspLsolveStalenessInPlace<kDefaultStaleness>();
+                const auto e = std::chrono::high_resolution_clock::now();
+                const double runtime = std::chrono::duration<double>(e - s).count();
 
                 if (iter == 0) {
-                    const double diffL = LInftyNormalisedDiff(xL, serialRefXL);
-                    correctL = (diffL < EPSILON);
-                    std::cout << "  Variance_SSP first-run max relative diff vs serial lsolve: " << diffL << std::endl;
+                    const double diff = LInftyNormalisedDiff(x, serialRefX);
+                    correct = (diff < EPSILON);
+                    std::cout << "  Variance_SSP first-run max relative diff vs serial: " << diff << std::endl;
                 }
 
                 if (iter >= preMeasureIterations) {
@@ -441,39 +400,8 @@ int main(int argc, char *argv[]) {
                                                      supersteps,
                                                      syncCosts,
                                                      kDefaultStaleness,
-                                                     runtimeL,
-                                                     correctL});
-                }
-
-                if (args.runUsolve) {
-                    std::vector<double> xU(n, 0.0);
-                    std::vector<double> bU(n, 1.0);
-                    sptrsv.x_ = xU.data();
-                    sptrsv.b_ = bU.data();
-
-                    const auto sU = std::chrono::high_resolution_clock::now();
-                    sptrsv.SspUsolveStaleness<kDefaultStaleness>();
-                    const auto eU = std::chrono::high_resolution_clock::now();
-                    const double runtimeU = std::chrono::duration<double>(eU - sU).count();
-
-                    if (iter == 0) {
-                        const double diffU = LInftyNormalisedDiff(xU, serialRefXU);
-                        correctU = (diffU < EPSILON);
-                        std::cout << "  Variance_SSP_Usolve first-run max relative diff vs serial usolve: " << diffU
-                                  << std::endl;
-                    }
-
-                    if (iter >= preMeasureIterations) {
-                        bufferedRows.emplace_back(CsvRow{graphName,
-                                                         "Variance_SSP_Usolve",
-                                                         args.processors,
-                                                         scheduleTime,
-                                                         supersteps,
-                                                         syncCosts,
-                                                         kDefaultStaleness,
-                                                         runtimeU,
-                                                         correctU});
-                    }
+                                                     runtime,
+                                                     correct});
                 }
             }
 
@@ -496,23 +424,20 @@ int main(int argc, char *argv[]) {
             const unsigned supersteps = schedule.NumberOfSupersteps();
             const int syncCosts = ComputeSyncCosts(instance);
 
-            bool correctL = false;
-            bool correctU = false;
+            bool correct = false;
             for (int iter = 0; iter < args.iterations + preMeasureIterations; ++iter) {
-                std::vector<double> xL(n, 0.0);
-                std::vector<double> bL(n, 1.0);
-                sptrsv.x_ = xL.data();
-                sptrsv.b_ = bL.data();
+                std::vector<double> x(n, 1.0);
+                sptrsv.x_ = x.data();
 
-                const auto sL = std::chrono::high_resolution_clock::now();
-                sptrsv.SspLsolveStaleness<kDefaultStaleness>();
-                const auto eL = std::chrono::high_resolution_clock::now();
-                const double runtimeL = std::chrono::duration<double>(eL - sL).count();
+                const auto s = std::chrono::high_resolution_clock::now();
+                sptrsv.SspLsolveStalenessInPlace<kDefaultStaleness>();
+                const auto e = std::chrono::high_resolution_clock::now();
+                const double runtime = std::chrono::duration<double>(e - s).count();
 
                 if (iter == 0) {
-                    const double diffL = LInftyNormalisedDiff(xL, serialRefXL);
-                    correctL = (diffL < EPSILON);
-                    std::cout << "  Growlocal_SSP first-run max relative diff vs serial lsolve: " << diffL << std::endl;
+                    const double diff = LInftyNormalisedDiff(x, serialRefX);
+                    correct = (diff < EPSILON);
+                    std::cout << "  Growlocal_SSP first-run max relative diff vs serial: " << diff << std::endl;
                 }
 
                 if (iter >= preMeasureIterations) {
@@ -523,39 +448,8 @@ int main(int argc, char *argv[]) {
                                                      supersteps,
                                                      syncCosts,
                                                      kDefaultStaleness,
-                                                     runtimeL,
-                                                     correctL});
-                }
-
-                if (args.runUsolve) {
-                    std::vector<double> xU(n, 0.0);
-                    std::vector<double> bU(n, 1.0);
-                    sptrsv.x_ = xU.data();
-                    sptrsv.b_ = bU.data();
-
-                    const auto sU = std::chrono::high_resolution_clock::now();
-                    sptrsv.SspUsolveStaleness<kDefaultStaleness>();
-                    const auto eU = std::chrono::high_resolution_clock::now();
-                    const double runtimeU = std::chrono::duration<double>(eU - sU).count();
-
-                    if (iter == 0) {
-                        const double diffU = LInftyNormalisedDiff(xU, serialRefXU);
-                        correctU = (diffU < EPSILON);
-                        std::cout << "  Growlocal_SSP_Usolve first-run max relative diff vs serial usolve: " << diffU
-                                  << std::endl;
-                    }
-
-                    if (iter >= preMeasureIterations) {
-                        bufferedRows.emplace_back(CsvRow{graphName,
-                                                         "Growlocal_SSP_Usolve",
-                                                         args.processors,
-                                                         scheduleTime,
-                                                         supersteps,
-                                                         syncCosts,
-                                                         kDefaultStaleness,
-                                                         runtimeU,
-                                                         correctU});
-                    }
+                                                     runtime,
+                                                     correct});
                 }
             }
 
@@ -578,23 +472,20 @@ int main(int argc, char *argv[]) {
             const unsigned supersteps = schedule.NumberOfSupersteps();
             const int syncCosts = ComputeSyncCosts(instance);
 
-            bool correctL = false;
-            bool correctU = false;
+            bool correct;
             for (int iter = 0; iter < args.iterations + preMeasureIterations; ++iter) {
-                std::vector<double> xL(n, 0.0);
-                std::vector<double> bL(n, 1.0);
-                sptrsv.x_ = xL.data();
-                sptrsv.b_ = bL.data();
+                std::vector<double> x(n, 1.0);
+                sptrsv.x_ = x.data();
 
-                const auto sL = std::chrono::high_resolution_clock::now();
-                sptrsv.LsolveNoPermutation();
-                const auto eL = std::chrono::high_resolution_clock::now();
-                const double runtimeL = std::chrono::duration<double>(eL - sL).count();
+                const auto s = std::chrono::high_resolution_clock::now();
+                sptrsv.LsolveNoPermutationInPlace();
+                const auto e = std::chrono::high_resolution_clock::now();
+                const double runtime = std::chrono::duration<double>(e - s).count();
 
                 if (iter == 0) {
-                    const double diffL = LInftyNormalisedDiff(xL, serialRefXL);
-                    correctL = (diffL < EPSILON);
-                    std::cout << "  Growlocal first-run max relative diff vs serial lsolve: " << diffL << std::endl;
+                    const double diff = LInftyNormalisedDiff(x, serialRefX);
+                    correct = (diff < EPSILON);
+                    std::cout << "  Growlocal first-run max relative diff vs serial: " << diff << std::endl;
                 }
 
                 if (iter >= preMeasureIterations) {
@@ -605,39 +496,8 @@ int main(int argc, char *argv[]) {
                                                      supersteps,
                                                      syncCosts,
                                                      1U,
-                                                     runtimeL,
-                                                     correctL});
-                }
-
-                if (args.runUsolve) {
-                    std::vector<double> xU(n, 0.0);
-                    std::vector<double> bU(n, 1.0);
-                    sptrsv.x_ = xU.data();
-                    sptrsv.b_ = bU.data();
-
-                    const auto s = std::chrono::high_resolution_clock::now();
-                    sptrsv.UsolveNoPermutation();
-                    const auto e = std::chrono::high_resolution_clock::now();
-                    const double runtime = std::chrono::duration<double>(e - s).count();
-
-                    if (iter == 0) {
-                        const double diff = LInftyNormalisedDiff(xU, serialRefXU);
-                        correctU = (diff < EPSILON);
-                        std::cout << "  Growlocal_Usolve first-run max relative diff vs serial usolve: " << diff
-                                  << std::endl;
-                    }
-
-                    if (iter >= preMeasureIterations) {
-                        bufferedRows.emplace_back(CsvRow{graphName,
-                                                         "Growlocal_Usolve",
-                                                         args.processors,
-                                                         scheduleTime,
-                                                         supersteps,
-                                                         syncCosts,
-                                                         1U,
-                                                         runtime,
-                                                         correctU});
-                    }
+                                                     runtime,
+                                                     correct});
                 }
             }
 
@@ -649,15 +509,13 @@ int main(int argc, char *argv[]) {
 
         if (args.algorithms.count(Algorithm::Serial) > 0U) {
             for (int iter = 0; iter < args.iterations + preMeasureIterations; ++iter) {
-                std::vector<double> xL(n, 0.0);
-                std::vector<double> bL(n, 1.0);
-                sptrsv.x_ = xL.data();
-                sptrsv.b_ = bL.data();
+                std::vector<double> x(n, 1.0);
+                sptrsv.x_ = x.data();
 
-                const auto sL = std::chrono::high_resolution_clock::now();
-                sptrsv.LsolveSerial();
-                const auto eL = std::chrono::high_resolution_clock::now();
-                const double runtimeL = std::chrono::duration<double>(eL - sL).count();
+                const auto s = std::chrono::high_resolution_clock::now();
+                sptrsv.LsolveSerialInPlace();
+                const auto e = std::chrono::high_resolution_clock::now();
+                const double runtime = std::chrono::duration<double>(e - s).count();
 
                 if (iter >= preMeasureIterations) {
                     bufferedRows.emplace_back(CsvRow{graphName,
@@ -667,32 +525,8 @@ int main(int argc, char *argv[]) {
                                                      1U,
                                                      0,
                                                      1U,
-                                                     runtimeL,
+                                                     runtime,
                                                      true});
-                }
-
-                if (args.runUsolve) {
-                    std::vector<double> xU(n, 0.0);
-                    std::vector<double> bU(n, 1.0);
-                    sptrsv.x_ = xU.data();
-                    sptrsv.b_ = bU.data();
-
-                    const auto s = std::chrono::high_resolution_clock::now();
-                    sptrsv.UsolveSerial();
-                    const auto e = std::chrono::high_resolution_clock::now();
-                    const double runtime = std::chrono::duration<double>(e - s).count();
-
-                    if (iter >= preMeasureIterations) {
-                        bufferedRows.emplace_back(CsvRow{graphName,
-                                                         "Serial_Usolve",
-                                                         1U,
-                                                         0.0,
-                                                         1U,
-                                                         0,
-                                                         1U,
-                                                         runtime,
-                                                         true});
-                    }
                 }
             }
 
