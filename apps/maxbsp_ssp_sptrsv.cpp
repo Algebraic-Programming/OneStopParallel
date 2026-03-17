@@ -349,8 +349,10 @@ int main(int argc, char *argv[]) {
             std::cerr << "Failed to load matrix: " << graphPath << std::endl;
             continue;
         }
+        lCsr.makeCompressed();
 
         Eigen::SparseMatrix<double, Eigen::ColMajor, int32_t> lCsc = lCsr;
+        lCsc.makeCompressed();
 
         SparseMatrixImp<int32_t> graph;
         graph.SetCsr(&lCsr);
