@@ -14,8 +14,8 @@
 #include <Eigen/Sparse>
 #include <algorithm>
 #include <chrono>
-#include <cstdlib>
 #include <cmath>
+#include <cstdlib>
 #include <ctime>
 #include <filesystem>
 #include <fstream>
@@ -134,8 +134,7 @@ double LInftyNormalisedDiff(const std::vector<double> &v, const std::vector<doub
 
 void PrintUsage(const char *prog) {
     std::cout << "Usage:\n"
-              << "  " << prog
-              << " --input <file_or_directory> [--output <csv>] [--iterations <n>] [--processors <p>]\n"
+              << "  " << prog << " --input <file_or_directory> [--output <csv>] [--iterations <n>] [--processors <p>]\n"
               << "      [--variance-ssp] [--growlocal-ssp] [--growlocal] [--eigen-serial] [--all]\n\n"
               << "Examples:\n"
               << "  " << prog << " --input ../data/mtx_tests/ErdosRenyi_2k_14k_A.mtx --all\n"
@@ -290,6 +289,12 @@ int ComputeSyncCosts(const BspInstance<SparseMatrixImp<int32_t>> &instance) {
 
 }    // namespace
 
+void resetOnes(std::vector<double> &x) {
+    for (double &val : x) {
+        val = 1.0;
+    }
+}
+
 int main(int argc, char *argv[]) {
     const std::string experimentStart = FormatExperimentStartTimestampForFilename();
 
@@ -377,9 +382,10 @@ int main(int argc, char *argv[]) {
             const int syncCosts = ComputeSyncCosts(instance);
 
             bool correct = false;
+            std::vector<double> x(n, 1.0);
+            sptrsv.x_ = x.data();
             for (int iter = 0; iter < args.iterations + preMeasureIterations; ++iter) {
-                std::vector<double> x(n, 1.0);
-                sptrsv.x_ = x.data();
+                resetOnes(x);
 
                 const auto s = std::chrono::high_resolution_clock::now();
                 sptrsv.SspLsolveStalenessInPlace<kDefaultStaleness>();
@@ -425,9 +431,10 @@ int main(int argc, char *argv[]) {
             const int syncCosts = ComputeSyncCosts(instance);
 
             bool correct = false;
+            std::vector<double> x(n, 1.0);
+            sptrsv.x_ = x.data();
             for (int iter = 0; iter < args.iterations + preMeasureIterations; ++iter) {
-                std::vector<double> x(n, 1.0);
-                sptrsv.x_ = x.data();
+                resetOnes(x);
 
                 const auto s = std::chrono::high_resolution_clock::now();
                 sptrsv.SspLsolveStalenessInPlace<kDefaultStaleness>();
@@ -473,9 +480,10 @@ int main(int argc, char *argv[]) {
             const int syncCosts = ComputeSyncCosts(instance);
 
             bool correct;
+            std::vector<double> x(n, 1.0);
+            sptrsv.x_ = x.data();
             for (int iter = 0; iter < args.iterations + preMeasureIterations; ++iter) {
-                std::vector<double> x(n, 1.0);
-                sptrsv.x_ = x.data();
+                resetOnes(x);
 
                 const auto s = std::chrono::high_resolution_clock::now();
                 sptrsv.LsolveNoPermutationInPlace();
@@ -508,9 +516,10 @@ int main(int argc, char *argv[]) {
         }
 
         if (args.algorithms.count(Algorithm::Serial) > 0U) {
+            std::vector<double> x(n, 1.0);
+            sptrsv.x_ = x.data();
             for (int iter = 0; iter < args.iterations + preMeasureIterations; ++iter) {
-                std::vector<double> x(n, 1.0);
-                sptrsv.x_ = x.data();
+                resetOnes(x);
 
                 const auto s = std::chrono::high_resolution_clock::now();
                 sptrsv.LsolveSerialInPlace();
@@ -555,8 +564,8 @@ int main(int argc, char *argv[]) {
     for (const auto &[key, agg] : summary) {
         const double geomean = std::exp(agg.sumLogRuntime / static_cast<double>(agg.samples));
         summaryCsv << CsvEscape(key.graph) << "," << key.algorithm << "," << key.processors << "," << agg.scheduleTimeSeconds
-               << "," << agg.supersteps << "," << agg.SyncCosts << "," << key.staleness
-                   << "," << agg.samples << "," << geomean << "," << agg.correctness << "\n";
+                   << "," << agg.supersteps << "," << agg.SyncCosts << "," << key.staleness << "," << agg.samples << ","
+                   << geomean << "," << agg.correctness << "\n";
     }
 
     std::cout << "Benchmark complete. CSV written to: " << detailCsvPath << std::endl;
