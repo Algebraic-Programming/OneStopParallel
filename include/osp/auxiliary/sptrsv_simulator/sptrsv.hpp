@@ -131,7 +131,7 @@ class Sptrsv {
                     do {
                         node--;
                         vectorStepProcessorVerticesU_[schedule.AssignedSuperstep(node)][schedule.AssignedProcessor(node)].push_back(
-                // --- SSP SpTRSV kernel integration from BspSptrsvCSR.hpp/cpp ---
+                            // --- SSP SpTRSV kernel integration from BspSptrsvCSR.hpp/cpp ---
 
                             static_cast<EigenIdxType>(node));
                     } while (node > 0);
@@ -240,39 +240,43 @@ class Sptrsv {
     }
 
     void LsolveSerial() {
+        const EigenIdxType *outer = (*(instance_->GetComputationalDag().GetCSR())).outerIndexPtr();
+        const EigenIdxType *inner = (*(instance_->GetComputationalDag().GetCSR())).innerIndexPtr();
+        const double *valPtr = (*(instance_->GetComputationalDag().GetCSR())).valuePtr();
+
         EigenIdxType numberOfVertices = static_cast<EigenIdxType>(instance_->NumberOfVertices());
         for (EigenIdxType i = 0; i < numberOfVertices; ++i) {
             x_[i] = b_[i];
-            for (EigenIdxType j = (*(instance_->GetComputationalDag().GetCSR())).outerIndexPtr()[i];
-                 j < (*(instance_->GetComputationalDag().GetCSR())).outerIndexPtr()[i + 1] - 1;
-                 ++j) {
-                x_[i] -= (*(instance_->GetComputationalDag().GetCSR())).valuePtr()[j]
-                         * x_[(*(instance_->GetComputationalDag().GetCSR())).innerIndexPtr()[j]];
+            for (EigenIdxType j = outer[i]; j < outer[i + 1] - 1; ++j) {
+                x_[i] -= valPtr[j] * x_[inner[j]];
             }
-            x_[i] /= (*(instance_->GetComputationalDag().GetCSR()))
-                         .valuePtr()[(*(instance_->GetComputationalDag().GetCSR())).outerIndexPtr()[i + 1] - 1];
+            x_[i] /= valPtr[outer[i + 1] - 1];
         }
     }
 
     void UsolveSerial() {
-        EigenIdxType numberOfVertices = static_cast<EigenIdxType>(instance_->NumberOfVertices());
+        const EigenIdxType *outer = (*(instance_->GetComputationalDag().GetCSC())).outerIndexPtr();
+        const EigenIdxType *inner = (*(instance_->GetComputationalDag().GetCSC())).innerIndexPtr();
+        const double *valPtr = (*(instance_->GetComputationalDag().GetCSC())).valuePtr();
+
+        const EigenIdxType numberOfVertices = static_cast<EigenIdxType>(instance_->NumberOfVertices());
 
         EigenIdxType i = numberOfVertices;
         do {
             i--;
             x_[i] = b_[i];
-            for (EigenIdxType j = (*(instance_->GetComputationalDag().GetCSC())).outerIndexPtr()[i] + 1;
-                 j < (*(instance_->GetComputationalDag().GetCSC())).outerIndexPtr()[i + 1];
-                 ++j) {
-                x_[i] -= (*(instance_->GetComputationalDag().GetCSC())).valuePtr()[j]
-                         * x_[(*(instance_->GetComputationalDag().GetCSC())).innerIndexPtr()[j]];
+            for (EigenIdxType j = outer[i] + 1; j < outer[i + 1]; ++j) {
+                x_[i] -= valPtr[j] * x_[inner[j]];
             }
-            x_[i] /= (*(instance_->GetComputationalDag().GetCSC()))
-                         .valuePtr()[(*(instance_->GetComputationalDag().GetCSC())).outerIndexPtr()[i]];
+            x_[i] /= valPtr[outer[i]];
         } while (i != 0);
     }
 
     void LsolveNoPermutationInPlace() {
+        const EigenIdxType *outer = (*(instance_->GetComputationalDag().GetCSR())).outerIndexPtr();
+        const EigenIdxType *inner = (*(instance_->GetComputationalDag().GetCSR())).innerIndexPtr();
+        const double *valPtr = (*(instance_->GetComputationalDag().GetCSR())).valuePtr();
+
 #    pragma omp parallel num_threads(instance_->NumberOfProcessors())
         {
             const size_t proc = static_cast<size_t>(omp_get_thread_num());
@@ -284,14 +288,10 @@ class Sptrsv {
                     const EigenIdxType upperB = boundsArrayL_[step][proc][index + 1];
 
                     for (EigenIdxType node = lowerB; node <= upperB; ++node) {
-                        for (EigenIdxType i = (*(instance_->GetComputationalDag().GetCSR())).outerIndexPtr()[node];
-                             i < (*(instance_->GetComputationalDag().GetCSR())).outerIndexPtr()[node + 1] - 1;
-                             ++i) {
-                            x_[node] -= (*(instance_->GetComputationalDag().GetCSR())).valuePtr()[i]
-                                        * x_[(*(instance_->GetComputationalDag().GetCSR())).innerIndexPtr()[i]];
+                        for (EigenIdxType i = outer[node]; i < outer[node + 1] - 1; ++i) {
+                            x_[node] -= valPtr[i] * x_[inner[i]];
                         }
-                        x_[node] /= (*(instance_->GetComputationalDag().GetCSR()))
-                                        .valuePtr()[(*(instance_->GetComputationalDag().GetCSR())).outerIndexPtr()[node + 1] - 1];
+                        x_[node] /= valPtr[outer[node + 1] - 1];
                     }
                 }
 #    pragma omp barrier
@@ -300,6 +300,10 @@ class Sptrsv {
     }
 
     void UsolveNoPermutationInPlace() {
+        const EigenIdxType *outer = (*(instance_->GetComputationalDag().GetCSC())).outerIndexPtr();
+        const EigenIdxType *inner = (*(instance_->GetComputationalDag().GetCSC())).innerIndexPtr();
+        const double *valPtr = (*(instance_->GetComputationalDag().GetCSC())).valuePtr();
+
 #    pragma omp parallel num_threads(instance_->NumberOfProcessors())
         {
             // Process each superstep starting from the last one (opposite of lsolve)
@@ -314,14 +318,10 @@ class Sptrsv {
 
                     do {
                         node--;
-                        for (EigenIdxType i = (*(instance_->GetComputationalDag().GetCSC())).outerIndexPtr()[node] + 1;
-                             i < (*(instance_->GetComputationalDag().GetCSC())).outerIndexPtr()[node + 1];
-                             ++i) {
-                            x_[node] -= (*(instance_->GetComputationalDag().GetCSC())).valuePtr()[i]
-                                        * x_[(*(instance_->GetComputationalDag().GetCSC())).innerIndexPtr()[i]];
+                        for (EigenIdxType i = outer[node] + 1; i < outer[node + 1]; ++i) {
+                            x_[node] -= valPtr[i] * x_[inner[i]];
                         }
-                        x_[node] /= (*(instance_->GetComputationalDag().GetCSC()))
-                                        .valuePtr()[(*(instance_->GetComputationalDag().GetCSC())).outerIndexPtr()[node]];
+                        x_[node] /= valPtr[outer[node]];
                     } while (node != lowerB);
                 }
 #    pragma omp barrier
@@ -330,6 +330,10 @@ class Sptrsv {
     }
 
     void LsolveNoPermutation() {
+        const EigenIdxType *outer = (*(instance_->GetComputationalDag().GetCSR())).outerIndexPtr();
+        const EigenIdxType *inner = (*(instance_->GetComputationalDag().GetCSR())).innerIndexPtr();
+        const double *valPtr = (*(instance_->GetComputationalDag().GetCSR())).valuePtr();
+
 #    pragma omp parallel num_threads(instance_->NumberOfProcessors())
         {
             const size_t proc = static_cast<size_t>(omp_get_thread_num());
@@ -342,14 +346,10 @@ class Sptrsv {
 
                     for (EigenIdxType node = lowerB; node <= upperB; ++node) {
                         x_[node] = b_[node];
-                        for (EigenIdxType i = (*(instance_->GetComputationalDag().GetCSR())).outerIndexPtr()[node];
-                             i < (*(instance_->GetComputationalDag().GetCSR())).outerIndexPtr()[node + 1] - 1;
-                             ++i) {
-                            x_[node] -= (*(instance_->GetComputationalDag().GetCSR())).valuePtr()[i]
-                                        * x_[(*(instance_->GetComputationalDag().GetCSR())).innerIndexPtr()[i]];
+                        for (EigenIdxType i = outer[node]; i < outer[node + 1] - 1; ++i) {
+                            x_[node] -= valPtr[i] * x_[inner[i]];
                         }
-                        x_[node] /= (*(instance_->GetComputationalDag().GetCSR()))
-                                        .valuePtr()[(*(instance_->GetComputationalDag().GetCSR())).outerIndexPtr()[node + 1] - 1];
+                        x_[node] /= valPtr[outer[node + 1] - 1];
                     }
                 }
 #    pragma omp barrier
@@ -358,6 +358,10 @@ class Sptrsv {
     }
 
     void UsolveNoPermutation() {
+        const EigenIdxType *outer = (*(instance_->GetComputationalDag().GetCSC())).outerIndexPtr();
+        const EigenIdxType *inner = (*(instance_->GetComputationalDag().GetCSC())).innerIndexPtr();
+        const double *valPtr = (*(instance_->GetComputationalDag().GetCSC())).valuePtr();
+
 #    pragma omp parallel num_threads(instance_->NumberOfProcessors())
         {
             // Process each superstep starting from the last one (opposite of lsolve)
@@ -373,14 +377,10 @@ class Sptrsv {
                     do {
                         node--;
                         x_[node] = b_[node];
-                        for (EigenIdxType i = (*(instance_->GetComputationalDag().GetCSC())).outerIndexPtr()[node] + 1;
-                             i < (*(instance_->GetComputationalDag().GetCSC())).outerIndexPtr()[node + 1];
-                             ++i) {
-                            x_[node] -= (*(instance_->GetComputationalDag().GetCSC())).valuePtr()[i]
-                                        * x_[(*(instance_->GetComputationalDag().GetCSC())).innerIndexPtr()[i]];
+                        for (EigenIdxType i = outer[node] + 1; i < outer[node + 1]; ++i) {
+                            x_[node] -= valPtr[i] * x_[inner[i]];
                         }
-                        x_[node] /= (*(instance_->GetComputationalDag().GetCSC()))
-                                        .valuePtr()[(*(instance_->GetComputationalDag().GetCSC())).outerIndexPtr()[node]];
+                        x_[node] /= valPtr[outer[node]];
                     } while (node != lowerB);
                 }
 #    pragma omp barrier
@@ -389,32 +389,32 @@ class Sptrsv {
     }
 
     void LsolveSerialInPlace() {
-        EigenIdxType numberOfVertices = static_cast<EigenIdxType>(instance_->NumberOfVertices());
+        const EigenIdxType *outer = (*(instance_->GetComputationalDag().GetCSR())).outerIndexPtr();
+        const EigenIdxType *inner = (*(instance_->GetComputationalDag().GetCSR())).innerIndexPtr();
+        const double *valPtr = (*(instance_->GetComputationalDag().GetCSR())).valuePtr();
+
+        const EigenIdxType numberOfVertices = static_cast<EigenIdxType>(instance_->NumberOfVertices());
         for (EigenIdxType i = 0; i < numberOfVertices; ++i) {
-            for (EigenIdxType j = (*(instance_->GetComputationalDag().GetCSR())).outerIndexPtr()[i];
-                 j < (*(instance_->GetComputationalDag().GetCSR())).outerIndexPtr()[i + 1] - 1;
-                 ++j) {
-                x_[i] -= (*(instance_->GetComputationalDag().GetCSR())).valuePtr()[j]
-                         * x_[(*(instance_->GetComputationalDag().GetCSR())).innerIndexPtr()[j]];
+            for (EigenIdxType j = outer[i]; j < outer[i + 1] - 1; ++j) {
+                x_[i] -= valPtr[j] * x_[inner[j]];
             }
-            x_[i] /= (*(instance_->GetComputationalDag().GetCSR()))
-                         .valuePtr()[(*(instance_->GetComputationalDag().GetCSR())).outerIndexPtr()[i + 1] - 1];
+            x_[i] /= valPtr[outer[i + 1] - 1];
         }
     }
 
     void UsolveSerialInPlace() {
-        EigenIdxType numberOfVertices = static_cast<EigenIdxType>(instance_->NumberOfVertices());
+        const EigenIdxType *outer = (*(instance_->GetComputationalDag().GetCSC())).outerIndexPtr();
+        const EigenIdxType *inner = (*(instance_->GetComputationalDag().GetCSC())).innerIndexPtr();
+        const double *valPtr = (*(instance_->GetComputationalDag().GetCSC())).valuePtr();
+
+        const EigenIdxType numberOfVertices = static_cast<EigenIdxType>(instance_->NumberOfVertices());
         EigenIdxType i = numberOfVertices;
         do {
             i--;
-            for (EigenIdxType j = (*(instance_->GetComputationalDag().GetCSC())).outerIndexPtr()[i] + 1;
-                 j < (*(instance_->GetComputationalDag().GetCSC())).outerIndexPtr()[i + 1];
-                 ++j) {
-                x_[i] -= (*(instance_->GetComputationalDag().GetCSC())).valuePtr()[j]
-                         * x_[(*(instance_->GetComputationalDag().GetCSC())).innerIndexPtr()[j]];
+            for (EigenIdxType j = outer[i] + 1; j < outer[i + 1]; ++j) {
+                x_[i] -= valPtr[j] * x_[inner[j]];
             }
-            x_[i] /= (*(instance_->GetComputationalDag().GetCSC()))
-                         .valuePtr()[(*(instance_->GetComputationalDag().GetCSC())).outerIndexPtr()[i]];
+            x_[i] /= valPtr[outer[i]];
         } while (i != 0);
     }
 
@@ -493,12 +493,12 @@ class Sptrsv {
         const unsigned nthreads = instance_->NumberOfProcessors();
         FlatCheckpointCounterBarrier barrier(nthreads);
 
-        auto *csr = instance_->GetComputationalDag().GetCSR();
-        const auto *outer = csr->outerIndexPtr();
-        const auto *inner = csr->innerIndexPtr();
-        const auto *vals = csr->valuePtr();
+        const auto *csr = instance_->GetComputationalDag().GetCSR();
+        const EigenIdxType *outer = csr->outerIndexPtr();
+        const EigenIdxType *inner = csr->innerIndexPtr();
+        const double *vals = csr->valuePtr();
 
-        #pragma omp parallel num_threads(nthreads)
+#    pragma omp parallel num_threads(nthreads)
         {
             const std::size_t proc = static_cast<std::size_t>(omp_get_thread_num());
             for (unsigned step = 0; step < numSupersteps_; ++step) {
@@ -536,12 +536,12 @@ class Sptrsv {
         const unsigned nthreads = instance_->NumberOfProcessors();
         FlatCheckpointCounterBarrier barrier(nthreads);
 
-        auto *csr = instance_->GetComputationalDag().GetCSR();
-        const auto *outer = csr->outerIndexPtr();
-        const auto *inner = csr->innerIndexPtr();
-        const auto *vals = csr->valuePtr();
+        const auto *csr = instance_->GetComputationalDag().GetCSR();
+        const EigenIdxType *outer = csr->outerIndexPtr();
+        const EigenIdxType *inner = csr->innerIndexPtr();
+        const double *vals = csr->valuePtr();
 
-        #pragma omp parallel num_threads(nthreads)
+#    pragma omp parallel num_threads(nthreads)
         {
             const std::size_t proc = static_cast<std::size_t>(omp_get_thread_num());
             for (unsigned step = 0; step < numSupersteps_; ++step) {
@@ -577,12 +577,12 @@ class Sptrsv {
         const unsigned nthreads = instance_->NumberOfProcessors();
         FlatCheckpointCounterBarrier barrier(nthreads);
 
-        auto *csc = instance_->GetComputationalDag().GetCSC();
-        const auto *outer = csc->outerIndexPtr();
-        const auto *inner = csc->innerIndexPtr();
-        const auto *vals = csc->valuePtr();
+        const auto *csc = instance_->GetComputationalDag().GetCSC();
+        const EigenIdxType *outer = csc->outerIndexPtr();
+        const EigenIdxType *inner = csc->innerIndexPtr();
+        const double *vals = csc->valuePtr();
 
-        #pragma omp parallel num_threads(nthreads)
+#    pragma omp parallel num_threads(nthreads)
         {
             const std::size_t proc = static_cast<std::size_t>(omp_get_thread_num());
             unsigned step = numSupersteps_;
