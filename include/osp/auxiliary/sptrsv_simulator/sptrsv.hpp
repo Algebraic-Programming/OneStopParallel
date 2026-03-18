@@ -249,10 +249,11 @@ class Sptrsv {
         const EigenIdxType numberOfVertices = static_cast<EigenIdxType>(instance_->NumberOfVertices());
         for (EigenIdxType i = 0; i < numberOfVertices; ++i) {
             x[i] = b[i];
+            double acc = 0.0;
             for (EigenIdxType j = outer[i]; j < outer[i + 1] - 1; ++j) {
-                x[i] -= valPtr[j] * x[inner[j]];
+                acc += valPtr[j] * x[inner[j]];
             }
-            x[i] /= valPtr[outer[i + 1] - 1];
+            x[i] = (x[i] - acc) / valPtr[outer[i + 1] - 1];
         }
     }
 
@@ -269,10 +270,11 @@ class Sptrsv {
         do {
             i--;
             x[i] = b[i];
+            double acc = 0.0;
             for (EigenIdxType j = outer[i] + 1; j < outer[i + 1]; ++j) {
-                x[i] -= valPtr[j] * x[inner[j]];
+                acc += valPtr[j] * x[inner[j]];
             }
-            x[i] /= valPtr[outer[i]];
+            x[i] = (x[i] - acc) / valPtr[outer[i]];
         } while (i != 0);
     }
 
@@ -293,10 +295,11 @@ class Sptrsv {
                     const EigenIdxType upperB = boundsArrayL_[step][proc][index + 1];
 
                     for (EigenIdxType node = lowerB; node <= upperB; ++node) {
+                        double acc = 0.0;
                         for (EigenIdxType i = outer[node]; i < outer[node + 1] - 1; ++i) {
-                            x[node] -= valPtr[i] * x[inner[i]];
+                            acc += valPtr[i] * x[inner[i]];
                         }
-                        x[node] /= valPtr[outer[node + 1] - 1];
+                        x[node] = (x[node] - acc) / valPtr[outer[node + 1] - 1];
                     }
                 }
 #    pragma omp barrier
@@ -324,10 +327,11 @@ class Sptrsv {
 
                     do {
                         node--;
+                        double acc = 0.0;
                         for (EigenIdxType i = outer[node] + 1; i < outer[node + 1]; ++i) {
-                            x[node] -= valPtr[i] * x[inner[i]];
+                            acc += valPtr[i] * x[inner[i]];
                         }
-                        x[node] /= valPtr[outer[node]];
+                        x[node] = (x[node] - acc) / valPtr[outer[node]];
                     } while (node != lowerB);
                 }
 #    pragma omp barrier
@@ -354,10 +358,11 @@ class Sptrsv {
 
                     for (EigenIdxType node = lowerB; node <= upperB; ++node) {
                         x[node] = b[node];
+                        double acc = 0.0;
                         for (EigenIdxType i = outer[node]; i < outer[node + 1] - 1; ++i) {
-                            x[node] -= valPtr[i] * x[inner[i]];
+                            acc += valPtr[i] * x[inner[i]];
                         }
-                        x[node] /= valPtr[outer[node + 1] - 1];
+                        x[node] = (x[node] - acc) / valPtr[outer[node + 1] - 1];
                     }
                 }
 #    pragma omp barrier
@@ -387,10 +392,11 @@ class Sptrsv {
                     do {
                         node--;
                         x[node] = b[node];
+                        double acc = 0.0;
                         for (EigenIdxType i = outer[node] + 1; i < outer[node + 1]; ++i) {
-                            x[node] -= valPtr[i] * x[inner[i]];
+                            acc += valPtr[i] * x[inner[i]];
                         }
-                        x[node] /= valPtr[outer[node]];
+                        x[node] = (x[node] - acc) / valPtr[outer[node]];
                     } while (node != lowerB);
                 }
 #    pragma omp barrier
@@ -406,10 +412,11 @@ class Sptrsv {
 
         const EigenIdxType numberOfVertices = static_cast<EigenIdxType>(instance_->NumberOfVertices());
         for (EigenIdxType i = 0; i < numberOfVertices; ++i) {
+            double acc = 0.0;
             for (EigenIdxType j = outer[i]; j < outer[i + 1] - 1; ++j) {
-                x[i] -= valPtr[j] * x[inner[j]];
+                acc += valPtr[j] * x[inner[j]];
             }
-            x[i] /= valPtr[outer[i + 1] - 1];
+            x[i] = (x[i] - acc) / valPtr[outer[i + 1] - 1];
         }
     }
 
@@ -423,10 +430,11 @@ class Sptrsv {
         EigenIdxType i = numberOfVertices;
         do {
             i--;
+            double acc = 0.0;
             for (EigenIdxType j = outer[i] + 1; j < outer[i + 1]; ++j) {
-                x[i] -= valPtr[j] * x[inner[j]];
+                acc += valPtr[j] * x[inner[j]];
             }
-            x[i] /= valPtr[outer[i]];
+            x[i] = (x[i] - acc) / valPtr[outer[i]];
         } while (i != 0);
     }
 
@@ -439,11 +447,12 @@ class Sptrsv {
                 const size_t proc = static_cast<size_t>(omp_get_thread_num());
                 const UVertType upperLimit = stepProcPtr_[step][proc] + stepProcNum_[step][proc];
                 for (UVertType rowIdx = stepProcPtr_[step][proc]; rowIdx < upperLimit; rowIdx++) {
+                    double acc = 0.0;
                     for (UVertType i = rowPtr_[rowIdx]; i < rowPtr_[rowIdx + 1] - 1; i++) {
-                        x[rowIdx] -= val_[i] * x[colIdx_[i]];
+                        acc += val_[i] * x[colIdx_[i]];
                     }
 
-                    x[rowIdx] /= val_[rowPtr_[rowIdx + 1] - 1];
+                    x[rowIdx] = (x[rowIdx] - acc) / val_[rowPtr_[rowIdx + 1] - 1];
                 }
 
 #    pragma omp barrier
@@ -462,11 +471,12 @@ class Sptrsv {
                 const UVertType upperLimit = stepProcPtr_[step][proc] + stepProcNum_[step][proc];
                 for (UVertType rowIdx = stepProcPtr_[step][proc]; rowIdx < upperLimit; rowIdx++) {
                     x[rowIdx] = b[rowIdx];
+                    double acc = 0.0;
                     for (UVertType i = rowPtr_[rowIdx]; i < rowPtr_[rowIdx + 1] - 1; i++) {
-                        x[rowIdx] -= val_[i] * x[colIdx_[i]];
+                        acc += val_[i] * x[colIdx_[i]];
                     }
 
-                    x[rowIdx] /= val_[rowPtr_[rowIdx + 1] - 1];
+                    x[rowIdx] = (x[rowIdx] - acc) / val_[rowPtr_[rowIdx + 1] - 1];
                 }
 
 #    pragma omp barrier
@@ -533,13 +543,14 @@ class Sptrsv {
                     for (EigenIdxType node = lowerB; node <= upperB; ++node) {
                         // Initialize solution for this node
                         x[node] = b[node];
+                        double acc = 0.0;
                         // Perform lower-triangular solve for this node
                         for (EigenIdxType i = outer[node]; i < outer[node + 1] - 1; ++i) {
-                            // Subtract contributions from previously solved nodes
-                            x[node] -= vals[i] * x[inner[i]];
+                            // Accumulate contributions from previously solved nodes
+                            acc += vals[i] * x[inner[i]];
                         }
                         // Divide by diagonal element to complete solve for this node
-                        x[node] /= vals[outer[node + 1] - 1];
+                        x[node] = (x[node] - acc) / vals[outer[node + 1] - 1];
                     }
                 }
                 // Signal completion of this superstep.
@@ -575,13 +586,14 @@ class Sptrsv {
                     EigenIdxType lowerB = boundsArrayL_[step][proc][index];
                     const EigenIdxType upperB = boundsArrayL_[step][proc][index + 1];
                     for (EigenIdxType node = lowerB; node <= upperB; ++node) {
+                        double acc = 0.0;
                         // Perform lower-triangular solve for this node
                         for (EigenIdxType i = outer[node]; i < outer[node + 1] - 1; ++i) {
-                            // Subtract contributions from previously solved nodes
-                            x[node] -= vals[i] * x[inner[i]];
+                            // Accumulate contributions from previously solved nodes
+                            acc += vals[i] * x[inner[i]];
                         }
                         // Divide by diagonal element to complete solve for this node
-                        x[node] /= vals[outer[node + 1] - 1];
+                        x[node] = (x[node] - acc) / vals[outer[node + 1] - 1];
                     }
                 }
                 // Signal completion of this superstep.
@@ -622,10 +634,11 @@ class Sptrsv {
                     do {
                         node--;
                         x[node] = b[node];
+                        double acc = 0.0;
                         for (EigenIdxType i = outer[node] + 1; i < outer[node + 1]; ++i) {
-                            x[node] -= vals[i] * x[inner[i]];
+                            acc += vals[i] * x[inner[i]];
                         }
-                        x[node] /= vals[outer[node]];
+                        x[node] = (x[node] - acc) / vals[outer[node]];
                     } while (node != lowerB);
                 }
 
