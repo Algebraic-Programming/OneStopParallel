@@ -25,12 +25,14 @@ limitations under the License.
 #    include <Eigen/Core>
 #    include <algorithm>
 #    include <atomic>
+#    include <cassert>
 #    include <chrono>
 #    include <iostream>
 #    include <list>
 #    include <map>
 #    include <memory>
 #    include <random>
+#    include <set>
 #    include <stdexcept>
 #    include <thread>
 #    include <vector>
@@ -42,155 +44,304 @@ limitations under the License.
 
 namespace osp {
 
-template <typename EigenIdxType>
+template <typename IndexType>
 class Sptrsv {
-    using UVertType = typename SparseMatrixImp<EigenIdxType>::VertexIdx;
+    using UVertType = typename SparseMatrixImp<IndexType>::VertexIdx;
+    using StorageIdx = IndexType;
+    using StepProcessorVertices = std::vector<std::vector<std::vector<IndexType>>>;
+
+    static StepProcessorVertices CreateStepProcessorStorage(size_t supersteps, size_t processors) {
+        return StepProcessorVertices(supersteps, std::vector<std::vector<IndexType>>(processors));
+    }
 
   private:
-    const BspInstance<SparseMatrixImp<EigenIdxType>> *instance_;
+    const BspInstance<SparseMatrixImp<IndexType>> *instance_;
+    bool baseStorageReady_ = false;
+    std::vector<double> baseVal_;
+    std::vector<double> baseCscVal_;
+    std::vector<StorageIdx> baseColIdx_;
+    std::vector<StorageIdx> baseRowPtr_;
+    std::vector<StorageIdx> baseRowIdx_;
+    std::vector<StorageIdx> baseColPtr_;
+
+    template <typename SparseStorageType>
+    void CopySparseStorage(const SparseStorageType *matrix,
+                           std::vector<double> &values,
+                           std::vector<StorageIdx> &innerIndices,
+                           std::vector<StorageIdx> &outerPointers) {
+        const size_t nnz = static_cast<size_t>(matrix->nonZeros());
+        const size_t nrows = instance_->NumberOfVertices();
+
+        values.assign(matrix->valuePtr(), matrix->valuePtr() + nnz);
+
+        innerIndices.clear();
+        innerIndices.reserve(nnz);
+        const StorageIdx *inner = matrix->innerIndexPtr();
+        for (size_t idx = 0; idx < nnz; ++idx) {
+            innerIndices.push_back(inner[idx]);
+        }
+
+        outerPointers.clear();
+        outerPointers.reserve(nrows + 1);
+        const StorageIdx *outer = matrix->outerIndexPtr();
+        for (size_t row = 0; row <= nrows; ++row) {
+            outerPointers.push_back(outer[row]);
+        }
+    }
+
+    void BuildBaseStorageIfNeeded() {
+        if (baseStorageReady_) {
+            return;
+        }
+
+        CopySparseStorage(instance_->GetComputationalDag().GetCSR(), baseVal_, baseColIdx_, baseRowPtr_);
+        CopySparseStorage(instance_->GetComputationalDag().GetCSC(), baseCscVal_, baseRowIdx_, baseColPtr_);
+        baseStorageReady_ = true;
+    }
+
+    static void AppendIncreasingBounds(const std::vector<IndexType> &vertices, std::vector<IndexType> &bounds) {
+        if (vertices.empty()) {
+            return;
+        }
+        IndexType start = vertices.front();
+        IndexType prev = vertices.front();
+        for (size_t i = 1; i < vertices.size(); ++i) {
+            if (vertices[i] != prev + 1) {
+                bounds.push_back(start);
+                bounds.push_back(prev);
+                start = vertices[i];
+            }
+            prev = vertices[i];
+        }
+        bounds.push_back(start);
+        bounds.push_back(prev);
+    }
+
+    static void AppendDecreasingBounds(const std::vector<IndexType> &vertices, std::vector<IndexType> &bounds) {
+        if (vertices.empty()) {
+            return;
+        }
+        IndexType start = vertices.front();
+        IndexType prev = vertices.front();
+        for (size_t i = 1; i < vertices.size(); ++i) {
+            if (vertices[i] != prev - 1) {
+                bounds.push_back(start);
+                bounds.push_back(prev);
+                start = vertices[i];
+            }
+            prev = vertices[i];
+        }
+        bounds.push_back(start);
+        bounds.push_back(prev);
+    }
+
+    static inline void SolveLowerTriangularCsrInPlace(const StorageIdx n,
+                                                      const StorageIdx *rowPtr,
+                                                      const StorageIdx *colIdx,
+                                                      const double *values,
+                                                      double *solution) {
+        for (StorageIdx i = 0; i < n; i++) {
+            const StorageIdx rowBegin = rowPtr[i];
+            const StorageIdx diagIndex = rowPtr[i + 1] - 1;
+            double accumulator = solution[i];
+            for (StorageIdx j = rowBegin; j < diagIndex; j++) {
+                accumulator -= values[j] * solution[colIdx[j]];
+            }
+            solution[i] = accumulator / values[diagIndex];
+        }
+    }
+
+    static inline void SolveLowerTriangularCsr(const StorageIdx n,
+                                               const StorageIdx *rowPtr,
+                                               const StorageIdx *colIdx,
+                                               const double *values,
+                                               const double *rhs,
+                                               double *solution) {
+        for (StorageIdx i = 0; i < n; i++) {
+            const StorageIdx rowBegin = rowPtr[i];
+            const StorageIdx diagIndex = rowPtr[i + 1] - 1;
+            double accumulator = rhs[i];
+            for (StorageIdx j = rowBegin; j < diagIndex; j++) {
+                accumulator -= values[j] * solution[colIdx[j]];
+            }
+            solution[i] = accumulator / values[diagIndex];
+        }
+    }
+
+    static inline void SolveLowerRowInPlace(const StorageIdx row,
+                                            const StorageIdx *rowPtr,
+                                            const StorageIdx *colIdx,
+                                            const double *values,
+                                            double *solution) {
+        const StorageIdx rowBegin = rowPtr[row];
+        const StorageIdx diagIndex = rowPtr[row + 1] - 1;
+        double accumulator = solution[row];
+        for (StorageIdx j = rowBegin; j < diagIndex; ++j) {
+            accumulator -= values[j] * solution[colIdx[j]];
+        }
+        solution[row] = accumulator / values[diagIndex];
+    }
+
+    static inline void SolveLowerRow(const StorageIdx row,
+                                     const StorageIdx *rowPtr,
+                                     const StorageIdx *colIdx,
+                                     const double *values,
+                                     const double *rhs,
+                                     double *solution) {
+        const StorageIdx rowBegin = rowPtr[row];
+        const StorageIdx diagIndex = rowPtr[row + 1] - 1;
+        double accumulator = rhs[row];
+        for (StorageIdx j = rowBegin; j < diagIndex; ++j) {
+            accumulator -= values[j] * solution[colIdx[j]];
+        }
+        solution[row] = accumulator / values[diagIndex];
+    }
+
+    static inline void SolveUpperColumnInPlace(const StorageIdx col,
+                                               const StorageIdx *colPtr,
+                                               const StorageIdx *rowIdx,
+                                               const double *values,
+                                               double *solution) {
+        const StorageIdx diagIndex = colPtr[col];
+        const StorageIdx colEnd = colPtr[col + 1];
+        double accumulator = solution[col];
+        for (StorageIdx j = diagIndex + 1; j < colEnd; ++j) {
+            accumulator -= values[j] * solution[rowIdx[j]];
+        }
+        solution[col] = accumulator / values[diagIndex];
+    }
+
+    static inline void SolveUpperColumn(const StorageIdx col,
+                                        const StorageIdx *colPtr,
+                                        const StorageIdx *rowIdx,
+                                        const double *values,
+                                        const double *rhs,
+                                        double *solution) {
+        const StorageIdx diagIndex = colPtr[col];
+        const StorageIdx colEnd = colPtr[col + 1];
+        double accumulator = rhs[col];
+        for (StorageIdx j = diagIndex + 1; j < colEnd; ++j) {
+            accumulator -= values[j] * solution[rowIdx[j]];
+        }
+        solution[col] = accumulator / values[diagIndex];
+    }
+
+    static inline void SolveUpperTriangularCscInPlace(const StorageIdx n,
+                                                      const StorageIdx *colPtr,
+                                                      const StorageIdx *rowIdx,
+                                                      const double *values,
+                                                      double *solution) {
+        StorageIdx col = n;
+        do {
+            col--;
+            const StorageIdx diagIndex = colPtr[col];
+            const StorageIdx colEnd = colPtr[col + 1];
+            double accumulator = solution[col];
+            for (StorageIdx j = diagIndex + 1; j < colEnd; ++j) {
+                accumulator -= values[j] * solution[rowIdx[j]];
+            }
+            solution[col] = accumulator / values[diagIndex];
+        } while (col != 0);
+    }
+
+    static inline void SolveUpperTriangularCsc(const StorageIdx n,
+                                               const StorageIdx *colPtr,
+                                               const StorageIdx *rowIdx,
+                                               const double *values,
+                                               const double *rhs,
+                                               double *solution) {
+        StorageIdx col = n;
+        do {
+            col--;
+            const StorageIdx diagIndex = colPtr[col];
+            const StorageIdx colEnd = colPtr[col + 1];
+            double accumulator = rhs[col];
+            for (StorageIdx j = diagIndex + 1; j < colEnd; ++j) {
+                accumulator -= values[j] * solution[rowIdx[j]];
+            }
+            solution[col] = accumulator / values[diagIndex];
+        } while (col != 0);
+    }
 
   public:
     std::vector<double> val_;
     std::vector<double> cscVal_;
-
-    std::vector<UVertType> colIdx_;
-    std::vector<UVertType> rowPtr_;
-
-    std::vector<UVertType> rowIdx_;
-    std::vector<UVertType> colPtr_;
-
+    std::vector<StorageIdx> colIdx_;
+    std::vector<StorageIdx> rowPtr_;
+    std::vector<StorageIdx> rowIdx_;
+    std::vector<StorageIdx> colPtr_;
     std::vector<std::vector<unsigned>> stepProcPtr_;
     std::vector<std::vector<unsigned>> stepProcNum_;
-
     double *x_;
     const double *b_;
-
     unsigned numSupersteps_;
-
-    std::vector<std::vector<std::vector<EigenIdxType>>> vectorStepProcessorVertices_;
-    std::vector<std::vector<std::vector<EigenIdxType>>> vectorStepProcessorVerticesU_;
+    StepProcessorVertices vectorStepProcessorVertices_;
+    StepProcessorVertices vectorStepProcessorVerticesU_;
     std::vector<int> ready_;
-
-    std::vector<std::vector<std::vector<EigenIdxType>>> boundsArrayL_;
-    std::vector<std::vector<std::vector<EigenIdxType>>> boundsArrayU_;
+    StepProcessorVertices boundsArrayL_;
+    StepProcessorVertices boundsArrayU_;
 
     Sptrsv() = default;
+    Sptrsv(BspInstance<SparseMatrixImp<IndexType>> &inst) : instance_(&inst) { BuildBaseStorageIfNeeded(); };
 
-    Sptrsv(BspInstance<SparseMatrixImp<EigenIdxType>> &inst) : instance_(&inst) {};
-
-    void SetupCsrNoPermutation(const BspSchedule<SparseMatrixImp<EigenIdxType>> &schedule) {
-        vectorStepProcessorVertices_ = std::vector<std::vector<std::vector<EigenIdxType>>>(
-            schedule.NumberOfSupersteps(), std::vector<std::vector<EigenIdxType>>(schedule.GetInstance().NumberOfProcessors()));
-
-        vectorStepProcessorVerticesU_ = std::vector<std::vector<std::vector<EigenIdxType>>>(
-            schedule.NumberOfSupersteps(), std::vector<std::vector<EigenIdxType>>(schedule.GetInstance().NumberOfProcessors()));
-
-        boundsArrayL_ = std::vector<std::vector<std::vector<EigenIdxType>>>(
-            schedule.NumberOfSupersteps(), std::vector<std::vector<EigenIdxType>>(schedule.GetInstance().NumberOfProcessors()));
-        boundsArrayU_ = std::vector<std::vector<std::vector<EigenIdxType>>>(
-            schedule.NumberOfSupersteps(), std::vector<std::vector<EigenIdxType>>(schedule.GetInstance().NumberOfProcessors()));
-
+    void SetupCsrNoPermutation(const BspSchedule<SparseMatrixImp<IndexType>> &schedule) {
+        BuildBaseStorageIfNeeded();
         numSupersteps_ = schedule.NumberOfSupersteps();
-        size_t numberOfVertices = instance_->GetComputationalDag().NumVertices();
+        const size_t processors = schedule.GetInstance().NumberOfProcessors();
+        const size_t numberOfVertices = instance_->GetComputationalDag().NumVertices();
+
+        vectorStepProcessorVertices_ = CreateStepProcessorStorage(numSupersteps_, processors);
+        vectorStepProcessorVerticesU_ = CreateStepProcessorStorage(numSupersteps_, processors);
+        boundsArrayL_ = CreateStepProcessorStorage(numSupersteps_, processors);
+        boundsArrayU_ = CreateStepProcessorStorage(numSupersteps_, processors);
 
 #    pragma omp parallel num_threads(2)
         {
-            int id = omp_get_thread_num();
-            switch (id) {
-                case 0: {
-                    for (size_t node = 0; node < numberOfVertices; ++node) {
-                        vectorStepProcessorVertices_[schedule.AssignedSuperstep(node)][schedule.AssignedProcessor(node)].push_back(
-                            static_cast<EigenIdxType>(node));
-                    }
-
-                    for (unsigned int step = 0; step < schedule.NumberOfSupersteps(); ++step) {
-                        for (unsigned int proc = 0; proc < instance_->NumberOfProcessors(); ++proc) {
-                            if (!vectorStepProcessorVertices_[step][proc].empty()) {
-                                EigenIdxType start = vectorStepProcessorVertices_[step][proc][0];
-                                EigenIdxType prev = vectorStepProcessorVertices_[step][proc][0];
-
-                                for (size_t i = 1; i < vectorStepProcessorVertices_[step][proc].size(); ++i) {
-                                    if (vectorStepProcessorVertices_[step][proc][i] != prev + 1) {
-                                        boundsArrayL_[step][proc].push_back(start);
-                                        boundsArrayL_[step][proc].push_back(prev);
-                                        start = vectorStepProcessorVertices_[step][proc][i];
-                                    }
-                                    prev = vectorStepProcessorVertices_[step][proc][i];
-                                }
-
-                                boundsArrayL_[step][proc].push_back(start);
-                                boundsArrayL_[step][proc].push_back(prev);
-                            }
-                        }
-                    }
-
-                    break;
+            if (omp_get_thread_num() == 0) {
+                for (size_t node = 0; node < numberOfVertices; ++node) {
+                    vectorStepProcessorVertices_[schedule.AssignedSuperstep(node)][schedule.AssignedProcessor(node)].push_back(
+                        static_cast<IndexType>(node));
                 }
-                case 1: {
-                    size_t node = numberOfVertices;
-                    do {
-                        node--;
-                        vectorStepProcessorVerticesU_[schedule.AssignedSuperstep(node)][schedule.AssignedProcessor(node)].push_back(
-                            // --- SSP SpTRSV kernel integration from BspSptrsvCSR.hpp/cpp ---
-
-                            static_cast<EigenIdxType>(node));
-                    } while (node > 0);
-
-                    for (unsigned int step = 0; step < schedule.NumberOfSupersteps(); ++step) {
-                        for (unsigned int proc = 0; proc < instance_->NumberOfProcessors(); ++proc) {
-                            if (!vectorStepProcessorVerticesU_[step][proc].empty()) {
-                                EigenIdxType startU = static_cast<EigenIdxType>(vectorStepProcessorVerticesU_[step][proc][0]);
-                                EigenIdxType prevU = static_cast<EigenIdxType>(vectorStepProcessorVerticesU_[step][proc][0]);
-
-                                for (size_t i = 1; i < vectorStepProcessorVerticesU_[step][proc].size(); ++i) {
-                                    if (static_cast<EigenIdxType>(vectorStepProcessorVerticesU_[step][proc][i]) != prevU - 1) {
-                                        boundsArrayU_[step][proc].push_back(startU);
-                                        boundsArrayU_[step][proc].push_back(prevU);
-                                        startU = static_cast<EigenIdxType>(vectorStepProcessorVerticesU_[step][proc][i]);
-                                    }
-                                    prevU = static_cast<EigenIdxType>(vectorStepProcessorVerticesU_[step][proc][i]);
-                                }
-
-                                boundsArrayU_[step][proc].push_back(startU);
-                                boundsArrayU_[step][proc].push_back(prevU);
-                            }
-                        }
+                for (unsigned int step = 0; step < numSupersteps_; ++step) {
+                    for (size_t proc = 0; proc < processors; ++proc) {
+                        AppendIncreasingBounds(vectorStepProcessorVertices_[step][proc], boundsArrayL_[step][proc]);
                     }
-
-                    break;
                 }
-                default: {
-                    std::cout << "Unexpected Behaviour" << std::endl;
+            } else {
+                size_t node = numberOfVertices;
+                do {
+                    node--;
+                    vectorStepProcessorVerticesU_[schedule.AssignedSuperstep(node)][schedule.AssignedProcessor(node)].push_back(
+                        static_cast<IndexType>(node));
+                } while (node > 0);
+                for (unsigned int step = 0; step < numSupersteps_; ++step) {
+                    for (size_t proc = 0; proc < processors; ++proc) {
+                        AppendDecreasingBounds(vectorStepProcessorVerticesU_[step][proc], boundsArrayU_[step][proc]);
+                    }
                 }
             }
         }
     }
 
-    void SetupCsrWithPermutation(const BspSchedule<SparseMatrixImp<EigenIdxType>> &schedule, std::vector<size_t> &perm) {
+    void SetupCsrWithPermutation(const BspSchedule<SparseMatrixImp<IndexType>> &schedule, std::vector<size_t> &perm) {
+        BuildBaseStorageIfNeeded();
         std::vector<size_t> permInv(perm.size());
         for (size_t i = 0; i < perm.size(); i++) {
             permInv[perm[i]] = i;
         }
 
         numSupersteps_ = schedule.NumberOfSupersteps();
-
         val_.clear();
         val_.reserve(static_cast<size_t>(instance_->GetComputationalDag().GetCSR()->nonZeros()));
-
         colIdx_.clear();
         colIdx_.reserve(static_cast<size_t>(instance_->GetComputationalDag().GetCSR()->nonZeros()));
-
         rowPtr_.clear();
         rowPtr_.reserve(instance_->NumberOfVertices() + 1);
-
-        stepProcPtr_
-            = std::vector<std::vector<unsigned>>(numSupersteps_, std::vector<unsigned>(instance_->NumberOfProcessors(), 0));
-
+        stepProcPtr_ = std::vector<std::vector<unsigned>>(numSupersteps_, std::vector<unsigned>(instance_->NumberOfProcessors(), 0));
         stepProcNum_ = schedule.NumAssignedNodesPerSuperstepProcessor();
 
         unsigned currentStep = 0;
         unsigned currentProcessor = 0;
-
         stepProcPtr_[currentStep][currentProcessor] = 0;
 
         for (const UVertType &node : permInv) {
@@ -203,100 +354,65 @@ class Sptrsv {
                         currentStep++;
                     }
                 }
-
                 stepProcPtr_[currentStep][currentProcessor] = static_cast<unsigned>(rowPtr_.size());
             }
 
-            rowPtr_.push_back(colIdx_.size());
-
+            rowPtr_.push_back(static_cast<StorageIdx>(colIdx_.size()));
             std::set<UVertType> parents;
-
             for (UVertType par : instance_->GetComputationalDag().Parents(node)) {
                 parents.insert(perm[par]);
             }
-
             for (const UVertType &par : parents) {
-                colIdx_.push_back(par);
+                colIdx_.push_back(static_cast<StorageIdx>(par));
                 unsigned found = 0;
-
-                const auto *outer = instance_->GetComputationalDag().GetCSR()->outerIndexPtr();
-                for (UVertType parInd = static_cast<UVertType>(outer[node]); parInd < static_cast<UVertType>(outer[node + 1] - 1);
-                     ++parInd) {
-                    if (static_cast<size_t>(instance_->GetComputationalDag().GetCSR()->innerIndexPtr()[parInd]) == permInv[par]) {
-                        val_.push_back(instance_->GetComputationalDag().GetCSR()->valuePtr()[parInd]);
+                const StorageIdx originalParent = static_cast<StorageIdx>(permInv[par]);
+                const size_t rowBegin = static_cast<size_t>(baseRowPtr_[node]);
+                const size_t rowEnd = static_cast<size_t>(baseRowPtr_[node + 1] - 1);
+                for (size_t parInd = rowBegin; parInd < rowEnd; ++parInd) {
+                    if (baseColIdx_[parInd] == originalParent) {
+                        val_.push_back(baseVal_[parInd]);
                         found++;
                     }
                 }
                 assert(found == 1);
             }
 
-            colIdx_.push_back(perm[node]);
-            val_.push_back(instance_->GetComputationalDag()
-                               .GetCSR()
-                               ->valuePtr()[instance_->GetComputationalDag().GetCSR()->outerIndexPtr()[node + 1] - 1]);
+            colIdx_.push_back(static_cast<StorageIdx>(perm[node]));
+            const size_t diagonalIndex = static_cast<size_t>(baseRowPtr_[node + 1] - 1);
+            val_.push_back(baseVal_[diagonalIndex]);
         }
 
-        rowPtr_.push_back(colIdx_.size());
+        rowPtr_.push_back(static_cast<StorageIdx>(colIdx_.size()));
     }
 
-    void LsolveSerial() const {
-        const EigenIdxType *const outer = (*(instance_->GetComputationalDag().GetCSR())).outerIndexPtr();
-        const EigenIdxType *const inner = (*(instance_->GetComputationalDag().GetCSR())).innerIndexPtr();
-        const double *const valPtr = (*(instance_->GetComputationalDag().GetCSR())).valuePtr();
-        double *const x = x_;
-        const double *const b = b_;
-
-        const EigenIdxType numberOfVertices = static_cast<EigenIdxType>(instance_->NumberOfVertices());
-        for (EigenIdxType i = 0; i < numberOfVertices; ++i) {
-            x[i] = b[i];
-            for (EigenIdxType j = outer[i]; j < outer[i + 1] - 1; ++j) {
-                x[i] -= valPtr[j] * x[inner[j]];
-            }
-            x[i] /= valPtr[outer[i + 1] - 1];
-        }
+    void LsolveSerial() {
+        const StorageIdx *outer = baseRowPtr_.data();
+        const StorageIdx *inner = baseColIdx_.data();
+        const double *valPtr = baseVal_.data();
+        SolveLowerTriangularCsr(static_cast<StorageIdx>(instance_->NumberOfVertices()), outer, inner, valPtr, b_, x_);
     }
 
-    void UsolveSerial() const {
-        const EigenIdxType *const outer = (*(instance_->GetComputationalDag().GetCSC())).outerIndexPtr();
-        const EigenIdxType *const inner = (*(instance_->GetComputationalDag().GetCSC())).innerIndexPtr();
-        const double *const valPtr = (*(instance_->GetComputationalDag().GetCSC())).valuePtr();
-        double *const x = x_;
-        const double *const b = b_;
-
-        const EigenIdxType numberOfVertices = static_cast<EigenIdxType>(instance_->NumberOfVertices());
-
-        EigenIdxType i = numberOfVertices;
-        do {
-            i--;
-            x[i] = b[i];
-            for (EigenIdxType j = outer[i] + 1; j < outer[i + 1]; ++j) {
-                x[i] -= valPtr[j] * x[inner[j]];
-            }
-            x[i] /= valPtr[outer[i]];
-        } while (i != 0);
+    void UsolveSerial() {
+        const StorageIdx *outer = baseColPtr_.data();
+        const StorageIdx *inner = baseRowIdx_.data();
+        const double *valPtr = baseCscVal_.data();
+        SolveUpperTriangularCsc(static_cast<StorageIdx>(instance_->NumberOfVertices()), outer, inner, valPtr, b_, x_);
     }
 
-    void LsolveNoPermutationInPlace() const {
-        const EigenIdxType *const outer = (*(instance_->GetComputationalDag().GetCSR())).outerIndexPtr();
-        const EigenIdxType *const inner = (*(instance_->GetComputationalDag().GetCSR())).innerIndexPtr();
-        const double *const valPtr = (*(instance_->GetComputationalDag().GetCSR())).valuePtr();
-        double *const x = x_;
-
+    void LsolveNoPermutationInPlace() {
+        const StorageIdx *outer = baseRowPtr_.data();
+        const StorageIdx *inner = baseColIdx_.data();
+        const double *valPtr = baseVal_.data();
 #    pragma omp parallel num_threads(instance_->NumberOfProcessors())
         {
             const size_t proc = static_cast<size_t>(omp_get_thread_num());
             for (unsigned step = 0; step < numSupersteps_; ++step) {
                 const size_t boundsStrSize = boundsArrayL_[step][proc].size();
-
                 for (size_t index = 0; index < boundsStrSize; index += 2) {
-                    EigenIdxType lowerB = boundsArrayL_[step][proc][index];
-                    const EigenIdxType upperB = boundsArrayL_[step][proc][index + 1];
-
-                    for (EigenIdxType node = lowerB; node <= upperB; ++node) {
-                        for (EigenIdxType i = outer[node]; i < outer[node + 1] - 1; ++i) {
-                            x[node] -= valPtr[i] * x[inner[i]];
-                        }
-                        x[node] /= valPtr[outer[node + 1] - 1];
+                    IndexType lowerB = boundsArrayL_[step][proc][index];
+                    const IndexType upperB = boundsArrayL_[step][proc][index + 1];
+                    for (IndexType node = lowerB; node <= upperB; ++node) {
+                        SolveLowerRowInPlace(static_cast<StorageIdx>(node), outer, inner, valPtr, x_);
                     }
                 }
 #    pragma omp barrier
@@ -304,30 +420,23 @@ class Sptrsv {
         }
     }
 
-    void UsolveNoPermutationInPlace() const {
-        const EigenIdxType *const outer = (*(instance_->GetComputationalDag().GetCSC())).outerIndexPtr();
-        const EigenIdxType *const inner = (*(instance_->GetComputationalDag().GetCSC())).innerIndexPtr();
-        const double *const valPtr = (*(instance_->GetComputationalDag().GetCSC())).valuePtr();
-        double *const x = x_;
-
+    void UsolveNoPermutationInPlace() {
+        const StorageIdx *outer = baseColPtr_.data();
+        const StorageIdx *inner = baseRowIdx_.data();
+        const double *valPtr = baseCscVal_.data();
 #    pragma omp parallel num_threads(instance_->NumberOfProcessors())
         {
-            // Process each superstep starting from the last one (opposite of lsolve)
             const size_t proc = static_cast<size_t>(omp_get_thread_num());
             unsigned step = numSupersteps_;
             do {
                 step--;
                 const size_t boundsStrSize = boundsArrayU_[step][proc].size();
                 for (size_t index = 0; index < boundsStrSize; index += 2) {
-                    EigenIdxType node = boundsArrayU_[step][proc][index] + 1;
-                    const EigenIdxType lowerB = boundsArrayU_[step][proc][index + 1];
-
+                    IndexType node = boundsArrayU_[step][proc][index] + 1;
+                    const IndexType lowerB = boundsArrayU_[step][proc][index + 1];
                     do {
                         node--;
-                        for (EigenIdxType i = outer[node] + 1; i < outer[node + 1]; ++i) {
-                            x[node] -= valPtr[i] * x[inner[i]];
-                        }
-                        x[node] /= valPtr[outer[node]];
+                        SolveUpperColumnInPlace(static_cast<StorageIdx>(node), outer, inner, valPtr, x_);
                     } while (node != lowerB);
                 }
 #    pragma omp barrier
@@ -335,29 +444,20 @@ class Sptrsv {
         }
     }
 
-    void LsolveNoPermutation() const {
-        const EigenIdxType *const outer = (*(instance_->GetComputationalDag().GetCSR())).outerIndexPtr();
-        const EigenIdxType *const inner = (*(instance_->GetComputationalDag().GetCSR())).innerIndexPtr();
-        const double *const valPtr = (*(instance_->GetComputationalDag().GetCSR())).valuePtr();
-        double *const x = x_;
-        const double *const b = b_;
-
+    void LsolveNoPermutation() {
+        const StorageIdx *outer = baseRowPtr_.data();
+        const StorageIdx *inner = baseColIdx_.data();
+        const double *valPtr = baseVal_.data();
 #    pragma omp parallel num_threads(instance_->NumberOfProcessors())
         {
             const size_t proc = static_cast<size_t>(omp_get_thread_num());
             for (unsigned step = 0; step < numSupersteps_; ++step) {
                 const size_t boundsStrSize = boundsArrayL_[step][proc].size();
-
                 for (size_t index = 0; index < boundsStrSize; index += 2) {
-                    EigenIdxType lowerB = boundsArrayL_[step][proc][index];
-                    const EigenIdxType upperB = boundsArrayL_[step][proc][index + 1];
-
-                    for (EigenIdxType node = lowerB; node <= upperB; ++node) {
-                        x[node] = b[node];
-                        for (EigenIdxType i = outer[node]; i < outer[node + 1] - 1; ++i) {
-                            x[node] -= valPtr[i] * x[inner[i]];
-                        }
-                        x[node] /= valPtr[outer[node + 1] - 1];
+                    IndexType lowerB = boundsArrayL_[step][proc][index];
+                    const IndexType upperB = boundsArrayL_[step][proc][index + 1];
+                    for (IndexType node = lowerB; node <= upperB; ++node) {
+                        SolveLowerRow(static_cast<StorageIdx>(node), outer, inner, valPtr, b_, x_);
                     }
                 }
 #    pragma omp barrier
@@ -365,32 +465,23 @@ class Sptrsv {
         }
     }
 
-    void UsolveNoPermutation() const {
-        const EigenIdxType *const outer = (*(instance_->GetComputationalDag().GetCSC())).outerIndexPtr();
-        const EigenIdxType *const inner = (*(instance_->GetComputationalDag().GetCSC())).innerIndexPtr();
-        const double *const valPtr = (*(instance_->GetComputationalDag().GetCSC())).valuePtr();
-        double *const x = x_;
-        const double *const b = b_;
-
+    void UsolveNoPermutation() {
+        const StorageIdx *outer = baseColPtr_.data();
+        const StorageIdx *inner = baseRowIdx_.data();
+        const double *valPtr = baseCscVal_.data();
 #    pragma omp parallel num_threads(instance_->NumberOfProcessors())
         {
-            // Process each superstep starting from the last one (opposite of lsolve)
             const size_t proc = static_cast<size_t>(omp_get_thread_num());
             unsigned step = numSupersteps_;
             do {
                 step--;
                 const size_t boundsStrSize = boundsArrayU_[step][proc].size();
                 for (size_t index = 0; index < boundsStrSize; index += 2) {
-                    EigenIdxType node = boundsArrayU_[step][proc][index] + 1;
-                    const EigenIdxType lowerB = boundsArrayU_[step][proc][index + 1];
-
+                    IndexType node = boundsArrayU_[step][proc][index] + 1;
+                    const IndexType lowerB = boundsArrayU_[step][proc][index + 1];
                     do {
                         node--;
-                        x[node] = b[node];
-                        for (EigenIdxType i = outer[node] + 1; i < outer[node + 1]; ++i) {
-                            x[node] -= valPtr[i] * x[inner[i]];
-                        }
-                        x[node] /= valPtr[outer[node]];
+                        SolveUpperColumn(static_cast<StorageIdx>(node), outer, inner, valPtr, b_, x_);
                     } while (node != lowerB);
                 }
 #    pragma omp barrier
@@ -398,85 +489,57 @@ class Sptrsv {
         }
     }
 
-    void LsolveSerialInPlace() const {
-        const EigenIdxType *const outer = (*(instance_->GetComputationalDag().GetCSR())).outerIndexPtr();
-        const EigenIdxType *const inner = (*(instance_->GetComputationalDag().GetCSR())).innerIndexPtr();
-        const double *const valPtr = (*(instance_->GetComputationalDag().GetCSR())).valuePtr();
-        double *const x = x_;
-
-        const EigenIdxType numberOfVertices = static_cast<EigenIdxType>(instance_->NumberOfVertices());
-        for (EigenIdxType i = 0; i < numberOfVertices; ++i) {
-            for (EigenIdxType j = outer[i]; j < outer[i + 1] - 1; ++j) {
-                x[i] -= valPtr[j] * x[inner[j]];
-            }
-            x[i] /= valPtr[outer[i + 1] - 1];
-        }
+    void LsolveSerialInPlace() {
+        const StorageIdx *outer = baseRowPtr_.data();
+        const StorageIdx *inner = baseColIdx_.data();
+        const double *valPtr = baseVal_.data();
+        SolveLowerTriangularCsrInPlace(static_cast<StorageIdx>(instance_->NumberOfVertices()), outer, inner, valPtr, x_);
     }
 
-    void UsolveSerialInPlace() const {
-        const EigenIdxType *const outer = (*(instance_->GetComputationalDag().GetCSC())).outerIndexPtr();
-        const EigenIdxType *const inner = (*(instance_->GetComputationalDag().GetCSC())).innerIndexPtr();
-        const double *const valPtr = (*(instance_->GetComputationalDag().GetCSC())).valuePtr();
-        double *const x = x_;
-
-        const EigenIdxType numberOfVertices = static_cast<EigenIdxType>(instance_->NumberOfVertices());
-        EigenIdxType i = numberOfVertices;
-        do {
-            i--;
-            for (EigenIdxType j = outer[i] + 1; j < outer[i + 1]; ++j) {
-                x[i] -= valPtr[j] * x[inner[j]];
-            }
-            x[i] /= valPtr[outer[i]];
-        } while (i != 0);
+    void UsolveSerialInPlace() {
+        const StorageIdx *outer = baseColPtr_.data();
+        const StorageIdx *inner = baseRowIdx_.data();
+        const double *valPtr = baseCscVal_.data();
+        SolveUpperTriangularCscInPlace(static_cast<StorageIdx>(instance_->NumberOfVertices()), outer, inner, valPtr, x_);
     }
 
-    void LsolveWithPermutationInPlace() const {
-        double *const x = x_;
-
+    void LsolveWithPermutationInPlace() {
 #    pragma omp parallel num_threads(instance_->NumberOfProcessors())
         {
             for (unsigned step = 0; step < numSupersteps_; step++) {
                 const size_t proc = static_cast<size_t>(omp_get_thread_num());
-                const UVertType upperLimit = stepProcPtr_[step][proc] + stepProcNum_[step][proc];
-                for (UVertType rowIdx = stepProcPtr_[step][proc]; rowIdx < upperLimit; rowIdx++) {
-                    for (UVertType i = rowPtr_[rowIdx]; i < rowPtr_[rowIdx + 1] - 1; i++) {
-                        x[rowIdx] -= val_[i] * x[colIdx_[i]];
-                    }
-
-                    x[rowIdx] /= val_[rowPtr_[rowIdx + 1] - 1];
+                const StorageIdx upperLimit = static_cast<StorageIdx>(stepProcPtr_[step][proc] + stepProcNum_[step][proc]);
+                const StorageIdx *outer = rowPtr_.data();
+                const StorageIdx *inner = colIdx_.data();
+                const double *vals = val_.data();
+                for (StorageIdx rowIdx = static_cast<StorageIdx>(stepProcPtr_[step][proc]); rowIdx < upperLimit; rowIdx++) {
+                    SolveLowerRowInPlace(rowIdx, outer, inner, vals, x_);
                 }
-
 #    pragma omp barrier
             }
         }
     }
 
-    void LsolveWithPermutation() const {
-        double *const x = x_;
-        const double *const b = b_;
-
+    void LsolveWithPermutation() {
 #    pragma omp parallel num_threads(instance_->NumberOfProcessors())
         {
             for (unsigned step = 0; step < numSupersteps_; step++) {
                 const size_t proc = static_cast<size_t>(omp_get_thread_num());
-                const UVertType upperLimit = stepProcPtr_[step][proc] + stepProcNum_[step][proc];
-                for (UVertType rowIdx = stepProcPtr_[step][proc]; rowIdx < upperLimit; rowIdx++) {
-                    x[rowIdx] = b[rowIdx];
-                    for (UVertType i = rowPtr_[rowIdx]; i < rowPtr_[rowIdx + 1] - 1; i++) {
-                        x[rowIdx] -= val_[i] * x[colIdx_[i]];
-                    }
-
-                    x[rowIdx] /= val_[rowPtr_[rowIdx + 1] - 1];
+                const StorageIdx upperLimit = static_cast<StorageIdx>(stepProcPtr_[step][proc] + stepProcNum_[step][proc]);
+                const StorageIdx *outer = rowPtr_.data();
+                const StorageIdx *inner = colIdx_.data();
+                const double *vals = val_.data();
+                for (StorageIdx rowIdx = static_cast<StorageIdx>(stepProcPtr_[step][proc]); rowIdx < upperLimit; rowIdx++) {
+                    SolveLowerRow(rowIdx, outer, inner, vals, b_, x_);
                 }
-
 #    pragma omp barrier
             }
         }
     }
 
     void ResetX() {
-        const EigenIdxType numberOfVertices = static_cast<EigenIdxType>(instance_->NumberOfVertices());
-        for (EigenIdxType i = 0; i < numberOfVertices; i++) {
+        IndexType numberOfVertices = static_cast<IndexType>(instance_->NumberOfVertices());
+        for (IndexType i = 0; i < numberOfVertices; i++) {
             x_[i] = 1.0;
         }
     }
@@ -501,109 +564,69 @@ class Sptrsv {
         }
     }
 
-    std::size_t GetNumberOfVertices() const { return instance_->NumberOfVertices(); }
+    std::size_t GetNumberOfVertices() { return instance_->NumberOfVertices(); }
 
-    // SSP Lsolve with staleness=2 (allowing at most one superstep of lag).
-    // Uses FlatCheckpointCounterBarrier created internally.
     template <unsigned staleness = 2U>
-    void SspLsolveStaleness() const {
+    void SspLsolveStaleness() {
         const unsigned nthreads = instance_->NumberOfProcessors();
         FlatCheckpointCounterBarrier barrier(nthreads);
-
-        const auto *const csr = instance_->GetComputationalDag().GetCSR();
-        const EigenIdxType *const outer = csr->outerIndexPtr();
-        const EigenIdxType *const inner = csr->innerIndexPtr();
-        const double *const vals = csr->valuePtr();
-        double *const x = x_;
-        const double *const b = b_;
-
+        const StorageIdx *outer = baseRowPtr_.data();
+        const StorageIdx *inner = baseColIdx_.data();
+        const double *vals = baseVal_.data();
 #    pragma omp parallel num_threads(nthreads)
         {
             const std::size_t proc = static_cast<std::size_t>(omp_get_thread_num());
             for (unsigned step = 0; step < numSupersteps_; ++step) {
-                // Process nodes assigned to this (step, proc) pair.
                 const size_t boundsStrSize = boundsArrayL_[step][proc].size();
-                // Enforce staleness window before starting this superstep.
                 if (boundsStrSize > 0U) {
                     barrier.Wait(proc, staleness - 1U);
                 }
                 for (size_t index = 0; index < boundsStrSize; index += 2) {
-                    EigenIdxType lowerB = boundsArrayL_[step][proc][index];
-                    const EigenIdxType upperB = boundsArrayL_[step][proc][index + 1];
-                    for (EigenIdxType node = lowerB; node <= upperB; ++node) {
-                        // Initialize solution for this node
-                        x[node] = b[node];
-                        // Perform lower-triangular solve for this node
-                        for (EigenIdxType i = outer[node]; i < outer[node + 1] - 1; ++i) {
-                            // Subtract contributions from previously solved nodes
-                            x[node] -= vals[i] * x[inner[i]];
-                        }
-                        // Divide by diagonal element to complete solve for this node
-                        x[node] /= vals[outer[node + 1] - 1];
+                    IndexType lowerB = boundsArrayL_[step][proc][index];
+                    const IndexType upperB = boundsArrayL_[step][proc][index + 1];
+                    for (IndexType node = lowerB; node <= upperB; ++node) {
+                        SolveLowerRow(static_cast<StorageIdx>(node), outer, inner, vals, b_, x_);
                     }
                 }
-                // Signal completion of this superstep.
                 barrier.Arrive(proc);
             }
         }
     }
 
-    // SSP Lsolve in-place with staleness=2 (allowing at most one superstep of lag).
-    // Uses FlatCheckpointCounterBarrier created internally.
     template <unsigned staleness = 2U>
-    void SspLsolveStalenessInPlace() const {
+    void SspLsolveStalenessInPlace() {
         const unsigned nthreads = instance_->NumberOfProcessors();
         FlatCheckpointCounterBarrier barrier(nthreads);
-
-        const auto *const csr = instance_->GetComputationalDag().GetCSR();
-        const EigenIdxType *const outer = csr->outerIndexPtr();
-        const EigenIdxType *const inner = csr->innerIndexPtr();
-        const double *const vals = csr->valuePtr();
-        double *const x = x_;
-
+        const StorageIdx *outer = baseRowPtr_.data();
+        const StorageIdx *inner = baseColIdx_.data();
+        const double *vals = baseVal_.data();
 #    pragma omp parallel num_threads(nthreads)
         {
             const std::size_t proc = static_cast<std::size_t>(omp_get_thread_num());
             for (unsigned step = 0; step < numSupersteps_; ++step) {
-                // Process nodes assigned to this (step, proc) pair.
                 const size_t boundsStrSize = boundsArrayL_[step][proc].size();
-                // Enforce staleness window before starting this superstep.
                 if (boundsStrSize > 0U) {
                     barrier.Wait(proc, staleness - 1U);
                 }
                 for (size_t index = 0; index < boundsStrSize; index += 2) {
-                    EigenIdxType lowerB = boundsArrayL_[step][proc][index];
-                    const EigenIdxType upperB = boundsArrayL_[step][proc][index + 1];
-                    for (EigenIdxType node = lowerB; node <= upperB; ++node) {
-                        // Perform lower-triangular solve for this node
-                        for (EigenIdxType i = outer[node]; i < outer[node + 1] - 1; ++i) {
-                            // Subtract contributions from previously solved nodes
-                            x[node] -= vals[i] * x[inner[i]];
-                        }
-                        // Divide by diagonal element to complete solve for this node
-                        x[node] /= vals[outer[node + 1] - 1];
+                    IndexType lowerB = boundsArrayL_[step][proc][index];
+                    const IndexType upperB = boundsArrayL_[step][proc][index + 1];
+                    for (IndexType node = lowerB; node <= upperB; ++node) {
+                        SolveLowerRowInPlace(static_cast<StorageIdx>(node), outer, inner, vals, x_);
                     }
                 }
-                // Signal completion of this superstep.
                 barrier.Arrive(proc);
             }
         }
     }
 
-    // SSP Usolve with configurable staleness.
-    // Uses FlatCheckpointCounterBarrier created internally.
     template <unsigned staleness = 2U>
-    void SspUsolveStaleness() const {
+    void SspUsolveStaleness() {
         const unsigned nthreads = instance_->NumberOfProcessors();
         FlatCheckpointCounterBarrier barrier(nthreads);
-
-        const auto *const csc = instance_->GetComputationalDag().GetCSC();
-        const EigenIdxType *const outer = csc->outerIndexPtr();
-        const EigenIdxType *const inner = csc->innerIndexPtr();
-        const double *const vals = csc->valuePtr();
-        double *const x = x_;
-        const double *const b = b_;
-
+        const StorageIdx *outer = baseColPtr_.data();
+        const StorageIdx *inner = baseRowIdx_.data();
+        const double *vals = baseCscVal_.data();
 #    pragma omp parallel num_threads(nthreads)
         {
             const std::size_t proc = static_cast<std::size_t>(omp_get_thread_num());
@@ -614,21 +637,14 @@ class Sptrsv {
                 if (boundsStrSize > 0U) {
                     barrier.Wait(proc, staleness - 1U);
                 }
-
                 for (size_t index = 0; index < boundsStrSize; index += 2) {
-                    EigenIdxType node = boundsArrayU_[step][proc][index] + 1;
-                    const EigenIdxType lowerB = boundsArrayU_[step][proc][index + 1];
-
+                    IndexType node = boundsArrayU_[step][proc][index] + 1;
+                    const IndexType lowerB = boundsArrayU_[step][proc][index + 1];
                     do {
                         node--;
-                        x[node] = b[node];
-                        for (EigenIdxType i = outer[node] + 1; i < outer[node + 1]; ++i) {
-                            x[node] -= vals[i] * x[inner[i]];
-                        }
-                        x[node] /= vals[outer[node]];
+                        SolveUpperColumn(static_cast<StorageIdx>(node), outer, inner, vals, b_, x_);
                     } while (node != lowerB);
                 }
-
                 barrier.Arrive(proc);
             } while (step != 0);
         }
