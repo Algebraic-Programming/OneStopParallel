@@ -29,6 +29,7 @@
 #include <unsupported/Eigen/SparseExtra>
 #include <vector>
 
+#include "osp/auxiliary/sptrsv_simulator/ScheduleNodePermuter.hpp"
 #include "osp/auxiliary/sptrsv_simulator/sptrsv.hpp"
 #include "osp/bsp/model/BspInstance.hpp"
 #include "osp/bsp/model/BspSchedule.hpp"
@@ -459,6 +460,48 @@ int main(int argc, char *argv[]) {
                                                      kDefaultStaleness,
                                                      runtime,
                                                      correct});
+                }
+            }
+
+            for (auto it = std::next(bufferedRows.cbegin(), writtenEntries); it != bufferedRows.cend(); ++it) {
+                WriteCsvRow(csv, *it);
+                ++writtenEntries;
+            }
+
+            std::vector<size_t> perm = ScheduleNodePermuterBasic(schedule, LOOP_PROCESSORS);
+            sptrsv.SetupCsrWithPermutation(schedule, perm);
+
+            bool permutedCorrect = false;
+            std::vector<double> xPerm(n, 1.0);
+            sptrsv.x_ = xPerm.data();
+            for (int iter = 0; iter < args.iterations + preMeasureIterations; ++iter) {
+                resetOnes(xPerm);
+                sptrsv.PermuteXVectorInverse(perm);
+
+                const auto s = std::chrono::high_resolution_clock::now();
+                sptrsv.SspLsolveWithPermutationInPlace<kDefaultStaleness>();
+                const auto e = std::chrono::high_resolution_clock::now();
+                const double runtime = std::chrono::duration<double>(e - s).count();
+
+                // Convert the permuted solution back to the original ordering for correctness checks.
+                sptrsv.PermuteXVector(perm);
+
+                if (iter == 0) {
+                    const double diff = LInftyNormalisedDiff(xPerm, serialRefX);
+                    permutedCorrect = (diff < EPSILON);
+                    std::cout << "  Growlocal_SSP_WithPerm first-run max relative diff vs serial: " << diff << std::endl;
+                }
+
+                if (iter >= preMeasureIterations) {
+                    bufferedRows.emplace_back(CsvRow{graphName,
+                                                     "Growlocal_SSP_WithPerm",
+                                                     args.processors,
+                                                     scheduleTime,
+                                                     supersteps,
+                                                     syncCosts,
+                                                     kDefaultStaleness,
+                                                     runtime,
+                                                     permutedCorrect});
                 }
             }
 

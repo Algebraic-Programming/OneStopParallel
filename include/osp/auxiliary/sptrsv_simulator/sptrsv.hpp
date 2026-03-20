@@ -172,13 +172,18 @@ class Sptrsv {
             permInv[perm[i]] = i;
         }
 
+        const auto *const csr = instance_->GetComputationalDag().GetCSR();
+        const auto *const outer = csr->outerIndexPtr();
+        const auto *const inner = csr->innerIndexPtr();
+        const auto *const values = csr->valuePtr();
+
         numSupersteps_ = schedule.NumberOfSupersteps();
 
         val_.clear();
-        val_.reserve(static_cast<size_t>(instance_->GetComputationalDag().GetCSR()->nonZeros()));
+        val_.reserve(static_cast<size_t>(csr->nonZeros()));
 
         colIdx_.clear();
-        colIdx_.reserve(static_cast<size_t>(instance_->GetComputationalDag().GetCSR()->nonZeros()));
+        colIdx_.reserve(static_cast<size_t>(csr->nonZeros()));
 
         rowPtr_.clear();
         rowPtr_.reserve(instance_->NumberOfVertices() + 1);
@@ -209,31 +214,16 @@ class Sptrsv {
 
             rowPtr_.push_back(colIdx_.size());
 
-            std::set<UVertType> parents;
-
-            for (UVertType par : instance_->GetComputationalDag().Parents(node)) {
-                parents.insert(perm[par]);
+            // Keep the original row traversal order when building the permuted CSR.
+            // This avoids changing the accumulation order inside the solve kernel.
+            for (UVertType parInd = static_cast<UVertType>(outer[node]); parInd < static_cast<UVertType>(outer[node + 1] - 1); ++parInd) {
+                const UVertType originalParent = static_cast<UVertType>(inner[parInd]);
+                colIdx_.push_back(static_cast<UVertType>(perm[originalParent]));
+                val_.push_back(values[parInd]);
             }
 
-            for (const UVertType &par : parents) {
-                colIdx_.push_back(par);
-                unsigned found = 0;
-
-                const auto *outer = instance_->GetComputationalDag().GetCSR()->outerIndexPtr();
-                for (UVertType parInd = static_cast<UVertType>(outer[node]); parInd < static_cast<UVertType>(outer[node + 1] - 1);
-                     ++parInd) {
-                    if (static_cast<size_t>(instance_->GetComputationalDag().GetCSR()->innerIndexPtr()[parInd]) == permInv[par]) {
-                        val_.push_back(instance_->GetComputationalDag().GetCSR()->valuePtr()[parInd]);
-                        found++;
-                    }
-                }
-                assert(found == 1);
-            }
-
-            colIdx_.push_back(perm[node]);
-            val_.push_back(instance_->GetComputationalDag()
-                               .GetCSR()
-                               ->valuePtr()[instance_->GetComputationalDag().GetCSR()->outerIndexPtr()[node + 1] - 1]);
+            colIdx_.push_back(static_cast<UVertType>(perm[node]));
+            val_.push_back(values[outer[node + 1] - 1]);
         }
 
         rowPtr_.push_back(colIdx_.size());
@@ -480,6 +470,80 @@ class Sptrsv {
                 }
 
 #    pragma omp barrier
+            }
+        }
+    }
+
+    // SSP Lsolve with permutation and configurable staleness.
+    // Uses the permuted CSR storage and a FlatCheckpointCounterBarrier.
+    template <unsigned staleness = 2U>
+    void SspLsolveWithPermutation() const {
+        const unsigned nthreads = instance_->NumberOfProcessors();
+        FlatCheckpointCounterBarrier barrier(nthreads);
+
+        double *const x = x_;
+        const double *const b = b_;
+        const UVertType *const outer = rowPtr_.data();
+        const UVertType *const inner = colIdx_.data();
+        const double *const vals = val_.data();
+
+#    pragma omp parallel num_threads(nthreads)
+        {
+            const size_t proc = static_cast<size_t>(omp_get_thread_num());
+            for (unsigned step = 0; step < numSupersteps_; ++step) {
+                const UVertType rowBegin = stepProcPtr_[step][proc];
+                const UVertType rowEnd = rowBegin + stepProcNum_[step][proc];
+
+                if (rowBegin < rowEnd) {
+                    barrier.Wait(proc, staleness - 1U);
+                }
+
+                for (UVertType rowIdx = rowBegin; rowIdx < rowEnd; ++rowIdx) {
+                    x[rowIdx] = b[rowIdx];
+                    double acc = 0.0;
+                    for (UVertType i = outer[rowIdx]; i < outer[rowIdx + 1] - 1; ++i) {
+                        acc += vals[i] * x[inner[i]];
+                    }
+                    x[rowIdx] = (x[rowIdx] - acc) / vals[outer[rowIdx + 1] - 1];
+                }
+
+                barrier.Arrive(proc);
+            }
+        }
+    }
+
+    // SSP Lsolve with permutation in-place and configurable staleness.
+    // Uses the permuted CSR storage and a FlatCheckpointCounterBarrier.
+    template <unsigned staleness = 2U>
+    void SspLsolveWithPermutationInPlace() const {
+        const unsigned nthreads = instance_->NumberOfProcessors();
+        FlatCheckpointCounterBarrier barrier(nthreads);
+
+        double *const x = x_;
+        const UVertType *const outer = rowPtr_.data();
+        const UVertType *const inner = colIdx_.data();
+        const double *const vals = val_.data();
+
+#    pragma omp parallel num_threads(nthreads)
+        {
+            const size_t proc = static_cast<size_t>(omp_get_thread_num());
+            for (unsigned step = 0; step < numSupersteps_; ++step) {
+                const UVertType rowBegin = stepProcPtr_[step][proc];
+                const UVertType rowEnd = rowBegin + stepProcNum_[step][proc];
+
+                if (rowBegin < rowEnd) {
+                    barrier.Wait(proc, staleness - 1U);
+                }
+
+                for (UVertType rowIdx = rowBegin; rowIdx < rowEnd; ++rowIdx) {
+                    double acc = 0.0;
+                    for (UVertType i = outer[rowIdx]; i < outer[rowIdx + 1] - 1; ++i) {
+                        acc += vals[i] * x[inner[i]];
+                    }
+                    x[rowIdx] = (x[rowIdx] - acc) / vals[outer[rowIdx + 1] - 1];
+                }
+
+                barrier.Arrive(proc);
             }
         }
     }
