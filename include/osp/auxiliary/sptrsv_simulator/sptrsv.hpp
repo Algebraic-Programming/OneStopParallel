@@ -673,8 +673,8 @@ class Sptrsv {
         {
             for (unsigned step = 0; step < numSupersteps_; step++) {
                 const size_t proc = static_cast<size_t>(omp_get_thread_num());
-                const UVertType upperLimit = stepProcPtr_[step][proc] + stepProcNum_[step][proc];
-                for (UVertType rowIdx = stepProcPtr_[step][proc]; rowIdx < upperLimit; rowIdx++) {
+                const UVertType upperLimit = procStepPtr_[proc][step] + procStepNum_[proc][step];
+                for (UVertType rowIdx = procStepPtr_[proc][step]; rowIdx < upperLimit; rowIdx++) {
                     x[rowIdx] = b[rowIdx];
                     double acc = 0.0;
                     for (UVertType i = rowPtr_[rowIdx]; i < rowPtr_[rowIdx + 1] - 1; i++) {
@@ -685,6 +685,40 @@ class Sptrsv {
                 }
 
 #    pragma omp barrier
+            }
+        }
+    }
+
+    template <unsigned staleness = 2U>
+    void SspLsolveStalenessInPlaceWithPermutation() const {
+        const unsigned nthreads = instance_->NumberOfProcessors();
+        FlatCheckpointCounterBarrier barrier(nthreads);
+
+        const auto *const csr = instance_->GetComputationalDag().GetCSR();
+        const EigenIdxType *const outer = csr->outerIndexPtr();
+        const EigenIdxType *const inner = csr->innerIndexPtr();
+        const double *const vals = csr->valuePtr();
+        double *const x = x_;
+
+#    pragma omp parallel num_threads(nthreads)
+        {
+            const std::size_t proc = static_cast<std::size_t>(omp_get_thread_num());
+            for (unsigned step = 0; step < numSupersteps_; ++step) {
+                if (procStepNum_[proc][step] > 0U) {
+                    barrier.Wait(proc, staleness - 1U);
+                }
+
+                const UVertType upperLimit = procStepPtr_[proc][step] + procStepNum_[proc][step];
+                for (UVertType rowIdx = procStepPtr_[proc][step]; rowIdx < upperLimit; rowIdx++) {
+                    double acc = 0.0;
+                    for (UVertType i = rowPtr_[rowIdx]; i < rowPtr_[rowIdx + 1] - 1; i++) {
+                        acc += val_[i] * x[colIdx_[i]];
+                    }
+
+                    x[rowIdx] = (x[rowIdx] - acc) / val_[rowPtr_[rowIdx + 1] - 1];
+                }
+                // Signal completion of this superstep.
+                barrier.Arrive(proc);
             }
         }
     }

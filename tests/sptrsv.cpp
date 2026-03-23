@@ -37,6 +37,8 @@ limitations under the License.
 #    include "osp/graph_algorithms/directed_graph_util.hpp"
 #    include "osp/graph_implementations/eigen_matrix_adapter/sparse_matrix.hpp"
 
+#    include "osp/bsp/scheduler/GreedySchedulers/GrowLocalMaxBsp.hpp"
+
 using namespace osp;
 
 bool CompareVectors(Eigen::VectorXd &v1, Eigen::VectorXd &v2) {
@@ -286,6 +288,48 @@ BOOST_AUTO_TEST_CASE(TestEigenSptrsv) {
 
     sim.PermuteXVector(perm);
     BOOST_CHECK(CompareVectors(lXRef, lXOsp));
+
+
+
+
+
+    GrowLocalSSP<SparseMatrixImp<int32_t>, 2U> schedulerSSP;
+    MaxBspSchedule<SparseMatrixImp<int32_t>> scheduleSSP(instance);
+
+    schedulerSSP.ComputeSchedule(scheduleSSP);
+
+    sim.SetupCsrWithPermutationLoopProcessors(scheduleSSP, perm);
+    permCheck = std::vector<bool>(graph.NumVertices(), false);
+    BOOST_CHECK_EQUAL(permCheck.size(), perm.size());
+    for (const auto vert : graph.Vertices()) {
+        BOOST_CHECK(not permCheck[perm[vert]]);
+        permCheck[perm[vert]] = true;
+    }
+    for (const bool val : permCheck) {
+        BOOST_CHECK(val);
+    }
+
+
+    // Comparisson with osp serial in place L solve
+    // Eigen
+    lBRef.setConstant(0.1);
+    lXRef.setConstant(0.1);
+    lXRef = lView.solve(lBRef);
+    // OSP
+    lXOsp.setConstant(0.1);
+    lBOsp.setZero();    // this will not be used as x will take the values that already has instead of the b values
+    sim.x_ = &lXOsp[0];
+    sim.b_ = &lBOsp[0];
+    // sim.permute_x_vector(perm);
+    sim.SspLsolveStalenessInPlaceWithPermutation<2U>();
+
+    sim.PermuteXVector(perm);
+    BOOST_CHECK(CompareVectors(lXRef, lXOsp));
+
+
+
+
+
 }
 
 #endif
