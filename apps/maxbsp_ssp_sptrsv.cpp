@@ -51,7 +51,10 @@ constexpr int preMeasureIterations = 2;
 enum class Algorithm {
     VarianceSsp,
     GrowLocalSsp,
+    GrowLocalSspPermSteps,
+    GrowLocalSspPermProcs,
     GrowLocal,
+    GrowLocalPermSteps,
     Serial
 };
 
@@ -135,11 +138,13 @@ double LInftyNormalisedDiff(const std::vector<double> &v, const std::vector<doub
 void PrintUsage(const char *prog) {
     std::cout << "Usage:\n"
               << "  " << prog << " --input <file_or_directory> [--output <csv>] [--iterations <n>] [--processors <p>]\n"
-              << "      [--variance-ssp] [--growlocal-ssp] [--growlocal] [--eigen-serial] [--all]\n\n"
+              << "      [--variance-ssp] [--growlocal-ssp] [--growlocal-ssp-perm-step] [--growlocal-ssp-perm-proc] [--growlocal] "
+                 "[--growlocal-perm-step] [--eigen-serial] [--all]\n\n"
               << "Examples:\n"
               << "  " << prog << " --input ../data/mtx_tests/ErdosRenyi_2k_14k_A.mtx --all\n"
               << "  " << prog
-              << " --input ../data/mtx_tests --output bench.csv --iterations 100 --processors 16 --variance-ssp --growlocal-ssp --growlocal\n";
+              << " --input ../data/mtx_tests --output bench.csv --iterations 100 --processors 16 --variance-ssp --growlocal-ssp "
+                 "--growlocal\n";
 }
 
 bool ParseArgs(int argc, char *argv[], Args &args) {
@@ -150,8 +155,7 @@ bool ParseArgs(int argc, char *argv[], Args &args) {
     for (int i = 1; i < argc; ++i) {
         const std::string flag = argv[i];
 
-        const bool needsValue
-            = (flag == "--input" || flag == "--output" || flag == "--iterations" || flag == "--processors");
+        const bool needsValue = (flag == "--input" || flag == "--output" || flag == "--iterations" || flag == "--processors");
         if (needsValue && i + 1 >= argc) {
             std::cerr << "Missing value for " << flag << "\n";
             return false;
@@ -169,12 +173,24 @@ bool ParseArgs(int argc, char *argv[], Args &args) {
             args.algorithms.insert(Algorithm::VarianceSsp);
         } else if (flag == "--growlocal-ssp") {
             args.algorithms.insert(Algorithm::GrowLocalSsp);
+        } else if (flag == "--growlocal-ssp-perm-step") {
+            args.algorithms.insert(Algorithm::GrowLocalSspPermSteps);
+        } else if (flag == "--growlocal-ssp-perm-proc") {
+            args.algorithms.insert(Algorithm::GrowLocalSspPermProcs);
         } else if (flag == "--growlocal") {
             args.algorithms.insert(Algorithm::GrowLocal);
+        } else if (flag == "--growlocal-perm-step") {
+            args.algorithms.insert(Algorithm::GrowLocalPermSteps);
         } else if (flag == "--eigen-serial") {
             args.algorithms.insert(Algorithm::Serial);
         } else if (flag == "--all") {
-            args.algorithms = {Algorithm::VarianceSsp, Algorithm::GrowLocalSsp, Algorithm::GrowLocal, Algorithm::Serial};
+            args.algorithms = {Algorithm::VarianceSsp,
+                               Algorithm::GrowLocalSsp,
+                               Algorithm::GrowLocalSspPermProcs,
+                               Algorithm::GrowLocalSspPermSteps,
+                               Algorithm::GrowLocal,
+                               Algorithm::GrowLocalPermSteps,
+                               Algorithm::Serial};
         } else if (flag == "--help" || flag == "-h") {
             PrintUsage(argv[0]);
             return false;
@@ -241,7 +257,8 @@ std::vector<std::filesystem::path> CollectInputGraphs(const std::string &inputPa
 }
 
 void EnsureCsvHeader(std::ofstream &csv) {
-    csv << "Graph,Algorithm,Processors,ScheduleTimeSeconds,ScheduleSupersteps,SynchronizationCosts,Staleness,RuntimeSeconds,Correctness\n";
+    csv << "Graph,Algorithm,Processors,ScheduleTimeSeconds,ScheduleSupersteps,SynchronizationCosts,Staleness,RuntimeSeconds,"
+           "Correctness\n";
 }
 
 void EnsureSummaryCsvHeader(std::ofstream &csv) {
@@ -251,7 +268,8 @@ void EnsureSummaryCsvHeader(std::ofstream &csv) {
 
 void WriteCsvRow(std::ofstream &csv, const CsvRow &row) {
     csv << CsvEscape(row.graph) << "," << row.algorithm << "," << row.processors << "," << row.scheduleTimeSeconds << ","
-    << row.supersteps << "," << row.SyncCosts << "," << row.staleness << "," << row.runtimeSeconds << "," << row.correctness << "\n";
+        << row.supersteps << "," << row.SyncCosts << "," << row.staleness << "," << row.runtimeSeconds << "," << row.correctness
+        << "\n";
 }
 
 std::string BuildSummaryCsvPath(const std::string &detailPath) {
@@ -468,6 +486,108 @@ int main(int argc, char *argv[]) {
             }
         }
 
+        if (args.algorithms.count(Algorithm::GrowLocalSspPermSteps) > 0U) {
+            GrowLocalSSP<SparseMatrixImp<int32_t>, kDefaultStaleness> scheduler;
+            MaxBspSchedule<SparseMatrixImp<int32_t>> schedule(instance);
+
+            const auto t0 = std::chrono::high_resolution_clock::now();
+            scheduler.ComputeSchedule(schedule);
+            const auto t1 = std::chrono::high_resolution_clock::now();
+            const double scheduleTime = std::chrono::duration<double>(t1 - t0).count();
+
+            std::vector<unsigned> perm;
+            sptrsv.SetupCsrWithPermutationLoopProcessors(schedule, perm);
+            const unsigned supersteps = schedule.NumberOfSupersteps();
+            const int syncCosts = ComputeSyncCosts(instance);
+
+            bool correct = false;
+            std::vector<double> x(n, 1.0);
+            sptrsv.x_ = x.data();
+            for (int iter = 0; iter < args.iterations + preMeasureIterations; ++iter) {
+                resetOnes(x);
+
+                const auto s = std::chrono::high_resolution_clock::now();
+                sptrsv.SspLsolveStalenessWithPermutationInPlace<kDefaultStaleness>();
+                const auto e = std::chrono::high_resolution_clock::now();
+                const double runtime = std::chrono::duration<double>(e - s).count();
+
+                if (iter == 0) {
+                    sptrsv.PermuteXVector(perm);
+                    const double diff = LInftyNormalisedDiff(x, serialRefX);
+                    correct = (diff < EPSILON);
+                    std::cout << "  Growlocal_SSP_Perm_Step first-run max relative diff vs serial: " << diff << std::endl;
+                }
+
+                if (iter >= preMeasureIterations) {
+                    bufferedRows.emplace_back(CsvRow{graphName,
+                                                     "Growlocal_SSP_Perm_Step",
+                                                     args.processors,
+                                                     scheduleTime,
+                                                     supersteps,
+                                                     syncCosts,
+                                                     kDefaultStaleness,
+                                                     runtime,
+                                                     correct});
+                }
+            }
+
+            for (auto it = std::next(bufferedRows.cbegin(), writtenEntries); it != bufferedRows.cend(); ++it) {
+                WriteCsvRow(csv, *it);
+                ++writtenEntries;
+            }
+        }
+
+        if (args.algorithms.count(Algorithm::GrowLocalSspPermProcs) > 0U) {
+            GrowLocalSSP<SparseMatrixImp<int32_t>, kDefaultStaleness> scheduler;
+            MaxBspSchedule<SparseMatrixImp<int32_t>> schedule(instance);
+
+            const auto t0 = std::chrono::high_resolution_clock::now();
+            scheduler.ComputeSchedule(schedule);
+            const auto t1 = std::chrono::high_resolution_clock::now();
+            const double scheduleTime = std::chrono::duration<double>(t1 - t0).count();
+
+            std::vector<unsigned> perm;
+            sptrsv.SetupCsrWithPermutationProcessorsFirst(schedule, perm);
+            const unsigned supersteps = schedule.NumberOfSupersteps();
+            const int syncCosts = ComputeSyncCosts(instance);
+
+            bool correct = false;
+            std::vector<double> x(n, 1.0);
+            sptrsv.x_ = x.data();
+            for (int iter = 0; iter < args.iterations + preMeasureIterations; ++iter) {
+                resetOnes(x);
+
+                const auto s = std::chrono::high_resolution_clock::now();
+                sptrsv.SspLsolveStalenessWithProcFirstPermutationInPlace<kDefaultStaleness>();
+                const auto e = std::chrono::high_resolution_clock::now();
+                const double runtime = std::chrono::duration<double>(e - s).count();
+
+                if (iter == 0) {
+                    sptrsv.PermuteXVector(perm);
+                    const double diff = LInftyNormalisedDiff(x, serialRefX);
+                    correct = (diff < EPSILON);
+                    std::cout << "  Growlocal_SSP_Perm_Proc first-run max relative diff vs serial: " << diff << std::endl;
+                }
+
+                if (iter >= preMeasureIterations) {
+                    bufferedRows.emplace_back(CsvRow{graphName,
+                                                     "Growlocal_SSP_Perm_Proc",
+                                                     args.processors,
+                                                     scheduleTime,
+                                                     supersteps,
+                                                     syncCosts,
+                                                     kDefaultStaleness,
+                                                     runtime,
+                                                     correct});
+                }
+            }
+
+            for (auto it = std::next(bufferedRows.cbegin(), writtenEntries); it != bufferedRows.cend(); ++it) {
+                WriteCsvRow(csv, *it);
+                ++writtenEntries;
+            }
+        }
+
         if (args.algorithms.count(Algorithm::GrowLocal) > 0U) {
             GrowLocalAutoCores<SparseMatrixImp<int32_t>> scheduler;
             BspSchedule<SparseMatrixImp<int32_t>> schedule(instance);
@@ -501,6 +621,57 @@ int main(int argc, char *argv[]) {
                 if (iter >= preMeasureIterations) {
                     bufferedRows.emplace_back(CsvRow{graphName,
                                                      "Growlocal",
+                                                     args.processors,
+                                                     scheduleTime,
+                                                     supersteps,
+                                                     syncCosts,
+                                                     1U,
+                                                     runtime,
+                                                     correct});
+                }
+            }
+
+            for (auto it = std::next(bufferedRows.cbegin(), writtenEntries); it != bufferedRows.cend(); ++it) {
+                WriteCsvRow(csv, *it);
+                ++writtenEntries;
+            }
+        }
+
+        if (args.algorithms.count(Algorithm::GrowLocalPermSteps) > 0U) {
+            GrowLocalAutoCores<SparseMatrixImp<int32_t>> scheduler;
+            BspSchedule<SparseMatrixImp<int32_t>> schedule(instance);
+
+            const auto t0 = std::chrono::high_resolution_clock::now();
+            scheduler.ComputeSchedule(schedule);
+            const auto t1 = std::chrono::high_resolution_clock::now();
+            const double scheduleTime = std::chrono::duration<double>(t1 - t0).count();
+
+            std::vector<unsigned> perm;
+            sptrsv.SetupCsrWithPermutationLoopProcessors(schedule, perm);
+            const unsigned supersteps = schedule.NumberOfSupersteps();
+            const int syncCosts = ComputeSyncCosts(instance);
+
+            bool correct;
+            std::vector<double> x(n, 1.0);
+            sptrsv.x_ = x.data();
+            for (int iter = 0; iter < args.iterations + preMeasureIterations; ++iter) {
+                resetOnes(x);
+
+                const auto s = std::chrono::high_resolution_clock::now();
+                sptrsv.LsolveWithPermutationInPlace();
+                const auto e = std::chrono::high_resolution_clock::now();
+                const double runtime = std::chrono::duration<double>(e - s).count();
+
+                if (iter == 0) {
+                    sptrsv.PermuteXVector(perm);
+                    const double diff = LInftyNormalisedDiff(x, serialRefX);
+                    correct = (diff < EPSILON);
+                    std::cout << "  Growlocal_Perm_Step first-run max relative diff vs serial: " << diff << std::endl;
+                }
+
+                if (iter >= preMeasureIterations) {
+                    bufferedRows.emplace_back(CsvRow{graphName,
+                                                     "Growlocal_Perm_Step",
                                                      args.processors,
                                                      scheduleTime,
                                                      supersteps,
