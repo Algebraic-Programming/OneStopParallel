@@ -248,7 +248,7 @@ class Sptrsv {
 
             const unsigned permVert = perm[vert];
             UVertType location = rowPtr_[permVert];
-            for (const auto [permPar, edgeIdx] : parents) {
+            for (const auto &[permPar, edgeIdx] : parents) {
                 colIdx_[location] = permPar;
                 val_[location] = values[edgeIdx];
                 ++location;
@@ -337,7 +337,7 @@ class Sptrsv {
 
             const unsigned permVert = perm[vert];
             UVertType location = rowPtr_[permVert];
-            for (const auto [permPar, edgeIdx] : parents) {
+            for (const auto &[permPar, edgeIdx] : parents) {
                 colIdx_[location] = permPar;
                 val_[location] = values[edgeIdx];
                 ++location;
