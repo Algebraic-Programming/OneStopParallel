@@ -690,7 +690,7 @@ class Sptrsv {
     }
 
     template <unsigned staleness = 2U>
-    void SspLsolveStalenessInPlaceWithPermutation() const {
+    void SspLsolveStalenessWithPermutationInPlace() const {
         const unsigned nthreads = instance_->NumberOfProcessors();
         FlatCheckpointCounterBarrier barrier(nthreads);
 
@@ -710,6 +710,43 @@ class Sptrsv {
 
                 const UVertType upperLimit = procStepPtr_[proc][step] + procStepNum_[proc][step];
                 for (UVertType rowIdx = procStepPtr_[proc][step]; rowIdx < upperLimit; rowIdx++) {
+                    double acc = 0.0;
+                    for (UVertType i = rowPtr_[rowIdx]; i < rowPtr_[rowIdx + 1] - 1; i++) {
+                        acc += val_[i] * x[colIdx_[i]];
+                    }
+
+                    x[rowIdx] = (x[rowIdx] - acc) / val_[rowPtr_[rowIdx + 1] - 1];
+                }
+                // Signal completion of this superstep.
+                barrier.Arrive(proc);
+            }
+        }
+    }
+
+    template <unsigned staleness = 2U>
+    void SspLsolveStalenessWithProcFirstPermutationInPlace() const {
+        const unsigned nthreads = instance_->NumberOfProcessors();
+        FlatCheckpointCounterBarrier barrier(nthreads);
+
+        const auto *const csr = instance_->GetComputationalDag().GetCSR();
+        const EigenIdxType *const outer = csr->outerIndexPtr();
+        const EigenIdxType *const inner = csr->innerIndexPtr();
+        const double *const vals = csr->valuePtr();
+        double *const x = x_;
+
+#    pragma omp parallel num_threads(nthreads)
+        {
+            const unsigned proc = static_cast<unsigned>(omp_get_thread_num());
+            const auto endStepPtr = std::next(procFirstStepPtr_.cbegin(), (proc + 1U) * numSupersteps_);
+            for (auto stepPtr = std::next(procFirstStepPtr_.cbegin(), proc * numSupersteps_); stepPtr != endStepPtr;) {
+                UVertType rowIdx = *stepPtr;
+                const UVertType endRowIdx = *(++stepPtr);
+
+                if (rowIdx != endRowIdx) {
+                    barrier.Wait(proc, staleness - 1U);
+                }
+
+                for (; rowIdx != endRowIdx; ++rowIdx) {
                     double acc = 0.0;
                     for (UVertType i = rowPtr_[rowIdx]; i < rowPtr_[rowIdx + 1] - 1; i++) {
                         acc += val_[i] * x[colIdx_[i]];
