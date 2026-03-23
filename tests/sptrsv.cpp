@@ -227,8 +227,18 @@ BOOST_AUTO_TEST_CASE(TestEigenSptrsv) {
     BOOST_CHECK(CompareVectors(uXRef, uXOsp));
 
     // Lsolve in-place With PERMUTATION
-    std::vector<size_t> perm = ScheduleNodePermuterBasic(scheduleCs, LOOP_PROCESSORS);
-    sim.SetupCsrWithPermutation(scheduleCs, perm);
+    std::vector<unsigned> perm;// = ScheduleNodePermuterBasic(scheduleCs, LOOP_PROCESSORS);
+    sim.SetupCsrWithPermutationLoopProcessors(scheduleCs, perm);
+    std::vector<bool> permCheck(graph.NumVertices(), false);
+    BOOST_CHECK_EQUAL(permCheck.size(), perm.size());
+    for (const auto vert : graph.Vertices()) {
+        BOOST_CHECK(not permCheck[perm[vert]]);
+        permCheck[perm[vert]] = true;
+    }
+    for (const bool val : permCheck) {
+        BOOST_CHECK(val);
+    }
+
 
     // Comparisson with osp serial in place L solve
     // Eigen
