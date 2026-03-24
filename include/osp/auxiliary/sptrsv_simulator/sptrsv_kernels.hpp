@@ -205,14 +205,14 @@ void SpLTrSvProcPermBSPParallel(double *__restrict__ const x,
                                 const double *__restrict__ const val,
                                 const unsigned numProcs,
                                 const unsigned numSuperSteps,
-                                const std::vector<IdxType> &procStepPtr) {
+                                const IdxType *__restrict__ const procStepPtr) {
     static_assert(std::is_integral_v<IdxType>);
 
 #pragma omp parallel num_threads(numProcs)
     {
         const unsigned proc = static_cast<unsigned>(omp_get_thread_num());
-        const auto endStepPtr = std::next(procStepPtr.cbegin(), (proc + 1U) * numSuperSteps);
-        for (auto stepPtr = std::next(procStepPtr.cbegin(), proc * numSuperSteps); stepPtr != endStepPtr;) {
+        const IdxType *const endStepPtr = procStepPtr + ((proc + 1U) * numSuperSteps);
+        for (const IdxType *stepPtr = procStepPtr + (proc * numSuperSteps); stepPtr != endStepPtr;) {
             IdxType row = *stepPtr;
             const IdxType endRow = *(++stepPtr);
             for (; row != endRow; ++row) {
@@ -236,14 +236,14 @@ void SpLTrSvProcPermBSPParallelInPlace(double *__restrict__ const x,
                                        const double *__restrict__ const val,
                                        const unsigned numProcs,
                                        const unsigned numSuperSteps,
-                                       const std::vector<IdxType> &procStepPtr) {
+                                       const IdxType *__restrict__ const procStepPtr) {
     static_assert(std::is_integral_v<IdxType>);
 
 #pragma omp parallel num_threads(numProcs)
     {
         const unsigned proc = static_cast<unsigned>(omp_get_thread_num());
-        const auto endStepPtr = std::next(procStepPtr.cbegin(), (proc + 1U) * numSuperSteps);
-        for (auto stepPtr = std::next(procStepPtr.cbegin(), proc * numSuperSteps); stepPtr != endStepPtr;) {
+        const IdxType *const endStepPtr = procStepPtr + ((proc + 1U) * numSuperSteps);
+        for (const IdxType *stepPtr = procStepPtr + (proc * numSuperSteps); stepPtr != endStepPtr;) {
             IdxType row = *stepPtr;
             const IdxType endRow = *(++stepPtr);
             for (; row != endRow; ++row) {
@@ -268,15 +268,15 @@ void SpLTrSvProcPermSSPParallel(double *__restrict__ const x,
                                 const double *__restrict__ const val,
                                 const unsigned numProcs,
                                 const unsigned numSuperSteps,
-                                const std::vector<IdxType> &procStepPtr) {
+                                const IdxType *__restrict__ const procStepPtr) {
     static_assert(std::is_integral_v<IdxType>);
 
     FlatCheckpointCounterBarrier barrier(numProcs);
 #pragma omp parallel num_threads(numProcs)
     {
         const unsigned proc = static_cast<unsigned>(omp_get_thread_num());
-        const auto endStepPtr = std::next(procStepPtr.cbegin(), (proc + 1U) * numSuperSteps);
-        for (auto stepPtr = std::next(procStepPtr.cbegin(), proc * numSuperSteps); stepPtr != endStepPtr;) {
+        const IdxType *const endStepPtr = procStepPtr + ((proc + 1U) * numSuperSteps);
+        for (const IdxType *stepPtr = procStepPtr + (proc * numSuperSteps); stepPtr != endStepPtr;) {
             IdxType row = *stepPtr;
             const IdxType endRow = *(++stepPtr);
 
@@ -304,15 +304,15 @@ void SpLTrSvProcPermSSPParallelInPlace(double *__restrict__ const x,
                                        const double *__restrict__ const val,
                                        const unsigned numProcs,
                                        const unsigned numSuperSteps,
-                                       const std::vector<IdxType> &procStepPtr) {
+                                       const IdxType *__restrict__ const procStepPtr) {
     static_assert(std::is_integral_v<IdxType>);
 
     FlatCheckpointCounterBarrier barrier(numProcs);
 #pragma omp parallel num_threads(numProcs)
     {
         const unsigned proc = static_cast<unsigned>(omp_get_thread_num());
-        const auto endStepPtr = std::next(procStepPtr.cbegin(), (proc + 1U) * numSuperSteps);
-        for (auto stepPtr = std::next(procStepPtr.cbegin(), proc * numSuperSteps); stepPtr != endStepPtr;) {
+        const IdxType *const endStepPtr = procStepPtr + ((proc + 1U) * numSuperSteps);
+        for (const IdxType *stepPtr = procStepPtr + (proc * numSuperSteps); stepPtr != endStepPtr;) {
             IdxType row = *stepPtr;
             const IdxType endRow = *(++stepPtr);
 

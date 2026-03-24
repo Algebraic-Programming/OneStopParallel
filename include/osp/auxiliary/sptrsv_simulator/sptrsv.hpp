@@ -591,7 +591,7 @@ class Sptrsv {
     void LsolveWithProcFirstPermutationInPlace() const {
         double *const x = x_;
 
-        SpLTrSvProcPermBSPParallelInPlace(x, rowPtr_.data(), colIdx_.data(), val_.data(), instance_->NumberOfProcessors(), numSupersteps_, procFirstStepPtr_);
+        SpLTrSvProcPermBSPParallelInPlace(x, rowPtr_.data(), colIdx_.data(), val_.data(), instance_->NumberOfProcessors(), numSupersteps_, procFirstStepPtr_.data());
     }
 
     void LsolveWithPermutation() const {
@@ -656,7 +656,7 @@ class Sptrsv {
     void SspLsolveStalenessWithProcFirstPermutationInPlace() const {
         double *const x = x_;
 
-        SpLTrSvProcPermSSPParallelInPlace<UVertType, staleness>(x, rowPtr_.data(), colIdx_.data(), val_.data(), instance_->NumberOfProcessors(), numSupersteps_, procFirstStepPtr_);
+        SpLTrSvProcPermSSPParallelInPlace<UVertType, staleness>(x, rowPtr_.data(), colIdx_.data(), val_.data(), instance_->NumberOfProcessors(), numSupersteps_, procFirstStepPtr_.data());
     }
 
     void ResetX() {
