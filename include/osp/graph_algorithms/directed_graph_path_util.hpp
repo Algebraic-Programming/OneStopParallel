@@ -132,7 +132,7 @@ std::size_t LongestPath(const GraphT &graph) {
             if (visitCounter[child] == graph.InDegree(child)) {
                 bfsQueue.push(child);
                 distances[child] = distances[current] + 1;
-                maxEdgecount = std::max(maxEdgecount, distances[child]);
+                maxEdgecount = std::max(maxEdgecount, static_cast<std::size_t>(distances[child]));
             }
         }
     }

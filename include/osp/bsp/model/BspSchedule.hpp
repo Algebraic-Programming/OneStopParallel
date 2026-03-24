@@ -553,8 +553,8 @@ class BspSchedule : public IBspSchedule<GraphT>, public IBspScheduleEval<GraphT>
      *
      * @return A 2D vector containing the number of nodes assigned to each processor in each superstep.
      */
-    [[nodiscard]] std::vector<std::vector<unsigned>> NumAssignedNodesPerSuperstepProcessor() const {
-        std::vector<std::vector<unsigned>> num(numberOfSupersteps_, std::vector<unsigned>(instance_->NumberOfProcessors(), 0));
+    [[nodiscard]] std::vector<std::vector<VertexIdx>> NumAssignedNodesPerSuperstepProcessor() const {
+        std::vector<std::vector<VertexIdx>> num(numberOfSupersteps_, std::vector<VertexIdx>(instance_->NumberOfProcessors(), 0));
 
         for (const auto &v : instance_->Vertices()) {
             num[nodeToSuperstepAssignment_[v]][nodeToProcessorAssignment_[v]] += 1;

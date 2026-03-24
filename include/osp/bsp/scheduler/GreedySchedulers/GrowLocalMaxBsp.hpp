@@ -469,7 +469,7 @@ ReturnStatus GrowLocalSSP<GraphT, staleness_t>::ComputeSchedule(MaxBspSchedule<G
         }
 
         for (unsigned proc = 0U; proc < numProcs; ++proc) {
-            totalAssigned += bestNewAssignments[proc].size();
+            totalAssigned += static_cast<VertexType>(bestNewAssignments[proc].size());
             for (const VertexType &node : bestNewAssignments[proc]) {
                 schedule.SetAssignedProcessor(node, proc);
 

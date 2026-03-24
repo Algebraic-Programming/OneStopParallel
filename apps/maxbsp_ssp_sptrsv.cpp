@@ -495,7 +495,7 @@ int main(int argc, char *argv[]) {
             const auto t1 = std::chrono::high_resolution_clock::now();
             const double scheduleTime = std::chrono::duration<double>(t1 - t0).count();
 
-            std::vector<unsigned> perm;
+            std::vector<SparseMatrixImp<int32_t>::VertexIdx> perm;
             sptrsv.SetupCsrWithPermutationLoopProcessors(schedule, perm);
             const unsigned supersteps = schedule.NumberOfSupersteps();
             const int syncCosts = ComputeSyncCosts(instance);
@@ -546,7 +546,7 @@ int main(int argc, char *argv[]) {
             const auto t1 = std::chrono::high_resolution_clock::now();
             const double scheduleTime = std::chrono::duration<double>(t1 - t0).count();
 
-            std::vector<unsigned> perm;
+            std::vector<SparseMatrixImp<int32_t>::VertexIdx> perm;
             sptrsv.SetupCsrWithPermutationProcessorsFirst(schedule, perm);
             const unsigned supersteps = schedule.NumberOfSupersteps();
             const int syncCosts = ComputeSyncCosts(instance);
@@ -646,7 +646,7 @@ int main(int argc, char *argv[]) {
             const auto t1 = std::chrono::high_resolution_clock::now();
             const double scheduleTime = std::chrono::duration<double>(t1 - t0).count();
 
-            std::vector<unsigned> perm;
+            std::vector<SparseMatrixImp<int32_t>::VertexIdx> perm;
             sptrsv.SetupCsrWithPermutationLoopProcessors(schedule, perm);
             const unsigned supersteps = schedule.NumberOfSupersteps();
             const int syncCosts = ComputeSyncCosts(instance);

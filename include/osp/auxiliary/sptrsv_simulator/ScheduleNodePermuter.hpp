@@ -34,25 +34,25 @@ enum ScheduleNodePermutationModes { LOOP_PROCESSORS, SNAKE_PROCESSORS, PROCESSOR
  *
  * @param sched BSP Schedule
  * @param mode ordering of processors
- * @return std::vector<size_t> vec[prev_node_name] = new_node_name(location)
+ * @return std::vector<VertexIdxT<GraphT>> vec[prev_node_name] = new_node_name(location)
  */
 template <typename GraphT>
-std::vector<size_t> ScheduleNodePermuterBasic(const BspSchedule<GraphT> &sched,
-                                              const ScheduleNodePermutationModes mode = LOOP_PROCESSORS) {
+std::vector<VertexIdxT<GraphT>> ScheduleNodePermuterBasic(const BspSchedule<GraphT> &sched,
+                                                          const ScheduleNodePermutationModes mode = LOOP_PROCESSORS) {
     // superstep, processor, nodes
-    std::vector<std::vector<std::vector<size_t>>> allocation(
+    std::vector<std::vector<std::vector<VertexIdxT<GraphT>>>> allocation(
         sched.NumberOfSupersteps(),
-        std::vector<std::vector<size_t>>(sched.GetInstance().NumberOfProcessors(), std::vector<size_t>({})));
-    for (size_t node = 0; node < sched.GetInstance().NumberOfVertices(); node++) {
+        std::vector<std::vector<VertexIdxT<GraphT>>>(sched.GetInstance().NumberOfProcessors(), std::vector<VertexIdxT<GraphT>>({})));
+    for (VertexIdxT<GraphT> node = 0; node < sched.GetInstance().NumberOfVertices(); node++) {
         allocation[sched.AssignedSuperstep(node)][sched.AssignedProcessor(node)].emplace_back(node);
     }
 
     // reordering and allocating into permutation
-    std::vector<size_t> permutation(sched.GetInstance().NumberOfVertices());
+    std::vector<VertexIdxT<GraphT>> permutation(sched.GetInstance().NumberOfVertices());
 
     if (mode == LOOP_PROCESSORS || mode == SNAKE_PROCESSORS) {
         bool forward = true;
-        size_t counter = 0;
+        VertexIdxT<GraphT> counter = 0;
         for (auto stepIt = allocation.begin(); stepIt != allocation.cend(); stepIt++) {
             if (forward) {
                 for (auto procIt = stepIt->begin(); procIt != stepIt->cend(); procIt++) {

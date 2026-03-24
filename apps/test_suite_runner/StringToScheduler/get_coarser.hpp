@@ -88,7 +88,7 @@ std::unique_ptr<Coarser<GraphTIn, GraphTOut>> GetCoarserByName(const ConfigParse
                                                    .value_or(std::numeric_limits<VMemwT<GraphTIn>>::max()));
                 coarserPtr->SetCommunicationThreshold(paramsPt.get_optional<VCommwT<GraphTIn>>("communication_threshold")
                                                           .value_or(std::numeric_limits<VCommwT<GraphTIn>>::max()));
-                coarserPtr->SetSuperNodeSizeThreshold(paramsPt.get_optional<std::size_t>("super_node_size_threshold").value_or(10));
+                coarserPtr->SetSuperNodeSizeThreshold(paramsPt.get_optional<VertexIdxT<GraphTIn>>("super_node_size_threshold").value_or(10));
                 coarserPtr->SetNodeDistThreshold(paramsPt.get_optional<unsigned>("node_dist_threshold").value_or(10));
             }
         };

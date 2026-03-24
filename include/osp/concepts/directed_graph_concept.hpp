@@ -64,13 +64,15 @@ struct IsDirectedGraph<T,
                                    decltype(std::declval<T>().Children(std::declval<VertexIdxT<T>>())),
                                    decltype(std::declval<T>().InDegree(std::declval<VertexIdxT<T>>())),
                                    decltype(std::declval<T>().OutDegree(std::declval<VertexIdxT<T>>()))>>
-    : std::conjunction<IsForwardRangeOf<decltype(std::declval<T>().Vertices()), VertexIdxT<T>>,
+    : std::conjunction<
+                       IsForwardRangeOf<decltype(std::declval<T>().Vertices()), VertexIdxT<T>>,
                        std::is_integral<decltype(std::declval<T>().NumVertices())>,
                        std::is_integral<decltype(std::declval<T>().NumEdges())>,
-                       IsInputRangeOf<decltype(std::declval<T>().Parents(std::declval<VertexIdxT<T>>())), VertexIdxT<T>>,
-                       IsInputRangeOf<decltype(std::declval<T>().Children(std::declval<VertexIdxT<T>>())), VertexIdxT<T>>,
-                       std::is_integral<decltype(std::declval<T>().InDegree(std::declval<VertexIdxT<T>>()))>,
-                       std::is_integral<decltype(std::declval<T>().OutDegree(std::declval<VertexIdxT<T>>()))>> {};
+                       IsInputRangeOf<decltype(std::declval<T>().Parents(std::declval<VertexIdxT<T>>())), VertexIdxT<T>>
+                    //    IsInputRangeOf<decltype(std::declval<T>().Children(std::declval<VertexIdxT<T>>())), VertexIdxT<T>>,
+                    //    std::is_integral<decltype(std::declval<T>().InDegree(std::declval<VertexIdxT<T>>()))>,
+                    //    std::is_integral<decltype(std::declval<T>().OutDegree(std::declval<VertexIdxT<T>>()))>
+                       > {};
 
 template <typename T>
 inline constexpr bool isDirectedGraphV = IsDirectedGraph<T>::value;

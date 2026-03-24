@@ -41,6 +41,7 @@ limitations under the License.
 #    include "osp/bsp/model/BspInstance.hpp"
 #    include "osp/bsp/model/BspSchedule.hpp"
 #    include "osp/graph_implementations/eigen_matrix_adapter/sparse_matrix.hpp"
+#    include "osp/auxiliary/sptrsv_simulator/sptrsv_kernels.hpp"
 
 namespace osp {
 
@@ -61,13 +62,13 @@ class Sptrsv {
     std::vector<UVertType> rowIdx_;
     std::vector<UVertType> colPtr_;
 
-    std::vector<std::vector<unsigned>> procStepPtr_;
-    std::vector<std::vector<unsigned>> procStepNum_;
+    std::vector<std::vector<UVertType>> procStepPtr_;
+    std::vector<std::vector<UVertType>> procStepNum_;
 
-    std::vector<unsigned> procFirstStepPtr_;
+    std::vector<UVertType> procFirstStepPtr_;
 
-    std::vector<std::vector<unsigned>> stepProcPtr_;
-    std::vector<std::vector<unsigned>> stepProcNum_;
+    std::vector<std::vector<UVertType>> stepProcPtr_;
+    std::vector<std::vector<UVertType>> stepProcNum_;
 
     double *x_;
     const double *b_;
@@ -98,14 +99,14 @@ class Sptrsv {
             schedule.NumberOfSupersteps(), std::vector<std::vector<EigenIdxType>>(schedule.GetInstance().NumberOfProcessors()));
 
         numSupersteps_ = schedule.NumberOfSupersteps();
-        size_t numberOfVertices = instance_->GetComputationalDag().NumVertices();
+        UVertType numberOfVertices = instance_->GetComputationalDag().NumVertices();
 
 #    pragma omp parallel num_threads(2)
         {
             int id = omp_get_thread_num();
             switch (id) {
                 case 0: {
-                    for (size_t node = 0; node < numberOfVertices; ++node) {
+                    for (UVertType node = 0; node < numberOfVertices; ++node) {
                         vectorStepProcessorVertices_[schedule.AssignedSuperstep(node)][schedule.AssignedProcessor(node)].push_back(
                             static_cast<EigenIdxType>(node));
                     }
@@ -116,7 +117,7 @@ class Sptrsv {
                                 EigenIdxType start = vectorStepProcessorVertices_[step][proc][0];
                                 EigenIdxType prev = vectorStepProcessorVertices_[step][proc][0];
 
-                                for (size_t i = 1; i < vectorStepProcessorVertices_[step][proc].size(); ++i) {
+                                for (UVertType i = 1; i < vectorStepProcessorVertices_[step][proc].size(); ++i) {
                                     if (vectorStepProcessorVertices_[step][proc][i] != prev + 1) {
                                         boundsArrayL_[step][proc].push_back(start);
                                         boundsArrayL_[step][proc].push_back(prev);
@@ -134,7 +135,7 @@ class Sptrsv {
                     break;
                 }
                 case 1: {
-                    size_t node = numberOfVertices;
+                    UVertType node = numberOfVertices;
                     do {
                         node--;
                         vectorStepProcessorVerticesU_[schedule.AssignedSuperstep(node)][schedule.AssignedProcessor(node)].push_back(
@@ -149,7 +150,7 @@ class Sptrsv {
                                 EigenIdxType startU = static_cast<EigenIdxType>(vectorStepProcessorVerticesU_[step][proc][0]);
                                 EigenIdxType prevU = static_cast<EigenIdxType>(vectorStepProcessorVerticesU_[step][proc][0]);
 
-                                for (size_t i = 1; i < vectorStepProcessorVerticesU_[step][proc].size(); ++i) {
+                                for (UVertType i = 1; i < vectorStepProcessorVerticesU_[step][proc].size(); ++i) {
                                     if (static_cast<EigenIdxType>(vectorStepProcessorVerticesU_[step][proc][i]) != prevU - 1) {
                                         boundsArrayU_[step][proc].push_back(startU);
                                         boundsArrayU_[step][proc].push_back(prevU);
@@ -173,26 +174,26 @@ class Sptrsv {
         }
     }
 
-    void SetupCsrWithPermutationLoopProcessors(const BspSchedule<SparseMatrixImp<EigenIdxType>> &schedule, std::vector<unsigned> &perm) {
+    void SetupCsrWithPermutationLoopProcessors(const BspSchedule<SparseMatrixImp<EigenIdxType>> &schedule, std::vector<UVertType> &perm) {
         const auto *const csr = instance_->GetComputationalDag().GetCSR();
         const EigenIdxType *const outer = csr->outerIndexPtr();
         const EigenIdxType *const inner = csr->innerIndexPtr();
         const double *const values = csr->valuePtr();
 
         const SparseMatrixImp<EigenIdxType> &graph = instance_->GetComputationalDag();
-        assert(static_cast<std::size_t>(graph.NumVertices()) + static_cast<std::size_t>(graph.NumEdges()) <= static_cast<std::size_t>(std::numeric_limits<unsigned>::max()));
-        const unsigned numVert = static_cast<unsigned>(graph.NumVertices());
+        assert(static_cast<std::size_t>(graph.NumVertices()) + static_cast<std::size_t>(graph.NumEdges()) <= static_cast<std::size_t>(std::numeric_limits<UVertType>::max()));
+        const UVertType numVert = static_cast<UVertType>(graph.NumVertices());
         numSupersteps_ = schedule.NumberOfSupersteps();
         const unsigned numProcs = instance_->NumberOfProcessors();
 
-        perm = std::vector<unsigned>(numVert, 0U);
+        perm = std::vector<UVertType>(numVert, 0U);
 
-        val_ = std::vector<double>(static_cast<size_t>(csr->nonZeros()));
-        colIdx_ = std::vector<UVertType>(static_cast<size_t>(csr->nonZeros()));
+        val_ = std::vector<double>(static_cast<std::size_t>(csr->nonZeros()));
+        colIdx_ = std::vector<UVertType>(static_cast<std::size_t>(csr->nonZeros()));
         rowPtr_ = std::vector<UVertType>(numVert + 1U, 0U);
 
-        procStepPtr_ = std::vector<std::vector<unsigned>>(numProcs, std::vector<unsigned>(numSupersteps_, 0U));
-        procStepNum_ = std::vector<std::vector<unsigned>>(numProcs, std::vector<unsigned>(numSupersteps_, 0U));
+        procStepPtr_ = std::vector<std::vector<UVertType>>(numProcs, std::vector<UVertType>(numSupersteps_, 0U));
+        procStepNum_ = std::vector<std::vector<UVertType>>(numProcs, std::vector<UVertType>(numSupersteps_, 0U));
 
         for (const auto vert : graph.Vertices()) {
             const unsigned whichStep = schedule.AssignedSuperstep(vert);
@@ -201,7 +202,7 @@ class Sptrsv {
             perm[vert] = procStepNum_[whichProc][whichStep]++; // offsets
         }
 
-        unsigned accNode = 0U;
+        UVertType accNode = 0U;
         for (unsigned step = 0U; step < numSupersteps_; ++step) {
             for (unsigned proc = 0U; proc < numProcs; ++proc) {
                 procStepPtr_[proc][step] = accNode;
@@ -213,20 +214,20 @@ class Sptrsv {
             perm[vert] += procStepPtr_[schedule.AssignedProcessor(vert)][schedule.AssignedSuperstep(vert)];
         }
 
-        std::vector<std::vector<unsigned>> entryAccumulation = std::vector<std::vector<unsigned>>(numProcs, std::vector<unsigned>(numSupersteps_, 0U));
+        std::vector<std::vector<UVertType>> entryAccumulation = std::vector<std::vector<UVertType>>(numProcs, std::vector<UVertType>(numSupersteps_, 0U));
 
         for (const auto vert : graph.Vertices()) {
             const unsigned whichStep = schedule.AssignedSuperstep(vert);
             const unsigned whichProc = schedule.AssignedProcessor(vert);
 
             rowPtr_[perm[vert]] = entryAccumulation[whichProc][whichStep];
-            entryAccumulation[whichProc][whichStep] += static_cast<unsigned>(graph.InDegree(vert)) + 1;
+            entryAccumulation[whichProc][whichStep] += static_cast<UVertType>(graph.InDegree(vert)) + 1;
         }
 
-        unsigned accEntry = 0U;
+        UVertType accEntry = 0U;
         for (unsigned step = 0U; step < numSupersteps_; ++step) {
             for (unsigned proc = 0U; proc < numProcs; ++proc) {
-                unsigned temp = entryAccumulation[proc][step];
+                UVertType temp = entryAccumulation[proc][step];
                 entryAccumulation[proc][step] = accEntry;
                 accEntry += temp;
             }
@@ -239,14 +240,14 @@ class Sptrsv {
         }
 
         for (const auto vert : graph.Vertices()) {
-            std::vector<std::pair<unsigned, unsigned>> parents;
+            std::vector<std::pair<UVertType, UVertType>> parents;
             parents.reserve(graph.InDegree(vert));
             for (EigenIdxType edge = outer[vert]; edge < outer[vert + 1] - 1; ++edge) {
-                parents.emplace_back(perm[static_cast<std::size_t>(inner[edge])], static_cast<unsigned>(edge));
+                parents.emplace_back(perm[static_cast<UVertType>(inner[edge])], static_cast<UVertType>(edge));
             }
             std::sort(parents.begin(), parents.end());
 
-            const unsigned permVert = perm[vert];
+            const UVertType permVert = perm[vert];
             UVertType location = rowPtr_[permVert];
             for (const auto &[permPar, edgeIdx] : parents) {
                 colIdx_[location] = permPar;
@@ -258,28 +259,28 @@ class Sptrsv {
         }
     }
 
-    void SetupCsrWithPermutationProcessorsFirst(const BspSchedule<SparseMatrixImp<EigenIdxType>> &schedule, std::vector<unsigned> &perm) {
+    void SetupCsrWithPermutationProcessorsFirst(const BspSchedule<SparseMatrixImp<EigenIdxType>> &schedule, std::vector<UVertType> &perm) {
         const auto *const csr = instance_->GetComputationalDag().GetCSR();
         const EigenIdxType *const outer = csr->outerIndexPtr();
         const EigenIdxType *const inner = csr->innerIndexPtr();
         const double *const values = csr->valuePtr();
 
         const SparseMatrixImp<EigenIdxType> &graph = instance_->GetComputationalDag();
-        assert(static_cast<std::size_t>(graph.NumVertices()) + static_cast<std::size_t>(graph.NumEdges()) <= static_cast<std::size_t>(std::numeric_limits<unsigned>::max()));
-        const unsigned numVert = static_cast<unsigned>(graph.NumVertices());
+        assert(static_cast<std::size_t>(graph.NumVertices()) + static_cast<std::size_t>(graph.NumEdges()) <= static_cast<std::size_t>(std::numeric_limits<UVertType>::max()));
+        const UVertType numVert = static_cast<unsigned>(graph.NumVertices());
         numSupersteps_ = schedule.NumberOfSupersteps();
         const unsigned numProcs = instance_->NumberOfProcessors();
 
-        perm = std::vector<unsigned>(numVert, 0U);
+        perm = std::vector<UVertType>(numVert, 0U);
 
-        val_ = std::vector<double>(static_cast<size_t>(csr->nonZeros()));
-        colIdx_ = std::vector<UVertType>(static_cast<size_t>(csr->nonZeros()));
+        val_ = std::vector<double>(static_cast<std::size_t>(csr->nonZeros()));
+        colIdx_ = std::vector<UVertType>(static_cast<std::size_t>(csr->nonZeros()));
         rowPtr_ = std::vector<UVertType>(numVert + 1U, 0U);
 
-        procFirstStepPtr_ = std::vector<unsigned>(0U);
+        procFirstStepPtr_ = std::vector<UVertType>(0U);
         procFirstStepPtr_.reserve(numProcs + numSupersteps_ + 1U);
 
-        procStepNum_ = std::vector<std::vector<unsigned>>(numProcs, std::vector<unsigned>(numSupersteps_, 0U));
+        procStepNum_ = std::vector<std::vector<UVertType>>(numProcs, std::vector<UVertType>(numSupersteps_, 0U));
 
         for (const auto vert : graph.Vertices()) {
             const unsigned whichStep = schedule.AssignedSuperstep(vert);
@@ -288,7 +289,7 @@ class Sptrsv {
             perm[vert] = procStepNum_[whichProc][whichStep]++; // offsets
         }
 
-        unsigned accNode = 0U;
+        UVertType accNode = 0U;
         for (unsigned proc = 0U; proc < numProcs; ++proc) {
             for (unsigned step = 0U; step < numSupersteps_; ++step) {
                 procFirstStepPtr_.emplace_back(accNode);
@@ -302,20 +303,20 @@ class Sptrsv {
             perm[vert] += procFirstStepPtr_[schedule.AssignedProcessor(vert) * numSupersteps_ + schedule.AssignedSuperstep(vert)];
         }
 
-        std::vector<std::vector<unsigned>> entryAccumulation = std::vector<std::vector<unsigned>>(numProcs, std::vector<unsigned>(numSupersteps_, 0U));
+        std::vector<std::vector<UVertType>> entryAccumulation = std::vector<std::vector<UVertType>>(numProcs, std::vector<UVertType>(numSupersteps_, 0U));
 
         for (const auto vert : graph.Vertices()) {
             const unsigned whichStep = schedule.AssignedSuperstep(vert);
             const unsigned whichProc = schedule.AssignedProcessor(vert);
 
             rowPtr_[perm[vert]] = entryAccumulation[whichProc][whichStep];
-            entryAccumulation[whichProc][whichStep] += static_cast<unsigned>(graph.InDegree(vert)) + 1;
+            entryAccumulation[whichProc][whichStep] += static_cast<UVertType>(graph.InDegree(vert)) + 1;
         }
 
-        unsigned accEntry = 0U;
+        UVertType accEntry = 0U;
         for (unsigned proc = 0U; proc < numProcs; ++proc) {
             for (unsigned step = 0U; step < numSupersteps_; ++step) {
-                unsigned temp = entryAccumulation[proc][step];
+                UVertType temp = entryAccumulation[proc][step];
                 entryAccumulation[proc][step] = accEntry;
                 accEntry += temp;
             }
@@ -328,14 +329,14 @@ class Sptrsv {
         }
 
         for (const auto vert : graph.Vertices()) {
-            std::vector<std::pair<unsigned, unsigned>> parents;
+            std::vector<std::pair<UVertType, UVertType>> parents;
             parents.reserve(graph.InDegree(vert));
             for (EigenIdxType edge = outer[vert]; edge < outer[vert + 1] - 1; ++edge) {
-                parents.emplace_back(perm[static_cast<std::size_t>(inner[edge])], static_cast<unsigned>(edge));
+                parents.emplace_back(perm[static_cast<UVertType>(inner[edge])], static_cast<UVertType>(edge));
             }
             std::sort(parents.begin(), parents.end());
 
-            const unsigned permVert = perm[vert];
+            const UVertType permVert = perm[vert];
             UVertType location = rowPtr_[permVert];
             for (const auto &[permPar, edgeIdx] : parents) {
                 colIdx_[location] = permPar;
@@ -347,25 +348,25 @@ class Sptrsv {
         }
     }
 
-    void SetupCsrWithPermutation(const BspSchedule<SparseMatrixImp<EigenIdxType>> &schedule, std::vector<size_t> &perm) {
-        std::vector<size_t> permInv(perm.size());
-        for (size_t i = 0; i < perm.size(); i++) {
+    void SetupCsrWithPermutation(const BspSchedule<SparseMatrixImp<EigenIdxType>> &schedule, std::vector<UVertType> &perm) {
+        std::vector<UVertType> permInv(perm.size());
+        for (UVertType i = 0; i < perm.size(); i++) {
             permInv[perm[i]] = i;
         }
 
         numSupersteps_ = schedule.NumberOfSupersteps();
 
         val_.clear();
-        val_.reserve(static_cast<size_t>(instance_->GetComputationalDag().GetCSR()->nonZeros()));
+        val_.reserve(static_cast<std::size_t>(instance_->GetComputationalDag().GetCSR()->nonZeros()));
 
         colIdx_.clear();
-        colIdx_.reserve(static_cast<size_t>(instance_->GetComputationalDag().GetCSR()->nonZeros()));
+        colIdx_.reserve(static_cast<std::size_t>(instance_->GetComputationalDag().GetCSR()->nonZeros()));
 
         rowPtr_.clear();
         rowPtr_.reserve(instance_->NumberOfVertices() + 1);
 
         stepProcPtr_
-            = std::vector<std::vector<unsigned>>(numSupersteps_, std::vector<unsigned>(instance_->NumberOfProcessors(), 0));
+            = std::vector<std::vector<UVertType>>(numSupersteps_, std::vector<UVertType>(instance_->NumberOfProcessors(), 0));
 
         stepProcNum_ = schedule.NumAssignedNodesPerSuperstepProcessor();
 
@@ -385,10 +386,10 @@ class Sptrsv {
                     }
                 }
 
-                stepProcPtr_[currentStep][currentProcessor] = static_cast<unsigned>(rowPtr_.size());
+                stepProcPtr_[currentStep][currentProcessor] = static_cast<UVertType>(rowPtr_.size());
             }
 
-            rowPtr_.push_back(colIdx_.size());
+            rowPtr_.push_back(static_cast<UVertType>(colIdx_.size()));
 
             std::set<UVertType> parents;
 
@@ -403,7 +404,7 @@ class Sptrsv {
                 const auto *outer = instance_->GetComputationalDag().GetCSR()->outerIndexPtr();
                 for (UVertType parInd = static_cast<UVertType>(outer[node]); parInd < static_cast<UVertType>(outer[node + 1] - 1);
                      ++parInd) {
-                    if (static_cast<size_t>(instance_->GetComputationalDag().GetCSR()->innerIndexPtr()[parInd]) == permInv[par]) {
+                    if (static_cast<UVertType>(instance_->GetComputationalDag().GetCSR()->innerIndexPtr()[parInd]) == permInv[par]) {
                         val_.push_back(instance_->GetComputationalDag().GetCSR()->valuePtr()[parInd]);
                         found++;
                     }
@@ -417,7 +418,7 @@ class Sptrsv {
                                ->valuePtr()[instance_->GetComputationalDag().GetCSR()->outerIndexPtr()[node + 1] - 1]);
         }
 
-        rowPtr_.push_back(colIdx_.size());
+        rowPtr_.push_back(static_cast<UVertType>(colIdx_.size()));
     }
 
     void LsolveSerial() const {
@@ -426,16 +427,9 @@ class Sptrsv {
         const double *const valPtr = (*(instance_->GetComputationalDag().GetCSR())).valuePtr();
         double *const x = x_;
         const double *const b = b_;
-
         const EigenIdxType numberOfVertices = static_cast<EigenIdxType>(instance_->NumberOfVertices());
-        for (EigenIdxType i = 0; i < numberOfVertices; ++i) {
-            x[i] = b[i];
-            double acc = 0.0;
-            for (EigenIdxType j = outer[i]; j < outer[i + 1] - 1; ++j) {
-                acc += valPtr[j] * x[inner[j]];
-            }
-            x[i] = (x[i] - acc) / valPtr[outer[i + 1] - 1];
-        }
+
+        SpLTrSvSerial(numberOfVertices, x, b, outer, inner, valPtr);
     }
 
     void UsolveSerial() const {
@@ -465,27 +459,7 @@ class Sptrsv {
         const double *const valPtr = (*(instance_->GetComputationalDag().GetCSR())).valuePtr();
         double *const x = x_;
 
-#    pragma omp parallel num_threads(instance_->NumberOfProcessors())
-        {
-            const size_t proc = static_cast<size_t>(omp_get_thread_num());
-            for (unsigned step = 0; step < numSupersteps_; ++step) {
-                const size_t boundsStrSize = boundsArrayL_[step][proc].size();
-
-                for (size_t index = 0; index < boundsStrSize; index += 2) {
-                    EigenIdxType lowerB = boundsArrayL_[step][proc][index];
-                    const EigenIdxType upperB = boundsArrayL_[step][proc][index + 1];
-
-                    for (EigenIdxType node = lowerB; node <= upperB; ++node) {
-                        double acc = 0.0;
-                        for (EigenIdxType i = outer[node]; i < outer[node + 1] - 1; ++i) {
-                            acc += valPtr[i] * x[inner[i]];
-                        }
-                        x[node] = (x[node] - acc) / valPtr[outer[node + 1] - 1];
-                    }
-                }
-#    pragma omp barrier
-            }
-        }
+        SpLTrSvBSPParallelInPlace(x, outer, inner, valPtr, boundsArrayL_);
     }
 
     void UsolveNoPermutationInPlace() const {
@@ -497,12 +471,12 @@ class Sptrsv {
 #    pragma omp parallel num_threads(instance_->NumberOfProcessors())
         {
             // Process each superstep starting from the last one (opposite of lsolve)
-            const size_t proc = static_cast<size_t>(omp_get_thread_num());
+            const std::size_t proc = static_cast<std::size_t>(omp_get_thread_num());
             unsigned step = numSupersteps_;
             do {
                 step--;
-                const size_t boundsStrSize = boundsArrayU_[step][proc].size();
-                for (size_t index = 0; index < boundsStrSize; index += 2) {
+                const std::size_t boundsStrSize = boundsArrayU_[step][proc].size();
+                for (std::size_t index = 0; index < boundsStrSize; index += 2) {
                     EigenIdxType node = boundsArrayU_[step][proc][index] + 1;
                     const EigenIdxType lowerB = boundsArrayU_[step][proc][index + 1];
 
@@ -527,28 +501,7 @@ class Sptrsv {
         double *const x = x_;
         const double *const b = b_;
 
-#    pragma omp parallel num_threads(instance_->NumberOfProcessors())
-        {
-            const size_t proc = static_cast<size_t>(omp_get_thread_num());
-            for (unsigned step = 0; step < numSupersteps_; ++step) {
-                const size_t boundsStrSize = boundsArrayL_[step][proc].size();
-
-                for (size_t index = 0; index < boundsStrSize; index += 2) {
-                    EigenIdxType lowerB = boundsArrayL_[step][proc][index];
-                    const EigenIdxType upperB = boundsArrayL_[step][proc][index + 1];
-
-                    for (EigenIdxType node = lowerB; node <= upperB; ++node) {
-                        x[node] = b[node];
-                        double acc = 0.0;
-                        for (EigenIdxType i = outer[node]; i < outer[node + 1] - 1; ++i) {
-                            acc += valPtr[i] * x[inner[i]];
-                        }
-                        x[node] = (x[node] - acc) / valPtr[outer[node + 1] - 1];
-                    }
-                }
-#    pragma omp barrier
-            }
-        }
+        SpLTrSvBSPParallel(x, b, outer, inner, valPtr, boundsArrayL_);
     }
 
     void UsolveNoPermutation() const {
@@ -561,12 +514,12 @@ class Sptrsv {
 #    pragma omp parallel num_threads(instance_->NumberOfProcessors())
         {
             // Process each superstep starting from the last one (opposite of lsolve)
-            const size_t proc = static_cast<size_t>(omp_get_thread_num());
+            const std::size_t proc = static_cast<std::size_t>(omp_get_thread_num());
             unsigned step = numSupersteps_;
             do {
                 step--;
-                const size_t boundsStrSize = boundsArrayU_[step][proc].size();
-                for (size_t index = 0; index < boundsStrSize; index += 2) {
+                const std::size_t boundsStrSize = boundsArrayU_[step][proc].size();
+                for (std::size_t index = 0; index < boundsStrSize; index += 2) {
                     EigenIdxType node = boundsArrayU_[step][proc][index] + 1;
                     const EigenIdxType lowerB = boundsArrayU_[step][proc][index + 1];
 
@@ -590,15 +543,9 @@ class Sptrsv {
         const EigenIdxType *const inner = (*(instance_->GetComputationalDag().GetCSR())).innerIndexPtr();
         const double *const valPtr = (*(instance_->GetComputationalDag().GetCSR())).valuePtr();
         double *const x = x_;
-
         const EigenIdxType numberOfVertices = static_cast<EigenIdxType>(instance_->NumberOfVertices());
-        for (EigenIdxType i = 0; i < numberOfVertices; ++i) {
-            double acc = 0.0;
-            for (EigenIdxType j = outer[i]; j < outer[i + 1] - 1; ++j) {
-                acc += valPtr[j] * x[inner[j]];
-            }
-            x[i] = (x[i] - acc) / valPtr[outer[i + 1] - 1];
-        }
+
+        SpLTrSvSerialInPlace(numberOfVertices, x, outer, inner, valPtr);
     }
 
     void UsolveSerialInPlace() const {
@@ -624,7 +571,7 @@ class Sptrsv {
 
 #    pragma omp parallel num_threads(instance_->NumberOfProcessors())
         {
-            const size_t proc = static_cast<size_t>(omp_get_thread_num());
+            const std::size_t proc = static_cast<std::size_t>(omp_get_thread_num());
             for (unsigned step = 0; step < numSupersteps_; step++) {
                 const UVertType upperLimit = procStepPtr_[proc][step] + procStepNum_[proc][step];
                 for (UVertType rowIdx = procStepPtr_[proc][step]; rowIdx < upperLimit; rowIdx++) {
@@ -644,25 +591,7 @@ class Sptrsv {
     void LsolveWithProcFirstPermutationInPlace() const {
         double *const x = x_;
 
-#    pragma omp parallel num_threads(instance_->NumberOfProcessors())
-        {
-            const unsigned proc = static_cast<unsigned>(omp_get_thread_num());
-            const auto endStepPtr = std::next(procFirstStepPtr_.cbegin(), (proc + 1U) * numSupersteps_);
-            for (auto stepPtr = std::next(procFirstStepPtr_.cbegin(), proc * numSupersteps_); stepPtr != endStepPtr;) {
-                UVertType rowIdx = *stepPtr;
-                const UVertType endRowIdx = *(++stepPtr);
-                for (; rowIdx != endRowIdx; ++rowIdx) {
-                    double acc = 0.0;
-                    for (UVertType i = rowPtr_[rowIdx]; i < rowPtr_[rowIdx + 1] - 1; i++) {
-                        acc += val_[i] * x[colIdx_[i]];
-                    }
-
-                    x[rowIdx] = (x[rowIdx] - acc) / val_[rowPtr_[rowIdx + 1] - 1];
-                }
-
-#    pragma omp barrier
-            }
-        }
+        SpLTrSvProcPermBSPParallelInPlace(x, rowPtr_.data(), colIdx_.data(), val_.data(), instance_->NumberOfProcessors(), numSupersteps_, procFirstStepPtr_);
     }
 
     void LsolveWithPermutation() const {
@@ -672,7 +601,7 @@ class Sptrsv {
 #    pragma omp parallel num_threads(instance_->NumberOfProcessors())
         {
             for (unsigned step = 0; step < numSupersteps_; step++) {
-                const size_t proc = static_cast<size_t>(omp_get_thread_num());
+                const std::size_t proc = static_cast<std::size_t>(omp_get_thread_num());
                 const UVertType upperLimit = procStepPtr_[proc][step] + procStepNum_[proc][step];
                 for (UVertType rowIdx = procStepPtr_[proc][step]; rowIdx < upperLimit; rowIdx++) {
                     x[rowIdx] = b[rowIdx];
@@ -779,17 +708,17 @@ class Sptrsv {
         }
     }
 
-    void PermuteXVectorInverse(const std::vector<size_t> &perm) {
+    void PermuteXVectorInverse(const std::vector<UVertType> &perm) {
         std::vector<double> vecUnperm(perm.size());
-        for (size_t i = 0; i < perm.size(); i++) {
+        for (UVertType i = 0; i < perm.size(); i++) {
             vecUnperm[perm[i]] = x_[i];
         }
-        for (size_t i = 0; i < perm.size(); i++) {
+        for (UVertType i = 0; i < perm.size(); i++) {
             x_[i] = vecUnperm[i];
         }
     }
 
-    std::size_t GetNumberOfVertices() const { return instance_->NumberOfVertices(); }
+    UVertType GetNumberOfVertices() const { return instance_->NumberOfVertices(); }
 
     // SSP Lsolve with staleness=2 (allowing at most one superstep of lag).
     // Uses FlatCheckpointCounterBarrier created internally.
@@ -810,12 +739,12 @@ class Sptrsv {
             const std::size_t proc = static_cast<std::size_t>(omp_get_thread_num());
             for (unsigned step = 0; step < numSupersteps_; ++step) {
                 // Process nodes assigned to this (step, proc) pair.
-                const size_t boundsStrSize = boundsArrayL_[step][proc].size();
+                const std::size_t boundsStrSize = boundsArrayL_[step][proc].size();
                 // Enforce staleness window before starting this superstep.
                 if (boundsStrSize > 0U) {
                     barrier.Wait(proc, staleness - 1U);
                 }
-                for (size_t index = 0; index < boundsStrSize; index += 2) {
+                for (std::size_t index = 0; index < boundsStrSize; index += 2) {
                     EigenIdxType lowerB = boundsArrayL_[step][proc][index];
                     const EigenIdxType upperB = boundsArrayL_[step][proc][index + 1];
                     for (EigenIdxType node = lowerB; node <= upperB; ++node) {
@@ -855,12 +784,12 @@ class Sptrsv {
             const std::size_t proc = static_cast<std::size_t>(omp_get_thread_num());
             for (unsigned step = 0; step < numSupersteps_; ++step) {
                 // Process nodes assigned to this (step, proc) pair.
-                const size_t boundsStrSize = boundsArrayL_[step][proc].size();
+                const std::size_t boundsStrSize = boundsArrayL_[step][proc].size();
                 // Enforce staleness window before starting this superstep.
                 if (boundsStrSize > 0U) {
                     barrier.Wait(proc, staleness - 1U);
                 }
-                for (size_t index = 0; index < boundsStrSize; index += 2) {
+                for (std::size_t index = 0; index < boundsStrSize; index += 2) {
                     EigenIdxType lowerB = boundsArrayL_[step][proc][index];
                     const EigenIdxType upperB = boundsArrayL_[step][proc][index + 1];
                     for (EigenIdxType node = lowerB; node <= upperB; ++node) {
@@ -900,12 +829,12 @@ class Sptrsv {
             unsigned step = numSupersteps_;
             do {
                 step--;
-                const size_t boundsStrSize = boundsArrayU_[step][proc].size();
+                const std::size_t boundsStrSize = boundsArrayU_[step][proc].size();
                 if (boundsStrSize > 0U) {
                     barrier.Wait(proc, staleness - 1U);
                 }
 
-                for (size_t index = 0; index < boundsStrSize; index += 2) {
+                for (std::size_t index = 0; index < boundsStrSize; index += 2) {
                     EigenIdxType node = boundsArrayU_[step][proc][index] + 1;
                     const EigenIdxType lowerB = boundsArrayU_[step][proc][index + 1];
 

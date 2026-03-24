@@ -490,9 +490,9 @@ bool PullBackSchedule(const BspSchedule<GraphTIn> &scheduleIn,
 
 template <typename GraphTIn, typename GraphTOut>
 bool PullBackSchedule(const BspSchedule<GraphTIn> &scheduleIn,
-                      const std::vector<VertexIdxT<GraphTOut>> &reverseVertexMap,
+                      const std::vector<VertexIdxT<GraphTIn>> &reverseVertexMap,
                       BspSchedule<GraphTOut> &scheduleOut) {
-    for (unsigned idx = 0; idx < reverseVertexMap.size(); ++idx) {
+    for (const auto &idx : scheduleOut.GetInstance().GetComputationalDag().Vertices()) {
         const auto &v = reverseVertexMap[idx];
 
         scheduleOut.SetAssignedSuperstep(idx, scheduleIn.AssignedSuperstep(v));

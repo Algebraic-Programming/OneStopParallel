@@ -205,7 +205,7 @@ std::vector<VertexIdxT<GraphT>> CuthillMckeeUndirected(const GraphT &dag, bool s
             }
         }
 
-        nodeCounter += currentLevel.size();
+        nodeCounter += static_cast<VertexType>(currentLevel.size());
 
         if (nodePriority.empty()) {    // the dag has more than one connected components
 

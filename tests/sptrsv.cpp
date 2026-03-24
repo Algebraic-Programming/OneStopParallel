@@ -229,7 +229,7 @@ BOOST_AUTO_TEST_CASE(TestEigenSptrsv) {
     BOOST_CHECK(CompareVectors(uXRef, uXOsp));
 
     // Lsolve in-place With PERMUTATION
-    std::vector<unsigned> perm;// = ScheduleNodePermuterBasic(scheduleCs, LOOP_PROCESSORS);
+    std::vector<SparseMatrixImp<int32_t>::VertexIdx> perm;// = ScheduleNodePermuterBasic(scheduleCs, LOOP_PROCESSORS);
     sim.SetupCsrWithPermutationLoopProcessors(scheduleCs, perm);
     std::vector<bool> permCheck(graph.NumVertices(), false);
     BOOST_CHECK_EQUAL(permCheck.size(), perm.size());
