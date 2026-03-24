@@ -42,7 +42,7 @@ using namespace osp;
 
 namespace {
 
-constexpr double EPSILON = 1e-12;
+constexpr double EPSILON = 1e-8;
 constexpr unsigned kDefaultStaleness = 2U;
 constexpr int defaultSynchronisationCosts = 500;
 
