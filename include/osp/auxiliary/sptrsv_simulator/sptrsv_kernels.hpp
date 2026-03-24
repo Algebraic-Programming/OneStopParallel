@@ -126,6 +126,77 @@ void SpLTrSvBSPParallelInPlace(double *__restrict__ const x,
     }
 }
 
+template <typename IdxType, unsigned staleness = 2U>
+void SpLTrSvSSPParallel(double *__restrict__ const x,
+                        const double *__restrict__ const b,
+                        const IdxType *__restrict__ const outer,
+                        const IdxType *__restrict__ const inner,
+                        const double *__restrict__ const val,
+                        const std::vector<std::vector<std::vector<IdxType>>> &BoundsStepProcIdx) {
+    static_assert(std::is_integral_v<IdxType>);
+
+    const std::size_t nthreads = BoundsStepProcIdx[0U].size();
+    FlatCheckpointCounterBarrier barrier(nthreads);
+
+#pragma omp parallel num_threads(nthreads)
+    {
+        const std::size_t proc = static_cast<std::size_t>(omp_get_thread_num());
+        for (std::size_t step = 0; step < BoundsStepProcIdx.size(); ++step) {
+            const std::size_t ubIdx = BoundsStepProcIdx[step][proc].size();
+            if (ubIdx > 0U) {
+                barrier.Wait(proc, staleness - 1U);
+            }
+            for (std::size_t idx = 0; idx < ubIdx; ++idx) {
+                IdxType row = BoundsStepProcIdx[step][proc][idx];
+                const IdxType ubRow = BoundsStepProcIdx[step][proc][++idx];
+                for (; row <= ubRow; ++row) {
+                    double acc = b[row];
+                    for (IdxType entryIdx = outer[row]; entryIdx < outer[row + 1] - 1; ++entryIdx) {
+                        acc -= val[entryIdx] * x[inner[entryIdx]];
+                    }
+                    x[row] = acc / val[outer[row + 1] - 1];
+                }
+            }
+            barrier.Arrive(proc);
+        }
+    }
+}
+
+template <typename IdxType, unsigned staleness = 2U>
+void SpLTrSvSSPParallelInPlace(double *__restrict__ const x,
+                               const IdxType *__restrict__ const outer,
+                               const IdxType *__restrict__ const inner,
+                               const double *__restrict__ const val,
+                               const std::vector<std::vector<std::vector<IdxType>>> &BoundsStepProcIdx) {
+    static_assert(std::is_integral_v<IdxType>);
+
+    const std::size_t nthreads = BoundsStepProcIdx[0U].size();
+    FlatCheckpointCounterBarrier barrier(nthreads);
+
+#pragma omp parallel num_threads(nthreads)
+    {
+        const std::size_t proc = static_cast<std::size_t>(omp_get_thread_num());
+        for (std::size_t step = 0; step < BoundsStepProcIdx.size(); ++step) {
+            const std::size_t ubIdx = BoundsStepProcIdx[step][proc].size();
+            if (ubIdx > 0U) {
+                barrier.Wait(proc, staleness - 1U);
+            }
+            for (std::size_t idx = 0; idx < ubIdx; ++idx) {
+                IdxType row = BoundsStepProcIdx[step][proc][idx];
+                const IdxType ubRow = BoundsStepProcIdx[step][proc][++idx];
+                for (; row <= ubRow; ++row) {
+                    double acc = x[row];
+                    for (IdxType entryIdx = outer[row]; entryIdx < outer[row + 1] - 1; ++entryIdx) {
+                        acc -= val[entryIdx] * x[inner[entryIdx]];
+                    }
+                    x[row] = acc / val[outer[row + 1] - 1];
+                }
+            }
+            barrier.Arrive(proc);
+        }
+    }
+}
+
 template <typename IdxType>
 void SpLTrSvProcPermBSPParallel(double *__restrict__ const x,
                                 const double *__restrict__ const b,
@@ -221,7 +292,6 @@ void SpLTrSvProcPermSSPParallel(double *__restrict__ const x,
 
                 x[row] = acc / val[outer[row + 1] - 1];
             }
-            // Signal completion of this superstep.
             barrier.Arrive(proc);
         }
     }
@@ -258,7 +328,6 @@ void SpLTrSvProcPermSSPParallelInPlace(double *__restrict__ const x,
 
                 x[row] = acc / val[outer[row + 1] - 1];
             }
-            // Signal completion of this superstep.
             barrier.Arrive(proc);
         }
     }
