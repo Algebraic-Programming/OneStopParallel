@@ -580,9 +580,12 @@ class Sptrsv {
 #    pragma omp parallel num_threads(instance_->NumberOfProcessors())
         {
             const std::size_t proc = static_cast<std::size_t>(omp_get_thread_num());
+            const auto &stepPtr = procStepPtr_[proc];
+            const auto &stepNum = procStepNum_[proc];
+
             for (unsigned step = 0; step < numSupersteps_; step++) {
-                const UVertType upperLimit = procStepPtr_[proc][step] + procStepNum_[proc][step];
-                for (UVertType rowIdx = procStepPtr_[proc][step]; rowIdx < upperLimit; rowIdx++) {
+                const UVertType upperLimit = stepPtr[step] + stepNum[step];
+                for (UVertType rowIdx = stepPtr[step]; rowIdx < upperLimit; rowIdx++) {
                     double acc = x[rowIdx];
                     for (UVertType i = rowPtr_[rowIdx]; i < rowPtr_[rowIdx + 1] - 1; i++) {
                         acc -= val_[i] * x[colIdx_[i]];
@@ -608,10 +611,13 @@ class Sptrsv {
 
 #    pragma omp parallel num_threads(instance_->NumberOfProcessors())
         {
+            const std::size_t proc = static_cast<std::size_t>(omp_get_thread_num());
+            const auto &stepPtr = procStepPtr_[proc];
+            const auto &stepNum = procStepNum_[proc];
+
             for (unsigned step = 0; step < numSupersteps_; step++) {
-                const std::size_t proc = static_cast<std::size_t>(omp_get_thread_num());
-                const UVertType upperLimit = procStepPtr_[proc][step] + procStepNum_[proc][step];
-                for (UVertType rowIdx = procStepPtr_[proc][step]; rowIdx < upperLimit; rowIdx++) {
+                const UVertType upperLimit = stepPtr[step] + stepNum[step];
+                for (UVertType rowIdx = stepPtr[step]; rowIdx < upperLimit; rowIdx++) {
                     double acc = b[rowIdx];
                     for (UVertType i = rowPtr_[rowIdx]; i < rowPtr_[rowIdx + 1] - 1; i++) {
                         acc -= val_[i] * x[colIdx_[i]];
@@ -639,13 +645,18 @@ class Sptrsv {
 #    pragma omp parallel num_threads(nthreads)
         {
             const std::size_t proc = static_cast<std::size_t>(omp_get_thread_num());
+            const auto &stepPtr = procStepPtr_[proc];
+            const auto &stepNum = procStepNum_[proc];
+
             for (unsigned step = 0; step < numSupersteps_; ++step) {
-                if (procStepNum_[proc][step] > 0U) {
+                UVertType rowIdx = stepPtr[step];
+                const UVertType upperLimit = stepPtr[step] + stepNum[step];
+
+                if (rowIdx != upperLimit) {
                     barrier.Wait(proc, staleness - 1U);
                 }
 
-                const UVertType upperLimit = procStepPtr_[proc][step] + procStepNum_[proc][step];
-                for (UVertType rowIdx = procStepPtr_[proc][step]; rowIdx < upperLimit; rowIdx++) {
+                for (; rowIdx < upperLimit; rowIdx++) {
                     double acc = x[rowIdx];
                     for (UVertType i = rowPtr_[rowIdx]; i < rowPtr_[rowIdx + 1] - 1; i++) {
                         acc -= val_[i] * x[colIdx_[i]];
