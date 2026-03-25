@@ -482,10 +482,10 @@ class Sptrsv {
             do {
                 step--;
                 const auto &localBoundsArrayU = procLocalBoundsArrayU[step];
-                const std::size_t boundsStrSize = localBoundsArrayU.size();
-                for (std::size_t index = 0; index < boundsStrSize; ++index) {
-                    EigenIdxType node = localBoundsArrayU[index] + 1;
-                    const EigenIdxType lowerB = localBoundsArrayU[++index];
+                const auto idxItEnd = localBoundsArrayU.cend();
+                for (auto idxIt = localBoundsArrayU.cbegin(); idxIt != idxItEnd; ++idxIt) {
+                    EigenIdxType node = (*idxIt) + 1;
+                    const EigenIdxType lowerB = *(++idxIt);
 
                     do {
                         node--;
@@ -528,9 +528,10 @@ class Sptrsv {
                 step--;
                 const auto &localBoundsArrayU = procLocalBoundsArrayU[step];
                 const std::size_t boundsStrSize = localBoundsArrayU.size();
-                for (std::size_t index = 0; index < boundsStrSize; ++index) {
-                    EigenIdxType node = localBoundsArrayU[index] + 1;
-                    const EigenIdxType lowerB = localBoundsArrayU[++index];
+                const auto idxItEnd = localBoundsArrayU.cend();
+                for (auto idxIt = localBoundsArrayU.cbegin(); idxIt != idxItEnd; ++idxIt) {
+                    EigenIdxType node = (*idxIt) + 1;
+                    const EigenIdxType lowerB = *(++idxIt);
 
                     do {
                         node--;
@@ -755,14 +756,16 @@ class Sptrsv {
             do {
                 step--;
                 const auto &localBoundsArrayU = procLocalBoundsArrayU[step];
-                const std::size_t boundsStrSize = localBoundsArrayU.size();
-                if (boundsStrSize > 0U) {
+                auto idxIt = localBoundsArrayU.cbegin();
+                const auto idxItEnd = localBoundsArrayU.cend();
+
+                if (idxIt != idxItEnd) {
                     barrier.Wait(proc, staleness - 1U);
                 }
 
-                for (std::size_t index = 0; index < boundsStrSize; ++index) {
-                    EigenIdxType node = localBoundsArrayU[index] + 1;
-                    const EigenIdxType lowerB = localBoundsArrayU[++index];
+                for (; idxIt != idxItEnd; ++idxIt) {
+                    EigenIdxType node = (*idxIt) + 1;
+                    const EigenIdxType lowerB = *(++idxIt);
 
                     do {
                         node--;
