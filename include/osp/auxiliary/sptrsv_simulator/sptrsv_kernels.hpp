@@ -79,11 +79,11 @@ void SpLTrSvBSPParallel(double *__restrict__ const x,
         const std::size_t numSuperSteps = BoundsStepIdx.size();
 
         for (std::size_t step = 0U; step < numSuperSteps; ++step) {
-            const std::vector<IdxType> &BoundIdx = BoundsStepIdx[step];
-            const std::size_t ubIdx = BoundIdx.size();
-            for (std::size_t idx = 0U; idx < ubIdx; ++idx) {
-                IdxType row = BoundIdx[idx];
-                const IdxType ubRow = BoundIdx[++idx];
+            const std::vector<IdxType> &BoundsIdx = BoundsStepIdx[step];
+            const auto idxItEnd = BoundsIdx.cend();
+            for (auto idxIt = BoundsIdx.cbegin(); idxIt != idxItEnd; ++idxIt) {
+                IdxType row = *idxIt;
+                const IdxType ubRow = *(++idxIt);
                 for (; row <= ubRow; ++row) {
                     double acc = b[row];
                     for (IdxType entryIdx = outer[row]; entryIdx < outer[row + 1] - 1; ++entryIdx) {
@@ -112,11 +112,11 @@ void SpLTrSvBSPParallelInPlace(double *__restrict__ const x,
         const std::size_t numSuperSteps = BoundsStepIdx.size();
 
         for (std::size_t step = 0U; step < numSuperSteps; ++step) {
-            const std::vector<IdxType> &BoundIdx = BoundsStepIdx[step];
-            const std::size_t ubIdx = BoundIdx.size();
-            for (std::size_t idx = 0U; idx < ubIdx; ++idx) {
-                IdxType row = BoundIdx[idx];
-                const IdxType ubRow = BoundIdx[++idx];
+            const std::vector<IdxType> &BoundsIdx = BoundsStepIdx[step];
+            const auto idxItEnd = BoundsIdx.cend();
+            for (auto idxIt = BoundsIdx.cbegin(); idxIt != idxItEnd; ++idxIt) {
+                IdxType row = *idxIt;
+                const IdxType ubRow = *(++idxIt);
                 for (; row <= ubRow; ++row) {
                     double acc = x[row];
                     for (IdxType entryIdx = outer[row]; entryIdx < outer[row + 1] - 1; ++entryIdx) {
@@ -148,13 +148,16 @@ void SpLTrSvSSPParallel(double *__restrict__ const x,
         const std::vector<std::vector<IdxType>> &BoundsStepIdx = BoundsProcStepIdx[proc];
         for (std::size_t step = 0; step < BoundsStepIdx.size(); ++step) {
             const std::vector<IdxType> &BoundsIdx = BoundsStepIdx[step];
-            const std::size_t ubIdx = BoundsIdx.size();
-            if (ubIdx > 0U) {
+            auto idxIt = BoundsIdx.cbegin();
+            const auto idxItEnd = BoundsIdx.cend();
+
+            if (idxIt != idxItEnd) {
                 barrier.Wait(proc, staleness - 1U);
             }
-            for (std::size_t idx = 0; idx < ubIdx; ++idx) {
-                IdxType row = BoundsIdx[idx];
-                const IdxType ubRow = BoundsIdx[++idx];
+
+            for (; idxIt != idxItEnd; ++idxIt) {
+                IdxType row = *idxIt;
+                const IdxType ubRow = *(++idxIt);
                 for (; row <= ubRow; ++row) {
                     double acc = b[row];
                     for (IdxType entryIdx = outer[row]; entryIdx < outer[row + 1] - 1; ++entryIdx) {
@@ -185,13 +188,16 @@ void SpLTrSvSSPParallelInPlace(double *__restrict__ const x,
         const std::vector<std::vector<IdxType>> &BoundsStepIdx = BoundsProcStepIdx[proc];
         for (std::size_t step = 0; step < BoundsStepIdx.size(); ++step) {
             const std::vector<IdxType> &BoundsIdx = BoundsStepIdx[step];
-            const std::size_t ubIdx = BoundsIdx.size();
-            if (ubIdx > 0U) {
+            auto idxIt = BoundsIdx.cbegin();
+            const auto idxItEnd = BoundsIdx.cend();
+
+            if (idxIt != idxItEnd) {
                 barrier.Wait(proc, staleness - 1U);
             }
-            for (std::size_t idx = 0; idx < ubIdx; ++idx) {
-                IdxType row = BoundsIdx[idx];
-                const IdxType ubRow = BoundsIdx[++idx];
+
+            for (; idxIt != idxItEnd; ++idxIt) {
+                IdxType row = *idxIt;
+                const IdxType ubRow = *(++idxIt);
                 for (; row <= ubRow; ++row) {
                     double acc = x[row];
                     for (IdxType entryIdx = outer[row]; entryIdx < outer[row + 1] - 1; ++entryIdx) {
