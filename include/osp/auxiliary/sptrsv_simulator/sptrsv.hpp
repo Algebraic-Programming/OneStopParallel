@@ -75,7 +75,7 @@ class Sptrsv {
 
     unsigned numSupersteps_;
 
-    std::vector<std::vector<std::vector<EigenIdxType>>> vectorStepProcessorVertices_;
+    std::vector<std::vector<std::vector<EigenIdxType>>> vectorProcessorStepVerticesL_;
     std::vector<std::vector<std::vector<EigenIdxType>>> vectorStepProcessorVerticesU_;
     std::vector<int> ready_;
 
@@ -87,14 +87,14 @@ class Sptrsv {
     Sptrsv(BspInstance<SparseMatrixImp<EigenIdxType>> &inst) : instance_(&inst) {};
 
     void SetupCsrNoPermutation(const BspSchedule<SparseMatrixImp<EigenIdxType>> &schedule) {
-        vectorStepProcessorVertices_ = std::vector<std::vector<std::vector<EigenIdxType>>>(
-            schedule.NumberOfSupersteps(), std::vector<std::vector<EigenIdxType>>(schedule.GetInstance().NumberOfProcessors()));
+        vectorProcessorStepVerticesL_ = std::vector<std::vector<std::vector<EigenIdxType>>>(
+            schedule.GetInstance().NumberOfProcessors(), std::vector<std::vector<EigenIdxType>>(schedule.NumberOfSupersteps()));
 
         vectorStepProcessorVerticesU_ = std::vector<std::vector<std::vector<EigenIdxType>>>(
             schedule.NumberOfSupersteps(), std::vector<std::vector<EigenIdxType>>(schedule.GetInstance().NumberOfProcessors()));
 
         boundsArrayL_ = std::vector<std::vector<std::vector<EigenIdxType>>>(
-            schedule.NumberOfSupersteps(), std::vector<std::vector<EigenIdxType>>(schedule.GetInstance().NumberOfProcessors()));
+            schedule.GetInstance().NumberOfProcessors(), std::vector<std::vector<EigenIdxType>>(schedule.NumberOfSupersteps()));
         boundsArrayU_ = std::vector<std::vector<std::vector<EigenIdxType>>>(
             schedule.NumberOfSupersteps(), std::vector<std::vector<EigenIdxType>>(schedule.GetInstance().NumberOfProcessors()));
 
@@ -107,27 +107,30 @@ class Sptrsv {
             switch (id) {
                 case 0: {
                     for (UVertType node = 0; node < numberOfVertices; ++node) {
-                        vectorStepProcessorVertices_[schedule.AssignedSuperstep(node)][schedule.AssignedProcessor(node)].push_back(
+                        vectorProcessorStepVerticesL_[schedule.AssignedProcessor(node)][schedule.AssignedSuperstep(node)].push_back(
                             static_cast<EigenIdxType>(node));
                     }
 
-                    for (unsigned int step = 0; step < schedule.NumberOfSupersteps(); ++step) {
-                        for (unsigned int proc = 0; proc < instance_->NumberOfProcessors(); ++proc) {
-                            if (!vectorStepProcessorVertices_[step][proc].empty()) {
-                                EigenIdxType start = vectorStepProcessorVertices_[step][proc][0];
-                                EigenIdxType prev = vectorStepProcessorVertices_[step][proc][0];
+                    for (unsigned int proc = 0; proc < instance_->NumberOfProcessors(); ++proc) {
+                        for (unsigned int step = 0; step < schedule.NumberOfSupersteps(); ++step) {
+                            const auto &vectorVerticesL = vectorProcessorStepVerticesL_[proc][step];
+                            auto &localBoundsArrayL_ = boundsArrayL_[proc][step];
 
-                                for (UVertType i = 1; i < vectorStepProcessorVertices_[step][proc].size(); ++i) {
-                                    if (vectorStepProcessorVertices_[step][proc][i] != prev + 1) {
-                                        boundsArrayL_[step][proc].push_back(start);
-                                        boundsArrayL_[step][proc].push_back(prev);
-                                        start = vectorStepProcessorVertices_[step][proc][i];
+                            if (!vectorVerticesL.empty()) {
+                                EigenIdxType start = vectorVerticesL[0];
+                                EigenIdxType prev = vectorVerticesL[0];
+
+                                for (UVertType i = 1; i < vectorVerticesL.size(); ++i) {
+                                    if (vectorVerticesL[i] != prev + 1) {
+                                        localBoundsArrayL_.push_back(start);
+                                        localBoundsArrayL_.push_back(prev);
+                                        start = vectorVerticesL[i];
                                     }
-                                    prev = vectorStepProcessorVertices_[step][proc][i];
+                                    prev = vectorVerticesL[i];
                                 }
 
-                                boundsArrayL_[step][proc].push_back(start);
-                                boundsArrayL_[step][proc].push_back(prev);
+                                localBoundsArrayL_.push_back(start);
+                                localBoundsArrayL_.push_back(prev);
                             }
                         }
                     }
