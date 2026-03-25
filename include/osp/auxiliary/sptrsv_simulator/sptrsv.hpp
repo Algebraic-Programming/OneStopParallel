@@ -76,7 +76,7 @@ class Sptrsv {
     unsigned numSupersteps_;
 
     std::vector<std::vector<std::vector<EigenIdxType>>> vectorProcessorStepVerticesL_;
-    std::vector<std::vector<std::vector<EigenIdxType>>> vectorStepProcessorVerticesU_;
+    std::vector<std::vector<std::vector<EigenIdxType>>> vectorProcessorStepVerticesU_;
     std::vector<int> ready_;
 
     std::vector<std::vector<std::vector<EigenIdxType>>> boundsArrayL_;
@@ -90,13 +90,13 @@ class Sptrsv {
         vectorProcessorStepVerticesL_ = std::vector<std::vector<std::vector<EigenIdxType>>>(
             schedule.GetInstance().NumberOfProcessors(), std::vector<std::vector<EigenIdxType>>(schedule.NumberOfSupersteps()));
 
-        vectorStepProcessorVerticesU_ = std::vector<std::vector<std::vector<EigenIdxType>>>(
-            schedule.NumberOfSupersteps(), std::vector<std::vector<EigenIdxType>>(schedule.GetInstance().NumberOfProcessors()));
+        vectorProcessorStepVerticesU_ = std::vector<std::vector<std::vector<EigenIdxType>>>(
+            schedule.GetInstance().NumberOfProcessors(), std::vector<std::vector<EigenIdxType>>(schedule.NumberOfSupersteps()));
 
         boundsArrayL_ = std::vector<std::vector<std::vector<EigenIdxType>>>(
             schedule.GetInstance().NumberOfProcessors(), std::vector<std::vector<EigenIdxType>>(schedule.NumberOfSupersteps()));
         boundsArrayU_ = std::vector<std::vector<std::vector<EigenIdxType>>>(
-            schedule.NumberOfSupersteps(), std::vector<std::vector<EigenIdxType>>(schedule.GetInstance().NumberOfProcessors()));
+            schedule.GetInstance().NumberOfProcessors(), std::vector<std::vector<EigenIdxType>>(schedule.NumberOfSupersteps()));
 
         numSupersteps_ = schedule.NumberOfSupersteps();
         UVertType numberOfVertices = instance_->GetComputationalDag().NumVertices();
@@ -141,29 +141,32 @@ class Sptrsv {
                     UVertType node = numberOfVertices;
                     do {
                         node--;
-                        vectorStepProcessorVerticesU_[schedule.AssignedSuperstep(node)][schedule.AssignedProcessor(node)].push_back(
+                        vectorProcessorStepVerticesU_[schedule.AssignedProcessor(node)][schedule.AssignedSuperstep(node)].push_back(
                             // --- SSP SpTRSV kernel integration from BspSptrsvCSR.hpp/cpp ---
 
                             static_cast<EigenIdxType>(node));
                     } while (node > 0);
 
-                    for (unsigned int step = 0; step < schedule.NumberOfSupersteps(); ++step) {
-                        for (unsigned int proc = 0; proc < instance_->NumberOfProcessors(); ++proc) {
-                            if (!vectorStepProcessorVerticesU_[step][proc].empty()) {
-                                EigenIdxType startU = static_cast<EigenIdxType>(vectorStepProcessorVerticesU_[step][proc][0]);
-                                EigenIdxType prevU = static_cast<EigenIdxType>(vectorStepProcessorVerticesU_[step][proc][0]);
+                    for (unsigned int proc = 0; proc < instance_->NumberOfProcessors(); ++proc) {
+                        for (unsigned int step = 0; step < schedule.NumberOfSupersteps(); ++step) {
+                            const auto &vectorVerticesU = vectorProcessorStepVerticesU_[proc][step];
+                            auto &localBoundsArrayU = boundsArrayU_[proc][step];
 
-                                for (UVertType i = 1; i < vectorStepProcessorVerticesU_[step][proc].size(); ++i) {
-                                    if (static_cast<EigenIdxType>(vectorStepProcessorVerticesU_[step][proc][i]) != prevU - 1) {
-                                        boundsArrayU_[step][proc].push_back(startU);
-                                        boundsArrayU_[step][proc].push_back(prevU);
-                                        startU = static_cast<EigenIdxType>(vectorStepProcessorVerticesU_[step][proc][i]);
+                            if (!vectorVerticesU.empty()) {
+                                EigenIdxType startU = static_cast<EigenIdxType>(vectorVerticesU[0]);
+                                EigenIdxType prevU = static_cast<EigenIdxType>(vectorVerticesU[0]);
+
+                                for (UVertType i = 1; i < vectorVerticesU.size(); ++i) {
+                                    if (static_cast<EigenIdxType>(vectorVerticesU[i]) != prevU - 1) {
+                                        localBoundsArrayU.push_back(startU);
+                                        localBoundsArrayU.push_back(prevU);
+                                        startU = static_cast<EigenIdxType>(vectorVerticesU[i]);
                                     }
-                                    prevU = static_cast<EigenIdxType>(vectorStepProcessorVerticesU_[step][proc][i]);
+                                    prevU = static_cast<EigenIdxType>(vectorVerticesU[i]);
                                 }
 
-                                boundsArrayU_[step][proc].push_back(startU);
-                                boundsArrayU_[step][proc].push_back(prevU);
+                                localBoundsArrayU.push_back(startU);
+                                localBoundsArrayU.push_back(prevU);
                             }
                         }
                     }
@@ -474,13 +477,15 @@ class Sptrsv {
         {
             // Process each superstep starting from the last one (opposite of lsolve)
             const std::size_t proc = static_cast<std::size_t>(omp_get_thread_num());
+            const auto& procLocalBoundsArrayU = boundsArrayU_[proc];
             unsigned step = numSupersteps_;
             do {
                 step--;
-                const std::size_t boundsStrSize = boundsArrayU_[step][proc].size();
-                for (std::size_t index = 0; index < boundsStrSize; index += 2) {
-                    EigenIdxType node = boundsArrayU_[step][proc][index] + 1;
-                    const EigenIdxType lowerB = boundsArrayU_[step][proc][index + 1];
+                const auto &localBoundsArrayU = procLocalBoundsArrayU[step];
+                const std::size_t boundsStrSize = localBoundsArrayU.size();
+                for (std::size_t index = 0; index < boundsStrSize; ++index) {
+                    EigenIdxType node = localBoundsArrayU[index] + 1;
+                    const EigenIdxType lowerB = localBoundsArrayU[++index];
 
                     do {
                         node--;
@@ -517,13 +522,15 @@ class Sptrsv {
         {
             // Process each superstep starting from the last one (opposite of lsolve)
             const std::size_t proc = static_cast<std::size_t>(omp_get_thread_num());
+            const auto &procLocalBoundsArrayU = boundsArrayU_[proc];
             unsigned step = numSupersteps_;
             do {
                 step--;
-                const std::size_t boundsStrSize = boundsArrayU_[step][proc].size();
-                for (std::size_t index = 0; index < boundsStrSize; index += 2) {
-                    EigenIdxType node = boundsArrayU_[step][proc][index] + 1;
-                    const EigenIdxType lowerB = boundsArrayU_[step][proc][index + 1];
+                const auto &localBoundsArrayU = procLocalBoundsArrayU[step];
+                const std::size_t boundsStrSize = localBoundsArrayU.size();
+                for (std::size_t index = 0; index < boundsStrSize; ++index) {
+                    EigenIdxType node = localBoundsArrayU[index] + 1;
+                    const EigenIdxType lowerB = localBoundsArrayU[++index];
 
                     do {
                         node--;
@@ -732,17 +739,19 @@ class Sptrsv {
 #    pragma omp parallel num_threads(nthreads)
         {
             const std::size_t proc = static_cast<std::size_t>(omp_get_thread_num());
+            const auto &procLocalBoundsArrayU = boundsArrayU_[proc];
             unsigned step = numSupersteps_;
             do {
                 step--;
-                const std::size_t boundsStrSize = boundsArrayU_[step][proc].size();
+                const auto &localBoundsArrayU = procLocalBoundsArrayU[step];
+                const std::size_t boundsStrSize = localBoundsArrayU.size();
                 if (boundsStrSize > 0U) {
                     barrier.Wait(proc, staleness - 1U);
                 }
 
-                for (std::size_t index = 0; index < boundsStrSize; index += 2) {
-                    EigenIdxType node = boundsArrayU_[step][proc][index] + 1;
-                    const EigenIdxType lowerB = boundsArrayU_[step][proc][index + 1];
+                for (std::size_t index = 0; index < boundsStrSize; ++index) {
+                    EigenIdxType node = localBoundsArrayU[index] + 1;
+                    const EigenIdxType lowerB = localBoundsArrayU[++index];
 
                     do {
                         node--;
