@@ -356,7 +356,7 @@ BOOST_AUTO_TEST_CASE(kl_lambda_improver_incremental_update_test) {
 
     CheckEqualLambdaMap(lambda_map, kl_6.GetCommCostF().nodeLambdaMap_);
     CheckEqualAffinityTable(affinity, kl_6.GetAffinityTable(), nodes_to_check);
-};
+}
 
 BOOST_AUTO_TEST_CASE(kl_lambda_improver_inner_loop_test) {
     using graph = ComputationalDagEdgeIdxVectorImplDefIntT;
@@ -486,7 +486,7 @@ BOOST_AUTO_TEST_CASE(kl_lambda_improver_inner_loop_test) {
 
     CheckEqualLambdaMap(lambda_map, kl_6.GetCommCostF().nodeLambdaMap_);
     CheckEqualAffinityTable(affinity, kl_6.GetAffinityTable(), nodes_to_check);
-};
+}
 
 BOOST_AUTO_TEST_CASE(KlLambdaImproverInnerLoopPenaltyTest) {
     using Graph = ComputationalDagEdgeIdxVectorImplDefIntT;
