@@ -143,6 +143,10 @@ _add_test( bit_mask )
 
 _add_test( hash_pair )
 
+_add_test( weak_barrier )
+
+_add_test( aligned_allocator )
+
 ## io
 _add_test( filereader DATA )
 

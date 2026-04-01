@@ -93,11 +93,13 @@ class BspSptrsvStatsModule : public IStatisticModule<TargetObjectType> {
                       || std::is_same_v<TargetObjectType, osp::BspSchedule<osp::SparseMatrixImp<int64_t>>>) {
             using IndexT
                 = std::conditional_t<std::is_same_v<TargetObjectType, osp::BspSchedule<osp::SparseMatrixImp<int32_t>>>, int32_t, int64_t>;
+            using UndexT
+                = std::conditional_t<std::is_same_v<TargetObjectType, osp::BspSchedule<osp::SparseMatrixImp<int32_t>>>, uint32_t, uint64_t>;
 
             auto instance = schedule.GetInstance();
             Sptrsv<IndexT> sim{instance};
 
-            std::vector<size_t> perm;
+            std::vector<UndexT> perm;
 
             if (mode_ == NO_PERMUTE) {
                 sim.SetupCsrNoPermutation(schedule);

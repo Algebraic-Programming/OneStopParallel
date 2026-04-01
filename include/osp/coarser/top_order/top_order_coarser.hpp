@@ -43,7 +43,7 @@ class TopOrderCoarser : public Coarser<GraphTIn, GraphTOut> {
     VMemwT<GraphTIn> currentMemory_ = 0;
     VWorkwT<GraphTIn> currentWork_ = 0;
     VCommwT<GraphTIn> currentCommunication_ = 0;
-    VertexType currentSuperNodeIdx_ = 0;
+    VertexIdxT<GraphTOut> currentSuperNodeIdx_ = 0;
 
     void FinishSuperNodeAddEdges(const GraphTIn &dagIn,
                                  GraphTOut &dagOut,
@@ -56,8 +56,8 @@ class TopOrderCoarser : public Coarser<GraphTIn, GraphTOut> {
         for (const auto &node : nodes) {
             if constexpr (hasEdgeWeightsV<GraphTIn> && hasEdgeWeightsV<GraphTOut>) {
                 for (const auto &inEdge : InEdges(node, dagIn)) {
-                    const VertexType parentRev = reverseVertexMap[Source(inEdge, dagIn)];
-                    if (parentRev != currentSuperNodeIdx_ && parentRev != std::numeric_limits<VertexType>::max()) {
+                    const VertexIdxT<GraphTOut> parentRev = reverseVertexMap[Source(inEdge, dagIn)];
+                    if (parentRev != currentSuperNodeIdx_ && parentRev != std::numeric_limits<VertexIdxT<GraphTOut>>::max()) {
                         auto pair = EdgeDesc(parentRev, currentSuperNodeIdx_, dagOut);
                         if (pair.second) {
                             dagOut.SetEdgeCommWeight(pair.first, dagOut.EdgeCommWeight(pair.first) + dagIn.EdgeCommWeight(inEdge));
@@ -68,8 +68,8 @@ class TopOrderCoarser : public Coarser<GraphTIn, GraphTOut> {
                 }
             } else {
                 for (const auto &parent : dagIn.Parents(node)) {
-                    const VertexType parentRev = reverseVertexMap[parent];
-                    if (parentRev != currentSuperNodeIdx_ && parentRev != std::numeric_limits<VertexType>::max()) {
+                    const VertexIdxT<GraphTOut> parentRev = reverseVertexMap[parent];
+                    if (parentRev != currentSuperNodeIdx_ && parentRev != std::numeric_limits<VertexIdxT<GraphTOut>>::max()) {
                         if (not Edge(parentRev, currentSuperNodeIdx_, dagOut)) {
                             dagOut.AddEdge(parentRev, currentSuperNodeIdx_);
                         }

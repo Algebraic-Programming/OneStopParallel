@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(TestSparseMatrixAdapter1) {
 
     size_t idx = 0;
 
-    for (const long unsigned int &v : graph.Vertices()) {
+    for (const auto &v : graph.Vertices()) {
         BOOST_CHECK_EQUAL(v, vertices[idx++]);
 
         size_t i = 0;
@@ -234,6 +234,8 @@ BOOST_AUTO_TEST_CASE(TestSparseMatrixAdapter2) {
         lCsc = lCsr;
 
         SparseMatrixImp<int32_t> graph;
+        using UVertType = VertexIdxT<SparseMatrixImp<int32_t>>;
+
         graph.SetCsr(&lCsr);
         graph.SetCsc(&lCsc);
 
@@ -244,7 +246,7 @@ BOOST_AUTO_TEST_CASE(TestSparseMatrixAdapter2) {
         BOOST_CHECK_EQUAL(static_cast<std::size_t>(graph.NumEdges()), graph2.NumEdges());
 
         for (const auto &vert : graph2.Vertices()) {
-            auto chldren = graph.Children(vert);
+            auto chldren = graph.Children(static_cast<UVertType>(vert));
             auto chldren2 = graph2.Children(vert);
             auto it = chldren.begin();
             auto it_other = chldren.begin();
@@ -269,7 +271,7 @@ BOOST_AUTO_TEST_CASE(TestSparseMatrixAdapter2) {
                 ++it_other;
                 ++it2;
             }
-            BOOST_CHECK_EQUAL(cntr, graph.OutDegree(vert));
+            BOOST_CHECK_EQUAL(static_cast<UVertType>(cntr), graph.OutDegree(static_cast<UVertType>(vert)));
             BOOST_CHECK_EQUAL(cntr, graph1.OutDegree(vert));
             BOOST_CHECK_EQUAL(cntr, graph2.OutDegree(vert));
             BOOST_CHECK(it == end);
@@ -278,7 +280,7 @@ BOOST_AUTO_TEST_CASE(TestSparseMatrixAdapter2) {
         }
 
         for (const auto &vert : graph2.Vertices()) {
-            auto parents = graph.Parents(vert);
+            auto parents = graph.Parents(static_cast<UVertType>(vert));
             auto parents2 = graph2.Parents(vert);
             auto it = parents.begin();
             auto it_other = parents.begin();
@@ -301,7 +303,7 @@ BOOST_AUTO_TEST_CASE(TestSparseMatrixAdapter2) {
                 ++it;
                 ++it2;
             }
-            BOOST_CHECK_EQUAL(cntr, graph.InDegree(vert));
+            BOOST_CHECK_EQUAL(static_cast<UVertType>(cntr), graph.InDegree(static_cast<UVertType>(vert)));
             BOOST_CHECK_EQUAL(cntr, graph1.InDegree(vert));
             BOOST_CHECK_EQUAL(cntr, graph2.InDegree(vert));
             BOOST_CHECK(it == end);

@@ -887,7 +887,7 @@ BOOST_AUTO_TEST_CASE(KlImprover_incremental_update_test) {
     nodes_to_check.erase(v3);
 
     CheckEqualAffinityTable(affinity, kl_6.GetAffinityTable(), nodes_to_check);
-};
+}
 
 // BOOST_AUTO_TEST_CASE(kl_total_comm_large_test_graphs) {
 //     std::vector<std::string> filenames_graph = LargeSpaaGraphs();

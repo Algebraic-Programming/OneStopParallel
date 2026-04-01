@@ -30,6 +30,7 @@ class EigenCSRRange {
   public:
     using CSRMatrix = Eigen::SparseMatrix<double, Eigen::RowMajor, EigenIdxType>;
     using Inner = typename CSRMatrix::InnerIterator;
+    using UsignedType = std::make_unsigned_t<EigenIdxType>;
 
     class Iterator {
         Inner it_;
@@ -41,10 +42,10 @@ class EigenCSRRange {
         }
 
       public:
-        using value_type = std::size_t;
+        using value_type = UsignedType;
         using reference = value_type;
         using pointer = void;
-        using difference_type = std::ptrdiff_t;
+        using difference_type = UsignedType;
         using iterator_category = std::input_iterator_tag;
 
         Iterator() = default;
@@ -58,7 +59,7 @@ class EigenCSRRange {
 
         Iterator(const CSRMatrix &mat, EigenIdxType idx) : it_(mat, idx) { SkipDiagonal(); }
 
-        reference operator*() const { return static_cast<std::size_t>(it_.col()); }
+        reference operator*() const { return static_cast<UsignedType>(it_.col()); }
 
         Iterator &operator++() {
             ++it_;
@@ -93,9 +94,11 @@ class EigenCSCRange {
     const Graph &graph_;
     EigenIdxType index_;
 
-  public:
+
+    public:
     using CSCMatrix = Eigen::SparseMatrix<double, Eigen::ColMajor, EigenIdxType>;
     using Inner = typename CSCMatrix::InnerIterator;
+    using UsignedType = std::make_unsigned_t<EigenIdxType>;
 
     class Iterator {
         Inner it_;
@@ -107,10 +110,10 @@ class EigenCSCRange {
         }
 
       public:
-        using value_type = std::size_t;
+        using value_type = UsignedType;
         using reference = value_type;
         using pointer = void;
-        using difference_type = std::ptrdiff_t;
+        using difference_type = UsignedType;
         using iterator_category = std::input_iterator_tag;
 
         Iterator() = default;
@@ -124,7 +127,7 @@ class EigenCSCRange {
 
         Iterator(const CSCMatrix &mat, EigenIdxType idx) : it_(mat, idx) { SkipDiagonal(); }
 
-        reference operator*() const { return static_cast<std::size_t>(it_.row()); }
+        reference operator*() const { return static_cast<UsignedType>(it_.row()); }
 
         Iterator &operator++() {
             ++it_;

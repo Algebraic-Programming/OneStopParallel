@@ -20,6 +20,9 @@ limitations under the License.
 
 #ifdef EIGEN_FOUND
 
+#    include <cstdint>
+#    include <type_traits>
+
 #    include <Eigen/SparseCore>
 
 #    include "eigen_sparse_iterator.hpp"
@@ -47,7 +50,7 @@ class SparseMatrixImp {
 
   public:
     // Vertex index type must match Eigen's StorageIndex (signed 32-bit)
-    using VertexIdx = size_t;
+    using VertexIdx = std::make_unsigned_t<EigenIdxType>;
 
     // Required graph trait aliases (used in concept checks)
     using VertexWorkWeightType = EigenIdxType;
@@ -70,10 +73,10 @@ class SparseMatrixImp {
     const MatrixCSC *GetCSC() const { return lCscP_; }
 
     /// @brief Number of vertices = number of rows in the matrix
-    size_t NumVertices() const noexcept { return static_cast<size_t>(lCsrP_->rows()); }
+    VertexIdx NumVertices() const noexcept { return static_cast<VertexIdx>(lCsrP_->rows()); }
 
     /// @brief Return a range over all vertices [0, NumVertices)
-    auto Vertices() const { return osp::IntegralRange<size_t>(NumVertices()); }
+    auto Vertices() const { return osp::IntegralRange<VertexIdx>(NumVertices()); }
 
     /// @brief Number of edges = total non-zeros minus diagonal elements
     VertexIdx NumEdges() const noexcept { return static_cast<VertexIdx>(lCsrP_->nonZeros() - lCsrP_->rows()); }
@@ -116,8 +119,6 @@ class SparseMatrixImp {
 using SparseMatrixGraphInt32T = SparseMatrixImp<int32_t>;
 using SparseMatrixGraphInt64T = SparseMatrixImp<int64_t>;
 
-static_assert(isDirectedGraphEdgeDescV<SparseMatrixImp<int32_t>>, "SparseMatrix must satisfy the directed_graph_edge_desc concept");
-
 // Verify that SparseMatrixImp satisfies the directed graph concept
 static_assert(isDirectedGraphV<SparseMatrixImp<int32_t>>, "SparseMatrix must satisfy directed_graph_concept");
 
@@ -129,6 +130,8 @@ static_assert(hasVertexWeightsV<SparseMatrixImp<int64_t>>, "CompactSparseGraph m
 
 static_assert(isComputationalDagTypedVerticesV<SparseMatrixImp<int32_t>>,
               "CompactSparseGraph must satisfy the is_computation_dag concept");
+
+static_assert(isDirectedGraphEdgeDescV<SparseMatrixImp<int32_t>>, "SparseMatrix must satisfy the directed_graph_edge_desc concept");
 
 }    // namespace osp
 

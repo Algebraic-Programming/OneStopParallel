@@ -1,0 +1,88 @@
+/*
+Copyright 2024 Huawei Technologies Co., Ltd.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+@author Toni Boehnlein, Christos Matzoros, Benjamin Lozes, Pal Andras Papp, Raphael S. Steiner
+*/
+
+#pragma once
+
+#include <algorithm>
+#include <atomic>
+#include <cstddef>
+#include <cstdint>
+
+#include "osp/auxiliary/sptrsv_simulator/WeakBarriers/aligned_allocator.hpp"
+#include "osp/auxiliary/sptrsv_simulator/WeakBarriers/cpu_relax.hpp"
+#include "osp/config/config.hpp"
+
+namespace osp {
+
+constexpr std::size_t RoundUpToCacheLine(std::size_t num) {
+    std::size_t size = ((num * sizeof(std::size_t) + CACHE_LINE_SIZE - 1U) / CACHE_LINE_SIZE) * CACHE_LINE_SIZE;
+    std::size_t ans = (size + sizeof(std::size_t) - 1U) / sizeof(std::size_t);
+
+    return ans;
+}
+
+struct alignas(CACHE_LINE_SIZE) AlignedAtomicCounter {
+    std::atomic<std::size_t> cntr_{0U};
+    int8_t pad[CACHE_LINE_SIZE - sizeof(std::atomic<std::size_t>)];
+
+    static_assert(std::atomic<std::size_t>::is_always_lock_free);
+    static_assert(sizeof(int8_t) == 1U);
+};
+
+class FlatCheckpointCounterBarrier {
+  private:
+    std::vector<AlignedAtomicCounter> cntrs_;
+    mutable std::vector<std::vector<std::size_t, AlignedAllocator<std::size_t, CACHE_LINE_SIZE>>> cachedCntrs_;
+
+  public:
+    FlatCheckpointCounterBarrier(std::size_t numThreads)
+        : cntrs_(std::vector<AlignedAtomicCounter>(numThreads)),
+          cachedCntrs_(std::vector<std::vector<std::size_t, AlignedAllocator<std::size_t, CACHE_LINE_SIZE>>>(
+              numThreads,
+              std::vector<std::size_t, AlignedAllocator<std::size_t, CACHE_LINE_SIZE>>(RoundUpToCacheLine(numThreads), 0U))) {};
+
+    inline void Arrive(const std::size_t threadId);
+    inline void Wait(const std::size_t threadId, const std::size_t diff) const;
+
+    FlatCheckpointCounterBarrier() = delete;
+    FlatCheckpointCounterBarrier(const FlatCheckpointCounterBarrier &) = delete;
+    FlatCheckpointCounterBarrier(FlatCheckpointCounterBarrier &&) = delete;
+    FlatCheckpointCounterBarrier &operator=(const FlatCheckpointCounterBarrier &) = delete;
+    FlatCheckpointCounterBarrier &operator=(FlatCheckpointCounterBarrier &&) = delete;
+    ~FlatCheckpointCounterBarrier() = default;
+};
+
+inline void FlatCheckpointCounterBarrier::Arrive(const std::size_t threadId) {
+    cntrs_[threadId].cntr_.fetch_add(1U, std::memory_order_release);
+    ++cachedCntrs_[threadId][threadId];
+}
+
+inline void FlatCheckpointCounterBarrier::Wait(const std::size_t threadId, const std::size_t diff) const {
+    std::vector<std::size_t, AlignedAllocator<std::size_t, CACHE_LINE_SIZE>> &localCachedCntrs = cachedCntrs_[threadId];
+
+    const std::size_t minVal = std::max(localCachedCntrs[threadId], diff) - diff;
+
+    for (std::size_t ind = 0U; ind < cntrs_.size(); ++ind) {
+        while ((localCachedCntrs[ind] < minVal)
+               && ((localCachedCntrs[ind] = cntrs_[ind].cntr_.load(std::memory_order_acquire)) < minVal)) {
+            cpu_relax();
+        }
+    }
+}
+
+}    // end namespace osp

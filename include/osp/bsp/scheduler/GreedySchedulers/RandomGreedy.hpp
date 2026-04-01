@@ -69,7 +69,7 @@ class RandomGreedy : public Scheduler<GraphT> {
             bool fewSources = next.size() < instance.NumberOfProcessors() ? true : false;
             unsigned failCounter = 0;
             while (!next.empty() && failCounter < 20) {
-                std::uniform_int_distribution<VertexType> randNodeIdx(0, next.size() - 1);
+                std::uniform_int_distribution<VertexType> randNodeIdx(0, static_cast<VertexType>(next.size() - 1));
                 VertexType nodeInd = randNodeIdx(g);
                 const auto &node = next[nodeInd];
                 bool processorSet = false;

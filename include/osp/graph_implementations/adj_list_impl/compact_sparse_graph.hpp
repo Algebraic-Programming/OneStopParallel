@@ -831,7 +831,7 @@ class CompactSparseGraph {
 
     template <typename RetT = VertexCommWeightType>
     inline std::enable_if_t<not useCommWeights, RetT> VertexCommWeight(const VertexIdx) const {
-        return static_cast<RetT>(0);
+        return static_cast<RetT>(1);
     }
 
     template <typename RetT = VertexMemWeightType>
@@ -841,7 +841,7 @@ class CompactSparseGraph {
 
     template <typename RetT = VertexMemWeightType>
     inline std::enable_if_t<not useMemWeights, RetT> VertexMemWeight(const VertexIdx) const {
-        return static_cast<RetT>(0);
+        return static_cast<RetT>(1);
     }
 
     template <typename RetT = VertexTypeType>
