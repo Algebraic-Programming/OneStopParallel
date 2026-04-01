@@ -107,7 +107,7 @@ ReturnStatus GreedyRecomputer<GraphT>::ComputeRecompScheduleAdvanced(BspSchedule
 
       // add further methods, if desired
     }
-    
+
     return ReturnStatus::OSP_SUCCESS;
 }
 
@@ -182,7 +182,7 @@ bool GreedyRecomputer<GraphT>::GreedyImprove(BspScheduleRecomp<GraphT> &schedule
             CostType increase = workCost_[toProc][compStep] + G.VertexWorkWeight(node) > maxWork_[compStep]
                                   ? workCost_[toProc][compStep] + G.VertexWorkWeight(node) - maxWork_[compStep]
                                   : 0;
-            
+
             if (increase < smallestIncrease) {
               bestStep = compStep;
               smallestIncrease = increase;
@@ -242,7 +242,7 @@ bool GreedyRecomputer<GraphT>::MergeEntireSupersteps(BspScheduleRecomp<GraphT> &
   std::vector<bool> stepRemoved(schedule.NumberOfSupersteps(), false);
 
   const GraphT &G = schedule.GetInstance().GetComputationalDag();
-  
+
   unsigned previousStep = 0;
   for (unsigned step = 0; step < schedule.NumberOfSupersteps() - 1; ++step) {
     if (stepRemoved[step]) {
@@ -250,7 +250,7 @@ bool GreedyRecomputer<GraphT>::MergeEntireSupersteps(BspScheduleRecomp<GraphT> &
     }
 
     for (unsigned nextStep = step + 1; nextStep < schedule.NumberOfSupersteps(); ++nextStep) {
-      
+
       // TRY TO MERGE step AND nextStep
       std::set<KeyTriple> newCommStepsBefore, newCommStepsAfter;
       std::set<std::pair<VertexIdx, unsigned> > newWorkSteps;
@@ -267,7 +267,7 @@ bool GreedyRecomputer<GraphT>::MergeEntireSupersteps(BspScheduleRecomp<GraphT> &
           newCommStepsAfter.insert(entry);
           continue;
         }
-        
+
         if (step > 0 && firstPresent_[node][fromProc] <= previousStep) {
           newCommStepsBefore.insert(entry);
         } else {
@@ -290,7 +290,7 @@ bool GreedyRecomputer<GraphT>::MergeEntireSupersteps(BspScheduleRecomp<GraphT> &
             if (firstPresent_[pred][proc] <= step) {
               continue;
             }
-            
+
             unsigned sendFromProcBefore = std::numeric_limits<unsigned>::max();
             for (unsigned procOffset = 0; procOffset < schedule.GetInstance().NumberOfProcessors(); ++procOffset) {
               unsigned fromProc = (proc + procOffset) % schedule.GetInstance().NumberOfProcessors();
@@ -320,9 +320,9 @@ bool GreedyRecomputer<GraphT>::MergeEntireSupersteps(BspScheduleRecomp<GraphT> &
         break;
       }
 
-      // EVALUATE COST  
+      // EVALUATE COST
       int costChange = 0;
-      
+
       // work cost in merged step
       std::vector<CostType> newWorkCost(schedule.GetInstance().NumberOfProcessors());
       for (unsigned proc = 0; proc < schedule.GetInstance().NumberOfProcessors(); ++proc) {
@@ -337,7 +337,7 @@ bool GreedyRecomputer<GraphT>::MergeEntireSupersteps(BspScheduleRecomp<GraphT> &
       for (unsigned proc = 0; proc < schedule.GetInstance().NumberOfProcessors(); ++proc) {
         newMax = std::max(newMax, newWorkCost[proc]);
       }
-      
+
       costChange += static_cast<int>(newMax) - static_cast<int>(maxWork_[step] + maxWork_[nextStep]);
 
       // comm cost before merged step
@@ -348,12 +348,12 @@ bool GreedyRecomputer<GraphT>::MergeEntireSupersteps(BspScheduleRecomp<GraphT> &
           newRecCost[proc] = recCost_[proc][previousStep];
         }
         for (const KeyTriple &newComm : newCommStepsBefore) {
-          CostType commCost = G.VertexCommWeight(std::get<0>(newComm)) * 
+          CostType commCost = G.VertexCommWeight(std::get<0>(newComm)) *
                                       schedule.GetInstance().GetArchitecture().CommunicationCosts(std::get<1>(newComm), std::get<2>(newComm));
           newSendCost[std::get<1>(newComm)] += commCost;
           newRecCost[std::get<2>(newComm)] += commCost;
         }
-        
+
         newMax = 0;
         for (unsigned proc = 0; proc < schedule.GetInstance().NumberOfProcessors(); ++proc) {
           newMax = std::max(newMax, newSendCost[proc]);
@@ -378,7 +378,7 @@ bool GreedyRecomputer<GraphT>::MergeEntireSupersteps(BspScheduleRecomp<GraphT> &
         newSendCost[std::get<1>(newComm)] += commCost;
         newRecCost[std::get<2>(newComm)] += commCost;
       }
-      
+
       newMax = 0;
       for (unsigned proc = 0; proc < schedule.GetInstance().NumberOfProcessors(); ++proc) {
         newMax = std::max(newMax, newSendCost[proc]);
@@ -424,11 +424,11 @@ bool GreedyRecomputer<GraphT>::MergeEntireSupersteps(BspScheduleRecomp<GraphT> &
         for (const KeyTriple &entry : commSteps_[step]) {
           neededOnProc_[std::get<0>(entry)][std::get<1>(entry)].erase(neededOnProc_[std::get<0>(entry)][std::get<1>(entry)].lower_bound(step));
         }
-        
+
         for (const KeyTriple &entry : commSteps_[nextStep]) {
           neededOnProc_[std::get<0>(entry)][std::get<1>(entry)].erase(neededOnProc_[std::get<0>(entry)][std::get<1>(entry)].lower_bound(nextStep));
         }
-        
+
         commSteps_[step].clear();
         for (unsigned proc = 0; proc < schedule.GetInstance().NumberOfProcessors(); ++proc) {
           sendCost_[proc][step] = 0;
@@ -447,7 +447,7 @@ bool GreedyRecomputer<GraphT>::MergeEntireSupersteps(BspScheduleRecomp<GraphT> &
         }
 
         maxComm_[nextStep] = 0;
-          
+
         maxComm_[step] = 0;
         for (unsigned proc = 0; proc < schedule.GetInstance().NumberOfProcessors(); ++proc) {
           maxComm_[step] = std::max(maxComm_[step], sendCost_[proc][step]);
@@ -459,7 +459,7 @@ bool GreedyRecomputer<GraphT>::MergeEntireSupersteps(BspScheduleRecomp<GraphT> &
           for (const KeyTriple &newComm : newCommStepsBefore) {
             AddCommStep(schedule, newComm, previousStep);
           }
-          
+
           for (unsigned proc = 0; proc < schedule.GetInstance().NumberOfProcessors(); ++proc) {
             maxComm_[previousStep] = std::max(maxComm_[previousStep], sendCost_[proc][previousStep]);
             maxComm_[previousStep] = std::max(maxComm_[previousStep], recCost_[proc][previousStep]);
@@ -499,7 +499,7 @@ bool GreedyRecomputer<GraphT>::RecomputeEntireSupersteps(BspScheduleRecomp<Graph
       commStepPerNodeAndReceiver[std::make_pair(std::get<0>(entry), std::get<2>(entry))].emplace_back(std::get<1>(entry), step);
     }
   }
-  
+
   for (unsigned step = 0; step < schedule.NumberOfSupersteps(); ++step) {
     for (unsigned fromProc = 0; fromProc < schedule.GetInstance().NumberOfProcessors(); ++fromProc) {
       for (unsigned toProc = 0; toProc < schedule.GetInstance().NumberOfProcessors(); ++toProc) {
@@ -533,7 +533,7 @@ bool GreedyRecomputer<GraphT>::RecomputeEntireSupersteps(BspScheduleRecomp<Graph
             internalOutDegree[pred] += 1;
           }
         }
-        
+
         std::set<VertexIdx> checkIfDisposable;
         for (const VertexIdx node : mustReplicate) {
           if (internalOutDegree.at(node) == 0) {
@@ -602,14 +602,14 @@ bool GreedyRecomputer<GraphT>::RecomputeEntireSupersteps(BspScheduleRecomp<Graph
         // EVALUATE COST
 
         int costChange = 0;
-      
+
         // work cost
         CostType newWorkCost = workCost_[toProc][step];
         for (const VertexIdx node : mustReplicate) {
           newWorkCost += G.VertexWorkWeight(node);
         }
         CostType newMax = std::max(maxWork_[step], newWorkCost);
-        
+
         costChange += static_cast<int>(newMax) - static_cast<int>(maxWork_[step]);
 
         // comm cost before merged step
@@ -626,7 +626,7 @@ bool GreedyRecomputer<GraphT>::RecomputeEntireSupersteps(BspScheduleRecomp<Graph
             newSendCost[std::get<1>(newComm)] += commCost;
             newRecCost += commCost;
           }
-          
+
           newMax = std::max(maxComm_[step - 1], newRecCost);
           for (unsigned proc = 0; proc < schedule.GetInstance().NumberOfProcessors(); ++proc) {
             newMax = std::max(newMax, newSendCost[proc]);
@@ -658,7 +658,7 @@ bool GreedyRecomputer<GraphT>::RecomputeEntireSupersteps(BspScheduleRecomp<Graph
         }
         for (const auto &changingStep : changedStepsRec) {
           unsigned stepChanged = changingStep.first;
-          
+
           std::vector<CostType> newSendCost(schedule.GetInstance().NumberOfProcessors());
           CostType newRecCost = recCost_[toProc][stepChanged] - changingStep.second;
           for (unsigned proc = 0; proc < schedule.GetInstance().NumberOfProcessors(); ++proc) {
@@ -667,7 +667,7 @@ bool GreedyRecomputer<GraphT>::RecomputeEntireSupersteps(BspScheduleRecomp<Graph
           for (const auto &procAndChange : changedStepsSent[stepChanged]) {
             newSendCost[procAndChange.first] -= procAndChange.second;
           }
-          
+
           newMax = 0;
           for (unsigned proc = 0; proc < schedule.GetInstance().NumberOfProcessors(); ++proc) {
             newMax = std::max(newMax, newSendCost[proc]);
@@ -705,7 +705,7 @@ bool GreedyRecomputer<GraphT>::RecomputeEntireSupersteps(BspScheduleRecomp<Graph
             for (const KeyTriple &newComm : newCommStepsBefore) {
               AddCommStep(schedule, newComm, step - 1);
             }
-            
+
             for (unsigned proc = 0; proc < schedule.GetInstance().NumberOfProcessors(); ++proc) {
               maxComm_[step - 1] = std::max(maxComm_[step - 1], sendCost_[proc][step - 1]);
               maxComm_[step - 1] = std::max(maxComm_[step - 1], recCost_[proc][step - 1]);
@@ -734,7 +734,7 @@ bool GreedyRecomputer<GraphT>::RecomputeEntireSupersteps(BspScheduleRecomp<Graph
 
   schedule.GetCommunicationSchedule().clear();
   for (unsigned step = 0; step < schedule.NumberOfSupersteps(); ++step) {
-    for (const KeyTriple &entry : commSteps_[step]) {      
+    for (const KeyTriple &entry : commSteps_[step]) {
       schedule.AddCommunicationScheduleEntry(entry, step);
     }
   }
@@ -759,9 +759,9 @@ bool GreedyRecomputer<GraphT>::BatchRemoveSteps(BspScheduleRecomp<GraphT> &sched
       }
     }
   }
-  
+
   for (unsigned step = 0; step < schedule.NumberOfSupersteps(); ++step) {
-    
+
     bool canReduce = (maxComm_[step] > 0);
     while (canReduce) {
 
@@ -792,8 +792,8 @@ bool GreedyRecomputer<GraphT>::BatchRemoveSteps(BspScheduleRecomp<GraphT> &sched
 
       for (unsigned proc = 0; proc < schedule.GetInstance().NumberOfProcessors(); ++proc) {
         for (unsigned sendOrRec = 0; sendOrRec < 2; ++sendOrRec) {
-         
-          std::set<KeyTriple> *currentCommSteps; 
+
+          std::set<KeyTriple> *currentCommSteps;
           if (sendOrRec == 0) {
             if (!sendSaturated[proc]) {
               continue;
@@ -864,11 +864,11 @@ bool GreedyRecomputer<GraphT>::BatchRemoveSteps(BspScheduleRecomp<GraphT> &sched
         if (skipStep) {
           // weird edge case if all comm steps have weight 0 (can be removed?)
           break;
-        }              
+        }
       }
       if (skipStep) {
         continue;
-      }                               
+      }
 
       if (maxComm_[step] > 0 && commSteps_[step].size() == removedCommSteps.size()) {
         commDecrease += schedule.GetInstance().GetArchitecture().SynchronisationCosts();
@@ -898,7 +898,7 @@ bool GreedyRecomputer<GraphT>::BatchRemoveSteps(BspScheduleRecomp<GraphT> &sched
           maxComm_[step] = std::max(maxComm_[step], sendCost_[proc][step]);
           maxComm_[step] = std::max(maxComm_[step], recCost_[proc][step]);
         }
-        
+
         canReduce = true;
         improved = true;
       }
@@ -936,17 +936,17 @@ void GreedyRecomputer<GraphT>::RefreshAuxData(const BspScheduleRecomp<GraphT> &s
 
     nodesPerProcAndStep_.clear();
     nodesPerProcAndStep_.resize(P, std::vector<std::vector<VertexIdx> >(S));
-    
+
     neededOnProc_.clear();
     neededOnProc_.resize(N, std::vector<std::multiset<unsigned> >(P, {S}));
-    
+
     maxWork_.clear();
     maxComm_.clear();
     maxWork_.resize(S, 0);
     maxComm_.resize(S, 0);
 
     commSteps_.clear();
-    commSteps_.resize(S);                              
+    commSteps_.resize(S);
 
     for (VertexIdx node = 0; node < N; ++node) {
       for (const std::pair<unsigned, unsigned> &procAndStep : schedule.Assignments(node)) {

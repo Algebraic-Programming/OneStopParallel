@@ -136,7 +136,7 @@ class StepByStepCoarser : public CoarserGenContractionMap<GraphT, GraphT> {
 
 template <typename GraphT>
 std::vector<VertexIdxT<GraphT>> StepByStepCoarser<GraphT>::GenerateVertexContractionMap(const GraphT &dagIn) {
-    const unsigned n = static_cast<unsigned>(dagIn.NumVertices());
+    const unsigned numVertices = static_cast<unsigned>(dagIn.NumVertices());
 
     gFull_ = dagIn;
     for (VertexIdx node = gCoarse_.NumVertices(); node > 0;) {
@@ -149,18 +149,18 @@ std::vector<VertexIdxT<GraphT>> StepByStepCoarser<GraphT>::GenerateVertexContrac
     contractionHistory_.clear();
 
     // target nr of nodes must be reasonable
-    if (targetNrOfNodes_ == 0 || targetNrOfNodes_ > n) {
-        targetNrOfNodes_ = std::max(n / 2, 1U);
+    if (targetNrOfNodes_ == 0 || targetNrOfNodes_ > numVertices) {
+        targetNrOfNodes_ = std::max(numVertices / 2, 1U);
     }
 
     // list of original node indices contained in each contracted node
     contains_.clear();
-    contains_.resize(n);
+    contains_.resize(numVertices);
 
     nodeValid_.clear();
-    nodeValid_.resize(n, true);
+    nodeValid_.resize(numVertices, true);
 
-    for (VertexIdx node = 0; node < n; ++node) {
+    for (VertexIdx node = 0; node < numVertices; ++node) {
         contains_[node].insert(node);
     }
 
@@ -170,7 +170,7 @@ std::vector<VertexIdxT<GraphT>> StepByStepCoarser<GraphT>::GenerateVertexContrac
 
     if (coarseningStrategy_ == CoarseningStrategy::EDGE_BY_EDGE) {
         // Init edge weights
-        for (VertexIdx node = 0; node < n; ++node) {
+        for (VertexIdx node = 0; node < numVertices; ++node) {
             for (VertexIdx succ : gFull_.Children(node)) {
                 edgeWeights_[std::make_pair(node, succ)] = gFull_.VertexCommWeight(node);
             }
@@ -180,7 +180,7 @@ std::vector<VertexIdxT<GraphT>> StepByStepCoarser<GraphT>::GenerateVertexContrac
         InitializeContractableEdges();
     }
 
-    for (unsigned nrOfNodes = n; nrOfNodes > targetNrOfNodes_;) {
+    for (unsigned nrOfNodes = numVertices; nrOfNodes > targetNrOfNodes_;) {
         // Single contraction step
 
         std::vector<std::pair<VertexIdx, VertexIdx>> edgesToContract;
