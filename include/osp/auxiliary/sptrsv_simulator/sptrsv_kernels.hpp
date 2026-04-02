@@ -146,13 +146,15 @@ void SpLTrSvSSPParallel(double *__restrict__ const x,
     {
         const std::size_t proc = static_cast<std::size_t>(omp_get_thread_num());
         const std::vector<std::vector<IdxType>> &BoundsStepIdx = BoundsProcStepIdx[proc];
-        for (std::size_t step = 0; step < BoundsStepIdx.size(); ++step) {
+        for (std::size_t step = 0; step < BoundsStepIdx.size(); ) {
             const std::vector<IdxType> &BoundsIdx = BoundsStepIdx[step];
             auto idxIt = BoundsIdx.cbegin();
             const auto idxItEnd = BoundsIdx.cend();
 
             if (idxIt != idxItEnd) {
-                barrier.Wait(proc, staleness - 1U);
+                constexpr std::size_t diff = staleness - 1U;
+                const std::size_t minStep = std::max(step, diff) - diff;
+                barrier.Wait(proc, minStep);
             }
 
             for (; idxIt != idxItEnd; ++idxIt) {
@@ -166,7 +168,7 @@ void SpLTrSvSSPParallel(double *__restrict__ const x,
                     x[row] = acc / val[outer[row + 1] - 1];
                 }
             }
-            barrier.Arrive(proc);
+            barrier.Arrive(proc, ++step);
         }
     }
 }
@@ -186,13 +188,15 @@ void SpLTrSvSSPParallelInPlace(double *__restrict__ const x,
     {
         const std::size_t proc = static_cast<std::size_t>(omp_get_thread_num());
         const std::vector<std::vector<IdxType>> &BoundsStepIdx = BoundsProcStepIdx[proc];
-        for (std::size_t step = 0; step < BoundsStepIdx.size(); ++step) {
+        for (std::size_t step = 0; step < BoundsStepIdx.size();) {
             const std::vector<IdxType> &BoundsIdx = BoundsStepIdx[step];
             auto idxIt = BoundsIdx.cbegin();
             const auto idxItEnd = BoundsIdx.cend();
 
             if (idxIt != idxItEnd) {
-                barrier.Wait(proc, staleness - 1U);
+                constexpr std::size_t diff = staleness - 1U;
+                const std::size_t minStep = std::max(step, diff) - diff;
+                barrier.Wait(proc, minStep);
             }
 
             for (; idxIt != idxItEnd; ++idxIt) {
@@ -206,7 +210,7 @@ void SpLTrSvSSPParallelInPlace(double *__restrict__ const x,
                     x[row] = acc / val[outer[row + 1] - 1];
                 }
             }
-            barrier.Arrive(proc);
+            barrier.Arrive(proc, ++step);
         }
     }
 }
@@ -290,12 +294,15 @@ void SpLTrSvProcPermSSPParallel(double *__restrict__ const x,
     {
         const unsigned proc = static_cast<unsigned>(omp_get_thread_num());
         const IdxType *const endStepPtr = procStepPtr + ((proc + 1U) * numSuperSteps);
+        std::size_t step = 0U;
         for (const IdxType *stepPtr = procStepPtr + (proc * numSuperSteps); stepPtr != endStepPtr;) {
             IdxType row = *stepPtr;
             const IdxType endRow = *(++stepPtr);
 
             if (row != endRow) {
-                barrier.Wait(proc, staleness - 1U);
+                constexpr std::size_t diff = staleness - 1U;
+                const std::size_t minStep = std::max(step, diff) - diff;
+                barrier.Wait(proc, minStep);
             }
 
             for (; row != endRow; ++row) {
@@ -306,7 +313,7 @@ void SpLTrSvProcPermSSPParallel(double *__restrict__ const x,
 
                 x[row] = acc / val[outer[row + 1] - 1];
             }
-            barrier.Arrive(proc);
+            barrier.Arrive(proc, ++step);
         }
     }
 }
@@ -326,12 +333,15 @@ void SpLTrSvProcPermSSPParallelInPlace(double *__restrict__ const x,
     {
         const unsigned proc = static_cast<unsigned>(omp_get_thread_num());
         const IdxType *const endStepPtr = procStepPtr + ((proc + 1U) * numSuperSteps);
+        std::size_t step = 0U;
         for (const IdxType *stepPtr = procStepPtr + (proc * numSuperSteps); stepPtr != endStepPtr;) {
             IdxType row = *stepPtr;
             const IdxType endRow = *(++stepPtr);
 
             if (row != endRow) {
-                barrier.Wait(proc, staleness - 1U);
+                constexpr std::size_t diff = staleness - 1U;
+                const std::size_t minStep = std::max(step, diff) - diff;
+                barrier.Wait(proc, minStep);
             }
 
             for (; row != endRow; ++row) {
@@ -342,7 +352,7 @@ void SpLTrSvProcPermSSPParallelInPlace(double *__restrict__ const x,
 
                 x[row] = acc / val[outer[row + 1] - 1];
             }
-            barrier.Arrive(proc);
+            barrier.Arrive(proc, ++step);
         }
     }
 }
