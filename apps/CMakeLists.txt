@@ -53,6 +53,7 @@ endif()
 if (COPT_FOUND)
 _add_executable( ilp_bsp_scheduler )
 _add_executable( ilp_hypergraph_partitioner )
+_add_executable( ilp_partitioning_test_suite )
 endif()
 
 endif()

@@ -189,7 +189,7 @@ class AbstractTestSuiteRunner {
         }
     }
 
-    int Run(int argc, char *argv[]) {
+    int virtual Run(int argc, char *argv[]) {
         try {
             parser_.ParseArgs(argc, argv);
         } catch (const std::exception &e) {
@@ -311,6 +311,8 @@ class AbstractTestSuiteRunner {
                     logStream_ << "Reading graph file " << filenameGraph << " failed." << std::endl;
                     continue;
                 }
+
+                bspInstance.SetAllOnesCompatibilityMatrix();
 
                 for (auto &algorithmConfigPair : parser_.scheduler_) {
                     const pt::ptree &algoConfig = algorithmConfigPair.second;

@@ -211,7 +211,7 @@ bool BspScheduleRecomp<GraphT>::SatisfiesConstraints() const {
 
         if (nodeFirstAvailableOnProc[node][fromProc] > val) {
             // std::cout << "Not a valid schedule: node " << node << " not yet available for sending from processor "
-            // << from_proc << " in superstep "<< val <<"." << std::endl;
+            // << fromProc << " in superstep "<< val <<"." << std::endl;
             return false;
         }
     }

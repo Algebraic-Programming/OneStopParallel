@@ -89,6 +89,19 @@ void HypergraphPartitioningILPWithReplication<HypergraphT>::SetupExtraVariablesC
     const IndexType numberOfParts = instance.GetNumberOfPartitions();
     const IndexType numberOfVertices = instance.GetHypergraph().NumVertices();
 
+    IndexType heaviestNode = 0;
+    auto maxWeightFound = -1.0;
+
+    for (IndexType node = 0; node < numberOfVertices; node++) {
+        auto w = instance.GetHypergraph().GetVertexWorkWeight(node);
+        if (w > maxWeightFound) {
+            maxWeightFound = w;
+            heaviestNode = node;
+        }
+    }
+    // symmetry breaking
+    model.AddConstr(this->nodeInPartition_[heaviestNode][0] == 1);
+
     if (replicationModel_ == ReplicationModelInIlp::GENERAL) {
         // create variables for each pin+partition combination
         std::map<std::pair<IndexType, unsigned>, IndexType> pinIdMap;

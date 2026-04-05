@@ -196,7 +196,16 @@ ReturnStatus RunBspScheduler(const ConfigParser &parser,
 
         std::unique_ptr<ImprovementScheduler<GraphT>> improver
             = GetBspImproverByName<GraphT>(parser, algorithm.get_child("parameters").get_child("improver"));
-        return improver->ImproveSchedule(schedule);
+
+        const unsigned timeLimit = parser.globalParams_.get_optional<unsigned>("timeLimit").value_or(std::numeric_limits<unsigned>::max());
+        improver->SetTimeLimitSeconds(timeLimit);
+        if (timeLimit == std::numeric_limits<unsigned>::max()) {
+            return improver->ImproveSchedule(schedule);
+        } else {
+            return improver->ImproveScheduleWithTimeLimit(schedule);
+        }
+
+
 #ifdef COPT
     } else if (id == "FullILP") {
         CoptFullScheduler<GraphT> scheduler;

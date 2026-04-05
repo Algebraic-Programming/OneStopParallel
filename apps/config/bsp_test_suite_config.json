@@ -18,16 +18,30 @@
             "parameters": {}
         },
         {
-            "name": "GreedyRecomputer",
+            "name": "GreedyRecomputerMask7",
+            "id": "GreedyRecomputer",
             "run" : true,
-            "name_suffix" : "Locking",
+            "name_suffix" : "GreedyBsp",
             "parameters": {
+                "methodmask" : 7,
                 "scheduler": {
-                    "name": "BspLocking",
+                    "name": "GreedyBspHC",
+                    "id": "LocalSearch",
+                    "run" : true,
+                    "name_suffix" : "GreedyBspHC",
                     "parameters": {
-                    "max_percent_idle_processors": 0.4,
-                    "increase_parallelism_in_new_superstep": true
-                    }                    
+                        "improver": {
+                            "name" : "hill_climb" 
+                        },
+                        "scheduler": {
+                            "name": "GreedyBsp",
+                            "id": "GreedyBsp",
+                            "parameters": {
+                                "max_percent_idle_processors": 0.2,
+                                "increase_parallelism_in_new_superstep": true
+                            }
+                        }                
+                    }                
                 } 
             }
         },

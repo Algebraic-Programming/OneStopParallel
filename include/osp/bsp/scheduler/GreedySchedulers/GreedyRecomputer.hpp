@@ -76,7 +76,7 @@ class GreedyRecomputer {
 
     ReturnStatus ComputeRecompScheduleBasic(BspScheduleCS<GraphT> &initialSchedule, BspScheduleRecomp<GraphT> &recompSchedule);
 
-    ReturnStatus ComputeRecompScheduleAdvanced(BspScheduleCS<GraphT> &initialSchedule, BspScheduleRecomp<GraphT> &recompSchedule);
+    ReturnStatus ComputeRecompScheduleAdvanced(BspScheduleCS<GraphT> &initialSchedule, BspScheduleRecomp<GraphT> &recompSchedule, unsigned methodMask = 7);
 };
 
 template <typename GraphT>
@@ -89,21 +89,33 @@ ReturnStatus GreedyRecomputer<GraphT>::ComputeRecompScheduleBasic(BspScheduleCS<
 }
 
 template <typename GraphT>
-ReturnStatus GreedyRecomputer<GraphT>::ComputeRecompScheduleAdvanced(BspScheduleCS<GraphT> &initialSchedule, BspScheduleRecomp<GraphT> &recompSchedule)
+ReturnStatus GreedyRecomputer<GraphT>::ComputeRecompScheduleAdvanced(BspScheduleCS<GraphT> &initialSchedule, BspScheduleRecomp<GraphT> &recompSchedule, unsigned methodMask)
 {
     recompSchedule = BspScheduleRecomp<GraphT>(initialSchedule);
     bool keepsImproving = true;
     while (keepsImproving)
     {
-      keepsImproving = BatchRemoveSteps(recompSchedule); // no need for greedyImprove if we use this more general one
-      recompSchedule.MergeSupersteps();
+      keepsImproving = false;
 
-      keepsImproving = MergeEntireSupersteps(recompSchedule) || keepsImproving;
-      recompSchedule.CleanSchedule();
-      recompSchedule.MergeSupersteps();
+      if ((methodMask & (1U << 0)) == 0) {
+        keepsImproving = GreedyImprove(recompSchedule) || keepsImproving;
+        recompSchedule.MergeSupersteps();
+      } else {
+        keepsImproving = BatchRemoveSteps(recompSchedule) || keepsImproving; // no need for greedyImprove if we use this more general one
+        recompSchedule.MergeSupersteps();
+      }
 
-      keepsImproving = RecomputeEntireSupersteps(recompSchedule) || keepsImproving;
-      recompSchedule.MergeSupersteps();
+      if ((methodMask & (1U << 1)) > 0) {
+        keepsImproving = MergeEntireSupersteps(recompSchedule) || keepsImproving;
+        recompSchedule.CleanSchedule();
+        recompSchedule.MergeSupersteps();
+      }
+
+      if ((methodMask & (1U << 2)) > 0) {
+        keepsImproving = RecomputeEntireSupersteps(recompSchedule) || keepsImproving;
+        recompSchedule.MergeSupersteps();
+        recompSchedule.CleanSchedule();
+      }
 
       // add further methods, if desired
     }
@@ -790,6 +802,8 @@ bool GreedyRecomputer<GraphT>::BatchRemoveSteps(BspScheduleRecomp<GraphT> &sched
       CostType workIncrease = 0;
       CostType commDecrease = std::numeric_limits<CostType>::max();
 
+      std::map<std::pair<VertexIdx, unsigned>, unsigned> newFirstComputable, newFirstNeeded;
+
       for (unsigned proc = 0; proc < schedule.GetInstance().NumberOfProcessors(); ++proc) {
         for (unsigned sendOrRec = 0; sendOrRec < 2; ++sendOrRec) {
 
@@ -820,7 +834,18 @@ bool GreedyRecomputer<GraphT>::BatchRemoveSteps(BspScheduleRecomp<GraphT> &sched
               continue;
             }
 
-            for (unsigned compStep = firstComputable[node][toProc]; compStep <= *neededOnProc_[node][toProc].begin(); ++compStep) {
+            unsigned lowerBound = firstComputable[node][toProc];
+            auto newFirstItr = newFirstComputable.find({node, toProc});
+            if (newFirstItr != newFirstComputable.end()) {
+              lowerBound = std::max(lowerBound, newFirstItr->second);
+            }
+            unsigned upperBound = *neededOnProc_[node][toProc].begin();
+            newFirstItr = newFirstNeeded.find({node, toProc});
+            if (newFirstItr != newFirstNeeded.end()) {
+              upperBound = std::min(upperBound, newFirstItr->second);
+            }
+
+            for (unsigned compStep = lowerBound; compStep <= upperBound; ++compStep) {
               auto itr = workIncreased.find(std::make_pair(toProc, compStep));
               CostType assignedExtra = (itr != workIncreased.end()) ? itr->second : 0;
               CostType increase = 0;
@@ -856,6 +881,23 @@ bool GreedyRecomputer<GraphT>::BatchRemoveSteps(BspScheduleRecomp<GraphT> &sched
             CostType commCost = schedule.GetInstance().GetComputationalDag().VertexCommWeight(node)
                         * schedule.GetInstance().GetArchitecture().CommunicationCosts(fromProc, toProc);
             commDecrease = std::min(commDecrease, commCost);
+
+            for (const VertexIdx &succ : G.Children(node)) {
+              auto newFirstItr = newFirstComputable.find({succ, toProc});
+              if (newFirstItr != newFirstComputable.end()) {
+                newFirstItr->second = std::max(newFirstItr->second, bestStepTarget);
+              } else {
+                newFirstComputable[{succ, toProc}] = bestStepTarget;
+              }
+            }
+            for (const VertexIdx &pred : G.Parents(node)) {
+              auto newFirstItr = newFirstNeeded.find({pred, toProc});
+              if (newFirstItr != newFirstNeeded.end()) {
+                newFirstItr->second = std::min(newFirstItr->second, bestStepTarget);
+              } else {
+                newFirstNeeded[{pred, toProc}] = bestStepTarget;
+              }
+            }
 
           } else {
             skipStep = true;
