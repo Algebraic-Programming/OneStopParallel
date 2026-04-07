@@ -35,6 +35,7 @@
 #include "osp/bsp/model/MaxBspSchedule.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/GreedyVarianceSspScheduler.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/GrowLocalAutoCores.hpp"
+#include "osp/bsp/scheduler/GreedySchedulers/OldGrowLocalAutoCoresParallel.hpp"
 #include "osp/bsp/scheduler/GreedySchedulers/GrowLocalMaxBsp.hpp"
 #include "osp/graph_implementations/eigen_matrix_adapter/sparse_matrix.hpp"
 
@@ -589,7 +590,7 @@ int main(int argc, char *argv[]) {
         }
 
         if (args.algorithms.count(Algorithm::GrowLocal) > 0U) {
-            GrowLocalAutoCores<SparseMatrixImp<int32_t>> scheduler;
+            OldGrowLocalAutoCoresParallel<SparseMatrixImp<int32_t>> scheduler;
             BspSchedule<SparseMatrixImp<int32_t>> schedule(instance);
 
             const auto t0 = std::chrono::high_resolution_clock::now();
@@ -638,7 +639,7 @@ int main(int argc, char *argv[]) {
         }
 
         if (args.algorithms.count(Algorithm::GrowLocalPermSteps) > 0U) {
-            GrowLocalAutoCores<SparseMatrixImp<int32_t>> scheduler;
+            OldGrowLocalAutoCoresParallel<SparseMatrixImp<int32_t>> scheduler;
             BspSchedule<SparseMatrixImp<int32_t>> schedule(instance);
 
             const auto t0 = std::chrono::high_resolution_clock::now();
