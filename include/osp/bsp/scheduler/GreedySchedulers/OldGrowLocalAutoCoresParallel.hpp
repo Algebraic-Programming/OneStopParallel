@@ -46,7 +46,7 @@ struct OldGrowLocalAutoCoresParallelParams {
     WeightT syncCostMultiplierMinSuperstepWeight_ = 1;
     WeightT syncCostMultiplierParallelCheck_ = 4;
 
-    unsigned numThreads_ = 0;              // 0 for auto
+    unsigned numThreads_ = 1;              // 0 for auto
     unsigned maxNumThreads_ = UINT_MAX;    // used when auto num threads
 };
 
