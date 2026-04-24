@@ -54,6 +54,7 @@ enum class Algorithm {
     GrowLocalSsp,
     GrowLocalSspPermSteps,
     GrowLocalSspPermProcs,
+    GrowLocalSspPermProcsBspExec,
     GrowLocal,
     GrowLocalPermSteps,
     Serial
@@ -178,6 +179,8 @@ bool ParseArgs(int argc, char *argv[], Args &args) {
             args.algorithms.insert(Algorithm::GrowLocalSspPermSteps);
         } else if (flag == "--growlocal-ssp-perm-proc") {
             args.algorithms.insert(Algorithm::GrowLocalSspPermProcs);
+        } else if (flag == "--growlocal-ssp-perm-proc-bsp-exec") {
+            args.algorithms.insert(Algorithm::GrowLocalSspPermProcsBspExec);
         } else if (flag == "--growlocal") {
             args.algorithms.insert(Algorithm::GrowLocal);
         } else if (flag == "--growlocal-perm-step") {
@@ -188,6 +191,7 @@ bool ParseArgs(int argc, char *argv[], Args &args) {
             args.algorithms = {Algorithm::VarianceSsp,
                                Algorithm::GrowLocalSsp,
                                Algorithm::GrowLocalSspPermProcs,
+                               Algorithm::GrowLocalSspPermProcsBspExec,
                                Algorithm::GrowLocalSspPermSteps,
                                Algorithm::GrowLocal,
                                Algorithm::GrowLocalPermSteps,
@@ -573,6 +577,57 @@ int main(int argc, char *argv[]) {
                 if (iter >= preMeasureIterations) {
                     bufferedRows.emplace_back(CsvRow{graphName,
                                                      "Growlocal_SSP_Perm_Proc",
+                                                     args.processors,
+                                                     scheduleTime,
+                                                     supersteps,
+                                                     syncCosts,
+                                                     kDefaultStaleness,
+                                                     runtime,
+                                                     correct});
+                }
+            }
+
+            for (auto it = std::next(bufferedRows.cbegin(), writtenEntries); it != bufferedRows.cend(); ++it) {
+                WriteCsvRow(csv, *it);
+                ++writtenEntries;
+            }
+        }
+
+        if (args.algorithms.count(Algorithm::GrowLocalSspPermProcsBspExec) > 0U) {
+            GrowLocalSSP<SparseMatrixImp<int32_t>, kDefaultStaleness> scheduler;
+            MaxBspSchedule<SparseMatrixImp<int32_t>> schedule(instance);
+
+            const auto t0 = std::chrono::high_resolution_clock::now();
+            scheduler.ComputeSchedule(schedule);
+            const auto t1 = std::chrono::high_resolution_clock::now();
+            const double scheduleTime = std::chrono::duration<double>(t1 - t0).count();
+
+            std::vector<SparseMatrixImp<int32_t>::VertexIdx> perm;
+            sptrsv.SetupCsrWithPermutationProcessorsFirst(schedule, perm);
+            const unsigned supersteps = schedule.NumberOfSupersteps();
+            const int syncCosts = ComputeSyncCosts(instance);
+
+            bool correct = false;
+            std::vector<double> x(n, 1.0);
+            sptrsv.x_ = x.data();
+            for (int iter = 0; iter < args.iterations + preMeasureIterations; ++iter) {
+                resetOnes(x);
+
+                const auto s = std::chrono::high_resolution_clock::now();
+                sptrsv.LsolveWithProcFirstPermutationInPlace();
+                const auto e = std::chrono::high_resolution_clock::now();
+                const double runtime = std::chrono::duration<double>(e - s).count();
+
+                if (iter == 0) {
+                    sptrsv.PermuteXVector(perm);
+                    const double diff = LInftyNormalisedDiff(x, serialRefX);
+                    correct = (diff < EPSILON);
+                    std::cout << "  Growlocal_SSP_Perm_Proc_BSP_Exec first-run max relative diff vs serial: " << diff << std::endl;
+                }
+
+                if (iter >= preMeasureIterations) {
+                    bufferedRows.emplace_back(CsvRow{graphName,
+                                                     "Growlocal_SSP_Perm_Proc_BSP_Exec",
                                                      args.processors,
                                                      scheduleTime,
                                                      supersteps,
