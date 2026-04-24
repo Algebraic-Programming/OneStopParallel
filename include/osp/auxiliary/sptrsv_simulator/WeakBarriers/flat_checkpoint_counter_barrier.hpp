@@ -56,8 +56,8 @@ class FlatCheckpointCounterBarrier {
               numThreads,
               std::vector<std::size_t, AlignedAllocator<std::size_t, CACHE_LINE_SIZE>>(RoundUpToCacheLine(numThreads), 0U))) {};
 
-    inline void Arrive(const std::size_t threadId);
-    inline void Wait(const std::size_t threadId, const std::size_t diff) const;
+    inline void Arrive(const std::size_t threadId, const std::size_t step);
+    inline void Wait(const std::size_t threadId, const std::size_t minStep) const;
 
     FlatCheckpointCounterBarrier() = delete;
     FlatCheckpointCounterBarrier(const FlatCheckpointCounterBarrier &) = delete;
@@ -67,19 +67,17 @@ class FlatCheckpointCounterBarrier {
     ~FlatCheckpointCounterBarrier() = default;
 };
 
-inline void FlatCheckpointCounterBarrier::Arrive(const std::size_t threadId) {
-    cntrs_[threadId].cntr_.fetch_add(1U, std::memory_order_release);
-    ++cachedCntrs_[threadId][threadId];
+inline void FlatCheckpointCounterBarrier::Arrive(const std::size_t threadId, const std::size_t step) {
+    cntrs_[threadId].cntr_.store(step, std::memory_order_release);
+    cachedCntrs_[threadId][threadId] = step;
 }
 
-inline void FlatCheckpointCounterBarrier::Wait(const std::size_t threadId, const std::size_t diff) const {
+inline void FlatCheckpointCounterBarrier::Wait(const std::size_t threadId, const std::size_t minStep) const {
     std::vector<std::size_t, AlignedAllocator<std::size_t, CACHE_LINE_SIZE>> &localCachedCntrs = cachedCntrs_[threadId];
 
-    const std::size_t minVal = std::max(localCachedCntrs[threadId], diff) - diff;
-
     for (std::size_t ind = 0U; ind < cntrs_.size(); ++ind) {
-        while ((localCachedCntrs[ind] < minVal)
-               && ((localCachedCntrs[ind] = cntrs_[ind].cntr_.load(std::memory_order_acquire)) < minVal)) {
+        while ((localCachedCntrs[ind] < minStep)
+               && ((localCachedCntrs[ind] = cntrs_[ind].cntr_.load(std::memory_order_acquire)) < minStep)) {
             cpu_relax();
         }
     }

@@ -237,13 +237,13 @@ BOOST_AUTO_TEST_CASE(TestFlatCheckpointCounterBarrier_2Threads) {
     std::vector<std::thread> threads(numThreads);
 
     auto threadWork = [&ans, &ans_mutex, numBarriers, &barrier](const std::size_t threadId) {
-        for (std::size_t cntr = 0U; cntr < numBarriers; ++cntr) {
+        for (std::size_t cntr = 0U; cntr < numBarriers; ) {
             {
                 std::lock_guard<std::mutex> lock(ans_mutex);
                 ans.emplace_back(cntr);
             }
-            barrier.Arrive(threadId);
-            barrier.Wait(threadId, 0U);
+            barrier.Arrive(threadId, ++cntr);
+            barrier.Wait(threadId, cntr);
         }
     };
 
@@ -275,13 +275,13 @@ BOOST_AUTO_TEST_CASE(TestFlatCheckpointCounterBarrier_128Threads) {
     std::vector<std::thread> threads(numThreads);
 
     auto threadWork = [&ans, &ans_mutex, numBarriers, &barrier](const std::size_t threadId) {
-        for (std::size_t cntr = 0U; cntr < numBarriers; ++cntr) {
+        for (std::size_t cntr = 0U; cntr < numBarriers; ) {
             {
                 std::lock_guard<std::mutex> lock(ans_mutex);
                 ans.emplace_back(cntr);
             }
-            barrier.Arrive(threadId);
-            barrier.Wait(threadId, 0U);
+            barrier.Arrive(threadId, ++cntr);
+            barrier.Wait(threadId, cntr);
         }
     };
 
@@ -313,13 +313,15 @@ BOOST_AUTO_TEST_CASE(TestFlatCheckpointCounterBarrier_SSP_2Threads) {
     std::vector<std::thread> threads(numThreads);
 
     auto threadWork = [&ans, &ans_mutex, numBarriers, &barrier](const std::size_t threadId) {
-        for (std::size_t cntr = 0U; cntr < numBarriers; ++cntr) {
-            barrier.Wait(threadId, 1U);
+        for (std::size_t cntr = 0U; cntr < numBarriers; ) {
+            constexpr std::size_t diff = 1U;
+            const std::size_t minCntr = std::max(cntr, diff) - diff;
+            barrier.Wait(threadId, minCntr);
             {
                 std::lock_guard<std::mutex> lock(ans_mutex);
                 ans.emplace_back(threadId);
             }
-            barrier.Arrive(threadId);
+            barrier.Arrive(threadId, ++cntr);
         }
     };
 
@@ -356,13 +358,15 @@ BOOST_AUTO_TEST_CASE(TestFlatCheckpointCounterBarrier_SSP_128Threads) {
     std::vector<std::thread> threads(numThreads);
 
     auto threadWork = [&ans, &ans_mutex, numBarriers, &barrier](const std::size_t threadId) {
-        for (std::size_t cntr = 0U; cntr < numBarriers; ++cntr) {
-            barrier.Wait(threadId, 1U);
+        for (std::size_t cntr = 0U; cntr < numBarriers; ) {
+            constexpr std::size_t diff = 1U;
+            const std::size_t minCntr = std::max(cntr, diff) - diff;
+            barrier.Wait(threadId, minCntr);
             {
                 std::lock_guard<std::mutex> lock(ans_mutex);
                 ans.emplace_back(threadId);
             }
-            barrier.Arrive(threadId);
+            barrier.Arrive(threadId, ++cntr);
         }
     };
 

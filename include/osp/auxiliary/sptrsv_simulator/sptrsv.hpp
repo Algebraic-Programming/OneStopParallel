@@ -649,12 +649,14 @@ class Sptrsv {
             const auto &stepPtr = procStepPtr_[proc];
             const auto &stepNum = procStepNum_[proc];
 
-            for (unsigned step = 0; step < numSupersteps_; ++step) {
+            for (unsigned step = 0; step < numSupersteps_; ) {
                 UVertType rowIdx = stepPtr[step];
                 const UVertType upperLimit = stepPtr[step] + stepNum[step];
 
                 if (rowIdx != upperLimit) {
-                    barrier.Wait(proc, staleness - 1U);
+                    constexpr unsigned diff = staleness - 1U;
+                    const std::size_t minStep = std::max(step, diff) - diff;
+                    barrier.Wait(proc, minStep);
                 }
 
                 for (; rowIdx < upperLimit; rowIdx++) {
@@ -666,7 +668,7 @@ class Sptrsv {
                     x[rowIdx] = acc / val_[rowPtr_[rowIdx + 1] - 1];
                 }
                 // Signal completion of this superstep.
-                barrier.Arrive(proc);
+                barrier.Arrive(proc, ++step);
             }
         }
     }
@@ -753,6 +755,7 @@ class Sptrsv {
             const std::size_t proc = static_cast<std::size_t>(omp_get_thread_num());
             const auto &procLocalBoundsArrayU = boundsArrayU_[proc];
             unsigned step = numSupersteps_;
+            std::size_t barrierCntr = 0U;
             do {
                 step--;
                 const auto &localBoundsArrayU = procLocalBoundsArrayU[step];
@@ -760,7 +763,9 @@ class Sptrsv {
                 const auto idxItEnd = localBoundsArrayU.cend();
 
                 if (idxIt != idxItEnd) {
-                    barrier.Wait(proc, staleness - 1U);
+                    constexpr std::size_t diff = staleness - 1U;
+                    const std::size_t minStep = std::max(barrierCntr, diff) - diff;
+                    barrier.Wait(proc, minStep);
                 }
 
                 for (; idxIt != idxItEnd; ++idxIt) {
@@ -777,7 +782,7 @@ class Sptrsv {
                     } while (node != lowerB);
                 }
 
-                barrier.Arrive(proc);
+                barrier.Arrive(proc, ++barrierCntr);
             } while (step != 0);
         }
     }
